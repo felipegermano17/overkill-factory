@@ -288,6 +288,8 @@ def build_preflight(
     generated_receipt_entries = max(int(cleanup_policy.get("generated_receipt_entries") or 0), generated_from_status)
     needs_human_review_entries = int(cleanup_policy.get("needs_human_review_entries") or 0)
     safe_cleanup_candidates = int(cleanup_policy.get("safe_cleanup_candidates") or 0)
+    git_hygiene = inventory.get("git_hygiene") if isinstance(inventory.get("git_hygiene"), dict) else {}
+    git_hygiene_blocking_items = git_hygiene.get("blocking_items") if isinstance(git_hygiene.get("blocking_items"), list) else []
     unintegrated_release_entries = max(entries - generated_from_status, 0)
     materializers_passed = True
     failed_materializers: list[str] = []
@@ -310,6 +312,7 @@ def build_preflight(
         "preflight_evidence_refs_exist": not missing_evidence_refs,
         "worktree_inventory_has_no_unknown_entries": needs_human_review_entries == 0,
         "worktree_inventory_has_no_cleanup_candidates": safe_cleanup_candidates == 0,
+        "worktree_git_hygiene_passed": len(git_hygiene_blocking_items) == 0,
         "worktree_has_release_candidate_material": release_candidate_entries > 0,
         "release_ref_has_no_unintegrated_worktree_entries": unintegrated_release_entries == 0,
         "current_branch_is_not_dirty_main": not (branch == "main" and unintegrated_release_entries > 0),
@@ -338,6 +341,8 @@ def build_preflight(
         next_required_actions.append("move release-candidate work off dirty main or commit through an explicit release branch")
     if not checks["release_ref_has_no_unintegrated_worktree_entries"]:
         next_required_actions.append("integrate the public-safe worktree into the target release ref")
+    if not checks["worktree_git_hygiene_passed"]:
+        next_required_actions.append("clean git branch/worktree hygiene before release: " + ", ".join(str(item) for item in git_hygiene_blocking_items))
     if not checks["preflight_evidence_refs_exist"]:
         next_required_actions.append("materialize missing preflight evidence summaries before release review")
     if not checks["fresh_preflight_materialization_provided"]:

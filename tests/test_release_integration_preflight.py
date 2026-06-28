@@ -125,6 +125,32 @@ class ReleaseIntegrationPreflightTest(unittest.TestCase):
         self.assertEqual(receipt["counts"]["unintegrated_release_entries"], 0)
         self.assertEqual(receipt["attention_items"], [])
 
+    def test_git_hygiene_blocks_release_preflight(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            paths = self._fixtures(
+                Path(tmp),
+                worktree="PASS",
+                head="PASS",
+                origin="PASS",
+                git_hygiene_blocking=["extra_git_worktrees_present", "local_non_main_branches_present"],
+            )
+
+            receipt = preflight.build_preflight(
+                inventory_path=paths["inventory"],
+                public_worktree_path=paths["worktree"],
+                public_head_path=paths["head"],
+                public_origin_path=paths["origin"],
+                branch_name="codex/release",
+                status_entries=0,
+                created_at="2026-06-10T00:00:00Z",
+                materialization=self.materialization(),
+            )
+
+        self.assertEqual(receipt["result"], "BLOCKED")
+        self.assertFalse(receipt["checks"]["worktree_git_hygiene_passed"])
+        self.assertIn("worktree_git_hygiene_passed", receipt["blocking_items"])
+        self.assertTrue(any("extra_git_worktrees_present" in item for item in receipt["next_required_actions"]))
+
     def test_missing_preflight_evidence_is_not_reported_as_existing_evidence(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -281,12 +307,18 @@ class ReleaseIntegrationPreflightTest(unittest.TestCase):
         origin: str,
         release_candidate_entries: int = 7,
         generated_receipt_entries: int = 0,
+        git_hygiene_blocking: list[str] | None = None,
     ) -> dict[str, Path]:
         inventory = root / "inventory.json"
         inventory.write_text(
             json.dumps(
                 {
                     "result": "ATTENTION",
+                    "git_hygiene": {
+                        "primary_branch": "main",
+                        "current_branch": "main",
+                        "blocking_items": git_hygiene_blocking or [],
+                    },
                     "cleanup_policy": {
                         "release_candidate_entries": release_candidate_entries,
                         "generated_receipt_entries": generated_receipt_entries,

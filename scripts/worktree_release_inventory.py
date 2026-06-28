@@ -79,6 +79,121 @@ def run_git_status() -> list[tuple[str, str]]:
     return entries
 
 
+def run_git(args: list[str]) -> str:
+    result = subprocess.run(
+        ["git", *args],
+        cwd=ROOT,
+        check=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    return result.stdout
+
+
+def parse_worktree_porcelain(text: str) -> list[dict[str, str]]:
+    worktrees: list[dict[str, str]] = []
+    current: dict[str, str] = {}
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if not line:
+            if current:
+                worktrees.append(current)
+                current = {}
+            continue
+        if " " in line:
+            key, value = line.split(" ", 1)
+        else:
+            key, value = line, "true"
+        if key == "branch" and value.startswith("refs/heads/"):
+            value = value.removeprefix("refs/heads/")
+        current[key] = value
+    if current:
+        worktrees.append(current)
+    return worktrees
+
+
+def branch_cherry_counts(branch: str, base: str = "main") -> dict[str, int]:
+    lines = [line for line in run_git(["cherry", "-v", base, branch]).splitlines() if line.strip()]
+    return {
+        "unique_patch_count": sum(1 for line in lines if line.startswith("+")),
+        "incorporated_patch_count": sum(1 for line in lines if line.startswith("-")),
+    }
+
+
+def build_git_hygiene(primary_branch: str = "main", remote: str = "origin") -> dict[str, object]:
+    current_branch = run_git(["branch", "--show-current"]).strip() or "DETACHED"
+    worktrees = parse_worktree_porcelain(run_git(["worktree", "list", "--porcelain"]))
+    extra_worktrees = [
+        {
+            "branch": wt.get("branch", "DETACHED"),
+            "detached": "detached" in wt,
+        }
+        for wt in worktrees
+        if Path(wt.get("worktree", "")).resolve() != ROOT.resolve()
+    ]
+
+    local_branches = [
+        name.strip()
+        for name in run_git(["for-each-ref", "--format=%(refname:short)", "refs/heads"]).splitlines()
+        if name.strip() and name.strip() != primary_branch
+    ]
+    local_unique = 0
+    local_incorporated = 0
+    for branch in local_branches:
+        counts = branch_cherry_counts(branch, primary_branch)
+        if counts["unique_patch_count"]:
+            local_unique += 1
+        else:
+            local_incorporated += 1
+
+    remote_prefix = f"{remote}/"
+    remote_main = f"{remote}/{primary_branch}"
+    remote_branches = [
+        name.strip()
+        for name in run_git(["branch", "-r", "--format=%(refname:short)"]).splitlines()
+        if name.strip().startswith(remote_prefix)
+        and name.strip() not in {remote_main, f"{remote}/HEAD"}
+    ]
+    remote_unique = 0
+    remote_incorporated = 0
+    remote_incorporated_codex = 0
+    for branch in remote_branches:
+        counts = branch_cherry_counts(branch, remote_main)
+        if counts["unique_patch_count"]:
+            remote_unique += 1
+        else:
+            remote_incorporated += 1
+            if branch.startswith(f"{remote}/codex/"):
+                remote_incorporated_codex += 1
+
+    blocking_items: list[str] = []
+    if current_branch != primary_branch:
+        blocking_items.append("current_branch_is_not_main")
+    if extra_worktrees:
+        blocking_items.append("extra_git_worktrees_present")
+    if local_branches:
+        blocking_items.append("local_non_main_branches_present")
+    if remote_incorporated_codex:
+        blocking_items.append("remote_incorporated_codex_branches_present")
+
+    return {
+        "primary_branch": primary_branch,
+        "current_branch": current_branch,
+        "current_branch_ok": current_branch == primary_branch,
+        "extra_worktree_count": len(extra_worktrees),
+        "extra_worktrees": extra_worktrees,
+        "local_non_main_branch_count": len(local_branches),
+        "local_unique_patch_branch_count": local_unique,
+        "local_incorporated_branch_count": local_incorporated,
+        "remote_non_main_branch_count": len(remote_branches),
+        "remote_unique_patch_branch_count": remote_unique,
+        "remote_incorporated_branch_count": remote_incorporated,
+        "remote_incorporated_codex_branch_count": remote_incorporated_codex,
+        "blocking_items": blocking_items,
+    }
+
+
 def top_level(path: str) -> str:
     return path.replace("\\", "/").split("/", 1)[0] or "."
 
@@ -140,7 +255,11 @@ def broad_counts(entries: list[tuple[str, str]]) -> dict[str, int]:
     return counts
 
 
-def build_inventory(entries: list[tuple[str, str]], created_at: str | None = None) -> dict[str, object]:
+def build_inventory(
+    entries: list[tuple[str, str]],
+    created_at: str | None = None,
+    git_hygiene: dict[str, object] | None = None,
+) -> dict[str, object]:
     top_levels: Counter[str] = Counter()
     classifications: Counter[str] = Counter()
     for status, path in entries:
@@ -156,8 +275,14 @@ def build_inventory(entries: list[tuple[str, str]], created_at: str | None = Non
         blocking_items.append("safe_cleanup_candidates_present")
     if needs_review:
         blocking_items.append("needs_human_review_entries_present")
+    git_blocking_items: list[str] = []
+    if git_hygiene:
+        raw_git_blocking = git_hygiene.get("blocking_items")
+        if isinstance(raw_git_blocking, list):
+            git_blocking_items = [str(item) for item in raw_git_blocking]
+            blocking_items.extend(git_blocking_items)
 
-    if needs_review:
+    if needs_review or git_blocking_items:
         result = "BLOCKED"
     elif safe_cleanup or release_material:
         result = "ATTENTION"
@@ -181,6 +306,13 @@ def build_inventory(entries: list[tuple[str, str]], created_at: str | None = Non
             "generated_receipt_entries": generated_receipts,
             "needs_human_review_entries": needs_review,
         },
+        "git_hygiene": git_hygiene
+        or {
+            "primary_branch": "main",
+            "current_branch": "unknown",
+            "blocking_items": [],
+            "not_collected": True,
+        },
         "blocking_items": blocking_items,
         "limits": [
             "This public-safe report intentionally omits raw file paths.",
@@ -202,7 +334,7 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     if not args.out.is_absolute():
         args.out = ROOT / args.out
-    inventory = build_inventory(run_git_status())
+    inventory = build_inventory(run_git_status(), git_hygiene=build_git_hygiene())
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(inventory, indent=2) + "\n", encoding="utf-8")
     try:

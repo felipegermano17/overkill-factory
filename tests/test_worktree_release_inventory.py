@@ -77,6 +77,41 @@ class WorktreeReleaseInventoryTest(unittest.TestCase):
         self.assertEqual(report["blocking_items"], [])
         self.assertEqual(report["result"], "PASS")
 
+    def test_git_hygiene_blocks_non_main_state(self) -> None:
+        report = inventory.build_inventory(
+            [],
+            created_at="2026-06-10T00:00:00Z",
+            git_hygiene={
+                "primary_branch": "main",
+                "current_branch": "codex/old-work",
+                "blocking_items": [
+                    "current_branch_is_not_main",
+                    "extra_git_worktrees_present",
+                    "local_non_main_branches_present",
+                ],
+            },
+        )
+
+        self.assertEqual(report["result"], "BLOCKED")
+        self.assertIn("current_branch_is_not_main", report["blocking_items"])
+        self.assertIn("extra_git_worktrees_present", report["blocking_items"])
+        self.assertIn("local_non_main_branches_present", report["blocking_items"])
+
+    def test_parse_worktree_porcelain_redacts_paths_to_branch_state(self) -> None:
+        parsed = inventory.parse_worktree_porcelain(
+            "worktree C:/repo\n"
+            "HEAD abc\n"
+            "branch refs/heads/main\n"
+            "\n"
+            "worktree C:/tmp/repo-feature\n"
+            "HEAD def\n"
+            "detached\n"
+            "\n"
+        )
+
+        self.assertEqual(parsed[0]["branch"], "main")
+        self.assertEqual(parsed[1]["detached"], "true")
+
     def test_external_out_path_reports_redacted_reference(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             out = Path(tmp) / "inventory.json"
