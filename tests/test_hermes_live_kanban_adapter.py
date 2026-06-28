@@ -4773,6 +4773,40 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         )
         self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
 
+    def test_no_idle_repairs_manual_factory_start_bypass(self) -> None:
+        fake = FakeHermes()
+        fake.tasks["t_" + "manual001"] = {
+            "id": "t_" + "manual001",
+            "status": "blocked",
+            "title": "F1 - Product Alpha source resolution + Product SOT start",
+            "assignee": "factory-orchestrator",
+            "created_by": "overkill-factory-gerente",
+            "skills": ["overkill-factory-product-intake"],
+            "parents": [],
+            "children": [],
+            "body": json.dumps({"objective": "manual start card"}),
+            "events": [],
+        }
+        args = adapter.build_parser().parse_args(
+            ["no-idle", "--board", TEST_BOARD, "--create-remediation", "--workspace", "scratch"]
+        )
+
+        result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertEqual(state["status"], "remediation_required")
+        self.assertEqual(state["classification"], "repair_board_contract")
+        self.assertTrue(state["remediation_task_created"])
+        self.assertEqual(result["board_reconcile_plan"]["plan_action"], "repair_board_contract")
+        self.assertTrue(any("bypassed Kanban-first adapter" in item for item in state["blocked_reasons"]))
+        self.assertTrue(any("overkill-factory-product-intake" in item for item in state["blocked_reasons"]))
+        created_task = next(
+            task for task in fake.tasks.values()
+            if json.loads(str(task.get("body") or "{}")).get("marker") == "factory_deterministic_reconcile"
+        )
+        self.assertEqual(created_task["status"], "ready")
+        self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
+
     def test_no_idle_creates_fresh_reconcile_card_when_idempotent_card_is_terminal_stale(self) -> None:
         fake = FakeHermes()
         todo_id = "t_" + "todo0001"

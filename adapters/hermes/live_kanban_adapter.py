@@ -9597,14 +9597,35 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
         if args.out:
             write_json(args.out, public_envelope)
         return public_envelope
-    reducer_preempts_legacy_classifier = bool(rows.get("ready")) or reconcile_plan.get("plan_action") in {
-        "repair_domain_brain_route",
-        "repair_declared_artifacts",
-        "repair_human_gate_packet",
-        "create_next_artifact_task",
-        "request_operator_input",
-        "request_human_gate_decision",
+    reconcile_blockers = [str(item) for item in (reconcile_plan.get("blocked_reasons") or [])]
+    legacy_remediation_strategy = str(legacy_classification.get("remediation_strategy") or "")
+    targeted_legacy_repair_available = legacy_remediation_strategy in {
+        "create_targeted_review_repair_task",
+        "create_post_review_owner_gate_package_task",
     }
+    runtime_contract_repair_required = (
+        not targeted_legacy_repair_available
+        and reconcile_plan.get("plan_action") == "repair_board_contract"
+        and any(
+            "bypassed Kanban-first adapter" in item
+            or "no native phase children" in item
+            or "skill(s) not allowed" in item
+            or "has no public profile binding" in item
+            for item in reconcile_blockers
+        )
+    )
+    reducer_preempts_legacy_classifier = (
+        bool(rows.get("ready"))
+        or runtime_contract_repair_required
+        or reconcile_plan.get("plan_action") in {
+            "repair_domain_brain_route",
+            "repair_declared_artifacts",
+            "repair_human_gate_packet",
+            "create_next_artifact_task",
+            "request_operator_input",
+            "request_human_gate_decision",
+        }
+    )
     if (
         reducer_preempts_legacy_classifier
         and reconcile_plan.get("plan_action") not in {"dispatch_ready", "observe_running", "no_unfinished_work"}

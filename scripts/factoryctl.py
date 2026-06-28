@@ -19469,6 +19469,18 @@ def user_decisions_for_card(card: dict[str, Any], gate_report: dict[str, Any]) -
     return decisions
 
 
+def blocked_actions_from_validation_errors(errors: list[str]) -> list[str]:
+    checks = [
+        ("product_creation_plan", "execute before plans and stop criteria exist"),
+        ("decomposition_coverage_review", "dispatch before Decomposition Coverage Review passes"),
+        ("product_implementation_readiness", "dispatch material work before Product Implementation Readiness exists"),
+        ("product_sot", "execute before Product SOT exists"),
+        ("method_contract", "create execution work before Method Contract exists"),
+    ]
+    normalized_errors = [str(error or "").lower() for error in errors]
+    return [action for marker, action in checks if any(marker in error for error in normalized_errors)]
+
+
 def build_factory_help(
     card: dict[str, Any],
     card_path: Path,
@@ -19520,6 +19532,13 @@ def build_factory_help(
         next_action_text = str(item.get("action") if isinstance(item, dict) else item).strip()
         if next_action_text and next_action_text not in next_actions:
             next_actions.append(next_action_text)
+    blocked_actions = sorted(
+        set(
+            _list_items(phase_row.get("blocked_actions"))
+            + _list_items(card.get("forbidden_actions"))
+            + blocked_actions_from_validation_errors(validation_errors)
+        )
+    )
 
     return {
         "$schema": "https://overkill-factory.dev/schemas/factory-help.schema.json",
@@ -19542,7 +19561,7 @@ def build_factory_help(
         "user_decision_required": user_decisions
         + ([] if phase_lock_blocked or phase_engine_blocked else recovery_decisions_for_help(active_recovery_routes)),
         "blocked_because": validation_errors + [f"{worker_id} is blocked by missing inputs" for worker_id in blocked_workers],
-        "blocked_actions": sorted(set(_list_items(phase_row.get("blocked_actions")) + _list_items(card.get("forbidden_actions")))),
+        "blocked_actions": blocked_actions,
         "evidence_needed": next_actions or _list_items(phase_row.get("required_artifacts")) + _list_items(phase_row.get("required_gates")),
         "required_workers": _list_items(gate_report.get("required_workers")),
         "blocked_workers": blocked_workers,
@@ -19573,6 +19592,9 @@ BOARD_RECONCILE_CREATE_ACTIONS = {
     "repair_human_gate_packet",
     "request_operator_input",
 }
+FACTORY_GATEWAY_PROFILE_IDS = {"overkill-factory-gerente"}
+FACTORY_RUNTIME_ASSIGNEE_PREFIXES = ("factory-", "overkill-")
+FACTORY_RUNTIME_SKILL_PREFIXES = ("overkill-factory",)
 
 
 def _task_status(task: dict[str, Any], fallback: str = "") -> str:
@@ -20038,6 +20060,136 @@ def structured_phase_id_from_task(task: dict[str, Any]) -> str:
         phase_engine = factory_phase_engine_state(card, allow_scaffold_artifacts=False)
         return str(phase_engine.get("computed_phase_id") or "").strip().upper()
     return ""
+
+
+def task_declared_skill_refs(task: dict[str, Any]) -> list[str]:
+    refs: list[str] = []
+    for key in ("skills", "skill_refs", "required_skills"):
+        refs.extend(_list_items(task.get(key)))
+    for payload in _task_payload_objects(task):
+        for key in ("skills", "skill_refs", "required_skills"):
+            refs.extend(_list_items(payload.get(key)))
+        profile_binding = payload.get("profile_binding")
+        if isinstance(profile_binding, dict):
+            refs.extend(_list_items(profile_binding.get("skill_refs")))
+    return sorted(set(refs))
+
+
+def _task_declared_actor(task: dict[str, Any], *keys: str) -> str:
+    for key in keys:
+        value = str(task.get(key) or "").strip()
+        if value:
+            return value
+    for payload in _task_payload_objects(task):
+        for key in keys:
+            value = str(payload.get(key) or "").strip()
+            if value:
+                return value
+    return ""
+
+
+def _task_has_native_link_fields(task: dict[str, Any]) -> bool:
+    return any(key in task for key in ("parents", "parent_ids", "children", "child_ids"))
+
+
+def _task_link_refs(task: dict[str, Any], *keys: str) -> list[str]:
+    refs: list[str] = []
+    for key in keys:
+        value = task.get(key)
+        if isinstance(value, list):
+            refs.extend(str(item).strip() for item in value if str(item).strip())
+        elif isinstance(value, dict):
+            refs.extend(str(item).strip() for item in value.keys() if str(item).strip())
+    return refs
+
+
+def _looks_like_factory_runtime_task(task: dict[str, Any]) -> bool:
+    title = _task_public_title(task)
+    created_by = _task_declared_actor(task, "created_by", "creator", "author", "createdBy")
+    skills = task_declared_skill_refs(task)
+    if factory_card_from_task(task) is not None:
+        return True
+    if re.match(r"^F\d+\b", title, re.IGNORECASE):
+        return True
+    if created_by in FACTORY_GATEWAY_PROFILE_IDS or created_by.startswith(FACTORY_RUNTIME_ASSIGNEE_PREFIXES):
+        return True
+    return any(skill.startswith(FACTORY_RUNTIME_SKILL_PREFIXES) for skill in skills)
+
+
+def factory_phase_id_from_title(value: Any) -> str:
+    text = str(value or "").strip().upper()
+    match = re.match(r"^F\s*(\d+)\b", text)
+    if not match:
+        return ""
+    return f"F{int(match.group(1))}"
+
+
+def board_reconcile_runtime_contract_blockers(
+    rows: dict[str, list[dict[str, Any]]],
+) -> tuple[list[str], dict[str, Any] | None]:
+    try:
+        profile_bindings = load_profile_bindings()
+    except (FileNotFoundError, ValueError):
+        profile_bindings = {}
+
+    blockers: list[str] = []
+    selected_ref: dict[str, Any] | None = None
+    for status, items in rows.items():
+        normalized_status = str(status or "").strip().lower()
+        if normalized_status in TERMINAL_BOARD_STATUSES:
+            continue
+        for task in items:
+            task_ref = _task_public_ref(task)
+            title = _task_public_title(task)
+            assignee = str(task.get("assignee") or task.get("owner") or "").strip()
+            skills = task_declared_skill_refs(task)
+            factory_like = _looks_like_factory_runtime_task(task)
+            phase_id = structured_phase_id_from_task(task)
+            card = factory_card_from_task(task)
+
+            if factory_like and not phase_id and card is None:
+                blockers.append(
+                    f"factory-owned task {task_ref} bypassed Kanban-first adapter: "
+                    "missing workflow_template_id/current_step_key/kanban_workflow_binding and canonical factory card"
+                )
+                if selected_ref is None:
+                    selected_ref = board_reconcile_task_ref(task, status=normalized_status)
+                    selected_ref["selection_reason"] = "factory-owned task lacks deterministic Kanban-first binding"
+
+            if (
+                factory_like
+                and factory_phase_id_from_title(title) == "F1"
+                and _task_has_native_link_fields(task)
+                and not _task_link_refs(task, "children", "child_ids")
+            ):
+                blockers.append(
+                    f"factory start task {task_ref} has no native phase children; "
+                    "factory starts must materialize the factory run graph through the Hermes adapter"
+                )
+                if selected_ref is None:
+                    selected_ref = board_reconcile_task_ref(task, status=normalized_status)
+                    selected_ref["selection_reason"] = "factory start card has no native run graph children"
+
+            if skills and assignee in profile_bindings:
+                allowed = set(_list_items(profile_bindings[assignee].get("skill_refs")))
+                invalid = sorted(skill for skill in skills if skill not in allowed)
+                if invalid:
+                    blockers.append(
+                        f"task {task_ref} declares skill(s) not allowed by assignee {assignee}: "
+                        + ", ".join(invalid)
+                    )
+                    if selected_ref is None:
+                        selected_ref = board_reconcile_task_ref(task, status=normalized_status)
+                        selected_ref["selection_reason"] = "task declares skills outside assignee profile binding"
+            elif skills and factory_like and assignee and assignee not in profile_bindings:
+                blockers.append(
+                    f"task {task_ref} declares skill(s) but assignee {assignee} has no public profile binding"
+                )
+                if selected_ref is None:
+                    selected_ref = board_reconcile_task_ref(task, status=normalized_status)
+                    selected_ref["selection_reason"] = "task skill refs cannot be validated against assignee profile binding"
+
+    return sorted(set(blockers)), selected_ref
 
 
 def task_has_structured_runtime_contract(task: dict[str, Any]) -> bool:
@@ -20815,6 +20967,7 @@ def build_board_reconcile_plan(
         ready_repair_ref,
         ready_repair_action,
     ) = board_reconcile_ready_dispatch_blockers(rows)
+    runtime_contract_blockers, runtime_contract_ref = board_reconcile_runtime_contract_blockers(rows)
     missing_artifact_blockers, missing_artifact_ref = board_reconcile_missing_declared_artifact_blockers(rows)
     blocked_readback_continuation, blocked_readback_continuation_errors = (
         board_reconcile_terminal_blocked_artifact_readback_continuation(rows)
@@ -20858,6 +21011,21 @@ def build_board_reconcile_plan(
             assignee="factory-orchestrator",
         )
         native_dispatch_required_next = False
+    elif runtime_contract_blockers:
+        selected_ref = runtime_contract_ref
+        plan_action = "repair_board_contract"
+        reason = "Hermes board contains factory-owned work outside the deterministic Kanban-first contract"
+        blocked_reasons.extend(runtime_contract_blockers)
+        create_task_contract = _board_reconcile_task_contract(
+            plan_action=plan_action,
+            board=board,
+            selected_card=None,
+            phase_engine=None,
+            factory_help=None,
+            reason=reason,
+            assignee="factory-orchestrator",
+        )
+        native_dispatch_required_next = True
     elif blocked_readback_continuation is not None:
         blocked_reasons.extend(blocked_readback_continuation_errors)
         phase_engine = blocked_readback_continuation["phase_engine"]

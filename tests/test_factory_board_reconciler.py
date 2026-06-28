@@ -284,6 +284,37 @@ class FactoryBoardReconcilerTest(unittest.TestCase):
         self.assertFalse(plan["create_task_contract"]["body"]["agent_may_choose_phase"])
         self.assertFalse(plan["human_gate_required"])
 
+    def test_manual_factory_start_card_without_run_graph_repairs_contract(self) -> None:
+        snapshot = {
+            "rows": {
+                "blocked": [
+                    {
+                        "id": "task-manual-start",
+                        "status": "blocked",
+                        "title": "F1 - Product Alpha source resolution + Product SOT start",
+                        "assignee": "factory-orchestrator",
+                        "created_by": "overkill-factory-gerente",
+                        "skills": ["overkill-factory-product-intake"],
+                        "parents": [],
+                        "children": [],
+                        "body": json.dumps({"objective": "manual start card"}),
+                    }
+                ]
+            }
+        }
+
+        plan = factoryctl.build_board_reconcile_plan(snapshot, board="product-alpha")
+
+        self.assertEqual(factoryctl.validate_board_reconcile_plan(plan), [])
+        self.assertEqual(plan["plan_action"], "repair_board_contract")
+        self.assertTrue(plan["create_task_allowed"])
+        self.assertFalse(plan["human_gate_required"])
+        self.assertFalse(plan["user_decision_required"])
+        self.assertEqual(plan["create_task_contract"]["body"]["required_output"], "canonical_factory_card")
+        self.assertTrue(any("bypassed Kanban-first adapter" in item for item in plan["blocked_reasons"]))
+        self.assertTrue(any("no native phase children" in item for item in plan["blocked_reasons"]))
+        self.assertTrue(any("overkill-factory-product-intake" in item for item in plan["blocked_reasons"]))
+
     def test_ready_work_uses_native_dispatch_not_reconcile_task(self) -> None:
         snapshot = {
             "rows": {
