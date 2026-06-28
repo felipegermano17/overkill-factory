@@ -27,7 +27,8 @@ The factory should:
 - Send short status updates.
 - Send markdown and PDF decision packages.
 - Register the operator's bounded decision after the package is delivered.
-- Notify the operator when work is blocked by a real `needs_input` decision.
+- Let `overkill-factory-gerente` report when work is blocked by a real
+  `needs_input` decision.
 
 ## What Telegram Must Not Do
 
@@ -37,6 +38,9 @@ The factory should:
 - Mark cards done.
 - Approve implementation, release, funds, signing, custody, secrets or production action by implication.
 - Replace Hermes Kanban dispatch, transitions, comments, runs or receipts.
+- Send direct worker, Kanban event, cron or artifact-dump notifications to the
+  operator. Those events may feed the manager, but only the manager talks to the
+  human.
 
 ## Decision Package Rule
 
@@ -69,7 +73,7 @@ technical artifact ids, internal reasoning and machine logs.
 
 ## Proactive Status Rule
 
-The factory should push status when:
+The factory should have the manager report when:
 
 - a worker batch completes;
 - a real human decision is needed;
@@ -78,8 +82,12 @@ The factory should push status when:
 - a repeated same-cause block escalates to triage;
 - release or production readiness changes.
 
-The factory should not spam the operator for internal retries, dependency waits
-or normal worker progress.
+The factory should not spam the operator for internal retries, dependency waits,
+normal worker progress, worker completion events or raw artifact dumps.
+
+Even when a human decision is required, the operator should receive a manager
+message with the decision package. A direct Kanban subscription, worker message
+or automatic notification is noise.
 
 ## Typed Block Mapping
 
@@ -88,7 +96,7 @@ Telegram notification follows Hermes typed block meaning:
 | Block reason | Telegram behavior |
 | --- | --- |
 | `dependency` | No operator page. Wait and auto-resume when parent work completes. |
-| `needs_input` | Page the operator only after the complete decision package exists. |
+| `needs_input` | The manager reports only after the complete decision package exists. |
 | `capability` | Factory searches providers, skills, packs and references before blocking. |
 | `transient` | Retry or route repair. Do not ask the operator to approve a transient hold. |
 

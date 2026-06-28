@@ -32,6 +32,10 @@ different runtime.
    decision questions, owner-readable documents and Kanban card titles/summaries.
    Keep only internal machine surfaces such as schema keys, ids, step keys,
    worker ids and logs in English when useful.
+10. Do not subscribe the operator directly to Kanban cards, worker completions,
+   cron/watchdog messages or artifact dumps. The only human-facing voice is the
+   selected manager profile, normally `overkill-factory-gerente`, which reports
+   readable status and decision packages.
 
 ## Factory Spine
 

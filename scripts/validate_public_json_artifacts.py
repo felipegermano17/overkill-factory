@@ -1400,10 +1400,31 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
         proactive = data.get("proactive_notification_policy") if isinstance(data.get("proactive_notification_policy"), dict) else {}
         if proactive.get("enabled") is not True or proactive.get("operator_polling_required") is not False:
             errors.append(f"{at}: operator_interface_profile proactive notifications must be enabled and polling-free")
+        if proactive.get("contact_mode") != "manager_report_only":
+            errors.append(f"{at}: operator_interface_profile contact_mode must be manager_report_only")
+        if proactive.get("manager_profile") != "overkill-factory-gerente":
+            errors.append(f"{at}: operator_interface_profile manager_profile must be overkill-factory-gerente")
+        for field in (
+            "direct_runtime_notifications_allowed",
+            "direct_worker_notifications_allowed",
+            "direct_artifact_dump_notifications_allowed",
+            "notify_subscribe_allowed",
+        ):
+            if proactive.get(field) is not False:
+                errors.append(f"{at}: operator_interface_profile {field} must be false")
+        if proactive.get("decision_contact_requires_manager_report") is not True:
+            errors.append(f"{at}: operator_interface_profile decisions must contact through manager report")
         notify_on = set(text_items(proactive.get("notify_on")))
-        missing_notify = sorted({"decision_required", "gate_blocked", "worker_batch_completed", "idle_timeout_detected"} - notify_on)
+        forbidden_notify = sorted({"worker_batch_completed"} & notify_on)
+        if forbidden_notify:
+            errors.append(f"{at}: operator_interface_profile forbids direct worker completion notifications: " + ", ".join(forbidden_notify))
+        missing_notify = sorted({"decision_required", "gate_blocked", "idle_timeout_detected", "manager_report_required"} - notify_on)
         if missing_notify:
-            errors.append(f"{at}: operator_interface_profile missing notify_on triggers: " + ", ".join(missing_notify))
+            errors.append(f"{at}: operator_interface_profile missing manager report triggers: " + ", ".join(missing_notify))
+        batched = set(text_items(proactive.get("batch_without_waking_for")))
+        missing_batched = sorted({"worker_batch_completed", "worker_artifact_dump", "kanban_done_event"} - batched)
+        if missing_batched:
+            errors.append(f"{at}: operator_interface_profile must batch noisy worker/Kanban events: " + ", ".join(missing_batched))
         delivery = data.get("artifact_delivery_policy") if isinstance(data.get("artifact_delivery_policy"), dict) else {}
         if delivery.get("summary_only_forbidden_when_decision_required") is not True:
             errors.append(f"{at}: operator_interface_profile must forbid summary-only decision packages")
@@ -1420,6 +1441,8 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
         acceptance = data.get("acceptance") if isinstance(data.get("acceptance"), dict) else {}
         if acceptance.get("operator_polling_required") is not False:
             errors.append(f"{at}: operator_interface_profile acceptance.operator_polling_required must be false")
+        if acceptance.get("manager_reports_required") is not True:
+            errors.append(f"{at}: operator_interface_profile acceptance.manager_reports_required must be true")
         if acceptance.get("execution_allowed") is not False:
             errors.append(f"{at}: operator_interface_profile must not allow execution")
     if data.get("record_type") == "factory_start_conversation":

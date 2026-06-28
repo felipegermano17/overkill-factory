@@ -44,9 +44,10 @@
         },
         "needs_input": {
           "type": "object",
-          "required": ["operator_page_allowed", "delivery_receipt_required", "decision_package_required"],
+          "required": ["operator_page_allowed", "manager_report_required", "delivery_receipt_required", "decision_package_required"],
           "properties": {
-            "operator_page_allowed": { "const": true },
+            "operator_page_allowed": { "const": false },
+            "manager_report_required": { "const": true },
             "delivery_receipt_required": { "const": true },
             "decision_package_required": { "const": true }
           },

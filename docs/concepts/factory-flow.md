@@ -144,6 +144,11 @@ attachments; Telegram rich cards, rich drafts, media groups and table-rendered
 bot messages are not the primary decision package because Telegram Desktop may
 render them as unsupported messages.
 
+The manager is the only human-facing voice. Worker completions, Kanban done
+events, cron/watchdog messages and artifact dumps may feed internal state, but
+they must not notify the operator directly. Even a real human decision is
+reported by the manager with the package, not by a raw subscription.
+
 Operator-facing language follows the operator's primary language. That covers
 chat, status, decision packages and Hermes Kanban card titles/summaries. Machine
 surfaces such as schema keys, record types, phase ids, step keys, worker ids and

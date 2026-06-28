@@ -13,7 +13,6 @@
     "kanban tail",
     "kanban runs",
     "kanban diagnostics",
-    "kanban notify-subscribe",
     "kanban notify-list",
     "kanban notify-unsubscribe"
   ],
@@ -38,7 +37,8 @@
       "auto_resume_expected": true
     },
     "needs_input_block_behavior": {
-      "operator_page_allowed": true,
+      "operator_page_allowed": false,
+      "manager_report_required": true,
       "operator_delivery_receipt_required": true,
       "decision_package_required": true
     },

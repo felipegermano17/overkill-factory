@@ -133,6 +133,13 @@
       "type": "object",
       "required": [
         "enabled",
+        "contact_mode",
+        "manager_profile",
+        "direct_runtime_notifications_allowed",
+        "direct_worker_notifications_allowed",
+        "direct_artifact_dump_notifications_allowed",
+        "notify_subscribe_allowed",
+        "decision_contact_requires_manager_report",
         "operator_polling_required",
         "max_silent_minutes_when_running",
         "notify_on",
@@ -140,6 +147,13 @@
       ],
       "properties": {
         "enabled": { "const": true },
+        "contact_mode": { "const": "manager_report_only" },
+        "manager_profile": { "const": "overkill-factory-gerente" },
+        "direct_runtime_notifications_allowed": { "const": false },
+        "direct_worker_notifications_allowed": { "const": false },
+        "direct_artifact_dump_notifications_allowed": { "const": false },
+        "notify_subscribe_allowed": { "const": false },
+        "decision_contact_requires_manager_report": { "const": true },
         "operator_polling_required": { "const": false },
         "max_silent_minutes_when_running": { "type": "integer", "minimum": 5, "maximum": 120 },
         "notify_on": {
@@ -150,10 +164,12 @@
               "factory_started",
               "decision_required",
               "gate_blocked",
-              "worker_batch_completed",
               "review_required",
               "release_or_risk_approval_required",
-              "idle_timeout_detected"
+              "idle_timeout_detected",
+              "manager_report_required",
+              "operator_action_required",
+              "material_state_change_digest"
             ]
           }
         },
@@ -222,6 +238,7 @@
         "interface_profile_created",
         "telegram_ready",
         "proactive_notifications_required",
+        "manager_reports_required",
         "operator_polling_required",
         "execution_allowed",
         "evidence_refs"
@@ -230,6 +247,7 @@
         "interface_profile_created": { "const": true },
         "telegram_ready": { "type": "boolean" },
         "proactive_notifications_required": { "const": true },
+        "manager_reports_required": { "const": true },
         "operator_polling_required": { "const": false },
         "execution_allowed": { "const": false },
         "evidence_refs": {

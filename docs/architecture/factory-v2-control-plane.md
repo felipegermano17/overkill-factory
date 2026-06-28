@@ -65,13 +65,15 @@ Factory V2 fails closed on these rules:
 
 Factory V2 now treats current Hermes Kanban primitives as the runtime lane:
 `gateway start`, `kanban dispatch`, `kanban watch`, `kanban tail`,
-`kanban runs`, `kanban diagnostics`, `kanban notify-subscribe`,
-`kanban notify-list` and `kanban notify-unsubscribe`.
+`kanban runs`, `kanban diagnostics`, `kanban notify-list` and
+`kanban notify-unsubscribe`.
 
 That matters because Overkill Factory should not create a shadow dispatcher.
 The factory owns contracts, gates, route decisions, receipts and validation.
 Hermes owns durable cards, workers, runs, comments, transitions and native
-dispatch/notification behavior.
+dispatch behavior. Direct `kanban notify-subscribe` is not the operator UX path
+for the factory: raw events may feed the manager, but the selected manager
+profile is the only human-facing voice.
 
 Factory V2 also uses Hermes typed block reasons as a hard runtime contract:
 

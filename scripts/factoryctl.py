@@ -9406,21 +9406,32 @@ def build_operator_interface_profile(
         },
         "proactive_notification_policy": {
             "enabled": True,
+            "contact_mode": "manager_report_only",
+            "manager_profile": "overkill-factory-gerente",
+            "direct_runtime_notifications_allowed": False,
+            "direct_worker_notifications_allowed": False,
+            "direct_artifact_dump_notifications_allowed": False,
+            "notify_subscribe_allowed": False,
+            "decision_contact_requires_manager_report": True,
             "operator_polling_required": False,
             "max_silent_minutes_when_running": 30,
             "notify_on": [
                 "factory_started",
                 "decision_required",
                 "gate_blocked",
-                "worker_batch_completed",
                 "review_required",
                 "release_or_risk_approval_required",
                 "idle_timeout_detected",
+                "manager_report_required",
+                "operator_action_required",
             ],
             "batch_without_waking_for": [
                 "internal_worker_handoff",
                 "schema_validation_pass",
                 "informational_progress_without_state_change",
+                "worker_batch_completed",
+                "worker_artifact_dump",
+                "kanban_done_event",
             ],
         },
         "artifact_delivery_policy": {
@@ -9442,6 +9453,7 @@ def build_operator_interface_profile(
             "interface_profile_created": True,
             "telegram_ready": interface == "telegram",
             "proactive_notifications_required": True,
+            "manager_reports_required": True,
             "operator_polling_required": False,
             "execution_allowed": False,
             "evidence_refs": [
@@ -9510,12 +9522,33 @@ def validate_operator_interface_profile(profile: dict[str, Any]) -> list[str]:
     proactive = profile.get("proactive_notification_policy") if isinstance(profile.get("proactive_notification_policy"), dict) else {}
     if proactive.get("enabled") is not True:
         errors.append("operator_interface_profile proactive notifications must be enabled")
+    if proactive.get("contact_mode") != "manager_report_only":
+        errors.append("operator_interface_profile contact_mode must be manager_report_only")
+    if proactive.get("manager_profile") != "overkill-factory-gerente":
+        errors.append("operator_interface_profile manager_profile must be overkill-factory-gerente")
+    if proactive.get("direct_runtime_notifications_allowed") is not False:
+        errors.append("operator_interface_profile direct runtime notifications must be disabled")
+    if proactive.get("direct_worker_notifications_allowed") is not False:
+        errors.append("operator_interface_profile direct worker notifications must be disabled")
+    if proactive.get("direct_artifact_dump_notifications_allowed") is not False:
+        errors.append("operator_interface_profile direct artifact dump notifications must be disabled")
+    if proactive.get("notify_subscribe_allowed") is not False:
+        errors.append("operator_interface_profile Kanban notify-subscribe must be disabled for the operator")
+    if proactive.get("decision_contact_requires_manager_report") is not True:
+        errors.append("operator_interface_profile decisions must contact the operator through manager reports")
     if proactive.get("operator_polling_required") is not False:
         errors.append("operator_interface_profile proactive policy must not require operator polling")
     notify_on = set(_list_items(proactive.get("notify_on")))
-    missing_notify = sorted({"decision_required", "gate_blocked", "worker_batch_completed", "idle_timeout_detected"} - notify_on)
+    forbidden_notify = sorted({"worker_batch_completed"} & notify_on)
+    if forbidden_notify:
+        errors.append("operator_interface_profile direct worker completion notifications are forbidden: " + ", ".join(forbidden_notify))
+    missing_notify = sorted({"decision_required", "gate_blocked", "idle_timeout_detected", "manager_report_required"} - notify_on)
     if missing_notify:
-        errors.append("operator_interface_profile missing proactive notification triggers: " + ", ".join(missing_notify))
+        errors.append("operator_interface_profile missing manager report triggers: " + ", ".join(missing_notify))
+    batched = set(_list_items(proactive.get("batch_without_waking_for")))
+    missing_batched = sorted({"worker_batch_completed", "worker_artifact_dump", "kanban_done_event"} - batched)
+    if missing_batched:
+        errors.append("operator_interface_profile must batch noisy worker/Kanban events: " + ", ".join(missing_batched))
 
     delivery = profile.get("artifact_delivery_policy") if isinstance(profile.get("artifact_delivery_policy"), dict) else {}
     if delivery.get("deep_artifacts_required") is not True:
@@ -9539,6 +9572,8 @@ def validate_operator_interface_profile(profile: dict[str, Any]) -> list[str]:
     acceptance = profile.get("acceptance") if isinstance(profile.get("acceptance"), dict) else {}
     if acceptance.get("operator_polling_required") is not False:
         errors.append("operator_interface_profile acceptance.operator_polling_required must be false")
+    if acceptance.get("manager_reports_required") is not True:
+        errors.append("operator_interface_profile acceptance.manager_reports_required must be true")
     if acceptance.get("execution_allowed") is not False:
         errors.append("operator_interface_profile acceptance.execution_allowed must be false")
     return errors

@@ -28,7 +28,7 @@
     "typed_block_policy_ref": { "const": "templates/hermes-typed-block-policy.json" },
     "hermes_native_primitives_required": {
       "type": "array",
-      "minItems": 9,
+      "minItems": 8,
       "items": { "type": "string", "minLength": 3 },
       "uniqueItems": true
     },
@@ -81,9 +81,10 @@
         },
         "needs_input_block_behavior": {
           "type": "object",
-          "required": ["operator_page_allowed", "operator_delivery_receipt_required", "decision_package_required"],
+          "required": ["operator_page_allowed", "manager_report_required", "operator_delivery_receipt_required", "decision_package_required"],
           "properties": {
-            "operator_page_allowed": { "const": true },
+            "operator_page_allowed": { "const": false },
+            "manager_report_required": { "const": true },
             "operator_delivery_receipt_required": { "const": true },
             "decision_package_required": { "const": true }
           },

@@ -81,6 +81,11 @@ title/summary. Internal ids, schema keys, phase ids, step keys, worker ids and
 machine logs may remain English because those are factory contracts, not human
 copy.
 
+The gerente is also the only human-facing voice. Do not subscribe the operator
+directly to Kanban cards, worker completion events, cron/watchdog messages or
+raw artifact dumps. Those signals may update state for the gerente; the gerente
+decides the readable report and sends it through the selected operator channel.
+
 ## Builder Layer
 
 The factory has surface-specific builders so product execution is not handled

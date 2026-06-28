@@ -61,7 +61,6 @@ HERMES_NATIVE_PRIMITIVES = {
     "kanban tail",
     "kanban runs",
     "kanban diagnostics",
-    "kanban notify-subscribe",
     "kanban notify-list",
     "kanban notify-unsubscribe",
 }
@@ -181,6 +180,10 @@ def validate_runtime_contract_set(root: Path = ROOT) -> list[str]:
     if dependency_policy.get("operator_page_allowed") is not False or dependency_policy.get("auto_resume_expected") is not True:
         errors.append("dependency typed blocks must not page the operator and must auto-resume")
     needs_input_policy = embedded_typed_block_policy.get("needs_input_block_behavior") if isinstance(embedded_typed_block_policy.get("needs_input_block_behavior"), dict) else {}
+    if needs_input_policy.get("operator_page_allowed") is not False:
+        errors.append("needs_input typed blocks must not page the operator directly")
+    if needs_input_policy.get("manager_report_required") is not True:
+        errors.append("needs_input typed blocks require a manager report")
     if needs_input_policy.get("operator_delivery_receipt_required") is not True:
         errors.append("needs_input typed blocks require operator delivery receipt before asking for a decision")
     capability_policy = embedded_typed_block_policy.get("capability_block_behavior") if isinstance(embedded_typed_block_policy.get("capability_block_behavior"), dict) else {}

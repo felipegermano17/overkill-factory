@@ -53,21 +53,32 @@
   },
   "proactive_notification_policy": {
     "enabled": true,
+    "contact_mode": "manager_report_only",
+    "manager_profile": "overkill-factory-gerente",
+    "direct_runtime_notifications_allowed": false,
+    "direct_worker_notifications_allowed": false,
+    "direct_artifact_dump_notifications_allowed": false,
+    "notify_subscribe_allowed": false,
+    "decision_contact_requires_manager_report": true,
     "operator_polling_required": false,
     "max_silent_minutes_when_running": 30,
     "notify_on": [
       "factory_started",
       "decision_required",
       "gate_blocked",
-      "worker_batch_completed",
       "review_required",
       "release_or_risk_approval_required",
-      "idle_timeout_detected"
+      "idle_timeout_detected",
+      "manager_report_required",
+      "operator_action_required"
     ],
     "batch_without_waking_for": [
       "internal_worker_handoff",
       "schema_validation_pass",
-      "informational_progress_without_state_change"
+      "informational_progress_without_state_change",
+      "worker_batch_completed",
+      "worker_artifact_dump",
+      "kanban_done_event"
     ]
   },
   "artifact_delivery_policy": {
@@ -96,6 +107,7 @@
     "interface_profile_created": true,
     "telegram_ready": true,
     "proactive_notifications_required": true,
+    "manager_reports_required": true,
     "operator_polling_required": false,
     "execution_allowed": false,
     "evidence_refs": [

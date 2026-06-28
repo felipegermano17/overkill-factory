@@ -18,7 +18,8 @@
       "event_required": "dependency_wait"
     },
     "needs_input": {
-      "operator_page_allowed": true,
+      "operator_page_allowed": false,
+      "manager_report_required": true,
       "delivery_receipt_required": true,
       "decision_package_required": true
     },
