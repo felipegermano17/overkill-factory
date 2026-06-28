@@ -1540,7 +1540,8 @@ def canonical_frontier_resume_target(rows: dict[str, list[dict[str, Any]]]) -> d
     selector = getattr(factoryctl, "select_reconciled_canonical_frontier_task", None)
     if not callable(selector):
         return None
-    task, selected_ref, reasons = selector(rows)
+    normalized_rows = factoryctl.board_rows_from_snapshot({"rows": rows})
+    task, selected_ref, reasons = selector(normalized_rows)
     if not isinstance(task, dict):
         return None
     task_id = task_record_id(task)

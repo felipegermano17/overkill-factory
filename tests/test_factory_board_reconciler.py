@@ -410,6 +410,38 @@ class FactoryBoardReconcilerTest(unittest.TestCase):
         self.assertTrue(plan["native_dispatch_required_next"])
         self.assertIsNone(plan["create_task_contract"])
 
+    def test_hermes_show_json_task_wrapper_preserves_structured_runtime_contract(self) -> None:
+        snapshot = {
+            "rows": {
+                "running": [
+                    {
+                        "task": {
+                            "id": "task-running-wrapper",
+                            "status": "running",
+                            "title": "F8 - Product Experience",
+                            "body": json.dumps(
+                                {
+                                    "packet_type": "factory_phase_work_card",
+                                    "current_step_key": "F8-capability-and-product-experience-selection",
+                                    "route_authority": "factory_phase_graph_and_compiled_workflow_plan",
+                                }
+                            ),
+                        },
+                        "comments": [{"body": "runtime evidence"}],
+                        "events": [{"type": "claimed"}],
+                        "runs": [{"status": "running"}],
+                    }
+                ]
+            }
+        }
+
+        plan = factoryctl.build_board_reconcile_plan(snapshot, board="product-alpha")
+
+        self.assertEqual(factoryctl.validate_board_reconcile_plan(plan), [])
+        self.assertEqual(plan["plan_action"], "observe_running")
+        self.assertFalse(plan["create_task_allowed"])
+        self.assertEqual(plan["blocked_reasons"], [])
+
     def test_ready_work_without_structured_phase_binding_repairs_contract_instead_of_dispatching(self) -> None:
         snapshot = {
             "rows": {

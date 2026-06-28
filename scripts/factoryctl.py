@@ -20431,6 +20431,32 @@ def board_reconcile_missing_declared_artifact_blockers(
 
 def board_rows_from_snapshot(snapshot: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
     rows: dict[str, list[dict[str, Any]]] = {status: [] for status in ("ready", "running", "todo", "blocked", "done")}
+
+    def normalize_task_record(item: dict[str, Any], *, fallback_status: str = "") -> dict[str, Any]:
+        nested = item.get("task")
+        if isinstance(nested, dict):
+            task = dict(nested)
+            for key in (
+                "latest_summary",
+                "parents",
+                "children",
+                "comments",
+                "events",
+                "runs",
+                "missing_declared_artifacts",
+            ):
+                if key in item and key not in task:
+                    task[key] = item[key]
+            status = str(task.get("status") or item.get("status") or fallback_status or "").strip().lower()
+            if status:
+                task["status"] = status
+            return task
+        task = dict(item)
+        status = str(task.get("status") or fallback_status or "").strip().lower()
+        if status:
+            task["status"] = status
+        return task
+
     raw_rows = snapshot.get("rows") if isinstance(snapshot.get("rows"), dict) else snapshot.get("tasks_by_status")
     if isinstance(raw_rows, dict):
         for status, items in raw_rows.items():
@@ -20440,9 +20466,7 @@ def board_rows_from_snapshot(snapshot: dict[str, Any]) -> dict[str, list[dict[st
             rows.setdefault(normalized, [])
             for item in items:
                 if isinstance(item, dict):
-                    task = dict(item)
-                    task.setdefault("status", normalized)
-                    rows[normalized].append(task)
+                    rows[normalized].append(normalize_task_record(item, fallback_status=normalized))
         return rows
 
     raw_tasks = snapshot.get("tasks") or snapshot.get("cards") or []
@@ -20450,8 +20474,9 @@ def board_rows_from_snapshot(snapshot: dict[str, Any]) -> dict[str, list[dict[st
         for item in raw_tasks:
             if not isinstance(item, dict):
                 continue
-            status = _task_status(item, "unknown")
-            rows.setdefault(status, []).append(dict(item))
+            task = normalize_task_record(item)
+            status = _task_status(task, "unknown")
+            rows.setdefault(status, []).append(task)
     return rows
 
 
