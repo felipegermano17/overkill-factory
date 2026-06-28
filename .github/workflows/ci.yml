@@ -23,6 +23,8 @@ jobs:
         run: python scripts/quickstart_smoke.py
       - name: Factory start path contract
         run: python scripts/validate_factory_start_path_contract.py
+      - name: Hermes profile runtime contracts
+        run: python scripts/validate_hermes_profile_runtime_contracts.py
       - name: Hermes transition plan smoke
         run: python scripts/factoryctl.py transition-plan --card examples/minimal-hermes-project/card.md --from-status draft --to-status ready --out "$RUNNER_TEMP/overkill-transition-plan.json"
       - name: Hermes transition hook smoke
