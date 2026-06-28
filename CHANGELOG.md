@@ -7,6 +7,22 @@ public releases.
 
 ## Unreleased
 
+## 2.0.15 - 2026-06-28
+
+- Add a schema-backed Decomposition Coverage Review between Product Creation
+  Plan and Product Implementation Readiness. Product Implementation Readiness
+  cannot pass unless the review is `PASS`, references the Product Creation Plan
+  and covers every planned work unit.
+- Move the workflow contract to the correct F11/F12 boundary: F11 creates the
+  complete Product Creation Plan; F12 runs independent multi-operator coverage
+  review and only then creates readiness for execution.
+- Align worker registry, worker profiles, Hermes bindings and public agent docs
+  with the workflow phases so required workers cannot depend on agent memory or
+  free-form interpretation.
+- Strengthen `scripts/validate_worker_profiles.py` so workflow-required workers
+  must have registry/profile phase coverage, aliases must resolve to real
+  bindings, and decomposition/readiness artifacts require the right workers.
+
 ## 2.0.14 - 2026-06-27
 
 - Make the Factory Run Graph more Hermes-native: downstream backbone phase cards
