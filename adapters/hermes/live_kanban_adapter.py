@@ -82,6 +82,175 @@ FACTORY_RUN_GRAPH_NO_IDLE_ROLE = "integrity_auditor_not_route_authority"
 FACTORY_WORKFLOW_CATALOG_PATH = ROOT / "docs" / "factory-workflow.catalog.json"
 FACTORY_RUN_GRAPH_DEFAULT_ASSIGNEE = "factory-orchestrator"
 DEFAULT_OPERATOR_LANGUAGE = "pt-BR"
+V3_PRODUCTION_ACTIVATION_VERSION = "v3.0.0-master-plan-100"
+V3_MASTER_PLAN_COMPLETION_REF = ROOT / "templates" / "factory-master-plan-completion.json"
+V3_FACTORY_PERFECT_RUN_SCRIPT = ROOT / "scripts" / "factory_perfect_run.py"
+
+
+def _load_json_if_present(path: Path) -> dict[str, Any]:
+    if not path.exists():
+        return {}
+    return json.loads(path.read_text())
+
+
+def v3_production_activation_guard(
+    root: Path = ROOT,
+    *,
+    worker_profiles: dict[str, Any] | None = None,
+    hermes_bindings: dict[str, Any] | None = None,
+    worker_registry: dict[str, Any] | None = None,
+    runtime_truth: dict[str, Any] | None = None,
+    canonical_frontier: dict[str, Any] | None = None,
+    freshness_policy: dict[str, Any] | None = None,
+    release_readiness: dict[str, Any] | None = None,
+    human_gate_package: dict[str, Any] | None = None,
+    receipt_five: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Return PASS only when the live adapter can rely on V3 activation material.
+
+    The adapter must not silently run a stale factory. It must check the same
+    runtime contracts the factory claims: Hermes/Kanban remains the runtime,
+    no-idle is recovery only, human gates are artifact-first, Receipt Five uses
+    durable readback and manager/agent bindings are fresh.
+    """
+    root = Path(root)
+    profiles = worker_profiles or _load_json_if_present(root / "agents" / "worker-profiles.public.json")
+    bindings = hermes_bindings or _load_json_if_present(root / "agents" / "hermes-profile-bindings.public.json")
+    registry = worker_registry or _load_json_if_present(root / "agents" / "worker-registry.public.json")
+    runtime = runtime_truth or _load_json_if_present(root / "templates" / "factory-runtime-truth-spine.json")
+    frontier = canonical_frontier or _load_json_if_present(root / "templates" / "factory-canonical-frontier-policy.json")
+    freshness = freshness_policy or _load_json_if_present(root / "templates" / "factory-manager-agent-freshness-policy.json")
+    readiness = release_readiness or _load_json_if_present(root / "templates" / "factory-v3-release-readiness.json")
+    gate_package = human_gate_package or _load_json_if_present(root / "templates" / "human-gate-decision-package.json")
+    receipt = receipt_five or _load_json_if_present(root / "templates" / "receipt-five.json")
+
+    blockers: list[str] = []
+    checks = {
+        "master_plan_completion": (root / "templates" / "factory-master-plan-completion.json").exists(),
+        "factory_perfect_run_script": (root / "scripts" / "factory_perfect_run.py").exists(),
+        "agent_activation": True,
+        "runtime_truth_spine": True,
+        "canonical_frontier": True,
+        "manager_agent_freshness_policy": True,
+        "human_gate_artifact_first": True,
+        "receipt_five_readback": True,
+    }
+
+    def fail(check: str, message: str) -> None:
+        checks[check] = False
+        blockers.append(message)
+
+    if not checks["master_plan_completion"]:
+        blockers.append("missing master plan completion record")
+    if not checks["factory_perfect_run_script"]:
+        blockers.append("missing Factory Perfect Run script")
+
+    authority = runtime.get("runtime_authority") or {}
+    runtime_acceptance = runtime.get("acceptance") or {}
+    if not (
+        authority.get("hermes_kanban_owns_runtime") is True
+        and authority.get("factory_owns_scheduler") is False
+        and authority.get("factory_owns_queue") is False
+        and authority.get("factory_owns_dispatch") is False
+        and authority.get("factory_owns_task_lifecycle") is False
+        and runtime_acceptance.get("no_mini_hermes") is True
+        and runtime_acceptance.get("dependency_edges_required") is True
+        and runtime_acceptance.get("hermes_state_readback_required") is True
+    ):
+        fail("runtime_truth_spine", "runtime truth spine does not enforce Hermes/Kanban runtime authority")
+
+    frontier_authority = frontier.get("authority_model") or {}
+    frontier_repair = frontier.get("recoverable_gap_policy") or {}
+    frontier_acceptance = frontier.get("acceptance") or {}
+    if not (
+        frontier_authority.get("hermes_kanban_state_required") is True
+        and frontier_authority.get("no_idle_is_scheduler") is False
+        and frontier_repair.get("repair_before_needs_input") is True
+        and frontier_acceptance.get("safe_next_action_required") is True
+        and frontier_acceptance.get("repair_before_human") is True
+        and frontier_acceptance.get("no_scheduler_overlap") is True
+        and frontier_acceptance.get("typed_stop_required") is True
+    ):
+        fail("canonical_frontier", "canonical frontier does not keep no-idle as repair/recovery only")
+
+    freshness_gate = freshness.get("freshness_gate") or {}
+    freshness_manager = freshness.get("manager_contract") or {}
+    freshness_bridge = freshness.get("operator_bridge_policy") or {}
+    freshness_acceptance = freshness.get("acceptance") or {}
+    if not (
+        freshness_gate.get("required_for_every_factory_change") is True
+        and freshness_manager.get("manager_may_replace_factory_code") is False
+        and freshness_manager.get("must_call_current_factory_contracts") is True
+        and freshness_bridge.get("direct_worker_operator_contact_allowed") is False
+        and freshness_acceptance.get("manager_current") is True
+        and freshness_acceptance.get("agents_current") is True
+        and freshness_acceptance.get("manager_uses_factory_code") is True
+        and freshness_acceptance.get("manager_only_bridge") is True
+    ):
+        fail("manager_agent_freshness_policy", "manager/agent freshness policy is missing or stale")
+
+    human_gate = readiness.get("human_gate_package") or {}
+    gate_required_fields = set(human_gate.get("required_fields") or [])
+    package_required_fields = {
+        "executive_summary",
+        "decision_needed",
+        "options_and_consequences",
+        "evidence_refs",
+        "next_safe_action",
+    }
+    if not (
+        human_gate.get("artifact_first") is True
+        and human_gate.get("pdf_or_plain_text_fallback_required") is True
+        and human_gate.get("delivery_receipt_required") is True
+        and human_gate.get("raw_json_primary_surface_allowed") is False
+        and human_gate.get("fake_human_gate_allowed") is False
+        and package_required_fields.issubset(gate_required_fields)
+        and gate_package.get("record_type") == "human_gate_decision_package"
+    ):
+        fail("human_gate_artifact_first", "human gate is not artifact-first with operator-readable fallback")
+
+    receipt_policy = readiness.get("receipt_five_policy") or {}
+    receipt_body = receipt.get("receipt_five") or {}
+    if not (
+        receipt_policy.get("readback_required") is True
+        and receipt_policy.get("contract_pass_means_done") is False
+        and receipt_policy.get("scaffold_or_template_counts_as_evidence") is False
+        and receipt_policy.get("stale_review_counts_as_current_authority") is False
+        and receipt_body.get("verification_result") == "PASS"
+        and bool(receipt_body.get("artifact_readback"))
+        and bool(receipt_body.get("runtime_proof"))
+        and bool(receipt_body.get("release_proof"))
+        and "template-only" in set(receipt_body.get("not_valid_evidence") or [])
+    ):
+        fail("receipt_five_readback", "Receipt Five readback/anti-overclaim policy is not enforced")
+
+    if profiles.get("production_activation_version") != V3_PRODUCTION_ACTIVATION_VERSION:
+        checks["agent_activation"] = False
+        blockers.append("worker profiles activation version missing or stale")
+    if bindings.get("production_activation_version") != V3_PRODUCTION_ACTIVATION_VERSION:
+        checks["agent_activation"] = False
+        blockers.append("Hermes bindings activation version missing or stale")
+    if registry.get("production_activation_version") != V3_PRODUCTION_ACTIVATION_VERSION:
+        checks["agent_activation"] = False
+        blockers.append("worker registry activation version missing or stale")
+    for worker_id, profile in (profiles.get("profiles") or {}).items():
+        activation = profile.get("v3_master_plan_activation") or {}
+        if activation.get("manager_only_operator_contact") is not True:
+            checks["agent_activation"] = False
+            blockers.append(f"{worker_id} does not enforce manager-only operator contact")
+        if activation.get("uses_factory_code_not_prompt_runtime") is not True:
+            checks["agent_activation"] = False
+            blockers.append(f"{worker_id} does not enforce factory-code runtime use")
+
+    result = "PASS" if not blockers else "BLOCKED"
+    return {
+        "record_type": "v3_production_activation_guard",
+        "result": result,
+        "runtime_authority": "hermes_kanban",
+        "checks": checks,
+        "blockers": blockers,
+    }
+
 PHASE_TITLES_BY_LANGUAGE = {
     "pt-BR": {
         "F0": "Pre-inicio / envelope de fontes selado",

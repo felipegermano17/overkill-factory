@@ -23,6 +23,12 @@ python scripts/factory_runtime_truth_spine_audit.py --out .tmp/factory-runtime-t
 python scripts/factory_canonical_frontier_audit.py --out .tmp/factory-canonical-frontier-audit.json --markdown .tmp/factory-canonical-frontier-audit.md
 python scripts/factory_manager_agent_freshness_audit.py --out .tmp/factory-manager-agent-freshness-audit.json --markdown .tmp/factory-manager-agent-freshness-audit.md
 python scripts/factory_v3_release_readiness_audit.py --out .tmp/factory-v3-release-readiness-audit.json --markdown .tmp/factory-v3-release-readiness-audit.md
+python scripts/factory_master_plan_completion_audit.py --out .tmp/factory-master-plan-completion-audit.json --markdown .tmp/factory-master-plan-completion-audit.md
+python scripts/factory_perfect_run.py --out .tmp/factory-perfect-run.json
+python scripts/factory_hermes_live_smoke.py --out .tmp/factory-hermes-live-smoke.json
+python scripts/render_human_gate_pdf.py --out .tmp/human-gate-decision-package.txt
+python scripts/factory_receipt_five_classifier.py --out .tmp/receipt-five-classification.json
+python scripts/factoryctl.py v3-production-activation-check
 python -m unittest discover -s tests
 python scripts/validate_document_governance.py
 python scripts/generate_factory_reference_docs.py --check
@@ -174,6 +180,12 @@ python scripts/factory_runtime_truth_spine_audit.py --out .tmp/factory-runtime-t
 python scripts/factory_canonical_frontier_audit.py --out .tmp/factory-canonical-frontier-audit.json --markdown .tmp/factory-canonical-frontier-audit.md
 python scripts/factory_manager_agent_freshness_audit.py --out .tmp/factory-manager-agent-freshness-audit.json --markdown .tmp/factory-manager-agent-freshness-audit.md
 python scripts/factory_v3_release_readiness_audit.py --out .tmp/factory-v3-release-readiness-audit.json --markdown .tmp/factory-v3-release-readiness-audit.md
+python scripts/factory_master_plan_completion_audit.py --out .tmp/factory-master-plan-completion-audit.json --markdown .tmp/factory-master-plan-completion-audit.md
+python scripts/factory_perfect_run.py --out .tmp/factory-perfect-run.json
+python scripts/factory_hermes_live_smoke.py --out .tmp/factory-hermes-live-smoke.json
+python scripts/render_human_gate_pdf.py --out .tmp/human-gate-decision-package.txt
+python scripts/factory_receipt_five_classifier.py --out .tmp/receipt-five-classification.json
+python scripts/factoryctl.py v3-production-activation-check
 python scripts/factory_battery.py
 python scripts/validate_document_governance.py
 python scripts/generate_factory_reference_docs.py --check

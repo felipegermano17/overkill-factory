@@ -12,6 +12,7 @@
     "$schema": { "type": "string", "minLength": 3 },
     "registry_version": { "type": "string", "minLength": 3 },
     "profile_contract_version": { "type": "string", "minLength": 3 },
+    "production_activation_version": { "type": "string", "minLength": 3 },
     "profiles": {
       "type": "object",
       "minProperties": 1,
@@ -288,7 +289,18 @@
             },
             "additionalProperties": false
           },
-          "public_safety_notes": { "type": "string", "minLength": 12 }
+          "public_safety_notes": { "type": "string", "minLength": 12 },
+          "v3_master_plan_activation": {
+            "type": "object",
+            "required": ["manager_only_operator_contact", "uses_factory_code_not_prompt_runtime", "required_checks", "evidence_policy"],
+            "properties": {
+              "manager_only_operator_contact": { "type": "boolean" },
+              "uses_factory_code_not_prompt_runtime": { "type": "boolean" },
+              "required_checks": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 3 } },
+              "evidence_policy": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 3 } }
+            },
+            "additionalProperties": false
+          }
         },
         "additionalProperties": false
       }

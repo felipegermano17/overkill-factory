@@ -36,8 +36,8 @@ Done without evidence is only a claim. Receipt Five, review, runtime state and p
 | Hermes profile bindings | 40 | `agents/hermes-profile-bindings.public.json` |
 | Operating systems | 17 | `templates/factory-operating-system-registry.json` |
 | Method engines | 8 | `templates/method-engine-registry.json` |
-| JSON schemas | 240 | `schemas/*.json` |
-| Templates | 153 | `templates/*` |
+| JSON schemas | 243 | `schemas/*.json` |
+| Templates | 156 | `templates/*` |
 | Public surfaces | 19 | `docs/public-surface.manifest.json` |
 
 ## Factory Phases
@@ -75,46 +75,46 @@ Done without evidence is only a claim. Receipt Five, review, runtime state and p
 
 | Worker | Phases | Output | Maximum authority | Evidence required |
 | --- | --- | --- | --- | --- |
-| factory-orchestrator | F0, F1, F6, F7, F8, F9, F11, +4 more | orchestration_result | materialize PhaseGraph, reducer and registry route/block outputs; cannot choose route, phase, gate, specialist, transition or approve gates | gate report, route registry resolution, next action, method contract, capability coverage report, +5 more |
-| source-ledger-worker | F0, F1, F2, F3 | source_ledger_result | classify source status; cannot promote decisions alone | source map, conflict list, gap list, source resolution notes, promoted claims, +1 more |
-| product-sot-planner | F2, F3, F4, F5 | product_sot_result | draft SOT candidate and owner-readable review packet; cannot approve architecture or release downstream freeze | SOT candidate, owner-readable Product SOT review packet, operator briefing package, open questions, decision boundaries, +3 more |
-| product-architect | F4, F6 | architecture_result | produce candidate architecture; cannot bypass human architecture gate | architecture packet, tradeoff list, risk matrix, trust boundary map, security architecture route, +1 more |
-| product-face | F5, F8, F13 | product_face_result | validate visible product evidence; cannot approve product alone | desktop screenshot, mobile screenshot, state matrix, a11y notes, journey proof |
-| solana-quasar-auditor | F7, F13, F15 | auditor_result | audit or preflight; cannot deploy, sign or touch funds | Solana AI Kit usage receipt, Auditor report, PDA/signers/CPI/CU checks, waiver if not run |
-| codex-security | F8, F13 | security_scan_result | run scans and report findings; cannot waive blocking findings | scan result, scope, tool, findings, evidence refs |
-| appsec-owasp-specialist | F7, F18, F15 | appsec_owasp_result | review controls and evidence; cannot accept residual risk alone | control matrix, test refs, risk residuals |
-| agentic-ai-security-specialist | F1, F7, F12, F18 | agentic_ai_security_result | review agent boundaries; cannot approve dangerous actions | prompt-injection controls, tool allowlist, memory trust tier |
-| autoreview-gate | F18, F15 | autoreview_result | find and verify issues; cannot approve release alone | review report, finding status, follow-up action |
-| remote-proof-runner | F13, F16 | remote_proof_result | run proof in scoped environment; cannot receive secrets by default | logs, artifacts, timing, cleanup, cost note |
-| handoff-packer | F9, F15, F20 | handoff_packet_result | package state; cannot invent approval or evidence | state, constraints, non-goals, artifact refs, next action |
-| independent-reviewer | F12, F18 | independent_review_result | review evidence; cannot replace human gates | review report, accepted findings, residual risk, reviewer-selection ref, Decomposition Coverage Review, +2 more |
-| evidence-reconciler | F13, F15, F16, F18, F21, F22 | receipt_five_reconciliation_result | reconcile evidence and block closure; cannot approve human gates or waive findings | effective worker result index, supersession ledger, missing/blocking evidence list, Receipt Five readiness verdict, closure summary, +1 more |
-| human-gate-clerk | F9, F15, F16, F24 | human_gate_record | record a real human decision; cannot invent approval | decision, scope, actor, time, evidence refs, +3 more |
-| docs-os-worker | F10 | documentation_os_result | produce docs; cannot authorize implementation | docs index, ADR refs, contract refs, doc-shape routing |
-| decomposition-planner | F11 | decomposition_result | create work graph; cannot bypass gates | card graph, dependencies, gate mapping, work-unit contracts, reviewer-selection plan, +6 more |
-| implementation-worker | F12, F15 | implementation_result | execute only when PhaseGraph and gate report require implementation-worker and the worker registry has no matching specialist builder | fallback rationale, diff refs, tests, receipt |
-| frontend-builder | F12, F13 | frontend_build_result | implement scoped visible product surfaces only; cannot approve Product Face evidence | diff refs, component/test refs, desktop/mobile evidence request |
-| backend-api-builder | F12, F13 | backend_api_build_result | implement scoped API/service work only | diff refs, API test refs, contract refs |
-| data-persistence-builder | F12, F13 | data_persistence_result | implement scoped schema/storage changes only | migration refs, schema test refs, rollback notes |
-| solana-quasar-builder | F12, F13 | solana_quasar_build_result | implement scoped Quasar/Solana program work only; cannot deploy mainnet or touch keys | Solana AI Kit usage receipt, diff refs, Quasar build/test refs, PDA/signer map |
-| solana-quasar-qa-engineer | F13, F15 | solana_quasar_qa_result | verify onchain behavior; cannot waive Auditor/security findings | Solana AI Kit usage receipt, test logs, devnet/local refs, negative test matrix |
-| wallet-transaction-builder | F12, F13 | wallet_transaction_result | implement scoped wallet/transaction UX and client flow; cannot touch real keys or funds | diff refs, transaction-state tests, signer boundary notes |
-| integration-builder | F12, F13 | integration_build_result | connect approved surfaces; cannot redesign owned components | integration test refs, runtime refs, handoff gaps |
-| test-automation-builder | F12, F13, F18 | test_automation_result | create and maintain tests/evals; cannot redefine acceptance criteria alone | test diff refs, run logs, coverage/gap notes |
-| infra-devops-builder | F12, F16 | infra_devops_result | prepare scoped runtime/deploy infrastructure; cannot release production alone | config diff refs, smoke refs, rollback notes |
-| agent-runtime-builder | F12, F18 | agent_runtime_result | implement scoped factory/agent runtime changes; cannot approve its own safety | adapter test refs, profile/binding refs, safety review handoff, agent eval plan |
-| qa-verification-worker | F13, F15, F17 | qa_verification_result | verify evidence; cannot waive risk | commands, outputs, artifacts, pass/fail, QA mode coverage |
-| security-orchestrator | F4, F6, F7, F8, F10, F13, F16 | security_orchestration_result | materialize security-domain registry outputs; cannot choose specialist outside registry or waive findings | specialist matrix, owner mapping, blocking policy, Security Architecture Plan, specialist routing rationale, +1 more |
-| cloud-infra-security-specialist | F7, F16 | cloud_infra_security_result | review cloud controls; cannot mutate production | least privilege notes, rollback proof, logs/monitoring plan |
-| crypto-key-management-specialist | F7, F16 | crypto_key_management_result | review key/custody design; cannot touch keys or funds | key boundary map, custody model, waivers |
-| release-ops-worker | F16, F17, F23, F24, F25 | release_ops_result | prepare release evidence; cannot release without gate | release plan, rollback plan, smoke result, monitoring refs, release channel evidence, +2 more |
-| memory-steward | F0, F1, F18 | memory_steward_result | classify memory; cannot turn memory into truth | trust tier, freshness, source refs, poisoning controls |
-| skill-eval-distiller | F8, F18, F26, F27 | skill_eval_result | propose skill changes; cannot fake eval success | repetition evidence, eval cases, before/after result, promotion decision, permission class, +3 more |
-| public-safety-gate | F16, F17 | public_safety_result | block public leaks; cannot approve product risk | scan command, result, redaction notes |
-| supply-chain-gate | F11, F13, F16 | supply_chain_result | review supply chain evidence; cannot waive release blockers | dependency report, secret scan, workflow permissions, SBOM or waiver |
-| detection-monitoring-worker | F16, F17, F4 | detection_monitoring_result | review observability; cannot approve release alone | monitoring plan, alert owner, incident response notes, data metrics plan, event instrumentation proof, +2 more |
-| control-tower-projection-worker | projection:operator_projection | project_projection_result | mirror runtime state for owner visibility; cannot change Hermes state | projection artifact, last source timestamp, runtime state ref, staleness note |
-| discord-control-tower-bridge | projection:operator_projection, F24 | control_tower_bridge_result | deliver operator console messages and register structured responses; cannot approve gates or mutate card state directly | redacted mapping ref, runtime registration event ref, bridge health proof, negative approval test |
+| factory-orchestrator | F0, F1, F6, F7, F8, F9, F11, +4 more | orchestration_result | materialize PhaseGraph, reducer and registry route/block outputs; cannot choose route, phase, gate, specialist, transition or approve gates | gate report, route registry resolution, next action, method contract, capability coverage report, +8 more |
+| source-ledger-worker | F0, F1, F2, F3 | source_ledger_result | classify source status; cannot promote decisions alone | source map, conflict list, gap list, source resolution notes, promoted claims, +4 more |
+| product-sot-planner | F2, F3, F4, F5 | product_sot_result | draft SOT candidate and owner-readable review packet; cannot approve architecture or release downstream freeze | SOT candidate, owner-readable Product SOT review packet, operator briefing package, open questions, decision boundaries, +6 more |
+| product-architect | F4, F6 | architecture_result | produce candidate architecture; cannot bypass human architecture gate | architecture packet, tradeoff list, risk matrix, trust boundary map, security architecture route, +4 more |
+| product-face | F5, F8, F13 | product_face_result | validate visible product evidence; cannot approve product alone | desktop screenshot, mobile screenshot, state matrix, a11y notes, journey proof, +3 more |
+| solana-quasar-auditor | F7, F13, F15 | auditor_result | audit or preflight; cannot deploy, sign or touch funds | Solana AI Kit usage receipt, Auditor report, PDA/signers/CPI/CU checks, waiver if not run, Receipt Five readback, +2 more |
+| codex-security | F8, F13 | security_scan_result | run scans and report findings; cannot waive blocking findings | scan result, scope, tool, findings, evidence refs, +3 more |
+| appsec-owasp-specialist | F7, F18, F15 | appsec_owasp_result | review controls and evidence; cannot accept residual risk alone | control matrix, test refs, risk residuals, Receipt Five readback, Factory Perfect Run evidence, +1 more |
+| agentic-ai-security-specialist | F1, F7, F12, F18 | agentic_ai_security_result | review agent boundaries; cannot approve dangerous actions | prompt-injection controls, tool allowlist, memory trust tier, Receipt Five readback, Factory Perfect Run evidence, +1 more |
+| autoreview-gate | F18, F15 | autoreview_result | find and verify issues; cannot approve release alone | review report, finding status, follow-up action, Receipt Five readback, Factory Perfect Run evidence, +1 more |
+| remote-proof-runner | F13, F16 | remote_proof_result | run proof in scoped environment; cannot receive secrets by default | logs, artifacts, timing, cleanup, cost note, +3 more |
+| handoff-packer | F9, F15, F20 | handoff_packet_result | package state; cannot invent approval or evidence | state, constraints, non-goals, artifact refs, next action, +3 more |
+| independent-reviewer | F12, F18 | independent_review_result | review evidence; cannot replace human gates | review report, accepted findings, residual risk, reviewer-selection ref, Decomposition Coverage Review, +5 more |
+| evidence-reconciler | F13, F15, F16, F18, F21, F22 | receipt_five_reconciliation_result | reconcile evidence and block closure; cannot approve human gates or waive findings | effective worker result index, supersession ledger, missing/blocking evidence list, Receipt Five readiness verdict, closure summary, +4 more |
+| human-gate-clerk | F9, F15, F16, F24 | human_gate_record | record a real human decision; cannot invent approval | decision, scope, actor, time, evidence refs, +6 more |
+| docs-os-worker | F10 | documentation_os_result | produce docs; cannot authorize implementation | docs index, ADR refs, contract refs, doc-shape routing, Receipt Five readback, +2 more |
+| decomposition-planner | F11 | decomposition_result | create work graph; cannot bypass gates | card graph, dependencies, gate mapping, work-unit contracts, reviewer-selection plan, +9 more |
+| implementation-worker | F12, F15 | implementation_result | execute only when PhaseGraph and gate report require implementation-worker and the worker registry has no matching specialist builder | fallback rationale, diff refs, tests, receipt, Receipt Five readback, +2 more |
+| frontend-builder | F12, F13 | frontend_build_result | implement scoped visible product surfaces only; cannot approve Product Face evidence | diff refs, component/test refs, desktop/mobile evidence request, Receipt Five readback, Factory Perfect Run evidence, +1 more |
+| backend-api-builder | F12, F13 | backend_api_build_result | implement scoped API/service work only | diff refs, API test refs, contract refs, Receipt Five readback, Factory Perfect Run evidence, +1 more |
+| data-persistence-builder | F12, F13 | data_persistence_result | implement scoped schema/storage changes only | migration refs, schema test refs, rollback notes, Receipt Five readback, Factory Perfect Run evidence, +1 more |
+| solana-quasar-builder | F12, F13 | solana_quasar_build_result | implement scoped Quasar/Solana program work only; cannot deploy mainnet or touch keys | Solana AI Kit usage receipt, diff refs, Quasar build/test refs, PDA/signer map, Receipt Five readback, +2 more |
+| solana-quasar-qa-engineer | F13, F15 | solana_quasar_qa_result | verify onchain behavior; cannot waive Auditor/security findings | Solana AI Kit usage receipt, test logs, devnet/local refs, negative test matrix, Receipt Five readback, +2 more |
+| wallet-transaction-builder | F12, F13 | wallet_transaction_result | implement scoped wallet/transaction UX and client flow; cannot touch real keys or funds | diff refs, transaction-state tests, signer boundary notes, Receipt Five readback, Factory Perfect Run evidence, +1 more |
+| integration-builder | F12, F13 | integration_build_result | connect approved surfaces; cannot redesign owned components | integration test refs, runtime refs, handoff gaps, Receipt Five readback, Factory Perfect Run evidence, +1 more |
+| test-automation-builder | F12, F13, F18 | test_automation_result | create and maintain tests/evals; cannot redefine acceptance criteria alone | test diff refs, run logs, coverage/gap notes, Receipt Five readback, Factory Perfect Run evidence, +1 more |
+| infra-devops-builder | F12, F16 | infra_devops_result | prepare scoped runtime/deploy infrastructure; cannot release production alone | config diff refs, smoke refs, rollback notes, Receipt Five readback, Factory Perfect Run evidence, +1 more |
+| agent-runtime-builder | F12, F18 | agent_runtime_result | implement scoped factory/agent runtime changes; cannot approve its own safety | adapter test refs, profile/binding refs, safety review handoff, agent eval plan, Receipt Five readback, +2 more |
+| qa-verification-worker | F13, F15, F17 | qa_verification_result | verify evidence; cannot waive risk | commands, outputs, artifacts, pass/fail, QA mode coverage, +3 more |
+| security-orchestrator | F4, F6, F7, F8, F10, F13, F16 | security_orchestration_result | materialize security-domain registry outputs; cannot choose specialist outside registry or waive findings | specialist matrix, owner mapping, blocking policy, Security Architecture Plan, specialist routing rationale, +4 more |
+| cloud-infra-security-specialist | F7, F16 | cloud_infra_security_result | review cloud controls; cannot mutate production | least privilege notes, rollback proof, logs/monitoring plan, Receipt Five readback, Factory Perfect Run evidence, +1 more |
+| crypto-key-management-specialist | F7, F16 | crypto_key_management_result | review key/custody design; cannot touch keys or funds | key boundary map, custody model, waivers, Receipt Five readback, Factory Perfect Run evidence, +1 more |
+| release-ops-worker | F16, F17, F23, F24, F25 | release_ops_result | prepare release evidence; cannot release without gate | release plan, rollback plan, smoke result, monitoring refs, release channel evidence, +5 more |
+| memory-steward | F0, F1, F18 | memory_steward_result | classify memory; cannot turn memory into truth | trust tier, freshness, source refs, poisoning controls, Receipt Five readback, +2 more |
+| skill-eval-distiller | F8, F18, F26, F27 | skill_eval_result | propose skill changes; cannot fake eval success | repetition evidence, eval cases, before/after result, promotion decision, permission class, +6 more |
+| public-safety-gate | F16, F17 | public_safety_result | block public leaks; cannot approve product risk | scan command, result, redaction notes, Receipt Five readback, Factory Perfect Run evidence, +1 more |
+| supply-chain-gate | F11, F13, F16 | supply_chain_result | review supply chain evidence; cannot waive release blockers | dependency report, secret scan, workflow permissions, SBOM or waiver, Receipt Five readback, +2 more |
+| detection-monitoring-worker | F16, F17, F4 | detection_monitoring_result | review observability; cannot approve release alone | monitoring plan, alert owner, incident response notes, data metrics plan, event instrumentation proof, +5 more |
+| control-tower-projection-worker | projection:operator_projection | project_projection_result | mirror runtime state for owner visibility; cannot change Hermes state | projection artifact, last source timestamp, runtime state ref, staleness note, Receipt Five readback, +2 more |
+| discord-control-tower-bridge | projection:operator_projection, F24 | control_tower_bridge_result | deliver operator console messages and register structured responses; cannot approve gates or mutate card state directly | redacted mapping ref, runtime registration event ref, bridge health proof, negative approval test, Receipt Five readback, +2 more |
 
 ## Worker Profiles
 
@@ -263,6 +263,7 @@ These are the public JSON schemas the factory exposes. They are not decoration; 
 - `schemas/factory-improvement-issue-candidate.schema.json`
 - `schemas/factory-learning-proposal.schema.json`
 - `schemas/factory-manager-agent-freshness-policy.schema.json`
+- `schemas/factory-master-plan-completion.schema.json`
 - `schemas/factory-master-update-plan.schema.json`
 - `schemas/factory-maturity-scorecard.schema.json`
 - `schemas/factory-method-excellence-registry.schema.json`
@@ -323,6 +324,7 @@ These are the public JSON schemas the factory exposes. They are not decoration; 
 - `schemas/hermes-worker-profile-readiness-smoke.schema.json`
 - `schemas/hermes-worker-result-index.schema.json`
 - `schemas/hermes-worker-route-readiness.schema.json`
+- `schemas/human-gate-decision-package.schema.json`
 - `schemas/human-gate-packet.schema.json`
 - `schemas/human-gate-record.schema.json`
 - `schemas/identity-system.schema.json`
@@ -360,6 +362,7 @@ These are the public JSON schemas the factory exposes. They are not decoration; 
 - `schemas/product-delivery-quality-profile.schema.json`
 - `schemas/product-e2e-release-proof.schema.json`
 - `schemas/product-experience-control-plane.schema.json`
+- `schemas/product-experience-evidence-stack.schema.json`
 - `schemas/product-experience-plan.schema.json`
 - `schemas/product-face-console.schema.json`
 - `schemas/product-face-packet.schema.json`
@@ -490,6 +493,7 @@ Templates are starter records paired with schemas. They are examples of valid sh
 - `templates/factory-github-issue-pattern-audit-registry.json`
 - `templates/factory-learning-proposal.json`
 - `templates/factory-manager-agent-freshness-policy.json`
+- `templates/factory-master-plan-completion.json`
 - `templates/factory-master-update-plan.json`
 - `templates/factory-maturity-scorecard.json`
 - `templates/factory-method-excellence-registry.json`
@@ -521,6 +525,7 @@ Templates are starter records paired with schemas. They are examples of valid sh
 - `templates/hermes-production-proof.json`
 - `templates/hermes-reducer-mutation-proof.json`
 - `templates/hermes-typed-block-policy.json`
+- `templates/human-gate-decision-package.json`
 - `templates/human-gate-record.json`
 - `templates/identity-system.json`
 - `templates/incident-support-plan.json`
@@ -546,6 +551,7 @@ Templates are starter records paired with schemas. They are examples of valid sh
 - `templates/product-delivery-quality-profile.json`
 - `templates/product-e2e-release-proof.json`
 - `templates/product-experience-control-plane.json`
+- `templates/product-experience-evidence-stack.json`
 - `templates/product-experience-plan.json`
 - `templates/product-face-packet.json`
 - `templates/product-face-result.json`

@@ -1,0 +1,532 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-master-plan-completion.schema.json",
+  "record_type": "factory_master_plan_completion",
+  "completion_version": "v3.0.0-master-plan-100",
+  "source_plan_ref": "private-overkill-studies/20260629-021900-overkill-factory-master-plan/PLANO_MESTRE_OVERKILL_FACTORY.md",
+  "waves": [
+    {
+      "wave": 0,
+      "name": "Prepara\u00e7\u00e3o e estabiliza\u00e7\u00e3o",
+      "status": "implemented",
+      "score": 100,
+      "implementation_kinds": [
+        "runtime_activation",
+        "agent_activation",
+        "operator_activation",
+        "test_enforced"
+      ],
+      "evidence": {
+        "code_refs": [
+          "scripts/factory_master_update_plan_audit.py",
+          "scripts/factory_master_plan_completion_audit.py"
+        ],
+        "test_refs": [
+          "tests/test_factory_master_update_plan.py",
+          "tests/test_factory_master_plan_completion.py"
+        ],
+        "command_refs": [
+          "command:python3 scripts/factory_master_update_plan_audit.py",
+          "command:python3 scripts/factory_master_plan_completion_audit.py"
+        ],
+        "runtime_refs": [
+          "templates/factory-master-update-plan.json",
+          "templates/factory-master-plan-completion.json"
+        ],
+        "agent_refs": [
+          "agents/worker-profiles.public.json",
+          "agents/hermes-profile-bindings.public.json",
+          "agents/worker-registry.public.json"
+        ],
+        "operator_refs": [
+          "templates/operator-interface-profile.json",
+          "templates/operator-delivery-receipt.json",
+          "templates/operator-briefing-package.json",
+          "docs/operations/telegram-operator-experience.md"
+        ],
+        "evidence_refs": [
+          "schemas/factory-master-update-plan.schema.json",
+          "schemas/factory-master-plan-completion.schema.json",
+          "docs/reference/factory-kernel-reference.md"
+        ]
+      }
+    },
+    {
+      "wave": 1,
+      "name": "Runtime Truth Spine",
+      "status": "implemented",
+      "score": 100,
+      "implementation_kinds": [
+        "runtime_activation",
+        "agent_activation",
+        "operator_activation",
+        "test_enforced"
+      ],
+      "evidence": {
+        "code_refs": [
+          "scripts/factory_runtime_truth_spine_audit.py",
+          "adapters/hermes/live_kanban_adapter.py",
+          "scripts/factoryctl.py",
+          "scripts/factory_hermes_live_smoke.py"
+        ],
+        "test_refs": [
+          "tests/test_factory_runtime_truth_spine.py",
+          "tests/test_hermes_live_kanban_adapter.py",
+          "tests/test_factoryctl.py",
+          "tests/test_hermes_adapter_v3_production_activation.py",
+          "tests/test_factory_hermes_live_smoke.py"
+        ],
+        "command_refs": [
+          "command:python3 scripts/factory_runtime_truth_spine_audit.py",
+          "command:python3 scripts/factoryctl.py factory-perfect-run",
+          "command:factoryctl hermes-live-smoke",
+          "command:factoryctl v3-production-activation-check --live-hermes"
+        ],
+        "runtime_refs": [
+          "templates/factory-runtime-truth-spine.json",
+          "templates/factory-run.json",
+          "templates/factory-run-event.json",
+          "templates/factory-promotion-packet.json",
+          "scripts/factory_hermes_live_smoke.py"
+        ],
+        "agent_refs": [
+          "agents/worker-profiles.public.json",
+          "agents/hermes-profile-bindings.public.json",
+          "agents/worker-registry.public.json"
+        ],
+        "operator_refs": [
+          "templates/operator-interface-profile.json",
+          "templates/operator-delivery-receipt.json",
+          "templates/operator-briefing-package.json",
+          "docs/operations/telegram-operator-experience.md"
+        ],
+        "evidence_refs": [
+          "schemas/factory-runtime-truth-spine.schema.json",
+          "templates/ready-work-unit-hermes-materialization-plan.json",
+          "scripts/factory_hermes_live_smoke.py"
+        ]
+      }
+    },
+    {
+      "wave": 2,
+      "name": "Autonomy and No-Idle Engine",
+      "status": "implemented",
+      "score": 100,
+      "implementation_kinds": [
+        "runtime_activation",
+        "agent_activation",
+        "operator_activation",
+        "test_enforced"
+      ],
+      "evidence": {
+        "code_refs": [
+          "scripts/factory_canonical_frontier_audit.py",
+          "adapters/hermes/live_kanban_adapter.py",
+          "scripts/factoryctl.py",
+          "scripts/factory_hermes_live_smoke.py"
+        ],
+        "test_refs": [
+          "tests/test_factory_canonical_frontier.py",
+          "tests/test_factory_no_idle_watchdog.py",
+          "tests/test_factory_board_reconciler.py",
+          "tests/test_hermes_adapter_v3_production_activation.py",
+          "tests/test_factory_hermes_live_smoke.py"
+        ],
+        "command_refs": [
+          "command:python3 scripts/factory_canonical_frontier_audit.py",
+          "command:python3 scripts/factoryctl.py reconcile-board --help",
+          "command:factoryctl hermes-live-smoke",
+          "command:factoryctl v3-production-activation-check --live-hermes"
+        ],
+        "runtime_refs": [
+          "templates/factory-canonical-frontier-policy.json",
+          "templates/factory-status-snapshot.json",
+          "templates/factory-decision-outbox.json",
+          "scripts/factory_hermes_live_smoke.py"
+        ],
+        "agent_refs": [
+          "agents/worker-profiles.public.json",
+          "agents/hermes-profile-bindings.public.json",
+          "agents/worker-registry.public.json"
+        ],
+        "operator_refs": [
+          "templates/operator-interface-profile.json",
+          "templates/operator-delivery-receipt.json",
+          "templates/operator-briefing-package.json",
+          "docs/operations/telegram-operator-experience.md"
+        ],
+        "evidence_refs": [
+          "schemas/factory-canonical-frontier-policy.schema.json",
+          "schemas/factory-status-snapshot.schema.json",
+          "scripts/factory_hermes_live_smoke.py"
+        ]
+      }
+    },
+    {
+      "wave": 3,
+      "name": "Manager-Only Operator Experience OS",
+      "status": "implemented",
+      "score": 100,
+      "implementation_kinds": [
+        "runtime_activation",
+        "agent_activation",
+        "operator_activation",
+        "test_enforced"
+      ],
+      "evidence": {
+        "code_refs": [
+          "scripts/factory_manager_agent_freshness_audit.py",
+          "scripts/factoryctl.py",
+          "scripts/factory_hermes_live_smoke.py"
+        ],
+        "test_refs": [
+          "tests/test_factory_manager_agent_freshness.py",
+          "tests/test_operator_experience.py",
+          "tests/test_factory_master_plan_completion.py",
+          "tests/test_factory_hermes_live_smoke.py"
+        ],
+        "command_refs": [
+          "command:python3 scripts/factory_manager_agent_freshness_audit.py",
+          "command:python3 scripts/factoryctl.py v3-production-activation-check",
+          "command:factoryctl hermes-live-smoke",
+          "command:factoryctl v3-production-activation-check --live-hermes"
+        ],
+        "runtime_refs": [
+          "templates/factory-manager-agent-freshness-policy.json",
+          "templates/operator-interface-profile.json",
+          "scripts/factory_hermes_live_smoke.py"
+        ],
+        "agent_refs": [
+          "agents/worker-profiles.public.json",
+          "agents/hermes-profile-bindings.public.json",
+          "agents/worker-registry.public.json"
+        ],
+        "operator_refs": [
+          "templates/operator-interface-profile.json",
+          "templates/operator-delivery-receipt.json",
+          "templates/operator-briefing-package.json",
+          "docs/operations/telegram-operator-experience.md"
+        ],
+        "evidence_refs": [
+          "schemas/factory-manager-agent-freshness-policy.schema.json",
+          "docs/agents/live-agent-configuration.md",
+          "scripts/factory_hermes_live_smoke.py"
+        ]
+      }
+    },
+    {
+      "wave": 4,
+      "name": "Human Gate Package, PDF e v\u00eddeo",
+      "status": "implemented",
+      "score": 100,
+      "implementation_kinds": [
+        "runtime_activation",
+        "agent_activation",
+        "operator_activation",
+        "test_enforced"
+      ],
+      "evidence": {
+        "code_refs": [
+          "scripts/render_human_gate_pdf.py",
+          "scripts/factoryctl.py"
+        ],
+        "test_refs": [
+          "tests/test_factory_master_plan_completion.py",
+          "tests/test_operator_experience.py"
+        ],
+        "command_refs": [
+          "command:python3 scripts/render_human_gate_pdf.py",
+          "command:python3 scripts/factoryctl.py human-gate-package"
+        ],
+        "runtime_refs": [
+          "templates/human-gate-decision-package.json",
+          "templates/human-gate-record.json"
+        ],
+        "agent_refs": [
+          "agents/worker-profiles.public.json",
+          "agents/hermes-profile-bindings.public.json",
+          "agents/worker-registry.public.json"
+        ],
+        "operator_refs": [
+          "templates/human-gate-decision-package.json",
+          "docs/operations/human-gate-delivery.md",
+          "templates/operator-delivery-receipt.json"
+        ],
+        "evidence_refs": [
+          "schemas/human-gate-decision-package.schema.json",
+          "schemas/human-gate-record.schema.json"
+        ]
+      }
+    },
+    {
+      "wave": 5,
+      "name": "Evidence, Receipt Five e Anti-Overclaim",
+      "status": "implemented",
+      "score": 100,
+      "implementation_kinds": [
+        "runtime_activation",
+        "agent_activation",
+        "operator_activation",
+        "test_enforced"
+      ],
+      "evidence": {
+        "code_refs": [
+          "scripts/factory_receipt_five_classifier.py",
+          "scripts/evidence_reconciler.py",
+          "scripts/swiss_watch_audit.py",
+          "scripts/factory_hermes_live_smoke.py"
+        ],
+        "test_refs": [
+          "tests/test_swiss_watch_audit.py",
+          "tests/test_evidence_reconciler.py",
+          "tests/test_factory_master_plan_completion.py",
+          "tests/test_factory_hermes_live_smoke.py"
+        ],
+        "command_refs": [
+          "command:python3 scripts/factory_receipt_five_classifier.py",
+          "command:python3 scripts/factoryctl.py receipt-five-classify",
+          "command:factoryctl hermes-live-smoke",
+          "command:factoryctl v3-production-activation-check --live-hermes"
+        ],
+        "runtime_refs": [
+          "templates/receipt-five.json",
+          "templates/completion-audit.json",
+          "scripts/factory_hermes_live_smoke.py"
+        ],
+        "agent_refs": [
+          "agents/worker-profiles.public.json",
+          "agents/hermes-profile-bindings.public.json",
+          "agents/worker-registry.public.json"
+        ],
+        "operator_refs": [
+          "templates/operator-interface-profile.json",
+          "templates/operator-delivery-receipt.json",
+          "templates/operator-briefing-package.json",
+          "docs/operations/telegram-operator-experience.md"
+        ],
+        "evidence_refs": [
+          "schemas/receipt-five.schema.json",
+          "examples/minimal-hermes-project/expected-receipt-five.json",
+          "scripts/factory_hermes_live_smoke.py"
+        ]
+      }
+    },
+    {
+      "wave": 6,
+      "name": "Product Truth, Method e Architecture Spine",
+      "status": "implemented",
+      "score": 100,
+      "implementation_kinds": [
+        "runtime_activation",
+        "agent_activation",
+        "operator_activation",
+        "test_enforced"
+      ],
+      "evidence": {
+        "code_refs": [
+          "scripts/factory_method_excellence_audit.py",
+          "scripts/factoryctl.py"
+        ],
+        "test_refs": [
+          "tests/test_factory_method_excellence_audit.py",
+          "tests/test_product_method_sot_planning.py",
+          "tests/test_factoryctl.py"
+        ],
+        "command_refs": [
+          "command:python3 scripts/factory_method_excellence_audit.py",
+          "command:python3 scripts/factoryctl.py product-implementation-readiness --help"
+        ],
+        "runtime_refs": [
+          "templates/product-sot.json",
+          "templates/method-contract.json",
+          "templates/product-creation-plan.json",
+          "templates/product-context-packet.json"
+        ],
+        "agent_refs": [
+          "agents/worker-profiles.public.json",
+          "agents/hermes-profile-bindings.public.json",
+          "agents/worker-registry.public.json"
+        ],
+        "operator_refs": [
+          "templates/operator-interface-profile.json",
+          "templates/operator-delivery-receipt.json",
+          "templates/operator-briefing-package.json",
+          "docs/operations/telegram-operator-experience.md"
+        ],
+        "evidence_refs": [
+          "schemas/product-sot.schema.json",
+          "schemas/product-context-packet.schema.json",
+          "docs/concepts/overkill-factory-method.md"
+        ]
+      }
+    },
+    {
+      "wave": 7,
+      "name": "Capability, Security, Release e Authority",
+      "status": "implemented",
+      "score": 100,
+      "implementation_kinds": [
+        "runtime_activation",
+        "agent_activation",
+        "operator_activation",
+        "test_enforced"
+      ],
+      "evidence": {
+        "code_refs": [
+          "scripts/factory_security_excellence_audit.py",
+          "scripts/factoryctl.py"
+        ],
+        "test_refs": [
+          "tests/test_factory_security_excellence_audit.py",
+          "tests/test_factoryctl.py"
+        ],
+        "command_refs": [
+          "command:python3 scripts/factory_security_excellence_audit.py",
+          "command:python3 scripts/factoryctl.py capability-acquisition-run --help"
+        ],
+        "runtime_refs": [
+          "templates/capability-acquisition-contract.json",
+          "templates/capability-acquisition-run.json",
+          "templates/security-route-contract.json"
+        ],
+        "agent_refs": [
+          "agents/skill-provider-registry.public.json",
+          "agents/capability-packs.public.json",
+          "agents/worker-registry.public.json"
+        ],
+        "operator_refs": [
+          "templates/operator-interface-profile.json",
+          "templates/operator-delivery-receipt.json",
+          "templates/operator-briefing-package.json",
+          "docs/operations/telegram-operator-experience.md"
+        ],
+        "evidence_refs": [
+          "schemas/capability-acquisition-contract.schema.json",
+          "schemas/capability-acquisition-run.schema.json",
+          "schemas/solana-ai-kit-usage-receipt.schema.json"
+        ]
+      }
+    },
+    {
+      "wave": 8,
+      "name": "Product Quality, Public GitHub Surface, V3 Release e Learning OS",
+      "status": "implemented",
+      "score": 100,
+      "implementation_kinds": [
+        "runtime_activation",
+        "agent_activation",
+        "operator_activation",
+        "test_enforced"
+      ],
+      "evidence": {
+        "code_refs": [
+          "scripts/factory_v3_release_readiness_audit.py",
+          "scripts/generate_factory_reference_docs.py",
+          "scripts/public_safety_scan.py",
+          "templates/factory-v3-release-readiness.json"
+        ],
+        "test_refs": [
+          "tests/test_factory_v3_release_readiness.py",
+          "tests/test_open_source_docs.py",
+          "tests/test_public_safety_scan.py",
+          "tests/test_factory_v3_release_readiness_audit.py"
+        ],
+        "command_refs": [
+          "command:python3 scripts/factory_v3_release_readiness_audit.py",
+          "command:python3 scripts/generate_factory_reference_docs.py --check"
+        ],
+        "runtime_refs": [
+          "templates/factory-v3-release-readiness.json",
+          "templates/product-experience-control-plane.json",
+          "templates/product-experience-evidence-stack.json"
+        ],
+        "agent_refs": [
+          "agents/worker-profiles.public.json",
+          "agents/hermes-profile-bindings.public.json",
+          "agents/worker-registry.public.json"
+        ],
+        "operator_refs": [
+          "README.md",
+          "README.pt-BR.md",
+          "docs/reference/public-map.md",
+          "docs/concepts/operator-journey.md"
+        ],
+        "evidence_refs": [
+          "docs/public-surface.manifest.json",
+          "CHANGELOG.md",
+          "pyproject.toml"
+        ]
+      }
+    },
+    {
+      "wave": 9,
+      "name": "E2E Final: Factory Perfect Run",
+      "status": "implemented",
+      "score": 100,
+      "implementation_kinds": [
+        "runtime_activation",
+        "agent_activation",
+        "operator_activation",
+        "test_enforced"
+      ],
+      "evidence": {
+        "code_refs": [
+          "scripts/factory_perfect_run.py",
+          "scripts/factory_master_plan_completion_audit.py",
+          "scripts/factoryctl.py",
+          "adapters/hermes/live_kanban_adapter.py",
+          "scripts/factory_hermes_live_smoke.py",
+          "scripts/factory_v3_release_readiness_audit.py",
+          "templates/factory-v3-release-readiness.json"
+        ],
+        "test_refs": [
+          "tests/test_factory_master_plan_completion.py",
+          "tests/test_factory_v3_release_readiness.py",
+          "tests/test_factory_runtime_truth_spine.py",
+          "tests/test_hermes_adapter_v3_production_activation.py",
+          "tests/test_factory_hermes_live_smoke.py",
+          "tests/test_factory_v3_release_readiness_audit.py"
+        ],
+        "command_refs": [
+          "command:python3 scripts/factory_perfect_run.py",
+          "command:python3 scripts/factoryctl.py factory-perfect-run",
+          "command:python3 scripts/factoryctl.py master-plan-completion",
+          "command:factoryctl hermes-live-smoke",
+          "command:factoryctl v3-production-activation-check --live-hermes"
+        ],
+        "runtime_refs": [
+          "templates/factory-master-plan-completion.json",
+          "templates/factory-runtime-truth-spine.json",
+          "templates/factory-canonical-frontier-policy.json",
+          "templates/receipt-five.json",
+          "scripts/factory_hermes_live_smoke.py"
+        ],
+        "agent_refs": [
+          "agents/worker-profiles.public.json",
+          "agents/hermes-profile-bindings.public.json",
+          "agents/worker-registry.public.json"
+        ],
+        "operator_refs": [
+          "templates/operator-interface-profile.json",
+          "templates/operator-delivery-receipt.json",
+          "templates/operator-briefing-package.json",
+          "docs/operations/telegram-operator-experience.md"
+        ],
+        "evidence_refs": [
+          "templates/factory-v3-release-readiness.json",
+          "templates/human-gate-decision-package.json",
+          "docs/reference/public-map.md",
+          "scripts/factory_hermes_live_smoke.py"
+        ]
+      }
+    }
+  ],
+  "final_checks": {
+    "all_waves_score_100": true,
+    "factory_perfect_run_passed": true,
+    "agents_and_bindings_updated": true,
+    "factoryctl_commands_exposed": true,
+    "adapter_runtime_enforced": true,
+    "human_gate_artifact_first": true,
+    "receipt_five_anti_overclaim": true
+  }
+}

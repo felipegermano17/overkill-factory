@@ -62,7 +62,10 @@
         "missing evidence chain",
         "missing method contract",
         "missing capability coverage",
-        "execution requested without autonomy readiness"
+        "execution requested without autonomy readiness",
+        "stale V3 production activation",
+        "worker packet treated as execution",
+        "operator direct contact without formal exception"
       ],
       "evidence_required": [
         "gate report",
@@ -74,13 +77,34 @@
         "ready gate verdict",
         "Decomposition Coverage Review",
         "Product Implementation Readiness",
-        "Hermes dependency graph"
+        "Hermes dependency graph",
+        "Receipt Five readback",
+        "Factory Perfect Run evidence",
+        "V3 master plan completion audit"
       ],
       "factory_gate_transition_policy": [
         "never unblock R3/R4 without required gates"
       ],
       "promotion_rule": "hybrid worker remains supervised; closed subflows only after repeated success",
-      "public_safety_notes": "No private board ids or runtime paths."
+      "public_safety_notes": "No private board ids or runtime paths.",
+      "v3_master_plan_activation": {
+        "runtime_authority": "hermes_kanban",
+        "operator_contact": "manager_only",
+        "completion_gate": "Receipt Five readback plus runtime/product/release proof",
+        "required_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "runtime-truth-spine",
+          "canonical-frontier",
+          "manager-agent-freshness",
+          "human-gate-package",
+          "receipt-five-readback",
+          "product-method-architecture",
+          "capability-security-release-authority",
+          "public-github-v3",
+          "factory_perfect_run"
+        ]
+      }
     },
     {
       "worker_id": "source-ledger-worker",
@@ -116,7 +140,10 @@
       "authority_max": "classify source status; cannot promote decisions alone",
       "veto_conditions": [
         "source mixed with inference",
-        "unresolved contradiction hidden"
+        "unresolved contradiction hidden",
+        "stale V3 production activation",
+        "worker packet treated as execution",
+        "operator direct contact without formal exception"
       ],
       "evidence_required": [
         "source map",
@@ -124,13 +151,34 @@
         "gap list",
         "source resolution notes",
         "promoted claims",
-        "rejected claims"
+        "rejected claims",
+        "Receipt Five readback",
+        "Factory Perfect Run evidence",
+        "V3 master plan completion audit"
       ],
       "factory_gate_transition_policy": [
         "Product SOT waits for source resolution"
       ],
       "promotion_rule": "stays open while source shapes remain unpredictable",
-      "public_safety_notes": "Raw extraction stays outside the public repo."
+      "public_safety_notes": "Raw extraction stays outside the public repo.",
+      "v3_master_plan_activation": {
+        "runtime_authority": "hermes_kanban",
+        "operator_contact": "manager_only",
+        "completion_gate": "Receipt Five readback plus runtime/product/release proof",
+        "required_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "runtime-truth-spine",
+          "canonical-frontier",
+          "manager-agent-freshness",
+          "human-gate-package",
+          "receipt-five-readback",
+          "product-method-architecture",
+          "capability-security-release-authority",
+          "public-github-v3",
+          "factory_perfect_run"
+        ]
+      }
     },
     {
       "worker_id": "product-sot-planner",
@@ -166,7 +214,10 @@
       "authority_max": "draft SOT candidate and owner-readable review packet; cannot approve architecture or release downstream freeze",
       "veto_conditions": [
         "candidate treated as approved",
-        "business/legal debate outside scope"
+        "business/legal debate outside scope",
+        "stale V3 production activation",
+        "worker packet treated as execution",
+        "operator direct contact without formal exception"
       ],
       "evidence_required": [
         "SOT candidate",
@@ -176,13 +227,34 @@
         "decision boundaries",
         "outcome contract",
         "discovery notes",
-        "assumption ledger"
+        "assumption ledger",
+        "Receipt Five readback",
+        "Factory Perfect Run evidence",
+        "V3 master plan completion audit"
       ],
       "factory_gate_transition_policy": [
         "architecture waits for owner-readable Product SOT review packet, full Product SOT scope coverage and Method Contract"
       ],
       "promotion_rule": "closed only for repeatable SOT normalization after evals",
-      "public_safety_notes": "No internal product names in public examples."
+      "public_safety_notes": "No internal product names in public examples.",
+      "v3_master_plan_activation": {
+        "runtime_authority": "hermes_kanban",
+        "operator_contact": "manager_only",
+        "completion_gate": "Receipt Five readback plus runtime/product/release proof",
+        "required_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "runtime-truth-spine",
+          "canonical-frontier",
+          "manager-agent-freshness",
+          "human-gate-package",
+          "receipt-five-readback",
+          "product-method-architecture",
+          "capability-security-release-authority",
+          "public-github-v3",
+          "factory_perfect_run"
+        ]
+      }
     },
     {
       "worker_id": "product-architect",
@@ -224,7 +296,10 @@
         "missing Method Contract",
         "architecture without risks",
         "hidden dependency",
-        "unsupported runtime choice"
+        "unsupported runtime choice",
+        "stale V3 production activation",
+        "worker packet treated as execution",
+        "operator direct contact without formal exception"
       ],
       "evidence_required": [
         "architecture packet",
@@ -232,7 +307,10 @@
         "risk matrix",
         "trust boundary map",
         "security architecture route",
-        "architecture decision record"
+        "architecture decision record",
+        "Receipt Five readback",
+        "Factory Perfect Run evidence",
+        "V3 master plan completion audit"
       ],
       "factory_gate_transition_policy": [
         "do not run while phase lock freezes architecture",
@@ -240,7 +318,25 @@
         "no decomposition before architecture gate"
       ],
       "promotion_rule": "stays open for judgment-heavy design",
-      "public_safety_notes": "Use example domains in public docs."
+      "public_safety_notes": "Use example domains in public docs.",
+      "v3_master_plan_activation": {
+        "runtime_authority": "hermes_kanban",
+        "operator_contact": "manager_only",
+        "completion_gate": "Receipt Five readback plus runtime/product/release proof",
+        "required_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "runtime-truth-spine",
+          "canonical-frontier",
+          "manager-agent-freshness",
+          "human-gate-package",
+          "receipt-five-readback",
+          "product-method-architecture",
+          "capability-security-release-authority",
+          "public-github-v3",
+          "factory_perfect_run"
+        ]
+      }
     },
     {
       "worker_id": "product-face",
@@ -275,20 +371,44 @@
       "veto_conditions": [
         "no screenshots",
         "no mobile state",
-        "no error/empty/loading state"
+        "no error/empty/loading state",
+        "stale V3 production activation",
+        "worker packet treated as execution",
+        "operator direct contact without formal exception"
       ],
       "evidence_required": [
         "desktop screenshot",
         "mobile screenshot",
         "state matrix",
         "a11y notes",
-        "journey proof"
+        "journey proof",
+        "Receipt Five readback",
+        "Factory Perfect Run evidence",
+        "V3 master plan completion audit"
       ],
       "factory_gate_transition_policy": [
         "product-facing done waits for Product Face evidence"
       ],
       "promotion_rule": "closed for repeatable screenshot/a11y runner after fixture coverage",
-      "public_safety_notes": "Screenshots must not expose private data."
+      "public_safety_notes": "Screenshots must not expose private data.",
+      "v3_master_plan_activation": {
+        "runtime_authority": "hermes_kanban",
+        "operator_contact": "manager_only",
+        "completion_gate": "Receipt Five readback plus runtime/product/release proof",
+        "required_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "runtime-truth-spine",
+          "canonical-frontier",
+          "manager-agent-freshness",
+          "human-gate-package",
+          "receipt-five-readback",
+          "product-method-architecture",
+          "capability-security-release-authority",
+          "public-github-v3",
+          "factory_perfect_run"
+        ]
+      }
     },
     {
       "worker_id": "solana-quasar-auditor",
@@ -321,19 +441,43 @@
       "veto_conditions": [
         "Anchor assumption",
         "missing PDA map",
-        "missing signer boundary"
+        "missing signer boundary",
+        "stale V3 production activation",
+        "worker packet treated as execution",
+        "operator direct contact without formal exception"
       ],
       "evidence_required": [
         "Solana AI Kit usage receipt",
         "Auditor report",
         "PDA/signers/CPI/CU checks",
-        "waiver if not run"
+        "waiver if not run",
+        "Receipt Five readback",
+        "Factory Perfect Run evidence",
+        "V3 master plan completion audit"
       ],
       "factory_gate_transition_policy": [
         "R3/R4 onchain waits for Auditor evidence or structured waiver"
       ],
       "promotion_rule": "hybrid until real Quasar implementation pilots pass",
-      "public_safety_notes": "No real keys, funds or private program details."
+      "public_safety_notes": "No real keys, funds or private program details.",
+      "v3_master_plan_activation": {
+        "runtime_authority": "hermes_kanban",
+        "operator_contact": "manager_only",
+        "completion_gate": "Receipt Five readback plus runtime/product/release proof",
+        "required_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "runtime-truth-spine",
+          "canonical-frontier",
+          "manager-agent-freshness",
+          "human-gate-package",
+          "receipt-five-readback",
+          "product-method-architecture",
+          "capability-security-release-authority",
+          "public-github-v3",
+          "factory_perfect_run"
+        ]
+      }
     },
     {
       "worker_id": "codex-security",
@@ -365,20 +509,44 @@
       "veto_conditions": [
         "no scope",
         "no tool evidence",
-        "blocking finding without exception"
+        "blocking finding without exception",
+        "stale V3 production activation",
+        "worker packet treated as execution",
+        "operator direct contact without formal exception"
       ],
       "evidence_required": [
         "scan result",
         "scope",
         "tool",
         "findings",
-        "evidence refs"
+        "evidence refs",
+        "Receipt Five readback",
+        "Factory Perfect Run evidence",
+        "V3 master plan completion audit"
       ],
       "factory_gate_transition_policy": [
         "done waits for security_scan_result when scan is required"
       ],
       "promotion_rule": "closed only for repeatable scan execution, not risk judgment",
-      "public_safety_notes": "Do not store secrets or raw private findings in examples."
+      "public_safety_notes": "Do not store secrets or raw private findings in examples.",
+      "v3_master_plan_activation": {
+        "runtime_authority": "hermes_kanban",
+        "operator_contact": "manager_only",
+        "completion_gate": "Receipt Five readback plus runtime/product/release proof",
+        "required_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "runtime-truth-spine",
+          "canonical-frontier",
+          "manager-agent-freshness",
+          "human-gate-package",
+          "receipt-five-readback",
+          "product-method-architecture",
+          "capability-security-release-authority",
+          "public-github-v3",
+          "factory_perfect_run"
+        ]
+      }
     },
     {
       "worker_id": "appsec-owasp-specialist",
@@ -411,18 +579,42 @@
       "veto_conditions": [
         "auth bypass untested",
         "unsafe errors",
-        "missing validation"
+        "missing validation",
+        "stale V3 production activation",
+        "worker packet treated as execution",
+        "operator direct contact without formal exception"
       ],
       "evidence_required": [
         "control matrix",
         "test refs",
-        "risk residuals"
+        "risk residuals",
+        "Receipt Five readback",
+        "Factory Perfect Run evidence",
+        "V3 master plan completion audit"
       ],
       "factory_gate_transition_policy": [
         "AppSec-sensitive done waits for AppSec result or waiver"
       ],
       "promotion_rule": "hybrid; checklists can become closed after repeated fixtures",
-      "public_safety_notes": "Use generic example endpoints."
+      "public_safety_notes": "Use generic example endpoints.",
+      "v3_master_plan_activation": {
+        "runtime_authority": "hermes_kanban",
+        "operator_contact": "manager_only",
+        "completion_gate": "Receipt Five readback plus runtime/product/release proof",
+        "required_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "runtime-truth-spine",
+          "canonical-frontier",
+          "manager-agent-freshness",
+          "human-gate-package",
+          "receipt-five-readback",
+          "product-method-architecture",
+          "capability-security-release-authority",
+          "public-github-v3",
+          "factory_perfect_run"
+        ]
+      }
     },
     {
       "worker_id": "agentic-ai-security-specialist",
@@ -455,18 +647,42 @@
       "veto_conditions": [
         "external text treated as instruction",
         "tool access too broad",
-        "memory poisoning risk ignored"
+        "memory poisoning risk ignored",
+        "stale V3 production activation",
+        "worker packet treated as execution",
+        "operator direct contact without formal exception"
       ],
       "evidence_required": [
         "prompt-injection controls",
         "tool allowlist",
-        "memory trust tier"
+        "memory trust tier",
+        "Receipt Five readback",
+        "Factory Perfect Run evidence",
+        "V3 master plan completion audit"
       ],
       "factory_gate_transition_policy": [
         "agentic surfaces wait for tool-boundary evidence"
       ],
       "promotion_rule": "hybrid because judgment and adversarial reasoning remain necessary",
-      "public_safety_notes": "No private prompts or memory dumps."
+      "public_safety_notes": "No private prompts or memory dumps.",
+      "v3_master_plan_activation": {
+        "runtime_authority": "hermes_kanban",
+        "operator_contact": "manager_only",
+        "completion_gate": "Receipt Five readback plus runtime/product/release proof",
+        "required_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "runtime-truth-spine",
+          "canonical-frontier",
+          "manager-agent-freshness",
+          "human-gate-package",
+          "receipt-five-readback",
+          "product-method-architecture",
+          "capability-security-release-authority",
+          "public-github-v3",
+          "factory_perfect_run"
+        ]
+      }
     },
     {
       "worker_id": "autoreview-gate",
@@ -494,18 +710,42 @@
       "veto_conditions": [
         "review without diff",
         "unverified finding",
-        "blocking finding ignored"
+        "blocking finding ignored",
+        "stale V3 production activation",
+        "worker packet treated as execution",
+        "operator direct contact without formal exception"
       ],
       "evidence_required": [
         "review report",
         "finding status",
-        "follow-up action"
+        "follow-up action",
+        "Receipt Five readback",
+        "Factory Perfect Run evidence",
+        "V3 master plan completion audit"
       ],
       "factory_gate_transition_policy": [
         "pre-landing code work waits for AutoReview when required"
       ],
       "promotion_rule": "closed because input and output are repeatable",
-      "public_safety_notes": "Reports must be redacted before public sharing."
+      "public_safety_notes": "Reports must be redacted before public sharing.",
+      "v3_master_plan_activation": {
+        "runtime_authority": "hermes_kanban",
+        "operator_contact": "manager_only",
+        "completion_gate": "Receipt Five readback plus runtime/product/release proof",
+        "required_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "runtime-truth-spine",
+          "canonical-frontier",
+          "manager-agent-freshness",
+          "human-gate-package",
+          "receipt-five-readback",
+          "product-method-architecture",
+          "capability-security-release-authority",
+          "public-github-v3",
+          "factory_perfect_run"
+        ]
+      }
     },
     {
       "worker_id": "remote-proof-runner",
@@ -537,20 +777,44 @@
         "no TTL",
         "no cost owner",
         "no cleanup evidence",
-        "secret required by default"
+        "secret required by default",
+        "stale V3 production activation",
+        "worker packet treated as execution",
+        "operator direct contact without formal exception"
       ],
       "evidence_required": [
         "logs",
         "artifacts",
         "timing",
         "cleanup",
-        "cost note"
+        "cost note",
+        "Receipt Five readback",
+        "Factory Perfect Run evidence",
+        "V3 master plan completion audit"
       ],
       "factory_gate_transition_policy": [
         "remote proof evidence attaches before promotion"
       ],
       "promotion_rule": "closed because command/proof shape is repeatable",
-      "public_safety_notes": "Artifact paths must be public-safe."
+      "public_safety_notes": "Artifact paths must be public-safe.",
+      "v3_master_plan_activation": {
+        "runtime_authority": "hermes_kanban",
+        "operator_contact": "manager_only",
+        "completion_gate": "Receipt Five readback plus runtime/product/release proof",
+        "required_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "runtime-truth-spine",
+          "canonical-frontier",
+          "manager-agent-freshness",
+          "human-gate-package",
+          "receipt-five-readback",
+          "product-method-architecture",
+          "capability-security-release-authority",
+          "public-github-v3",
+          "factory_perfect_run"
+        ]
+      }
     },
     {
       "worker_id": "handoff-packer",
@@ -583,21 +847,45 @@
         "operator decision handoff without owner-readable material package",
         "missing constraints",
         "missing evidence",
-        "private paths in public packet"
+        "private paths in public packet",
+        "stale V3 production activation",
+        "worker packet treated as execution",
+        "operator direct contact without formal exception"
       ],
       "evidence_required": [
         "state",
         "constraints",
         "non-goals",
         "artifact refs",
-        "next action"
+        "next action",
+        "Receipt Five readback",
+        "Factory Perfect Run evidence",
+        "V3 master plan completion audit"
       ],
       "factory_gate_transition_policy": [
         "handoff must not promote architecture, repo cleanup or human decisions ahead of the active frontier",
         "handoff required for R2+ worker transfer"
       ],
       "promotion_rule": "closed because packet shape is repeatable",
-      "public_safety_notes": "Use path-free public handoff unless private context is explicitly scoped."
+      "public_safety_notes": "Use path-free public handoff unless private context is explicitly scoped.",
+      "v3_master_plan_activation": {
+        "runtime_authority": "hermes_kanban",
+        "operator_contact": "manager_only",
+        "completion_gate": "Receipt Five readback plus runtime/product/release proof",
+        "required_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "runtime-truth-spine",
+          "canonical-frontier",
+          "manager-agent-freshness",
+          "human-gate-package",
+          "receipt-five-readback",
+          "product-method-architecture",
+          "capability-security-release-authority",
+          "public-github-v3",
+          "factory_perfect_run"
+        ]
+      }
     },
     {
       "worker_id": "independent-reviewer",
@@ -633,7 +921,10 @@
       "veto_conditions": [
         "self review",
         "missing evidence",
-        "untested claim"
+        "untested claim",
+        "stale V3 production activation",
+        "worker packet treated as execution",
+        "operator direct contact without formal exception"
       ],
       "evidence_required": [
         "review report",
@@ -642,13 +933,34 @@
         "reviewer-selection ref",
         "Decomposition Coverage Review",
         "coverage matrix",
-        "owner/reviewer signoffs"
+        "owner/reviewer signoffs",
+        "Receipt Five readback",
+        "Factory Perfect Run evidence",
+        "V3 master plan completion audit"
       ],
       "factory_gate_transition_policy": [
         "R2+ waits for independent review before done"
       ],
       "promotion_rule": "hybrid; closed only for narrow repeatable review checklists",
-      "public_safety_notes": "Reviewer packets must not expose private paths."
+      "public_safety_notes": "Reviewer packets must not expose private paths.",
+      "v3_master_plan_activation": {
+        "runtime_authority": "hermes_kanban",
+        "operator_contact": "manager_only",
+        "completion_gate": "Receipt Five readback plus runtime/product/release proof",
+        "required_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "runtime-truth-spine",
+          "canonical-frontier",
+          "manager-agent-freshness",
+          "human-gate-package",
+          "receipt-five-readback",
+          "product-method-architecture",
+          "capability-security-release-authority",
+          "public-github-v3",
+          "factory_perfect_run"
+        ]
+      }
     },
     {
       "worker_id": "evidence-reconciler",
@@ -695,7 +1007,10 @@
         "current worker result has blocking findings",
         "invalid worker result schema",
         "stale failed result without supersession record",
-        "Receipt Five cannot identify current evidence"
+        "Receipt Five cannot identify current evidence",
+        "stale V3 production activation",
+        "worker packet treated as execution",
+        "operator direct contact without formal exception"
       ],
       "evidence_required": [
         "effective worker result index",
@@ -703,7 +1018,10 @@
         "missing/blocking evidence list",
         "Receipt Five readiness verdict",
         "closure summary",
-        "completion audit verdict"
+        "completion audit verdict",
+        "Receipt Five readback",
+        "Factory Perfect Run evidence",
+        "V3 master plan completion audit"
       ],
       "factory_gate_transition_policy": [
         "runs after required worker artifacts exist",
@@ -711,7 +1029,25 @@
         "blocks done when current evidence cannot satisfy Receipt Five"
       ],
       "promotion_rule": "closed when reconciliation is deterministic, path-safe and repeatable on the same evidence set",
-      "public_safety_notes": "Indexes must use repo-relative or external refs only and must not expose private workspace paths."
+      "public_safety_notes": "Indexes must use repo-relative or external refs only and must not expose private workspace paths.",
+      "v3_master_plan_activation": {
+        "runtime_authority": "hermes_kanban",
+        "operator_contact": "manager_only",
+        "completion_gate": "Receipt Five readback plus runtime/product/release proof",
+        "required_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "runtime-truth-spine",
+          "canonical-frontier",
+          "manager-agent-freshness",
+          "human-gate-package",
+          "receipt-five-readback",
+          "product-method-architecture",
+          "capability-security-release-authority",
+          "public-github-v3",
+          "factory_perfect_run"
+        ]
+      }
     },
     {
       "worker_id": "human-gate-clerk",
@@ -753,7 +1089,10 @@
         "missing human actor",
         "missing evidence",
         "fake approval",
-        "planning-only continuation or specialist routing presented as approval"
+        "planning-only continuation or specialist routing presented as approval",
+        "stale V3 production activation",
+        "worker packet treated as execution",
+        "operator direct contact without formal exception"
       ],
       "evidence_required": [
         "decision",
@@ -763,14 +1102,35 @@
         "evidence refs",
         "approval scope",
         "decision actor role",
-        "durable runtime event"
+        "durable runtime event",
+        "Receipt Five readback",
+        "Factory Perfect Run evidence",
+        "V3 master plan completion audit"
       ],
       "factory_gate_transition_policy": [
         "architecture and R4 promotion wait for real human decision when a material authority trigger exists",
         "planning-only continuation, source resolution, method routing and specialist routing remain factory-owned unless authority, access, risk, release, funds, secrets or irreversible scope is present"
       ],
       "promotion_rule": "always human-controlled",
-      "public_safety_notes": "Use role names, not private personal identifiers."
+      "public_safety_notes": "Use role names, not private personal identifiers.",
+      "v3_master_plan_activation": {
+        "runtime_authority": "hermes_kanban",
+        "operator_contact": "manager_only",
+        "completion_gate": "Receipt Five readback plus runtime/product/release proof",
+        "required_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "runtime-truth-spine",
+          "canonical-frontier",
+          "manager-agent-freshness",
+          "human-gate-package",
+          "receipt-five-readback",
+          "product-method-architecture",
+          "capability-security-release-authority",
+          "public-github-v3",
+          "factory_perfect_run"
+        ]
+      }
     },
     {
       "worker_id": "docs-os-worker",
@@ -797,19 +1157,43 @@
       "veto_conditions": [
         "architecture not approved",
         "docs lack contracts",
-        "docs drift from SOT"
+        "docs drift from SOT",
+        "stale V3 production activation",
+        "worker packet treated as execution",
+        "operator direct contact without formal exception"
       ],
       "evidence_required": [
         "docs index",
         "ADR refs",
         "contract refs",
-        "doc-shape routing"
+        "doc-shape routing",
+        "Receipt Five readback",
+        "Factory Perfect Run evidence",
+        "V3 master plan completion audit"
       ],
       "factory_gate_transition_policy": [
         "decomposition waits for durable docs"
       ],
       "promotion_rule": "hybrid; templated docs can become closed after evals",
-      "public_safety_notes": "Docs must avoid private source dumps."
+      "public_safety_notes": "Docs must avoid private source dumps.",
+      "v3_master_plan_activation": {
+        "runtime_authority": "hermes_kanban",
+        "operator_contact": "manager_only",
+        "completion_gate": "Receipt Five readback plus runtime/product/release proof",
+        "required_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "runtime-truth-spine",
+          "canonical-frontier",
+          "manager-agent-freshness",
+          "human-gate-package",
+          "receipt-five-readback",
+          "product-method-architecture",
+          "capability-security-release-authority",
+          "public-github-v3",
+          "factory_perfect_run"
+        ]
+      }
     },
     {
       "worker_id": "decomposition-planner",
@@ -848,7 +1232,10 @@
       "veto_conditions": [
         "missing risk",
         "missing reviewer",
-        "missing Product Face result for visible product"
+        "missing Product Face result for visible product",
+        "stale V3 production activation",
+        "worker packet treated as execution",
+        "operator direct contact without formal exception"
       ],
       "evidence_required": [
         "card graph",
@@ -861,13 +1248,34 @@
         "lane/worktree isolation notes",
         "Product Creation Plan",
         "work-unit owner/reviewer matrix",
-        "Decomposition Coverage Review handoff"
+        "Decomposition Coverage Review handoff",
+        "Receipt Five readback",
+        "Factory Perfect Run evidence",
+        "V3 master plan completion audit"
       ],
       "factory_gate_transition_policy": [
         "cards without required contracts are rejected"
       ],
       "promotion_rule": "closed for narrow card normalization after regression suite",
-      "public_safety_notes": "Generated cards must be public-safe when committed."
+      "public_safety_notes": "Generated cards must be public-safe when committed.",
+      "v3_master_plan_activation": {
+        "runtime_authority": "hermes_kanban",
+        "operator_contact": "manager_only",
+        "completion_gate": "Receipt Five readback plus runtime/product/release proof",
+        "required_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "runtime-truth-spine",
+          "canonical-frontier",
+          "manager-agent-freshness",
+          "human-gate-package",
+          "receipt-five-readback",
+          "product-method-architecture",
+          "capability-security-release-authority",
+          "public-github-v3",
+          "factory_perfect_run"
+        ]
+      }
     },
     {
       "worker_id": "implementation-worker",
@@ -896,19 +1304,43 @@
       "veto_conditions": [
         "specialist builder available",
         "scope expansion",
-        "self approval"
+        "self approval",
+        "stale V3 production activation",
+        "worker packet treated as execution",
+        "operator direct contact without formal exception"
       ],
       "evidence_required": [
         "fallback rationale",
         "diff refs",
         "tests",
-        "receipt"
+        "receipt",
+        "Receipt Five readback",
+        "Factory Perfect Run evidence",
+        "V3 master plan completion audit"
       ],
       "factory_gate_transition_policy": [
         "use specialist builders first; fallback only for unknown or legacy code surfaces"
       ],
       "promotion_rule": "demote by default when a surface-specific builder exists",
-      "public_safety_notes": "No private credentials or local-only assumptions."
+      "public_safety_notes": "No private credentials or local-only assumptions.",
+      "v3_master_plan_activation": {
+        "runtime_authority": "hermes_kanban",
+        "operator_contact": "manager_only",
+        "completion_gate": "Receipt Five readback plus runtime/product/release proof",
+        "required_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "runtime-truth-spine",
+          "canonical-frontier",
+          "manager-agent-freshness",
+          "human-gate-package",
+          "receipt-five-readback",
+          "product-method-architecture",
+          "capability-security-release-authority",
+          "public-github-v3",
+          "factory_perfect_run"
+        ]
+      }
     },
     {
       "worker_id": "frontend-builder",
@@ -944,18 +1376,42 @@
       "veto_conditions": [
         "missing Product Face packet",
         "unapproved design-system change",
-        "self approval"
+        "self approval",
+        "stale V3 production activation",
+        "worker packet treated as execution",
+        "operator direct contact without formal exception"
       ],
       "evidence_required": [
         "diff refs",
         "component/test refs",
-        "desktop/mobile evidence request"
+        "desktop/mobile evidence request",
+        "Receipt Five readback",
+        "Factory Perfect Run evidence",
+        "V3 master plan completion audit"
       ],
       "factory_gate_transition_policy": [
         "frontend work waits for Product Face packet and later Product Face validation"
       ],
       "promotion_rule": "closed only for repeatable component implementation with visual regression fixtures",
-      "public_safety_notes": "Screenshots and UI refs must not expose private data."
+      "public_safety_notes": "Screenshots and UI refs must not expose private data.",
+      "v3_master_plan_activation": {
+        "runtime_authority": "hermes_kanban",
+        "operator_contact": "manager_only",
+        "completion_gate": "Receipt Five readback plus runtime/product/release proof",
+        "required_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "runtime-truth-spine",
+          "canonical-frontier",
+          "manager-agent-freshness",
+          "human-gate-package",
+          "receipt-five-readback",
+          "product-method-architecture",
+          "capability-security-release-authority",
+          "public-github-v3",
+          "factory_perfect_run"
+        ]
+      }
     },
     {
       "worker_id": "backend-api-builder",
@@ -987,18 +1443,42 @@
       "veto_conditions": [
         "missing API contract",
         "auth boundary unclear",
-        "scope expansion"
+        "scope expansion",
+        "stale V3 production activation",
+        "worker packet treated as execution",
+        "operator direct contact without formal exception"
       ],
       "evidence_required": [
         "diff refs",
         "API test refs",
-        "contract refs"
+        "contract refs",
+        "Receipt Five readback",
+        "Factory Perfect Run evidence",
+        "V3 master plan completion audit"
       ],
       "factory_gate_transition_policy": [
         "API/auth work waits for AppSec and security evidence when sensitive"
       ],
       "promotion_rule": "closed only for repeatable endpoint/service patterns with contract tests",
-      "public_safety_notes": "Use generic endpoint names in public artifacts."
+      "public_safety_notes": "Use generic endpoint names in public artifacts.",
+      "v3_master_plan_activation": {
+        "runtime_authority": "hermes_kanban",
+        "operator_contact": "manager_only",
+        "completion_gate": "Receipt Five readback plus runtime/product/release proof",
+        "required_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "runtime-truth-spine",
+          "canonical-frontier",
+          "manager-agent-freshness",
+          "human-gate-package",
+          "receipt-five-readback",
+          "product-method-architecture",
+          "capability-security-release-authority",
+          "public-github-v3",
+          "factory_perfect_run"
+        ]
+      }
     },
     {
       "worker_id": "data-persistence-builder",
@@ -1031,18 +1511,42 @@
       "veto_conditions": [
         "destructive migration without gate",
         "missing rollback",
-        "unclear data ownership"
+        "unclear data ownership",
+        "stale V3 production activation",
+        "worker packet treated as execution",
+        "operator direct contact without formal exception"
       ],
       "evidence_required": [
         "migration refs",
         "schema test refs",
-        "rollback notes"
+        "rollback notes",
+        "Receipt Five readback",
+        "Factory Perfect Run evidence",
+        "V3 master plan completion audit"
       ],
       "factory_gate_transition_policy": [
         "data work waits for rollback and security review when sensitive"
       ],
       "promotion_rule": "closed only for repeatable schema changes with rollback fixtures",
-      "public_safety_notes": "No private records or production data samples."
+      "public_safety_notes": "No private records or production data samples.",
+      "v3_master_plan_activation": {
+        "runtime_authority": "hermes_kanban",
+        "operator_contact": "manager_only",
+        "completion_gate": "Receipt Five readback plus runtime/product/release proof",
+        "required_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "runtime-truth-spine",
+          "canonical-frontier",
+          "manager-agent-freshness",
+          "human-gate-package",
+          "receipt-five-readback",
+          "product-method-architecture",
+          "capability-security-release-authority",
+          "public-github-v3",
+          "factory_perfect_run"
+        ]
+      }
     },
     {
       "worker_id": "solana-quasar-builder",
@@ -1076,19 +1580,43 @@
       "veto_conditions": [
         "Anchor assumption",
         "missing PDA/signer map",
-        "mainnet or key access requested"
+        "mainnet or key access requested",
+        "stale V3 production activation",
+        "worker packet treated as execution",
+        "operator direct contact without formal exception"
       ],
       "evidence_required": [
         "Solana AI Kit usage receipt",
         "diff refs",
         "Quasar build/test refs",
-        "PDA/signer map"
+        "PDA/signer map",
+        "Receipt Five readback",
+        "Factory Perfect Run evidence",
+        "V3 master plan completion audit"
       ],
       "factory_gate_transition_policy": [
         "onchain work waits for Solana QA, Auditor, security and human gates when required"
       ],
       "promotion_rule": "closed only after repeated Quasar fixtures and Auditor-reviewed patterns",
-      "public_safety_notes": "No real keys, funds, program secrets or private program identifiers."
+      "public_safety_notes": "No real keys, funds, program secrets or private program identifiers.",
+      "v3_master_plan_activation": {
+        "runtime_authority": "hermes_kanban",
+        "operator_contact": "manager_only",
+        "completion_gate": "Receipt Five readback plus runtime/product/release proof",
+        "required_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "runtime-truth-spine",
+          "canonical-frontier",
+          "manager-agent-freshness",
+          "human-gate-package",
+          "receipt-five-readback",
+          "product-method-architecture",
+          "capability-security-release-authority",
+          "public-github-v3",
+          "factory_perfect_run"
+        ]
+      }
     },
     {
       "worker_id": "solana-quasar-qa-engineer",
@@ -1121,19 +1649,43 @@
       "veto_conditions": [
         "no devnet/local proof",
         "missing negative tests",
-        "Auditor bypass"
+        "Auditor bypass",
+        "stale V3 production activation",
+        "worker packet treated as execution",
+        "operator direct contact without formal exception"
       ],
       "evidence_required": [
         "Solana AI Kit usage receipt",
         "test logs",
         "devnet/local refs",
-        "negative test matrix"
+        "negative test matrix",
+        "Receipt Five readback",
+        "Factory Perfect Run evidence",
+        "V3 master plan completion audit"
       ],
       "factory_gate_transition_policy": [
         "onchain done waits for QA, Auditor and security evidence"
       ],
       "promotion_rule": "closed only for stable Quasar test harnesses and replayable fixtures",
-      "public_safety_notes": "No real keys or live fund movement."
+      "public_safety_notes": "No real keys or live fund movement.",
+      "v3_master_plan_activation": {
+        "runtime_authority": "hermes_kanban",
+        "operator_contact": "manager_only",
+        "completion_gate": "Receipt Five readback plus runtime/product/release proof",
+        "required_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "runtime-truth-spine",
+          "canonical-frontier",
+          "manager-agent-freshness",
+          "human-gate-package",
+          "receipt-five-readback",
+          "product-method-architecture",
+          "capability-security-release-authority",
+          "public-github-v3",
+          "factory_perfect_run"
+        ]
+      }
     },
     {
       "worker_id": "wallet-transaction-builder",
@@ -1165,18 +1717,42 @@
       "veto_conditions": [
         "unclear signer authority",
         "real key/fund access",
-        "missing transaction states"
+        "missing transaction states",
+        "stale V3 production activation",
+        "worker packet treated as execution",
+        "operator direct contact without formal exception"
       ],
       "evidence_required": [
         "diff refs",
         "transaction-state tests",
-        "signer boundary notes"
+        "signer boundary notes",
+        "Receipt Five readback",
+        "Factory Perfect Run evidence",
+        "V3 master plan completion audit"
       ],
       "factory_gate_transition_policy": [
         "wallet/funds work waits for crypto/key, AppSec and Product Face evidence"
       ],
       "promotion_rule": "closed only for repeated wallet-state components with safe fixtures",
-      "public_safety_notes": "Use mock/devnet wallets only."
+      "public_safety_notes": "Use mock/devnet wallets only.",
+      "v3_master_plan_activation": {
+        "runtime_authority": "hermes_kanban",
+        "operator_contact": "manager_only",
+        "completion_gate": "Receipt Five readback plus runtime/product/release proof",
+        "required_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "runtime-truth-spine",
+          "canonical-frontier",
+          "manager-agent-freshness",
+          "human-gate-package",
+          "receipt-five-readback",
+          "product-method-architecture",
+          "capability-security-release-authority",
+          "public-github-v3",
+          "factory_perfect_run"
+        ]
+      }
     },
     {
       "worker_id": "integration-builder",
@@ -1208,18 +1784,42 @@
       "veto_conditions": [
         "missing upstream builder evidence",
         "unapproved cross-surface assumption",
-        "no E2E proof"
+        "no E2E proof",
+        "stale V3 production activation",
+        "worker packet treated as execution",
+        "operator direct contact without formal exception"
       ],
       "evidence_required": [
         "integration test refs",
         "runtime refs",
-        "handoff gaps"
+        "handoff gaps",
+        "Receipt Five readback",
+        "Factory Perfect Run evidence",
+        "V3 master plan completion audit"
       ],
       "factory_gate_transition_policy": [
         "integration waits for builder outputs and feeds QA verification"
       ],
       "promotion_rule": "closed only for repeatable glue patterns with stable E2E fixtures",
-      "public_safety_notes": "Use generic fixtures and no private endpoints."
+      "public_safety_notes": "Use generic fixtures and no private endpoints.",
+      "v3_master_plan_activation": {
+        "runtime_authority": "hermes_kanban",
+        "operator_contact": "manager_only",
+        "completion_gate": "Receipt Five readback plus runtime/product/release proof",
+        "required_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "runtime-truth-spine",
+          "canonical-frontier",
+          "manager-agent-freshness",
+          "human-gate-package",
+          "receipt-five-readback",
+          "product-method-architecture",
+          "capability-security-release-authority",
+          "public-github-v3",
+          "factory_perfect_run"
+        ]
+      }
     },
     {
       "worker_id": "test-automation-builder",
@@ -1253,18 +1853,42 @@
       "veto_conditions": [
         "test asserts wrong behavior",
         "no regression value",
-        "acceptance criteria missing"
+        "acceptance criteria missing",
+        "stale V3 production activation",
+        "worker packet treated as execution",
+        "operator direct contact without formal exception"
       ],
       "evidence_required": [
         "test diff refs",
         "run logs",
-        "coverage/gap notes"
+        "coverage/gap notes",
+        "Receipt Five readback",
+        "Factory Perfect Run evidence",
+        "V3 master plan completion audit"
       ],
       "factory_gate_transition_policy": [
         "high-repeat work should become tests or evals before learning loop"
       ],
       "promotion_rule": "closed only when fixtures are stable and held-out cases pass",
-      "public_safety_notes": "Public tests use public-safe fixtures."
+      "public_safety_notes": "Public tests use public-safe fixtures.",
+      "v3_master_plan_activation": {
+        "runtime_authority": "hermes_kanban",
+        "operator_contact": "manager_only",
+        "completion_gate": "Receipt Five readback plus runtime/product/release proof",
+        "required_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "runtime-truth-spine",
+          "canonical-frontier",
+          "manager-agent-freshness",
+          "human-gate-package",
+          "receipt-five-readback",
+          "product-method-architecture",
+          "capability-security-release-authority",
+          "public-github-v3",
+          "factory_perfect_run"
+        ]
+      }
     },
     {
       "worker_id": "infra-devops-builder",
@@ -1298,18 +1922,42 @@
       "veto_conditions": [
         "no rollback",
         "secret required by default",
-        "unclear environment boundary"
+        "unclear environment boundary",
+        "stale V3 production activation",
+        "worker packet treated as execution",
+        "operator direct contact without formal exception"
       ],
       "evidence_required": [
         "config diff refs",
         "smoke refs",
-        "rollback notes"
+        "rollback notes",
+        "Receipt Five readback",
+        "Factory Perfect Run evidence",
+        "V3 master plan completion audit"
       ],
       "factory_gate_transition_policy": [
         "infra work waits for cloud/security/release gates when promotion-like"
       ],
       "promotion_rule": "closed only for repeatable environment setup with rollback fixtures",
-      "public_safety_notes": "No account ids, tokens, private endpoints or local runtime paths."
+      "public_safety_notes": "No account ids, tokens, private endpoints or local runtime paths.",
+      "v3_master_plan_activation": {
+        "runtime_authority": "hermes_kanban",
+        "operator_contact": "manager_only",
+        "completion_gate": "Receipt Five readback plus runtime/product/release proof",
+        "required_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "runtime-truth-spine",
+          "canonical-frontier",
+          "manager-agent-freshness",
+          "human-gate-package",
+          "receipt-five-readback",
+          "product-method-architecture",
+          "capability-security-release-authority",
+          "public-github-v3",
+          "factory_perfect_run"
+        ]
+      }
     },
     {
       "worker_id": "agent-runtime-builder",
@@ -1344,19 +1992,43 @@
       "veto_conditions": [
         "tool access too broad",
         "memory boundary unclear",
-        "self approval"
+        "self approval",
+        "stale V3 production activation",
+        "worker packet treated as execution",
+        "operator direct contact without formal exception"
       ],
       "evidence_required": [
         "adapter test refs",
         "profile/binding refs",
         "safety review handoff",
-        "agent eval plan"
+        "agent eval plan",
+        "Receipt Five readback",
+        "Factory Perfect Run evidence",
+        "V3 master plan completion audit"
       ],
       "factory_gate_transition_policy": [
         "agent runtime work waits for agentic AI security, public safety and profile validation"
       ],
       "promotion_rule": "closed only for repeatable adapter/profile changes with regression tests",
-      "public_safety_notes": "No private profile dumps, local paths, secrets or internal runtime identifiers."
+      "public_safety_notes": "No private profile dumps, local paths, secrets or internal runtime identifiers.",
+      "v3_master_plan_activation": {
+        "runtime_authority": "hermes_kanban",
+        "operator_contact": "manager_only",
+        "completion_gate": "Receipt Five readback plus runtime/product/release proof",
+        "required_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "runtime-truth-spine",
+          "canonical-frontier",
+          "manager-agent-freshness",
+          "human-gate-package",
+          "receipt-five-readback",
+          "product-method-architecture",
+          "capability-security-release-authority",
+          "public-github-v3",
+          "factory_perfect_run"
+        ]
+      }
     },
     {
       "worker_id": "qa-verification-worker",
@@ -1389,20 +2061,44 @@
       "veto_conditions": [
         "no objective proof",
         "missing state coverage",
-        "failed tests ignored"
+        "failed tests ignored",
+        "stale V3 production activation",
+        "worker packet treated as execution",
+        "operator direct contact without formal exception"
       ],
       "evidence_required": [
         "commands",
         "outputs",
         "artifacts",
         "pass/fail",
-        "QA mode coverage"
+        "QA mode coverage",
+        "Receipt Five readback",
+        "Factory Perfect Run evidence",
+        "V3 master plan completion audit"
       ],
       "factory_gate_transition_policy": [
         "done waits for objective verification"
       ],
       "promotion_rule": "hybrid; closed only for deterministic fixtures",
-      "public_safety_notes": "Logs and screenshots must be redacted."
+      "public_safety_notes": "Logs and screenshots must be redacted.",
+      "v3_master_plan_activation": {
+        "runtime_authority": "hermes_kanban",
+        "operator_contact": "manager_only",
+        "completion_gate": "Receipt Five readback plus runtime/product/release proof",
+        "required_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "runtime-truth-spine",
+          "canonical-frontier",
+          "manager-agent-freshness",
+          "human-gate-package",
+          "receipt-five-readback",
+          "product-method-architecture",
+          "capability-security-release-authority",
+          "public-github-v3",
+          "factory_perfect_run"
+        ]
+      }
     },
     {
       "worker_id": "security-orchestrator",
@@ -1443,7 +2139,10 @@
       "veto_conditions": [
         "generic security review",
         "wrong specialist",
-        "missing owner"
+        "missing owner",
+        "stale V3 production activation",
+        "worker packet treated as execution",
+        "operator direct contact without formal exception"
       ],
       "evidence_required": [
         "specialist matrix",
@@ -1451,13 +2150,34 @@
         "blocking policy",
         "Security Architecture Plan",
         "specialist routing rationale",
-        "required security gates"
+        "required security gates",
+        "Receipt Five readback",
+        "Factory Perfect Run evidence",
+        "V3 master plan completion audit"
       ],
       "factory_gate_transition_policy": [
         "security-sensitive done waits for routed controls"
       ],
       "promotion_rule": "hybrid because security judgment stays adversarial",
-      "public_safety_notes": "Public examples must not include private findings."
+      "public_safety_notes": "Public examples must not include private findings.",
+      "v3_master_plan_activation": {
+        "runtime_authority": "hermes_kanban",
+        "operator_contact": "manager_only",
+        "completion_gate": "Receipt Five readback plus runtime/product/release proof",
+        "required_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "runtime-truth-spine",
+          "canonical-frontier",
+          "manager-agent-freshness",
+          "human-gate-package",
+          "receipt-five-readback",
+          "product-method-architecture",
+          "capability-security-release-authority",
+          "public-github-v3",
+          "factory_perfect_run"
+        ]
+      }
     },
     {
       "worker_id": "cloud-infra-security-specialist",
@@ -1490,18 +2210,42 @@
       "veto_conditions": [
         "no rollback",
         "broad IAM",
-        "secret access by default"
+        "secret access by default",
+        "stale V3 production activation",
+        "worker packet treated as execution",
+        "operator direct contact without formal exception"
       ],
       "evidence_required": [
         "least privilege notes",
         "rollback proof",
-        "logs/monitoring plan"
+        "logs/monitoring plan",
+        "Receipt Five readback",
+        "Factory Perfect Run evidence",
+        "V3 master plan completion audit"
       ],
       "factory_gate_transition_policy": [
         "infra/release waits for cloud security evidence"
       ],
       "promotion_rule": "hybrid; closed only for deterministic policy checks",
-      "public_safety_notes": "No real cloud account ids or secrets."
+      "public_safety_notes": "No real cloud account ids or secrets.",
+      "v3_master_plan_activation": {
+        "runtime_authority": "hermes_kanban",
+        "operator_contact": "manager_only",
+        "completion_gate": "Receipt Five readback plus runtime/product/release proof",
+        "required_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "runtime-truth-spine",
+          "canonical-frontier",
+          "manager-agent-freshness",
+          "human-gate-package",
+          "receipt-five-readback",
+          "product-method-architecture",
+          "capability-security-release-authority",
+          "public-github-v3",
+          "factory_perfect_run"
+        ]
+      }
     },
     {
       "worker_id": "crypto-key-management-specialist",
@@ -1534,18 +2278,42 @@
       "veto_conditions": [
         "real key access",
         "unclear signer authority",
-        "missing rotation/ownership"
+        "missing rotation/ownership",
+        "stale V3 production activation",
+        "worker packet treated as execution",
+        "operator direct contact without formal exception"
       ],
       "evidence_required": [
         "key boundary map",
         "custody model",
-        "waivers"
+        "waivers",
+        "Receipt Five readback",
+        "Factory Perfect Run evidence",
+        "V3 master plan completion audit"
       ],
       "factory_gate_transition_policy": [
         "key/funds surfaces wait for crypto/key review"
       ],
       "promotion_rule": "hybrid because custody risk needs human oversight",
-      "public_safety_notes": "Never store real key material."
+      "public_safety_notes": "Never store real key material.",
+      "v3_master_plan_activation": {
+        "runtime_authority": "hermes_kanban",
+        "operator_contact": "manager_only",
+        "completion_gate": "Receipt Five readback plus runtime/product/release proof",
+        "required_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "runtime-truth-spine",
+          "canonical-frontier",
+          "manager-agent-freshness",
+          "human-gate-package",
+          "receipt-five-readback",
+          "product-method-architecture",
+          "capability-security-release-authority",
+          "public-github-v3",
+          "factory_perfect_run"
+        ]
+      }
     },
     {
       "worker_id": "release-ops-worker",
@@ -1586,7 +2354,10 @@
       "veto_conditions": [
         "open blocker",
         "missing rollback",
-        "missing monitoring owner"
+        "missing monitoring owner",
+        "stale V3 production activation",
+        "worker packet treated as execution",
+        "operator direct contact without formal exception"
       ],
       "evidence_required": [
         "release plan",
@@ -1595,13 +2366,34 @@
         "monitoring refs",
         "release channel evidence",
         "rollback proof",
-        "production smoke"
+        "production smoke",
+        "Receipt Five readback",
+        "Factory Perfect Run evidence",
+        "V3 master plan completion audit"
       ],
       "factory_gate_transition_policy": [
         "R4 release waits for human gate and rollback evidence"
       ],
       "promotion_rule": "hybrid; dry-run substeps can become closed",
-      "public_safety_notes": "Use dry examples in public repo."
+      "public_safety_notes": "Use dry examples in public repo.",
+      "v3_master_plan_activation": {
+        "runtime_authority": "hermes_kanban",
+        "operator_contact": "manager_only",
+        "completion_gate": "Receipt Five readback plus runtime/product/release proof",
+        "required_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "runtime-truth-spine",
+          "canonical-frontier",
+          "manager-agent-freshness",
+          "human-gate-package",
+          "receipt-five-readback",
+          "product-method-architecture",
+          "capability-security-release-authority",
+          "public-github-v3",
+          "factory_perfect_run"
+        ]
+      }
     },
     {
       "worker_id": "memory-steward",
@@ -1631,19 +2423,43 @@
       "veto_conditions": [
         "untrusted memory promoted",
         "freshness unknown",
-        "poisoning risk ignored"
+        "poisoning risk ignored",
+        "stale V3 production activation",
+        "worker packet treated as execution",
+        "operator direct contact without formal exception"
       ],
       "evidence_required": [
         "trust tier",
         "freshness",
         "source refs",
-        "poisoning controls"
+        "poisoning controls",
+        "Receipt Five readback",
+        "Factory Perfect Run evidence",
+        "V3 master plan completion audit"
       ],
       "factory_gate_transition_policy": [
         "memory updates wait for source and trust tier"
       ],
       "promotion_rule": "hybrid because memory quality depends on context",
-      "public_safety_notes": "No private memory dumps."
+      "public_safety_notes": "No private memory dumps.",
+      "v3_master_plan_activation": {
+        "runtime_authority": "hermes_kanban",
+        "operator_contact": "manager_only",
+        "completion_gate": "Receipt Five readback plus runtime/product/release proof",
+        "required_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "runtime-truth-spine",
+          "canonical-frontier",
+          "manager-agent-freshness",
+          "human-gate-package",
+          "receipt-five-readback",
+          "product-method-architecture",
+          "capability-security-release-authority",
+          "public-github-v3",
+          "factory_perfect_run"
+        ]
+      }
     },
     {
       "worker_id": "skill-eval-distiller",
@@ -1685,7 +2501,10 @@
       "veto_conditions": [
         "one-off workflow",
         "no regression",
-        "no held-out case"
+        "no held-out case",
+        "stale V3 production activation",
+        "worker packet treated as execution",
+        "operator direct contact without formal exception"
       ],
       "evidence_required": [
         "repetition evidence",
@@ -1695,14 +2514,35 @@
         "permission class",
         "agent quality plan",
         "factory maturity scorecard",
-        "missing coverage register"
+        "missing coverage register",
+        "Receipt Five readback",
+        "Factory Perfect Run evidence",
+        "V3 master plan completion audit"
       ],
       "factory_gate_transition_policy": [
         "closed specialists need eval-backed promotion",
         "learnback and maturity audit cannot close as passive status text"
       ],
       "promotion_rule": "closed only after repeated predictable success",
-      "public_safety_notes": "Skill examples must be public-safe."
+      "public_safety_notes": "Skill examples must be public-safe.",
+      "v3_master_plan_activation": {
+        "runtime_authority": "hermes_kanban",
+        "operator_contact": "manager_only",
+        "completion_gate": "Receipt Five readback plus runtime/product/release proof",
+        "required_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "runtime-truth-spine",
+          "canonical-frontier",
+          "manager-agent-freshness",
+          "human-gate-package",
+          "receipt-five-readback",
+          "product-method-architecture",
+          "capability-security-release-authority",
+          "public-github-v3",
+          "factory_perfect_run"
+        ]
+      }
     },
     {
       "worker_id": "public-safety-gate",
@@ -1733,18 +2573,42 @@
         "private path",
         "internal name",
         "raw source extraction",
-        "private board link"
+        "private board link",
+        "stale V3 production activation",
+        "worker packet treated as execution",
+        "operator direct contact without formal exception"
       ],
       "evidence_required": [
         "scan command",
         "result",
-        "redaction notes"
+        "redaction notes",
+        "Receipt Five readback",
+        "Factory Perfect Run evidence",
+        "V3 master plan completion audit"
       ],
       "factory_gate_transition_policy": [
         "public artifacts wait for public-safety pass"
       ],
       "promotion_rule": "closed because scan shape is deterministic",
-      "public_safety_notes": "This worker protects the public repo boundary."
+      "public_safety_notes": "This worker protects the public repo boundary.",
+      "v3_master_plan_activation": {
+        "runtime_authority": "hermes_kanban",
+        "operator_contact": "manager_only",
+        "completion_gate": "Receipt Five readback plus runtime/product/release proof",
+        "required_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "runtime-truth-spine",
+          "canonical-frontier",
+          "manager-agent-freshness",
+          "human-gate-package",
+          "receipt-five-readback",
+          "product-method-architecture",
+          "capability-security-release-authority",
+          "public-github-v3",
+          "factory_perfect_run"
+        ]
+      }
     },
     {
       "worker_id": "supply-chain-gate",
@@ -1779,19 +2643,43 @@
       "veto_conditions": [
         "unpinned risky action",
         "secret leak",
-        "unknown dependency risk"
+        "unknown dependency risk",
+        "stale V3 production activation",
+        "worker packet treated as execution",
+        "operator direct contact without formal exception"
       ],
       "evidence_required": [
         "dependency report",
         "secret scan",
         "workflow permissions",
-        "SBOM or waiver"
+        "SBOM or waiver",
+        "Receipt Five readback",
+        "Factory Perfect Run evidence",
+        "V3 master plan completion audit"
       ],
       "factory_gate_transition_policy": [
         "code/release work waits for supply-chain gate"
       ],
       "promotion_rule": "hybrid; scanners closed, risk judgment supervised",
-      "public_safety_notes": "Reports must not expose private tokens."
+      "public_safety_notes": "Reports must not expose private tokens.",
+      "v3_master_plan_activation": {
+        "runtime_authority": "hermes_kanban",
+        "operator_contact": "manager_only",
+        "completion_gate": "Receipt Five readback plus runtime/product/release proof",
+        "required_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "runtime-truth-spine",
+          "canonical-frontier",
+          "manager-agent-freshness",
+          "human-gate-package",
+          "receipt-five-readback",
+          "product-method-architecture",
+          "capability-security-release-authority",
+          "public-github-v3",
+          "factory_perfect_run"
+        ]
+      }
     },
     {
       "worker_id": "detection-monitoring-worker",
@@ -1834,7 +2722,10 @@
       "veto_conditions": [
         "no alert owner",
         "no incident path",
-        "no rollback signal"
+        "no rollback signal",
+        "stale V3 production activation",
+        "worker packet treated as execution",
+        "operator direct contact without formal exception"
       ],
       "evidence_required": [
         "monitoring plan",
@@ -1843,13 +2734,34 @@
         "data metrics plan",
         "event instrumentation proof",
         "dashboard or health evidence",
-        "privacy visibility notes"
+        "privacy visibility notes",
+        "Receipt Five readback",
+        "Factory Perfect Run evidence",
+        "V3 master plan completion audit"
       ],
       "factory_gate_transition_policy": [
         "production promotion waits for monitoring evidence"
       ],
       "promotion_rule": "hybrid because runtime signals are product-specific",
-      "public_safety_notes": "No private dashboards or log samples in public repo."
+      "public_safety_notes": "No private dashboards or log samples in public repo.",
+      "v3_master_plan_activation": {
+        "runtime_authority": "hermes_kanban",
+        "operator_contact": "manager_only",
+        "completion_gate": "Receipt Five readback plus runtime/product/release proof",
+        "required_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "runtime-truth-spine",
+          "canonical-frontier",
+          "manager-agent-freshness",
+          "human-gate-package",
+          "receipt-five-readback",
+          "product-method-architecture",
+          "capability-security-release-authority",
+          "public-github-v3",
+          "factory_perfect_run"
+        ]
+      }
     },
     {
       "worker_id": "control-tower-projection-worker",
@@ -1879,19 +2791,43 @@
       "veto_conditions": [
         "projection is stale",
         "blocker is hidden",
-        "Discord state is treated as source of truth"
+        "Discord state is treated as source of truth",
+        "stale V3 production activation",
+        "worker packet treated as execution",
+        "operator direct contact without formal exception"
       ],
       "evidence_required": [
         "projection artifact",
         "last source timestamp",
         "runtime state ref",
-        "staleness note"
+        "staleness note",
+        "Receipt Five readback",
+        "Factory Perfect Run evidence",
+        "V3 master plan completion audit"
       ],
       "factory_gate_transition_policy": [
         "when the owner Control Tower is active, material execution waits for a fresh projection"
       ],
       "promotion_rule": "closed because projection rendering is deterministic from runtime state once the mapping contract exists",
-      "public_safety_notes": "Use redacted runtime refs and never publish raw Discord ids, private board ids, private URLs or logs."
+      "public_safety_notes": "Use redacted runtime refs and never publish raw Discord ids, private board ids, private URLs or logs.",
+      "v3_master_plan_activation": {
+        "runtime_authority": "hermes_kanban",
+        "operator_contact": "manager_only",
+        "completion_gate": "Receipt Five readback plus runtime/product/release proof",
+        "required_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "runtime-truth-spine",
+          "canonical-frontier",
+          "manager-agent-freshness",
+          "human-gate-package",
+          "receipt-five-readback",
+          "product-method-architecture",
+          "capability-security-release-authority",
+          "public-github-v3",
+          "factory_perfect_run"
+        ]
+      }
     },
     {
       "worker_id": "discord-control-tower-bridge",
@@ -1923,20 +2859,45 @@
         "approval is free-form chat only",
         "runtime registration path is missing",
         "bridge health does not follow the schema",
-        "Discord message is treated as canonical evidence"
+        "Discord message is treated as canonical evidence",
+        "stale V3 production activation",
+        "worker packet treated as execution",
+        "operator direct contact without formal exception"
       ],
       "evidence_required": [
         "redacted mapping ref",
         "runtime registration event ref",
         "bridge health proof",
-        "negative approval test"
+        "negative approval test",
+        "Receipt Five readback",
+        "Factory Perfect Run evidence",
+        "V3 master plan completion audit"
       ],
       "factory_gate_transition_policy": [
         "Discord responses are advisory until the runtime records a valid structured event",
         "the bridge never marks ready, done, released or approved by itself"
       ],
       "promotion_rule": "closed because event mapping and delivery are repeatable after private mapping and bridge health proof",
-      "public_safety_notes": "Keep real Discord ids, role ids, message ids, webhook URLs, private runtime ids and logs outside the public repo."
+      "public_safety_notes": "Keep real Discord ids, role ids, message ids, webhook URLs, private runtime ids and logs outside the public repo.",
+      "v3_master_plan_activation": {
+        "runtime_authority": "hermes_kanban",
+        "operator_contact": "manager_only",
+        "completion_gate": "Receipt Five readback plus runtime/product/release proof",
+        "required_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "runtime-truth-spine",
+          "canonical-frontier",
+          "manager-agent-freshness",
+          "human-gate-package",
+          "receipt-five-readback",
+          "product-method-architecture",
+          "capability-security-release-authority",
+          "public-github-v3",
+          "factory_perfect_run"
+        ]
+      }
     }
-  ]
+  ],
+  "production_activation_version": "v3.0.0-master-plan-100"
 }
