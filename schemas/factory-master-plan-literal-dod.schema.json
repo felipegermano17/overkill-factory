@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/factory-master-plan-literal-dod.schema.json",
+  "title": "Factory Master Plan Literal Definition of Done",
+  "type": "object",
+  "required": ["record_type", "source_plan_ref", "completion_policy", "criteria"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "record_type": { "const": "factory_master_plan_literal_dod" },
+    "source_plan_ref": { "type": "string", "minLength": 3 },
+    "completion_policy": { "type": "string", "minLength": 12 },
+    "criteria": {
+      "type": "array",
+      "minItems": 17,
+      "maxItems": 17,
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "local_support", "external_live_required", "external_live_status", "evidence_refs", "command_refs", "operator_safe", "overclaim_guard"],
+        "properties": {
+          "id": { "type": "string", "minLength": 3 },
+          "name": { "type": "string", "minLength": 3 },
+          "local_support": { "type": "boolean" },
+          "external_live_required": { "type": "boolean" },
+          "external_live_status": { "enum": ["not_required", "pending", "verified"] },
+          "evidence_refs": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 3 } },
+          "command_refs": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 3 } },
+          "operator_safe": { "type": "boolean" },
+          "overclaim_guard": { "type": "string", "minLength": 3 }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

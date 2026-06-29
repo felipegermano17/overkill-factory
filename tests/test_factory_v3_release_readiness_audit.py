@@ -28,6 +28,7 @@ class FactoryV3ReleaseReadinessAuditTest(unittest.TestCase):
         perfect = registry["factory_perfect_run_policy"]
         self.assertTrue(perfect["release_blocks_without_factory_perfect_run"])
         self.assertIn("command:factoryctl factory-perfect-run", perfect["required_commands"])
+        self.assertIn("command:factoryctl literal-dod-audit", perfect["required_commands"])
         self.assertIn("command:factoryctl v3-production-activation-check --live-hermes", perfect["required_commands"])
         w09 = next(track for track in registry["readiness_tracks"] if track["id"] == "W09-factory-perfect-run")
         self.assertIn("scripts/factory_perfect_run.py", w09["evidence_refs"])
