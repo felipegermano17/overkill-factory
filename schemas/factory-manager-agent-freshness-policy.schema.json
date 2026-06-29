@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/factory-manager-agent-freshness-policy.schema.json",
+  "title": "Factory Manager Agent Freshness Policy",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "policy_id",
+    "created_at",
+    "freshness_gate",
+    "manager_contract",
+    "operator_bridge_policy",
+    "freshness_smoke",
+    "acceptance"
+  ],
+  "properties": {
+    "$schema": {"const": "https://overkill-factory.dev/schemas/factory-manager-agent-freshness-policy.schema.json"},
+    "record_type": {"const": "factory_manager_agent_freshness_policy"},
+    "policy_id": {"type": "string", "minLength": 3},
+    "created_at": {"type": "string", "minLength": 10},
+    "freshness_gate": {
+      "type": "object",
+      "required": ["required_for_every_factory_change", "required_layers", "affected_agent_policy"],
+      "properties": {
+        "required_for_every_factory_change": {"type": "boolean"},
+        "required_layers": {"type": "array", "minItems": 4, "items": {"type": "string", "minLength": 3}},
+        "affected_agent_policy": {"type": "string", "minLength": 8}
+      },
+      "additionalProperties": false
+    },
+    "manager_contract": {
+      "type": "object",
+      "required": ["manager_profile", "manager_may_replace_factory_code", "must_call_current_factory_contracts", "required_factory_audits", "forbidden_patterns"],
+      "properties": {
+        "manager_profile": {"type": "string", "minLength": 3},
+        "manager_may_replace_factory_code": {"type": "boolean"},
+        "must_call_current_factory_contracts": {"type": "boolean"},
+        "required_factory_audits": {"type": "array", "minItems": 3, "items": {"type": "string", "minLength": 3}},
+        "forbidden_patterns": {"type": "array", "minItems": 3, "items": {"type": "string", "minLength": 3}}
+      },
+      "additionalProperties": false
+    },
+    "operator_bridge_policy": {
+      "type": "object",
+      "required": ["single_human_facing_profile", "direct_worker_operator_contact_allowed", "operator_polling_kanban_required"],
+      "properties": {
+        "single_human_facing_profile": {"type": "string", "minLength": 3},
+        "direct_worker_operator_contact_allowed": {"type": "boolean"},
+        "operator_polling_kanban_required": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "freshness_smoke": {
+      "type": "object",
+      "required": ["required", "proves", "commands"],
+      "properties": {
+        "required": {"type": "boolean"},
+        "proves": {"type": "array", "minItems": 3, "items": {"type": "string", "minLength": 3}},
+        "commands": {"type": "array", "minItems": 2, "items": {"type": "string", "minLength": 3}}
+      },
+      "additionalProperties": false
+    },
+    "acceptance": {
+      "type": "object",
+      "required": ["manager_current", "agents_current", "manager_uses_factory_code", "manager_only_bridge"],
+      "properties": {
+        "manager_current": {"type": "boolean"},
+        "agents_current": {"type": "boolean"},
+        "manager_uses_factory_code": {"type": "boolean"},
+        "manager_only_bridge": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

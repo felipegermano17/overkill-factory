@@ -21,6 +21,7 @@ python scripts/factory_github_issue_pattern_audit.py --out .tmp/factory-github-i
 python scripts/factory_master_update_plan_audit.py --out .tmp/factory-master-update-plan-audit.json --markdown .tmp/factory-master-update-plan-audit.md
 python scripts/factory_runtime_truth_spine_audit.py --out .tmp/factory-runtime-truth-spine-audit.json --markdown .tmp/factory-runtime-truth-spine-audit.md
 python scripts/factory_canonical_frontier_audit.py --out .tmp/factory-canonical-frontier-audit.json --markdown .tmp/factory-canonical-frontier-audit.md
+python scripts/factory_manager_agent_freshness_audit.py --out .tmp/factory-manager-agent-freshness-audit.json --markdown .tmp/factory-manager-agent-freshness-audit.md
 python -m unittest discover -s tests
 python scripts/validate_document_governance.py
 python scripts/generate_factory_reference_docs.py --check
@@ -170,6 +171,7 @@ python scripts/factory_github_issue_pattern_audit.py --out .tmp/factory-github-i
 python scripts/factory_master_update_plan_audit.py --out .tmp/factory-master-update-plan-audit.json --markdown .tmp/factory-master-update-plan-audit.md
 python scripts/factory_runtime_truth_spine_audit.py --out .tmp/factory-runtime-truth-spine-audit.json --markdown .tmp/factory-runtime-truth-spine-audit.md
 python scripts/factory_canonical_frontier_audit.py --out .tmp/factory-canonical-frontier-audit.json --markdown .tmp/factory-canonical-frontier-audit.md
+python scripts/factory_manager_agent_freshness_audit.py --out .tmp/factory-manager-agent-freshness-audit.json --markdown .tmp/factory-manager-agent-freshness-audit.md
 python scripts/factory_battery.py
 python scripts/validate_document_governance.py
 python scripts/generate_factory_reference_docs.py --check
