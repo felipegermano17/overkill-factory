@@ -1,7 +1,7 @@
 # GitHub Project Surface
 
 > Document status: CURRENT SUPPORTING GUIDE.
-> Current authority: README.md, pyproject.toml, .github/workflows/, tests/
+> Current authority: README.md, factory/pyproject.toml, .github/workflows/, factory/tests/
 > Runtime boundary: GitHub automation protects the public repository. Hermes
 > remains the runtime source of truth for real factory cards.
 > Naming note: this guide is intentionally not named README.md so GitHub keeps
@@ -36,9 +36,9 @@ automation and contribution hygiene.
 Run the local checks before changing workflows or templates:
 
 ```bash
-python scripts/supply_chain_proof.py --check --no-write
-python scripts/public_safety_scan.py
-python scripts/secret_safety_scan.py
+python factory/scripts/supply_chain_proof.py --check --no-write
+python factory/scripts/public_safety_scan.py
+python factory/scripts/secret_safety_scan.py
 python -m unittest discover -s tests -p "test_*.py" -q
 ```
 

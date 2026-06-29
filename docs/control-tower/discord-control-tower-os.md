@@ -1,7 +1,7 @@
 # Discord Control Tower OS
 
 > Document status: CURRENT SUPPORTING GUIDE.
-> Current authority: `scripts/factoryctl.py`, schemas, tests and current public guides.
+> Current authority: `factory/scripts/factoryctl.py`, schemas, tests and current public guides.
 > Runtime boundary: This guide describes the optional operator console layer; Discord does not replace Hermes state, receipts or runtime gates.
 
 Discord Control Tower OS is the owner-facing control layer for Overkill
@@ -194,7 +194,7 @@ a production-ready multi-project operator console.
 The current public implementation for that mapping is:
 
 ```text
-scripts/factory_concierge_discord_bridge.py
+factory/scripts/factory_concierge_discord_bridge.py
 ```
 
 It receives a `project-projection.json`, updates the global dashboard, the
@@ -320,7 +320,7 @@ event. The runtime and Overkill gates decide whether that event is valid.
 The practical project projection command is:
 
 ```bash
-python scripts/factory_concierge_discord_bridge.py \
+python factory/scripts/factory_concierge_discord_bridge.py \
   --projection /private/path/to/project-projection.json \
   --state /private/path/to/discord-bridge-state.json \
   --env /private/path/to/hermes.env \
@@ -330,7 +330,7 @@ python scripts/factory_concierge_discord_bridge.py \
 
 Use `--dry-run` first when wiring a new server. The state file is private
 because it contains Discord ids. The output receipt must follow
-`schemas/operator-control-tower-bridge-health.schema.json` and the public copy
+`factory/schemas/operator-control-tower-bridge-health.schema.json` and the public copy
 must redact ids, paths, tokens, URLs and logs.
 
 ## Automation Layer
@@ -338,7 +338,7 @@ must redact ids, paths, tokens, URLs and logs.
 The project projector handles one projection. The full owner UX automation uses:
 
 ```text
-scripts/factory_concierge_discord_automation.py
+factory/scripts/factory_concierge_discord_automation.py
 ```
 
 It composes the projector with the remaining Control Tower behavior:
@@ -358,7 +358,7 @@ It composes the projector with the remaining Control Tower behavior:
 The recurring command shape is:
 
 ```bash
-python scripts/factory_concierge_discord_automation.py \
+python factory/scripts/factory_concierge_discord_automation.py \
   --projection-dir /private/path/projections \
   --event-dir /private/path/events \
   --approval-dir /private/path/approvals \
@@ -432,14 +432,14 @@ and runtime registration path exist.
 Use the harness below after the real server/mapping exists:
 
 ```bash
-python scripts/operator_control_tower_proof.py \
+python factory/scripts/operator_control_tower_proof.py \
   --mapping /private/path/to/discord-control-tower-mapping.json \
   --runtime-registration-event /private/path/to/runtime-approval-event.json \
   --bridge-health /private/path/to/bridge-health.json
 ```
 
 The `--bridge-health` file must follow
-`schemas/operator-control-tower-bridge-health.schema.json`. A generic JSON file
+`factory/schemas/operator-control-tower-bridge-health.schema.json`. A generic JSON file
 with only `result: PASS` is not enough.
 
 The harness also checks that the mapping and runtime approval event refer to

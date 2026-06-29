@@ -1,0 +1,798 @@
+from __future__ import annotations
+
+import json
+import importlib.util
+import subprocess
+import sys
+import tomllib
+import unittest
+from pathlib import Path
+
+
+CODE_ROOT = Path(__file__).resolve().parents[1]
+ROOT = CODE_ROOT.parent
+PUBLIC_JSON_VALIDATOR_PATH = CODE_ROOT / "scripts" / "validate_public_json_artifacts.py"
+
+
+def project_path(rel: str) -> Path:
+    code_prefixes = ("adapters/", "agents/", "examples/", "fixtures/", "schemas/", "scripts/", "skills/", "templates/", "tests/")
+    code_names = {"pyproject.toml", ".env.example"}
+    return CODE_ROOT / rel if rel in code_names or rel.startswith(code_prefixes) else ROOT / rel
+
+def read_text(rel: str) -> str:
+    return project_path(rel).read_text(encoding="utf-8")
+
+
+def load_public_json_validator():
+    spec = importlib.util.spec_from_file_location("validate_public_json_artifacts", PUBLIC_JSON_VALIDATOR_PATH)
+    assert spec is not None
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+    return module
+
+
+def project_release_tag() -> str:
+    pyproject = tomllib.loads(read_text("pyproject.toml"))
+    return f"v{pyproject['project']['version']}"
+
+
+class OpenSourceDocsTest(unittest.TestCase):
+    def test_readme_is_external_user_entrypoint(self) -> None:
+        readme = read_text("README.md")
+        required_headings = [
+            "Plain Explanation",
+            "Why This Exists",
+            "How The Factory Works",
+            "Hermes Runtime",
+            "Ways To Use It",
+            "First Run",
+            "Repository Shape",
+            "Current Release State",
+            "Read Next",
+            "Validation",
+            "Public Boundary",
+        ]
+
+        for heading in required_headings:
+            with self.subTest(heading=heading):
+                self.assertIn(f"## {heading}", readme)
+
+        self.assertIn("README.pt-BR.md", readme)
+        self.assertIn("Public map:", readme)
+        self.assertIn(
+            "https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.3.html",
+            readme,
+        )
+        self.assertIn("full Product SOT scope coverage", readme)
+        self.assertIn("Hermes Kanban remains the source of truth", readme)
+        self.assertIn("Hermes and Receipt Five remain the source of truth", readme)
+        self.assertIn("Overkill Factory is a production line for projects built by agents.", readme)
+        self.assertIn('the factory is not "a smart chat" and not a', readme)
+        self.assertIn("mini-Hermes", readme)
+        self.assertIn(project_release_tag(), readme)
+        self.assertIn("Factory V3", readme)
+        self.assertIn("docs/architecture/factory-v2-control-plane.md", readme)
+        self.assertIn("docs/reference/factory-kernel-reference.md", readme)
+        self.assertIn("python factory/scripts/generate_factory_reference_docs.py --check", readme)
+        self.assertIn("docs/operations/promise-to-implementation.md", readme)
+        self.assertIn("docs/promise-implementation-map.public.json", readme)
+        self.assertIn("templates/v2-study-traceability.json", readme)
+        self.assertIn("templates/v2-doc-implementation-obligations.json", readme)
+        self.assertIn("templates/factory-v2-readiness-claim.json", readme)
+        self.assertNotIn("Para você, como usuário leigo", readme)
+        self.assertNotIn("## What It Does Not Do", readme)
+        self.assertNotIn("codex plugin add overkill-factory-bridge@overkill-factory", readme)
+        self.assertNotIn("docs/reference/public-map.md", readme)
+        self.assertNotIn("docs/operator/overkill-factory-bridge-plugin.md", readme)
+
+        for rel in [
+            "README.pt-BR.md",
+            "docs/index.md",
+            "docs/operator/overkill-factory-bridge.md",
+            "docs/getting-started/quickstart-hermes.md",
+            "docs/getting-started/install-in-hermes.md",
+            "docs/reference/cli.md",
+            "docs/reference/factory-kernel-reference.md",
+            "docs/architecture/factory-v2-control-plane.md",
+            "docs/operations/telegram-operator-experience.md",
+            "docs/operations/promise-to-implementation.md",
+            "docs/promise-implementation-map.public.json",
+            "templates/v2-study-traceability.json",
+            "templates/v2-doc-implementation-obligations.json",
+            "templates/factory-v2-readiness-claim.json",
+        ]:
+            with self.subTest(link=rel):
+                self.assertIn(rel.replace("\\", "/"), readme)
+
+        for command in [
+            "factoryctl doctor",
+            "factoryctl init",
+            "factoryctl run minimal",
+        ]:
+            with self.subTest(command=command):
+                self.assertIn(command, readme)
+
+    def test_portuguese_readme_mirrors_public_entrypoint(self) -> None:
+        readme_pt = read_text("README.pt-BR.md")
+        required_headings = [
+            "Explicação Simples",
+            "Por Que Existe",
+            "Como A Fábrica Funciona",
+            "Runtime Hermes",
+            "Formas De Usar",
+            "Primeira Execução",
+            "Estrutura Do Repositório",
+            "Estado Atual De Release",
+            "Leia Depois",
+            "Validação",
+            "Fronteira Pública",
+        ]
+
+        for heading in required_headings:
+            with self.subTest(heading=heading):
+                self.assertIn(f"## {heading}", readme_pt)
+
+        for expected in [
+            "[English](README.md)",
+            "Mapa público:",
+            "A Overkill Factory é uma linha de produção para projetos feitos por agentes.",
+            'O ponto mais importante: a fábrica não é "um chat inteligente" e não é um',
+            "mini-Hermes",
+            "linha de produção em etapas para trabalho de produto controlado",
+            "Hermes Kanban continua sendo a fonte de verdade",
+            "Hermes e Receipt Five continuam sendo a fonte de verdade",
+            project_release_tag(),
+            "Factory V3",
+            "docs/architecture/factory-v2-control-plane.md",
+            "docs/reference/factory-kernel-reference.md",
+            "python factory/scripts/generate_factory_reference_docs.py --check",
+            "docs/operations/promise-to-implementation.md",
+            "docs/promise-implementation-map.public.json",
+            "docs/operator/overkill-factory-bridge.md",
+            "templates/v2-doc-implementation-obligations.json",
+            "fixtures/README.md",
+            "https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.3.html",
+            "factoryctl run minimal",
+        ]:
+            with self.subTest(expected=expected):
+                self.assertIn(expected, readme_pt)
+        self.assertNotIn("Para você, como usuário leigo", readme_pt)
+        self.assertNotIn("codex plugin add overkill-factory-bridge@overkill-factory", readme_pt)
+        self.assertNotIn("docs/operator/overkill-factory-bridge-plugin.md", readme_pt)
+
+    def test_public_docs_skeleton_exists(self) -> None:
+        required_paths = [
+            "docs/getting-started/quickstart-hermes.md",
+            "docs/governance/document-governance.md",
+            "docs/concepts/factory-flow.md",
+            "docs/concepts/overkill-factory-method.md",
+            "docs/concepts/operator-journey.md",
+            "docs/agents/worker-profiles.md",
+            "agents/README.md",
+            "docs/agents/factory-stage-agent-map.md",
+            "docs/agents/capability-packs.md",
+            "docs/control-tower/open-source-setup.md",
+            "docs/operations/validation-and-release.md",
+            "docs/operations/promise-to-implementation.md",
+            "docs/operations/telegram-operator-experience.md",
+            "docs/operations/release-policy.md",
+            "docs/operations/troubleshooting.md",
+            "docs/architecture/factory-operating-systems.md",
+            "docs/architecture/context-spine.md",
+            "docs/architecture/hermes-integration.md",
+            "docs/index.md",
+            "docs/getting-started/install-in-hermes.md",
+            "docs/reference/cli.md",
+            "docs/reference/factory-kernel-reference.md",
+            "docs/examples/gallery.md",
+            "docs/security/oss-security.md",
+            "docs/maintenance/repo-surface.md",
+            "examples/minimal-hermes-project/README.md",
+            "examples/minimal-hermes-project/input-paper.md",
+            "examples/minimal-hermes-project/expected-flow.md",
+            "examples/minimal-hermes-project/expected-receipt-five.json",
+            "fixtures/README.md",
+            "fixtures/product-validation/README.md",
+            "fixtures/product-validation/qvg-public-validation-product/README.md",
+            "fixtures/product-validation/devnet-receipt-pass/README.md",
+            ".env.example",
+            "pyproject.toml",
+            "docs/reference/CHANGELOG.md",
+            "docs/mkdocs.yml",
+            ".github/CONTRIBUTING.md",
+            ".github/SECURITY.md",
+            ".github/dependabot.yml",
+            ".github/PROJECT_SURFACE.md",
+            ".github/workflows/codeql.yml",
+            ".github/workflows/dependency-review.yml",
+            ".github/workflows/security.yml",
+            ".github/ISSUE_TEMPLATE/bug_report.yml",
+            ".github/ISSUE_TEMPLATE/feature_request.yml",
+            ".github/ISSUE_TEMPLATE/config.yml",
+            ".github/pull_request_template.md",
+            "docs/operator/overkill-factory-bridge.md",
+            "docs/operations/promise-to-implementation.md",
+            "README.pt-BR.md",
+        ]
+
+        for rel in required_paths:
+            with self.subTest(path=rel):
+                self.assertTrue(project_path(rel).is_file())
+
+    def test_hermes_learn_boundary_is_documented(self) -> None:
+        learn = read_text("docs/maintenance/hermes-learn-integration.md")
+        learning_os = read_text("docs/maintenance/factory-learning-skill-evolution-os.md")
+        self_improvement = read_text("docs/maintenance/self-improvement-loop.md")
+        docs_index = read_text("docs/index.md")
+        mkdocs = read_text("docs/mkdocs.yml")
+
+        for phrase in [
+            "Hermes `/learn`",
+            "capture lane",
+            "factory_learning_proposal",
+            "skills.write_approval: true",
+            "must not activate skills",
+            "python -m pytest -q factory/tests/agent/test_learn_prompt.py",
+        ]:
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, learn)
+
+        for text in [learning_os, self_improvement, docs_index, mkdocs]:
+            with self.subTest(doc=text[:40]):
+                self.assertIn("hermes-learn-integration.md", text)
+
+    def test_deterministic_runtime_mantra_is_documented_as_control_plane_rule(self) -> None:
+        deterministic = read_text("docs/architecture/deterministic-control-plane.md")
+        hermes = read_text("docs/architecture/hermes-integration.md")
+        flow = read_text("docs/concepts/factory-flow.md")
+        skill = read_text("skills/codex/overkill-factory/SKILL.md")
+        combined = f"{deterministic}\n{hermes}\n{flow}\n{skill}"
+        normalized = " ".join(combined.split())
+
+        for phrase in [
+            "less mirabolante",
+            "Kanban-native",
+            "Hermes-native",
+            "more deterministic",
+            "easier to trust",
+            "No-idle is the integrity auditor",
+            "not the normal source of new factory route authority",
+            "Watchdogs and no-idle checks are guardrails",
+            "No-idle and watchdog code are integrity auditors and recovery paths",
+        ]:
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, normalized)
+
+    def test_public_repo_does_not_commit_generated_example_outputs(self) -> None:
+        generated_paths = [
+            CODE_ROOT / "examples" / "worker-packets",
+            CODE_ROOT / "examples" / "gate-reports",
+        ]
+
+        for path in generated_paths:
+            with self.subTest(path=path.relative_to(ROOT).as_posix()):
+                self.assertFalse(path.exists())
+
+        automation_doc = read_text("docs/automation/worker-automation-v0.md")
+        self.assertIn("--out .tmp/worker-packets/onchain-card", automation_doc)
+        self.assertNotIn("--out examples/worker-packets", automation_doc)
+
+    def test_v3_public_surface_excludes_unfinished_codex_plugin(self) -> None:
+        removed_paths = [
+            ".agents",
+            ".codex",
+            "plugins",
+            "docs/operator/overkill-factory-bridge-plugin.md",
+            "skills/codex/overkill-factory-bridge",
+            "tests/test_overkill_factory_bridge_plugin.py",
+            "docs/reference/public-map.md",
+        ]
+
+        for rel in removed_paths:
+            with self.subTest(rel=rel):
+                self.assertFalse(project_path(rel).exists())
+
+        searchable = [
+            "README.md",
+            "README.pt-BR.md",
+            "docs/mkdocs.yml",
+            "docs/public-surface.manifest.json",
+            "pyproject.toml",
+        ]
+        forbidden = [
+            "codex plugin add overkill-factory-bridge@overkill-factory",
+            "docs/operator/overkill-factory-bridge-plugin.md",
+            ".agents/README.md",
+            ".codex/README.md",
+            "plugins/overkill-factory-bridge",
+            "docs/reference/public-map.md",
+        ]
+        for rel in searchable:
+            text = read_text(rel)
+            for phrase in forbidden:
+                with self.subTest(rel=rel, phrase=phrase):
+                    self.assertNotIn(phrase, text)
+
+
+    def test_repository_shape_explains_every_public_top_level_folder(self) -> None:
+        readme = read_text("README.md")
+        expected_public_dirs = [
+            ".github/",
+            "adapters/",
+            "agents/",
+            "docs/",
+            "examples/",
+            "fixtures/",
+            "schemas/",
+            "scripts/",
+            "skills/",
+            "templates/",
+            "tests/",
+        ]
+
+        for rel in expected_public_dirs:
+            with self.subTest(rel=rel):
+                self.assertIn(f"`{rel}`", readme)
+
+        self.assertIn("Generated worker packets and gate reports belong in `.tmp/`", readme)
+
+    def test_high_noise_public_directories_have_entrypoint_guides(self) -> None:
+        required_entrypoints = {
+            "adapters/README.md": ["runtime integrations", "Hermes"],
+            ".github/PROJECT_SURFACE.md": ["GitHub project surface", "Dependabot"],
+            "agents/README.md": ["worker registry", "Hermes bindings"],
+            "docs/README.md": ["human guides", "public onboarding"],
+            "examples/README.md": ["source examples", ".tmp/"],
+            "fixtures/README.md": ["regression", "public-safe"],
+            "fixtures/product-validation/README.md": ["product-shaped fixtures", "not public products"],
+            "schemas/README.md": ["machine contracts", "JSON Schema"],
+            "scripts/README.md": ["CLI", "validation"],
+            "skills/README.md": ["Codex skill", "public-safe"],
+            "templates/README.md": ["templates", "schemas"],
+            "tests/README.md": ["regression", "public path"],
+        }
+
+        for rel, expected_phrases in required_entrypoints.items():
+            with self.subTest(path=rel):
+                path = project_path(rel)
+                self.assertTrue(path.is_file())
+                text = read_text(rel)
+                for heading in [
+                    "## What Belongs Here",
+                    "## What Does Not Belong Here",
+                    "## Source Of Truth",
+                    "## How It Is Validated",
+                ]:
+                    self.assertIn(heading, text)
+                normalized = text.lower()
+                for phrase in expected_phrases:
+                    self.assertIn(phrase.lower(), normalized)
+
+    def test_examples_readme_keeps_generated_outputs_out_of_repo(self) -> None:
+        examples = read_text("examples/README.md")
+
+        self.assertIn("Generated worker packets and gate reports belong in `.tmp/`", examples)
+        self.assertIn("Do not commit generated run output", examples)
+        self.assertIn("hand-authored public fixtures", examples)
+        self.assertIn("domain-neutral fixture", examples)
+        self.assertIn("examples/minimal-hermes-project/", examples)
+
+    def test_fixture_policy_separates_fixtures_from_generated_evidence(self) -> None:
+        contributing = read_text(".github/CONTRIBUTING.md")
+        tests_readme = read_text("tests/README.md")
+        combined = f"{contributing}\n{tests_readme}"
+
+        for phrase in [
+            "Fixture And Generated Evidence Policy",
+            "minimal, domain-neutral, public-safe",
+            "Generated evidence is different",
+            "belong in `.tmp/`, `$RUNNER_TEMP`, release artifacts or a",
+            "private evidence store",
+            "old pilot output or narrative execution history",
+            "Generated worker packets, gate reports, scan summaries or Receipt Five output",
+        ]:
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, combined)
+
+    def test_documented_generated_evidence_commands_use_temp_outputs(self) -> None:
+        docs_to_check = [
+            "README.md",
+            ".github/CONTRIBUTING.md",
+            "examples/README.md",
+            "tests/README.md",
+            "docs/automation/worker-automation-v0.md",
+            "docs/getting-started/quickstart-hermes.md",
+            "docs/operations/validation-and-release.md",
+            "docs/reference/cli.md",
+            ".github/workflows/ci.yml",
+        ]
+        allowed_output_markers = (".tmp/", ".tmp\\", "$RUNNER_TEMP", "path/to/", "../my-product-factory")
+
+        for rel in docs_to_check:
+            text = read_text(rel)
+            for line in text.splitlines():
+                if "--out " not in line and "--summary-json " not in line and "--packets-out " not in line:
+                    continue
+                with self.subTest(path=rel, line=line.strip()):
+                    self.assertTrue(
+                        any(marker in line for marker in allowed_output_markers),
+                        f"generated evidence command should write to a temp or external path: {line}",
+                    )
+
+    def test_product_validation_fixtures_are_not_public_products(self) -> None:
+        fixtures = read_text("fixtures/product-validation/README.md")
+
+        self.assertIn("product-shaped fixtures", fixtures)
+        self.assertIn("not public products", fixtures)
+        self.assertIn("not onboarding examples", fixtures)
+        self.assertIn("Private product material", fixtures)
+
+    def test_public_json_validator_scans_product_validation_fixtures(self) -> None:
+        validator = load_public_json_validator()
+        scan_dirs = {path.relative_to(ROOT).as_posix() for path in validator.SCAN_DIRS}
+
+        self.assertIn("fixtures/product-validation", scan_dirs)
+        self.assertNotIn("products", scan_dirs)
+
+    def test_public_codex_skill_covers_open_source_stewardship(self) -> None:
+        skill = read_text("skills/codex/overkill-factory/SKILL.md")
+        open_source_ref = CODE_ROOT / "skills" / "codex" / "overkill-factory" / "references" / "open-source-github.md"
+        documentation_ref = (
+            ROOT
+            / "skills"
+            / "codex"
+            / "overkill-factory"
+            / "references"
+            / "documentation-standard.md"
+        )
+
+        self.assertTrue(open_source_ref.is_file())
+        self.assertTrue(documentation_ref.is_file())
+        self.assertIn("professional open-source GitHub stewardship", skill)
+        self.assertIn("Product Experience OS/Product Face", skill)
+        self.assertIn("Less mirabolante, more Kanban-native, more Hermes-native", skill)
+        self.assertIn("workers inventing the next phase", skill)
+        self.assertIn("Use the V2 control plane as the default factory spine", skill)
+        self.assertIn("validate-v2-study-traceability", skill)
+        self.assertIn("validate-capability-acquisition-contract", skill)
+        self.assertIn("references/open-source-github.md", skill)
+        self.assertIn("references/documentation-standard.md", skill)
+        self.assertIn("Every public folder needs a burden-of-proof decision", skill)
+
+    def test_docs_site_navigation_and_maintenance_boundaries_exist(self) -> None:
+        docs_index = read_text("docs/index.md")
+        mkdocs = read_text("docs/mkdocs.yml")
+        cli = read_text("docs/reference/cli.md")
+        repo_surface = read_text("docs/maintenance/repo-surface.md")
+
+        for phrase in [
+            "Operator Path",
+            "Install In Your Hermes",
+            "CLI Reference",
+            "Examples",
+            "Security",
+            "Release",
+            "Maintainer Internals",
+        ]:
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, docs_index)
+                self.assertIn(phrase, mkdocs)
+
+        for command in ["factoryctl doctor", "factoryctl init", "factoryctl run minimal"]:
+            with self.subTest(command=command):
+                self.assertIn(command, cli)
+
+        self.assertIn("Operator surface", repo_surface)
+        self.assertIn("Maintainer internals", repo_surface)
+        self.assertIn("Generated output", repo_surface)
+
+    def test_public_surface_manifest_covers_core_operator_docs(self) -> None:
+        manifest = json.loads(read_text("docs/public-surface.manifest.json"))
+        by_path = {surface["path"]: surface for surface in manifest["surfaces"]}
+        core_docs = [
+            "docs/getting-started/quickstart-hermes.md",
+            "docs/reference/cli.md",
+            "docs/operations/validation-and-release.md",
+        ]
+
+        for rel in core_docs:
+            with self.subTest(rel=rel):
+                self.assertIn(rel, manifest["canonical_sources"])
+                self.assertIn(rel, by_path)
+                self.assertIn("source_refs_exist", by_path[rel]["claim_checks"])
+                self.assertIn("source_of_truth_disclaimer", by_path[rel]["claim_checks"])
+                self.assertIn("no_runtime_proof_claim", by_path[rel]["claim_checks"])
+
+    def test_mkdocs_public_surface_build_is_ci_covered(self) -> None:
+        pyproject = read_text("pyproject.toml")
+        ci = read_text(".github/workflows/ci.yml")
+        gitignore = read_text(".gitignore")
+        mkdocs = read_text("docs/mkdocs.yml")
+
+        self.assertIn("[project.optional-dependencies]", pyproject)
+        self.assertIn('docs = ["mkdocs>=1.6,<2"]', pyproject)
+        self.assertIn('python -m pip install ".[docs]"', ci)
+        self.assertIn('python -m mkdocs build --strict --site-dir "$RUNNER_TEMP/overkill-mkdocs-site"', ci)
+        self.assertIn("site/", gitignore)
+        self.assertIn("exclude_docs:", mkdocs)
+        self.assertIn("not_in_nav:", mkdocs)
+
+    def test_public_repo_has_no_legacy_pilot_markdown_templates(self) -> None:
+        tracked_templates = {
+            path.relative_to(ROOT).as_posix()
+            for path in (CODE_ROOT / "templates").glob("*.md")
+        }
+
+        self.assertNotIn("templates/pilot-input-paper.md", tracked_templates)
+        self.assertNotIn("templates/v3-6-learning-record.md", tracked_templates)
+        self.assertIn("templates/product-sot.md", tracked_templates)
+        self.assertIn("templates/architecture-review-packet.md", tracked_templates)
+
+    def test_published_surface_sync_has_manual_scheduled_workflow(self) -> None:
+        workflow = read_text(".github/workflows/public-surface-published-sync.yml")
+
+        self.assertIn("workflow_dispatch:", workflow)
+        self.assertIn("schedule:", workflow)
+        self.assertNotIn("pull_request:", workflow)
+        self.assertNotIn("push:", workflow)
+        self.assertIn("permissions:", workflow)
+        self.assertIn("contents: read", workflow)
+        self.assertIn("python -B scripts/validate_public_surface_sync.py --check-published", workflow)
+        self.assertNotIn("upload-artifact", workflow)
+
+    def test_release_security_and_example_gallery_are_professional_surfaces(self) -> None:
+        changelog = read_text("docs/reference/CHANGELOG.md")
+        release_policy = read_text("docs/operations/release-policy.md")
+        oss_security = read_text("docs/security/oss-security.md")
+        gallery = read_text("docs/examples/gallery.md")
+        pyproject = read_text("pyproject.toml")
+
+        self.assertIn("Unreleased", changelog)
+        self.assertIn("semantic versioning", release_policy)
+        self.assertIn("CodeQL", oss_security)
+        self.assertIn("Dependency Review", oss_security)
+        self.assertIn("SBOM", oss_security)
+        self.assertIn("must not claim an official real Hermes E2E harness", release_policy)
+        for example in [
+            "minimal-hermes-project",
+            "v35_valid_product_face.md",
+            "v35_valid_security_with_scan.md",
+            "v35_valid_onchain_auditor_scan.md",
+        ]:
+            with self.subTest(example=example):
+                self.assertIn(example, gallery)
+
+        self.assertNotIn("OWNER", pyproject)
+
+    def test_public_metadata_uses_live_repository_urls_and_explicit_license(self) -> None:
+        pyproject = read_text("pyproject.toml")
+        mkdocs = read_text("docs/mkdocs.yml")
+        license_text = read_text("LICENSE")
+        owner = "feli" + "pegermano17"
+        repo_url = f"https://github.com/{owner}/overkill-factory"
+
+        dead_placeholder_domain = "overkill-factory.dev"
+        self.assertNotIn(dead_placeholder_domain, pyproject)
+        self.assertNotIn(dead_placeholder_domain, mkdocs)
+
+        for expected in [
+            f'Homepage = "{repo_url}"',
+            f'Documentation = "{repo_url}/tree/main/docs"',
+            f'Repository = "{repo_url}"',
+            f'Issues = "{repo_url}/issues"',
+            'license = "MIT"',
+            'license-files = ["LICENSE"]',
+        ]:
+            with self.subTest(expected=expected):
+                self.assertIn(expected, pyproject)
+
+        self.assertIn(f"repo_url: {repo_url}", mkdocs)
+        self.assertTrue(license_text.startswith("MIT License"))
+        self.assertIn("Permission is hereby granted", license_text)
+
+    def test_agent_public_doc_covers_every_registered_worker(self) -> None:
+        registry = json.loads(read_text("agents/worker-registry.public.json"))
+        agent_doc = read_text("docs/agents/worker-profiles.md")
+        registered_workers = [worker["worker_id"] for worker in registry["workers"]]
+
+        for worker_id in registered_workers:
+            with self.subTest(worker_id=worker_id):
+                self.assertIn(f"`{worker_id}`", agent_doc)
+
+        required_agent_topics = [
+            "responsibility",
+            "when it enters",
+            "receives",
+            "delivers",
+            "must not",
+            "evidence",
+            "tooling",
+            "coverage",
+        ]
+        normalized = agent_doc.lower()
+        for topic in required_agent_topics:
+            with self.subTest(topic=topic):
+                self.assertIn(topic, normalized)
+
+    def test_quickstart_and_operations_docs_include_runnable_validation_commands(self) -> None:
+        quickstart = read_text("docs/getting-started/quickstart-hermes.md")
+        walkthrough = read_text("docs/getting-started/first-external-operator-walkthrough.md")
+        operations = read_text("docs/operations/validation-and-release.md")
+        combined = f"{quickstart}\n{walkthrough}\n{operations}"
+        required_commands = [
+            "factoryctl doctor",
+            "factoryctl run minimal",
+            "python -m unittest discover -s tests",
+            "python factory/scripts/validate_document_governance.py",
+            "python factory/scripts/validate_public_json_artifacts.py",
+            "python factory/scripts/validate_promise_implementation_map.py",
+            "python factory/scripts/validate_worker_profiles.py",
+            "python factory/scripts/secret_safety_scan.py",
+            "python factory/scripts/public_safety_scan.py",
+            "python factory/scripts/supply_chain_proof.py --check --no-write",
+            "python factory/scripts/release_integration_preflight.py",
+            "python factory/scripts/factory_production_readiness.py",
+            "python factory/scripts/worktree_release_inventory.py",
+            "factoryctl gate-report",
+            "factoryctl worker-packet",
+        ]
+
+        for command in required_commands:
+            with self.subTest(command=command):
+                self.assertIn(command, combined)
+
+    def test_external_operator_walkthrough_stays_public_and_tmp_scoped(self) -> None:
+        walkthrough = read_text("docs/getting-started/first-external-operator-walkthrough.md")
+        install = read_text("docs/getting-started/install-in-hermes.md")
+        combined = f"{walkthrough}\n{install}"
+        owner = "feli" + "pegermano17"
+        repo_url = f"https://github.com/{owner}/overkill-factory"
+
+        for expected in [
+            f"git clone {repo_url}.git",
+            "factoryctl gate-report --card factory/examples/minimal-hermes-project/card.md",
+            "--out .tmp/external-operator-worker-packets",
+            "--out .tmp/external-hermes-worker-packets",
+            "does not mutate a real Hermes board",
+            "All generated output stays under `.tmp/`",
+        ]:
+            with self.subTest(expected=expected):
+                self.assertIn(expected, combined)
+
+        self.assertNotIn("C:" + "\\" + "Users", combined)
+        self.assertNotIn("historical pilot", combined.lower())
+
+    def test_release_cli_smoke_installs_package_and_runs_entrypoints(self) -> None:
+        workflow = read_text(".github/workflows/release-cli-smoke.yml")
+
+        for expected in [
+            "ubuntu-latest",
+            "windows-latest",
+            "python -m pip install .",
+            "factoryctl --help",
+            "factoryctl doctor --json",
+            "factoryctl run minimal",
+            "overkill-quickstart",
+            "$env:RUNNER_TEMP",
+            "python factory/scripts/public_safety_scan.py",
+            "python factory/scripts/secret_safety_scan.py",
+            "tags:",
+            '"v*"',
+        ]:
+            with self.subTest(expected=expected):
+                self.assertIn(expected, workflow)
+
+    def test_release_cli_smoke_runs_for_packaged_asset_changes(self) -> None:
+        pyproject = tomllib.loads(read_text("pyproject.toml"))
+        workflow = read_text(".github/workflows/release-cli-smoke.yml")
+        data_files = pyproject["tool"]["setuptools"]["data-files"]
+        packaged_roots = {
+            pattern.split("/", 1)[0]
+            for patterns in data_files.values()
+            for pattern in patterns
+            if "/" in pattern
+        }
+
+        for root in sorted(packaged_roots):
+            with self.subTest(root=root):
+                self.assertIn(f'- "{root}/**"', workflow)
+
+    def test_package_metadata_includes_cli_runtime_assets(self) -> None:
+        pyproject = read_text("pyproject.toml")
+
+        for expected in [
+            "[tool.setuptools.data-files]",
+            "share/overkill-factory/agents",
+            "share/overkill-factory/docs/operator",
+            "share/overkill-factory/examples/minimal-hermes-project",
+            "share/overkill-factory/fixtures/product-validation",
+            "share/overkill-factory/schemas",
+            "share/overkill-factory/templates",
+            "share/overkill-factory/adapters/hermes",
+            "share/overkill-factory/skills/codex/overkill-factory",
+        ]:
+            with self.subTest(expected=expected):
+                self.assertIn(expected, pyproject)
+
+    def test_minimal_example_is_public_safe_and_reproducible(self) -> None:
+        example = read_text("examples/minimal-hermes-project/README.md")
+        expected_flow = read_text("examples/minimal-hermes-project/expected-flow.md")
+        receipt = json.loads(read_text("examples/minimal-hermes-project/expected-receipt-five.json"))
+
+        for rel in ["input-paper.md", "expected-flow.md", "expected-receipt-five.json"]:
+            with self.subTest(rel=rel):
+                self.assertIn(rel, example)
+
+        self.assertIn("Hermes", expected_flow)
+        self.assertIn("Control Tower is optional", expected_flow)
+        self.assertEqual(receipt["record_type"], "receipt_five_example")
+        self.assertEqual(receipt["result"], "PASS")
+        self.assertTrue(receipt["public_safe"])
+
+    def test_minimal_example_gate_report_is_ready_for_worker_execution(self) -> None:
+        result = subprocess.run(
+            [
+                sys.executable,
+                "scripts/factoryctl.py",
+                "gate-report",
+                "--card",
+                "examples/minimal-hermes-project/card.md",
+            ],
+            cwd=CODE_ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        report = json.loads(result.stdout)
+
+        self.assertEqual(report["gate_status"], "ready_for_worker_execution")
+        self.assertEqual(report["blocked_workers"], [])
+        self.assertIn("independent-reviewer", report["required_workers"])
+        self.assertEqual(report["workers"]["independent-reviewer"]["status"], "requires_execution")
+
+    def test_quickstart_smoke_writes_small_json_result(self) -> None:
+        out = CODE_ROOT / ".tmp" / "test-quickstart-result.json"
+        packets = CODE_ROOT / ".tmp" / "test-minimal-worker-packets"
+        result = subprocess.run(
+            [
+                sys.executable,
+                "scripts/quickstart_smoke.py",
+                "--out",
+                str(out),
+                "--packets-out",
+                str(packets),
+            ],
+            cwd=CODE_ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        payload = json.loads(out.read_text(encoding="utf-8"))
+
+        self.assertIn("PASS", result.stdout)
+        self.assertEqual(payload["result"], "PASS")
+        self.assertEqual(payload["card"], "examples/minimal-hermes-project/card.md")
+        self.assertGreater(payload["worker_packet_count"], 0)
+
+    def test_ci_uses_public_example_not_historical_pilot_evidence(self) -> None:
+        workflow = read_text(".github/workflows/ci.yml")
+
+        self.assertIn("examples/minimal-hermes-project/card.md", workflow)
+        self.assertNotIn("pilots/quasar-vault-guard-test", workflow)
+        self.assertNotIn(".tmp/factory-runs/cards/solana-quasar-r3.md", workflow)
+
+    def test_document_governance_passes(self) -> None:
+        result = subprocess.run(
+            [sys.executable, "scripts/validate_document_governance.py"],
+            cwd=CODE_ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertIn("OK", result.stdout)
+
+
+if __name__ == "__main__":
+    unittest.main()

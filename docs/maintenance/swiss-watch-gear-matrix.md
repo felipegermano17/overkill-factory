@@ -1,7 +1,7 @@
 # Swiss Watch Gear Matrix
 
 > Document status: GENERATED MAINTAINER BASELINE.
-> Source: `.tmp/swiss-watch/factory-workflow-compiled-plan.json`, `agents/worker-registry.public.json`, `templates/hermes-typed-block-policy.json`.
+> Source: `.tmp/swiss-watch/factory-workflow-compiled-plan.json`, `factory/agents/worker-registry.public.json`, `factory/templates/hermes-typed-block-policy.json`.
 > Runtime boundary: Hermes Kanban remains the runtime source of truth. This matrix is an audit view, not a parallel state store.
 
 ## Purpose

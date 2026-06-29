@@ -1,7 +1,7 @@
 # Overkill Factory Docs
 
 > Document status: CURRENT SUPPORTING GUIDE.
-> Current authority: README.md, scripts/factoryctl.py, schemas/, tests/
+> Current authority: README.md, factory/scripts/factoryctl.py, factory/schemas/, factory/tests/
 > Runtime boundary: This page is navigation. Runtime gates live in scripts,
 > schemas, adapter hooks and Hermes state.
 
@@ -52,16 +52,16 @@ Use `architecture/context-spine.md` before letting memory, prior run context or
 learned facts affect factory behavior.
 
 Use these templates when checking V2 closure:
-`templates/v2-study-traceability.json`,
-`templates/product-experience-control-plane.json`,
-`templates/worker-authority-contract.json`,
-`templates/capability-acquisition-contract.json`,
-`templates/hermes-reducer-mutation-proof.json` and
-`templates/factory-v2-readiness-claim.json`.
+`factory/templates/v2-study-traceability.json`,
+`factory/templates/product-experience-control-plane.json`,
+`factory/templates/worker-authority-contract.json`,
+`factory/templates/capability-acquisition-contract.json`,
+`factory/templates/hermes-reducer-mutation-proof.json` and
+`factory/templates/factory-v2-readiness-claim.json`.
 
 ## Examples
 
-Use `examples/gallery.md` to choose a minimal, Product Face, security or onchain
+Use `factory/examples/gallery.md` to choose a minimal, Product Face, security or onchain
 example. Example files are source material, not historical proof.
 
 ## Security

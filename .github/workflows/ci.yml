@@ -19,15 +19,21 @@ jobs:
           python-version: "3.12"
       - name: Unit tests
         run: python -m unittest discover -s tests -p "test_*.py" -q
+        working-directory: factory
       - name: Quickstart smoke
         run: python scripts/quickstart_smoke.py
+        working-directory: factory
       - name: Factory start path contract
         run: python scripts/validate_factory_start_path_contract.py
+        working-directory: factory
       - name: Hermes profile runtime contracts
         run: python scripts/validate_hermes_profile_runtime_contracts.py
+        working-directory: factory
       - name: Hermes transition plan smoke
         run: python scripts/factoryctl.py transition-plan --card examples/minimal-hermes-project/card.md --from-status draft --to-status ready --out "$RUNNER_TEMP/overkill-transition-plan.json"
+        working-directory: factory
       - name: Hermes transition hook smoke
+        working-directory: factory
         run: |
           mkdir -p "$RUNNER_TEMP/overkill-hook"
           python adapters/hermes/transition_hook.py \
@@ -55,22 +61,31 @@ jobs:
           fi
       - name: Hermes adapter compatibility check
         run: python adapters/hermes/compatibility-check.py
+        working-directory: factory
       - name: Public JSON artifact validation
         run: python scripts/validate_public_json_artifacts.py
+        working-directory: factory
       - name: Promise implementation map validation
         run: python scripts/validate_promise_implementation_map.py
+        working-directory: factory
       - name: Generated factory reference validation
         run: python scripts/generate_factory_reference_docs.py --check
+        working-directory: factory
       - name: Public surface sync
         run: python scripts/validate_public_surface_sync.py
+        working-directory: factory
       - name: Worker profile validation
         run: python scripts/validate_worker_profiles.py
+        working-directory: factory
       - name: Supply-chain proof
         run: python scripts/supply_chain_proof.py --check --no-write
+        working-directory: factory
       - name: Secret safety scan
         run: python scripts/secret_safety_scan.py
+        working-directory: factory
       - name: Public safety scan
         run: python scripts/public_safety_scan.py
+        working-directory: factory
   docs:
     runs-on: ubuntu-latest
     steps:
@@ -79,6 +94,6 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install docs dependencies
-        run: python -m pip install ".[docs]"
+        run: python -m pip install "./factory[docs]"
       - name: MkDocs strict build
-        run: python -m mkdocs build --strict --site-dir "$RUNNER_TEMP/overkill-mkdocs-site"
+        run: python -m mkdocs build -f docs/mkdocs.yml --strict --site-dir "$RUNNER_TEMP/overkill-mkdocs-site"

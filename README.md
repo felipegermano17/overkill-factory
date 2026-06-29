@@ -31,8 +31,8 @@ The technology split is:
 | Runtime | Hermes Kanban | Durable boards, cards, parent/child dependencies, typed blocks, dispatcher, worker processes, comments, runs, logs, workspaces and schedules. |
 | Factory kernel | Overkill Factory | Phase graph, method contracts, schemas, templates, validation, gates, capability routing, worker authority rules, Product Experience, security/release checks and Receipt Five evidence rules. |
 | CLI and validators | `factoryctl` and scripts | Generate, inspect and validate cards, packets, receipts, workflows, worker profiles, public docs and release readiness. |
-| Runtime adapter | `adapters/hermes/` | Connects factory contracts to the real Hermes Kanban state without replacing Hermes as the source of truth. |
-| Worker catalog | `agents/`, `skills/`, `templates/` | Defines what specialist workers are allowed to do, which skills/capabilities they need and what evidence they must return. |
+| Runtime adapter | `factory/adapters/hermes/` | Connects factory contracts to the real Hermes Kanban state without replacing Hermes as the source of truth. |
+| Worker catalog | `factory/agents/`, `factory/skills/`, `factory/templates/` | Defines what specialist workers are allowed to do, which factory/skills/capabilities they need and what evidence they must return. |
 
 So the short version is:
 
@@ -95,7 +95,7 @@ method, contracts and gates only where Hermes needs a factory-specific layer.
 The Swiss Watch reliability audit makes that rule executable:
 
 ```bash
-python scripts/swiss_watch_audit.py --out .tmp/swiss-watch-audit.json --markdown .tmp/swiss-watch-audit.md
+python factory/scripts/swiss_watch_audit.py --out .tmp/swiss-watch-audit.json --markdown .tmp/swiss-watch-audit.md
 ```
 
 It checks that the production-line gears have contracts, Hermes-native
@@ -174,7 +174,7 @@ Inspect it with:
 
 ```bash
 factoryctl operating-systems
-factoryctl validate-operating-systems templates/factory-operating-system-registry.json
+factoryctl validate-operating-systems factory/templates/factory-operating-system-registry.json
 factoryctl operating-system-scorecard --runtime-proof .tmp/factory-runs/hermes-runtime/hermes-worker-runtime-proof.json
 ```
 
@@ -197,7 +197,7 @@ Method OS also has a method-engine registry:
 
 ```bash
 factoryctl method-engines
-factoryctl validate-method-engines templates/method-engine-registry.json
+factoryctl validate-method-engines factory/templates/method-engine-registry.json
 ```
 
 The Method Contract must bind selected methods to engines such as spec-first
@@ -252,7 +252,7 @@ From a clean checkout:
 ```bash
 git clone https://github.com/felipegermano17/overkill-factory.git
 cd overkill-factory
-python -m pip install -e .
+python -m pip install -e ./factory
 factoryctl doctor
 factoryctl run minimal
 factoryctl v3-production-activation-check
@@ -304,16 +304,16 @@ first, what its source of truth is and how drift is prevented.
 | Path | Public purpose |
 | --- | --- |
 | `.github/` | GitHub workflows, templates, Dependabot and repository hygiene. See `.github/PROJECT_SURFACE.md`. |
-| `adapters/` | Runtime integrations, currently Hermes hooks and patches. See `adapters/README.md`. |
-| `agents/` | Public worker registry, profiles, permissions, capability packs and Hermes bindings. See `agents/README.md`. |
+| `factory/adapters/` | Runtime integrations, currently Hermes hooks and patches. See `factory/adapters/README.md`. |
+| `factory/agents/` | Public worker registry, profiles, permissions, capability packs and Hermes bindings. See `factory/agents/README.md`. |
 | `docs/` | Human guides for onboarding, concepts, operations, security and maintenance. See `docs/README.md`. |
-| `examples/` | Small public examples and source fixtures for the factory path. See `examples/README.md`. |
-| `fixtures/` | Minimal public-safe regression fixtures, including advanced product-shaped validation fixtures. See `fixtures/README.md`. |
-| `schemas/` | Machine contracts for cards, receipts, workers, gates and public artifacts. See `schemas/README.md`. |
-| `scripts/` | CLI entrypoints, validation tools, proof helpers and maintainer checks. See `scripts/README.md`. |
-| `skills/` | Installable factory skill material for operators/agents. See `skills/README.md`. |
-| `templates/` | Starter contracts paired with schemas and tests. See `templates/README.md`. |
-| `tests/` | Regression coverage for public contracts, docs, adapters and examples. See `tests/README.md`. |
+| `factory/examples/` | Small public examples and source fixtures for the factory path. See `factory/examples/README.md`. |
+| `factory/fixtures/` | Minimal public-safe regression fixtures, including advanced product-shaped validation fixtures. See `factory/fixtures/README.md`. |
+| `factory/schemas/` | Machine contracts for cards, receipts, workers, gates and public artifacts. See `factory/schemas/README.md`. |
+| `factory/scripts/` | CLI entrypoints, validation tools, proof helpers and maintainer checks. See `factory/scripts/README.md`. |
+| `factory/skills/` | Installable factory skill material for operators/agents. See `factory/skills/README.md`. |
+| `factory/templates/` | Starter contracts paired with schemas and tests. See `factory/templates/README.md`. |
+| `factory/tests/` | Regression coverage for public contracts, docs, adapters and examples. See `factory/tests/README.md`. |
 
 Ignored local folders such as `.tmp/`, `build/`, `dist/`, `site/` and
 `*.egg-info/` are not public product surfaces.
@@ -367,9 +367,9 @@ implementation, proof and boundary.
 - `docs/reference/factory-kernel-reference.md`: generated reference of the actual phases, workers, profiles, operating systems, method engines, schemas, templates and public surfaces.
 - `docs/architecture/factory-v2-control-plane.md`: deterministic control plane.
 - `docs/operations/telegram-operator-experience.md`: Telegram-first operator experience without turning Telegram into the runtime source of truth.
-- `templates/v2-study-traceability.json`: raw V2 claim ledger with bounded truth levels, evidence refs and known gaps.
-- `templates/v2-doc-implementation-obligations.json`: obligations that prevent documented V2 work from being mistaken for implemented code.
-- `templates/factory-v2-readiness-claim.json`: scoped readiness claim contract.
+- `factory/templates/v2-study-traceability.json`: raw V2 claim ledger with bounded truth levels, evidence refs and known gaps.
+- `factory/templates/v2-doc-implementation-obligations.json`: obligations that prevent documented V2 work from being mistaken for implemented code.
+- `factory/templates/factory-v2-readiness-claim.json`: scoped readiness claim contract.
 - `docs/operations/promise-to-implementation.md`: public promise-to-proof audit.
 
 ## Validation
@@ -377,33 +377,33 @@ implementation, proof and boundary.
 Before publishing public changes:
 
 ```bash
-python scripts/validate_document_governance.py
-python scripts/generate_factory_reference_docs.py --check
-python scripts/validate_public_json_artifacts.py
-python scripts/validate_worker_profiles.py
-python scripts/validate_promise_implementation_map.py
-python scripts/factoryctl.py validate-v2-runtime-contracts
-python scripts/factoryctl.py validate-agent-skill-boundaries
-python scripts/factoryctl.py validate-reference-superiority
-python scripts/factoryctl.py capability-acquisition-run --capability-gap solana-ai-kit --surface solana --out .tmp/factory-runs/capability/readme-capability-acquisition-run.json
-python scripts/factoryctl.py validate-capability-acquisition-run .tmp/factory-runs/capability/readme-capability-acquisition-run.json
-python scripts/factoryctl.py validate-v2-study-traceability templates/v2-study-traceability.json
-python scripts/factoryctl.py validate-v2-doc-implementation-obligations templates/v2-doc-implementation-obligations.json --traceability templates/v2-study-traceability.json
-python scripts/public_safety_scan.py
-python scripts/secret_safety_scan.py
-python scripts/validate_public_surface_sync.py
-python -m unittest discover -s tests -q
+python factory/scripts/validate_document_governance.py
+python factory/scripts/generate_factory_reference_docs.py --check
+python factory/scripts/validate_public_json_artifacts.py
+python factory/scripts/validate_worker_profiles.py
+python factory/scripts/validate_promise_implementation_map.py
+python factory/scripts/factoryctl.py validate-v2-runtime-contracts
+python factory/scripts/factoryctl.py validate-agent-skill-boundaries
+python factory/scripts/factoryctl.py validate-reference-superiority
+python factory/scripts/factoryctl.py capability-acquisition-run --capability-gap solana-ai-kit --surface solana --out .tmp/factory-runs/capability/readme-capability-acquisition-run.json
+python factory/scripts/factoryctl.py validate-capability-acquisition-run .tmp/factory-runs/capability/readme-capability-acquisition-run.json
+python factory/scripts/factoryctl.py validate-v2-study-traceability factory/templates/v2-study-traceability.json
+python factory/scripts/factoryctl.py validate-v2-doc-implementation-obligations factory/templates/v2-doc-implementation-obligations.json --traceability factory/templates/v2-study-traceability.json
+python factory/scripts/public_safety_scan.py
+python factory/scripts/secret_safety_scan.py
+python factory/scripts/validate_public_surface_sync.py
+cd factory && python -m unittest discover -s tests -q
 ```
 
 For release readiness:
 
 ```bash
-python scripts/release_integration_preflight.py
-python scripts/worktree_release_inventory.py
+python factory/scripts/release_integration_preflight.py
+python factory/scripts/worktree_release_inventory.py
 factoryctl v1-completion-gate --github-actions-result PASS --open-v1-blockers 0 --open-prs 0
 ```
 
-The public map is validated by `scripts/validate_public_surface_sync.py`. It
+The public map is validated by `factory/scripts/validate_public_surface_sync.py`. It
 compares the tracked HTML against the published GCS object and checks that the
 visual does not claim runtime authority.
 

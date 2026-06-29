@@ -1,8 +1,8 @@
 # Install In Your Hermes
 
 > Document status: CURRENT SUPPORTING GUIDE.
-> Current authority: README.md, scripts/factoryctl.py, adapters/hermes/README.md,
-> agents/hermes-profile-bindings.public.json, tests/
+> Current authority: README.md, factory/scripts/factoryctl.py, factory/adapters/hermes/README.md,
+> factory/agents/hermes-profile-bindings.public.json, factory/tests/
 > Runtime boundary: This guide prepares an operator-owned Hermes integration. It
 > does not claim a real Hermes E2E harness.
 
@@ -31,14 +31,14 @@ Hermes adapter patch or inspecting public docs and examples.
 Before touching a real Hermes board, prove the public adapter path locally:
 
 ```bash
-factoryctl gate-report --card examples/minimal-hermes-project/card.md
+factoryctl gate-report --card factory/examples/minimal-hermes-project/card.md
 factoryctl worker-packet \
   --worker all \
   --required-only \
-  --card examples/minimal-hermes-project/card.md \
+  --card factory/examples/minimal-hermes-project/card.md \
   --out .tmp/external-hermes-worker-packets
-python adapters/hermes/transition_hook.py \
-  --card examples/minimal-hermes-project/card.md \
+python factory/adapters/hermes/transition_hook.py \
+  --card factory/examples/minimal-hermes-project/card.md \
   --from-status draft \
   --to-status ready \
   --ledger .tmp/external-hermes-worker-ledger.json \
@@ -52,16 +52,16 @@ screenshots or runtime proof from your own Hermes instance.
 ## What Gets Installed
 
 - `factoryctl`: the supported CLI.
-- Public Codex skill material under `skills/codex/overkill-factory/`.
-- Hermes adapter material under `adapters/hermes/`.
-- Public worker bindings under `agents/hermes-profile-bindings.public.json`.
+- Public Codex skill material under `factory/skills/codex/overkill-factory/`.
+- Hermes adapter material under `factory/adapters/hermes/`.
+- Public worker bindings under `factory/agents/hermes-profile-bindings.public.json`.
 
 ## Connect To Hermes
 
 1. Review the workspace created by `factoryctl init`.
 2. Install the Codex skill into the agent environment that will operate Hermes.
 3. Apply the Hermes adapter patch in a test Hermes checkout first.
-4. Wire Hermes transition events to `adapters/hermes/transition_hook.py`.
+4. Wire Hermes transition events to `factory/adapters/hermes/transition_hook.py`.
 5. Generate worker packets with `factoryctl worker-packet`.
 6. Create or route Hermes worker cards from those packets.
 7. Attach real worker result artifacts and Receipt Five before `done`.
@@ -93,18 +93,18 @@ is also valid.
 export FACTORY_GATEWAY_PROFILE=overkill-factory-gerente
 export HERMES_PROFILE_HOME="$HERMES_HOME/profiles/$FACTORY_GATEWAY_PROFILE"
 mkdir -p "$HERMES_PROFILE_HOME/scripts"
-cat > "$HERMES_PROFILE_HOME/scripts/overkill_factory_no_idle_watchdog.sh" <<'SH'
+cat > "$HERMES_PROFILE_HOME/factory/scripts/overkill_factory_no_idle_watchdog.sh" <<'SH'
 #!/usr/bin/env bash
 set -euo pipefail
 export HOME="${HERMES_HOME:-$HOME}"
 export HERMES_HOME="${HERMES_HOME:-$HOME}"
 cd /path/to/overkill-factory
-python scripts/factory_no_idle_watchdog.py \
+python factory/scripts/factory_no_idle_watchdog.py \
   --all-nonempty-boards \
   --exclude-board old-product-board-if-not-archived \
   --emit-events
 SH
-chmod +x "$HERMES_PROFILE_HOME/scripts/overkill_factory_no_idle_watchdog.sh"
+chmod +x "$HERMES_PROFILE_HOME/factory/scripts/overkill_factory_no_idle_watchdog.sh"
 hermes --profile "$FACTORY_GATEWAY_PROFILE" cron create "every 5m" \
   --name overkill-factory-no-idle-watchdog \
   --script overkill_factory_no_idle_watchdog.sh \
@@ -121,7 +121,7 @@ For one active product board that should keep moving, add a second explicit
 cron job scoped to that board:
 
 ```bash
-python scripts/factory_no_idle_watchdog.py \
+python factory/scripts/factory_no_idle_watchdog.py \
   --board active-product-board-slug \
   --create-remediation \
   --dispatch \

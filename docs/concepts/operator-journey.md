@@ -1,7 +1,7 @@
 # Operator Journey
 
 > Document status: CURRENT SUPPORTING GUIDE.
-> Current authority: `scripts/factoryctl.py`, `schemas/`, adapter hooks, tests and `README.md`.
+> Current authority: `factory/scripts/factoryctl.py`, `factory/schemas/`, adapter hooks, tests and `README.md`.
 > Runtime boundary: This guide explains how a human operator experiences the factory; runtime state and receipts decide completion.
 
 This page explains what happens inside Overkill Factory from the point of view

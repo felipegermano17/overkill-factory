@@ -117,7 +117,7 @@ factoryctl worker-packet --worker all --required-only --card path/to/card.json -
 For public repo changes, also run:
 
 ```bash
-python scripts/validate_public_json_artifacts.py
+python factory/scripts/validate_public_json_artifacts.py
 python -m unittest tests.test_factoryctl -q
 ```
 

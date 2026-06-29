@@ -22,11 +22,11 @@ Raw JSON is never the operator-facing gate.
 
 The canonical package is:
 
-`templates/human-gate-decision-package.json`
+`factory/templates/human-gate-decision-package.json`
 
 The fallback renderer is:
 
-`python3 scripts/render_human_gate_pdf.py`
+`python3 factory/scripts/render_human_gate_pdf.py`
 
 A low-risk planning step must not become a human gate by default. A gate is for
 material authority, release, secrets, funds, mainnet, production, R3/R4 or other

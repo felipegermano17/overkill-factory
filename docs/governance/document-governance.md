@@ -1,7 +1,7 @@
 # Document Governance
 
 > Document status: CURRENT SUPPORTING GUIDE.
-> Current authority: `scripts/factoryctl.py`, schemas, tests and `README.md`.
+> Current authority: `factory/scripts/factoryctl.py`, schemas, tests and `README.md`.
 > Runtime boundary: This guide controls document classification; executable gates still decide factory runtime behavior.
 
 This page defines which documents can guide an external user and which ones are
@@ -11,7 +11,7 @@ allowed only outside the public repository.
 
 Use this order when documents disagree:
 
-1. Executable gates: `scripts/factoryctl.py`, schemas, adapter hooks and tests.
+1. Executable gates: `factory/scripts/factoryctl.py`, schemas, adapter hooks and tests.
 2. Current user path: `README.md`, `docs/getting-started/quickstart-hermes.md`,
    `docs/concepts/factory-flow.md`, `docs/concepts/overkill-factory-method.md`,
    `docs/concepts/operator-journey.md` and
@@ -78,6 +78,6 @@ release note, private evidence store or local `.tmp` output before publishing.
 Run this check before claiming the docs are clean:
 
 ```bash
-python scripts/validate_document_governance.py
-python scripts/generate_factory_reference_docs.py --check
+python factory/scripts/validate_document_governance.py
+python factory/scripts/generate_factory_reference_docs.py --check
 ```

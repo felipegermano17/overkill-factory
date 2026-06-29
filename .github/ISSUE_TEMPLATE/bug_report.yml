@@ -17,7 +17,7 @@ body:
       description: Commands, card snippet or minimal steps.
       value: |
         ```bash
-        python scripts/quickstart_smoke.py
+        python factory/scripts/quickstart_smoke.py
         ```
     validations:
       required: true

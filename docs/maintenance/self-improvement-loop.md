@@ -1,7 +1,7 @@
 # Factory Self-Improvement Loop
 
 > Document status: CURRENT SUPPORTING GUIDE.
-> Current authority: `scripts/factory_self_improvement.py`, schemas, tests.
+> Current authority: `factory/scripts/factory_self_improvement.py`, schemas, tests.
 > Runtime boundary: these helpers produce dry-run plans and public-safe
 > candidates. They do not dispatch Hermes, activate workers, post GitHub
 > comments or approve gates.
@@ -15,18 +15,18 @@ intake and governance checks into structured artifacts.
 
 ## Contracts
 
-- `schemas/missing-capability-completion-plan.schema.json`
-- `schemas/execution-learnback-record.schema.json`
-- `schemas/factory-sdlc-feedback-loop.schema.json`
-- `schemas/factory-readiness-scorecard.schema.json`
-- `schemas/factory-learning-proposal.schema.json`
-- `schemas/factory-improvement-issue-candidate.schema.json`
-- `schemas/owner-issue-intake-config.schema.json`
-- `schemas/owner-issue-intake-report.schema.json`
-- `schemas/ai-codebase-governance-report.schema.json`
-- `schemas/reasoning-policy.schema.json`
-- `schemas/reference-quality-packet.schema.json`
-- `schemas/reference-source-registry.schema.json`
+- `factory/schemas/missing-capability-completion-plan.schema.json`
+- `factory/schemas/execution-learnback-record.schema.json`
+- `factory/schemas/factory-sdlc-feedback-loop.schema.json`
+- `factory/schemas/factory-readiness-scorecard.schema.json`
+- `factory/schemas/factory-learning-proposal.schema.json`
+- `factory/schemas/factory-improvement-issue-candidate.schema.json`
+- `factory/schemas/owner-issue-intake-config.schema.json`
+- `factory/schemas/owner-issue-intake-report.schema.json`
+- `factory/schemas/ai-codebase-governance-report.schema.json`
+- `factory/schemas/reasoning-policy.schema.json`
+- `factory/schemas/reference-quality-packet.schema.json`
+- `factory/schemas/reference-source-registry.schema.json`
 
 ## Missing Capability Completion
 
@@ -34,7 +34,7 @@ When a gate report shows blocked workers, missing profile bindings or capability
 coverage gaps, use:
 
 ```bash
-python scripts/factory_self_improvement.py missing-capability-plan \
+python factory/scripts/factory_self_improvement.py missing-capability-plan \
   --gate-report .tmp/gate-report.json \
   --out .tmp/missing-capability-plan.json
 ```
@@ -52,7 +52,7 @@ After material execution, generate an `execution_learnback_record` from Receipt
 Five and, when available, the Evidence Graph:
 
 ```bash
-python scripts/factory_self_improvement.py learnback-record \
+python factory/scripts/factory_self_improvement.py learnback-record \
   --receipt .tmp/receipt-five.json \
   --evidence-graph .tmp/evidence-graph.json \
   --out .tmp/execution-learnback-record.json
@@ -61,7 +61,7 @@ python scripts/factory_self_improvement.py learnback-record \
 Then generate issue candidates:
 
 ```bash
-python scripts/factory_self_improvement.py learnback-issues \
+python factory/scripts/factory_self_improvement.py learnback-issues \
   --record .tmp/execution-learnback-record.json \
   --out .tmp/factory-improvement-issue-candidates.json
 ```
@@ -92,8 +92,8 @@ cannot claim improvement without a target, validation path and promotion
 boundary.
 
 ```bash
-python scripts/factoryctl.py validate-sdlc-feedback-loop \
-  templates/factory-sdlc-feedback-loop.json
+python factory/scripts/factoryctl.py validate-sdlc-feedback-loop \
+  factory/templates/factory-sdlc-feedback-loop.json
 ```
 
 Use this before converting external research, incidents, review findings,
@@ -118,8 +118,8 @@ Use `factory_readiness_scorecard` before long autonomous execution to decide
 whether the factory can proceed, proceed with bounds, remediate, or block:
 
 ```bash
-python scripts/factoryctl.py validate-readiness-scorecard \
-  templates/factory-readiness-scorecard.json
+python factory/scripts/factoryctl.py validate-readiness-scorecard \
+  factory/templates/factory-readiness-scorecard.json
 ```
 
 The scorecard checks the execution environment around the work: build/install,
@@ -147,7 +147,7 @@ skill, worker, gate, schema, test, doc, reference, issue, hook, MCP/tool,
 install profile or recorded rejection:
 
 ```bash
-python scripts/factory_self_improvement.py learning-proposals \
+python factory/scripts/factory_self_improvement.py learning-proposals \
   --record .tmp/execution-learnback-record.json \
   --out .tmp/factory-learning-proposals.json
 ```
@@ -178,8 +178,8 @@ An operator-owned factory instance may review selected GitHub issues and convert
 them into blocked factory work:
 
 ```bash
-python scripts/factory_self_improvement.py issue-intake \
-  --config templates/owner-issue-intake-config.json \
+python factory/scripts/factory_self_improvement.py issue-intake \
+  --config factory/templates/owner-issue-intake-config.json \
   --issues .tmp/issues.json \
   --out .tmp/owner-issue-intake-report.json
 ```
@@ -223,7 +223,7 @@ or asset reuse. Product Face remains the proof layer after implementation.
 Use:
 
 ```bash
-python scripts/factory_self_improvement.py governance-audit \
+python factory/scripts/factory_self_improvement.py governance-audit \
   --out .tmp/ai-codebase-governance-report.json
 ```
 

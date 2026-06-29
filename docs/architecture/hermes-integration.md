@@ -21,14 +21,14 @@ factory card
 
 | File | Purpose |
 | --- | --- |
-| `adapters/hermes/README.md` | Human-readable adapter contract and patch notes. |
-| `adapters/hermes/patches/0001-overkill-factory-v35-gates-official-main.patch` | Kanban gate patch for Hermes. |
-| `adapters/hermes/transition_hook.py` | Transition planning and done-time reconciliation helper. |
-| `scripts/factory_bridge.py` | Operator inbox, start-request and handoff helper. |
-| `agents/worker-registry.public.json` | Process role registry. |
-| `agents/worker-profiles.public.json` | Public agent identity, authority and evidence contract. |
-| `agents/hermes-profile-bindings.public.json` | Hermes profile name, skill refs, queue policy and receipt field. |
-| `schemas/` | JSON schemas for cards, receipts, worker results and release records. |
+| `factory/adapters/hermes/README.md` | Human-readable adapter contract and patch notes. |
+| `factory/adapters/hermes/patches/0001-overkill-factory-v35-gates-official-main.patch` | Kanban gate patch for Hermes. |
+| `factory/adapters/hermes/transition_hook.py` | Transition planning and done-time reconciliation helper. |
+| `factory/scripts/factory_bridge.py` | Operator inbox, start-request and handoff helper. |
+| `factory/agents/worker-registry.public.json` | Process role registry. |
+| `factory/agents/worker-profiles.public.json` | Public agent identity, authority and evidence contract. |
+| `factory/agents/hermes-profile-bindings.public.json` | Hermes profile name, skill refs, queue policy and receipt field. |
+| `factory/schemas/` | JSON schemas for cards, receipts, worker results and release records. |
 
 ## Transition Model
 
@@ -165,7 +165,7 @@ become the runtime.
 ## First Integration Path
 
 1. Run local repository validation.
-2. Generate a gate report from `examples/minimal-hermes-project/card.md`.
+2. Generate a gate report from `factory/examples/minimal-hermes-project/card.md`.
 3. Preview Hermes profile materialization.
 4. Apply the adapter patch in a test Hermes checkout.
 5. Wire Hermes transition events to `transition_hook.py`.

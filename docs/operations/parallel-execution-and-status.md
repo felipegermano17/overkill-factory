@@ -1,8 +1,8 @@
 # Parallel Execution And Status
 
 > Document status: CURRENT SUPPORTING GUIDE.
-> Current authority: `scripts/factoryctl.py`, `schemas/parallel-lane-contract.schema.json`,
-> `schemas/factory-status-snapshot.schema.json`, Hermes runtime state.
+> Current authority: `factory/scripts/factoryctl.py`, `factory/schemas/parallel-lane-contract.schema.json`,
+> `factory/schemas/factory-status-snapshot.schema.json`, Hermes runtime state.
 > Runtime boundary: this guide defines public contracts. Hermes or the operator's
 > runtime remains the source of truth.
 
@@ -98,15 +98,15 @@ A snapshot must show:
 Generate a local snapshot with:
 
 ```bash
-factoryctl status-snapshot --card examples/minimal-hermes-project/card.md --out .tmp/factory-status-snapshot.json
+factoryctl status-snapshot --card factory/examples/minimal-hermes-project/card.md --out .tmp/factory-status-snapshot.json
 ```
 
 Add lane contracts or evidence refs when applicable:
 
 ```bash
 factoryctl status-snapshot \
-  --card examples/minimal-hermes-project/card.md \
-  --lane-contract templates/parallel-lane-contract.json \
+  --card factory/examples/minimal-hermes-project/card.md \
+  --lane-contract factory/templates/parallel-lane-contract.json \
   --evidence-ref external:operator-summary \
   --out .tmp/factory-status-snapshot.json
 ```

@@ -95,9 +95,9 @@ gate package cannot proceed while the computed frontier is still Product SOT and
 the next required artifact is `operator_briefing_package`.
 
 In Hermes/Kanban runtime reconciliation, public scaffold material is not
-evidence. References such as `templates/...`, `source-ledger.md`,
+evidence. References such as `factory/templates/...`, `source-ledger.md`,
 `factoryctl:gate-report` or embedded placeholder packets copied from
-`templates/vfinal-factory-card.json` do not count as product-specific source,
+`factory/templates/vfinal-factory-card.json` do not count as product-specific source,
 SOT, Method Contract, architecture, readiness or gate artifacts. They are useful
 as examples and schemas; a live product board must materialize its own artifacts
 before the phase engine advances.

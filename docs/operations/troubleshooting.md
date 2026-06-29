@@ -8,7 +8,7 @@ Do not bypass a gate just to get a green status.
 Run:
 
 ```bash
-python scripts/factoryctl.py validate-card <card>
+python factory/scripts/factoryctl.py validate-card <card>
 ```
 
 Fix missing required fields first:
@@ -43,7 +43,7 @@ Check:
 Run:
 
 ```bash
-python scripts/public_safety_scan.py
+python factory/scripts/public_safety_scan.py
 ```
 
 Remove or redact the reported public-boundary residue. Do not add allowlists for
@@ -55,7 +55,7 @@ repo-relative paths.
 Run:
 
 ```bash
-python scripts/secret_safety_scan.py
+python factory/scripts/secret_safety_scan.py
 ```
 
 Rotate any real credential that was committed. Replace public examples with
@@ -73,16 +73,16 @@ python -m unittest tests.test_factoryctl -q
 
 Do not turn a shell launcher failure into a PASS. If the environment reports a
 runner error such as `CreateProcessAsUserW failed: 5`, use the pattern in
-`scripts/safe_shell.py` and record the result as `BLOCKED` with remediation.
+`factory/scripts/safe_shell.py` and record the result as `BLOCKED` with remediation.
 Only a later successful run of the same argv can supersede that blocker.
 
 ## Hermes Patch Does Not Apply
 
-Read `adapters/hermes/README.md` and rerun the patch check from a clean Hermes
+Read `factory/adapters/hermes/README.md` and rerun the patch check from a clean Hermes
 checkout:
 
 ```bash
-git apply --check <path-to-overkill-factory>/adapters/hermes/patches/0001-overkill-factory-v35-gates-official-main.patch
+git apply --check <path-to-overkill-factory>/factory/adapters/hermes/patches/0001-overkill-factory-v35-gates-official-main.patch
 ```
 
 If it fails, compare the tested Hermes commit and your local Hermes version.
@@ -98,7 +98,7 @@ or complete it manually.
 Run:
 
 ```bash
-python adapters/hermes/live_kanban_adapter.py recover-ready-work-units \
+python factory/adapters/hermes/live_kanban_adapter.py recover-ready-work-units \
   --plan <ready-work-unit-hermes-plan.json> \
   --materialization-result <live-ready-work-unit-materialization-result.json> \
   --route-readiness <route-readiness.json>
@@ -121,7 +121,7 @@ message to that repo-relative ref.
 Run:
 
 ```bash
-python scripts/factory_completion_audit.py --no-write --require-complete
+python factory/scripts/factory_completion_audit.py --no-write --require-complete
 ```
 
 The audit is allowed to be stricter than a status summary. Fix the missing lane,

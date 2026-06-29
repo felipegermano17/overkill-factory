@@ -88,11 +88,11 @@ methodology changes from a chat summary.
 A `/learn` integration is acceptable only when these checks pass:
 
 ```bash
-python scripts/validate_public_json_artifacts.py
+python factory/scripts/validate_public_json_artifacts.py
 python -m unittest tests.test_factory_self_improvement -q
 python -m unittest tests.test_open_source_docs -q
-python scripts/public_safety_scan.py
-python scripts/secret_safety_scan.py
+python factory/scripts/public_safety_scan.py
+python factory/scripts/secret_safety_scan.py
 ```
 
 Runtime owners should also verify Hermes itself:
@@ -101,7 +101,7 @@ Runtime owners should also verify Hermes itself:
 hermes version
 hermes doctor
 hermes gateway status --system
-python -m pytest -q tests/agent/test_learn_prompt.py
+python -m pytest -q factory/tests/agent/test_learn_prompt.py
 ```
 
 Those Hermes commands prove the runtime supports `/learn`. They do not replace

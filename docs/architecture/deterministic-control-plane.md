@@ -1,7 +1,7 @@
 # Deterministic Control Plane
 
 Document status: CURRENT SUPPORTING GUIDE
-Current authority: scripts/factoryctl.py, schemas/, tests/
+Current authority: factory/scripts/factoryctl.py, factory/schemas/, factory/tests/
 Runtime boundary: Hermes Kanban remains the durable runtime. The factory
 control plane computes whether Hermes may create, release or dispatch work.
 
@@ -52,7 +52,7 @@ Plain `phase` text is not enough.
 
 ## Adapter Boundaries
 
-`adapters/hermes/live_kanban_adapter.py dispatch` performs a reconcile preflight
+`factory/adapters/hermes/live_kanban_adapter.py dispatch` performs a reconcile preflight
 before calling `hermes kanban dispatch --json`. If the plan action is not
 `dispatch_ready`, native dispatch is skipped and the plan is returned for repair
 or operator handling.
@@ -67,7 +67,7 @@ or close gates.
 
 ## Regression Fixtures
 
-Incident replay fixtures under `fixtures/incidents/` pin the failures that must
+Incident replay fixtures under `factory/fixtures/incidents/` pin the failures that must
 not return:
 
 - F3 blocked while F4 ready;

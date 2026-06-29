@@ -18,3 +18,4 @@ jobs:
           python-version: "3.12"
       - name: Published public surface sync
         run: python -B scripts/validate_public_surface_sync.py --check-published
+        working-directory: factory

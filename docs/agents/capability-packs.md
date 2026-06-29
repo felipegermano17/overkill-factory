@@ -23,8 +23,8 @@ that adapts to mobile screens. Use `ios`, `android`, `react-native`, `expo` or
 `native-mobile` for native mobile work. The broad surface `mobile` is
 intentionally ambiguous and must be refined before execution.
 
-`scripts/factoryctl.py validate-card` checks those surfaces against
-`agents/capability-packs.public.json`.
+`factory/scripts/factoryctl.py validate-card` checks those surfaces against
+`factory/agents/capability-packs.public.json`.
 
 Reusable packs should also state their practical operator contract:
 
@@ -108,12 +108,12 @@ A template pack becomes executable only when the card includes a
 - missing capabilities, if any;
 - an execution rule.
 
-The template lives at `templates/capability-pack-contract.json`.
-`templates/capability-pack-activation-example.json` shows a complete
+The template lives at `factory/templates/capability-pack-contract.json`.
+`factory/templates/capability-pack-activation-example.json` shows a complete
 non-core pack activation shape, but it is deliberately blocked until real
 public-safe smoke and eval refs replace the placeholders.
 
-`agents/capability-pack-activation-ledger.public.json` is the current activation
+`factory/agents/capability-pack-activation-ledger.public.json` is the current activation
 ledger for non-core packs. It states whether each specialized pack is
 `activated`, `template_only` or `blocked_until_installed`, and names the smoke,
 eval, profile-binding and structured-proof requirements that must exist before
@@ -122,7 +122,7 @@ pack as activated, `factoryctl` requires a bounded human activation gate plus
 activation scope/rationale in the `capability_pack_contract`.
 
 Core packs can still require surface-specific proof through
-`templates/product-delivery-quality-profile.json`. API/data surfaces must prove
+`factory/templates/product-delivery-quality-profile.json`. API/data surfaces must prove
 contract, auth, error semantics, migrations, fixtures, retention and operational
 data safety. CLI/TUI surfaces must prove command transcripts, help output,
 error states, install/run and shell behavior. A user-facing agentic product must

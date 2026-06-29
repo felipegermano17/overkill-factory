@@ -23,26 +23,26 @@
       ],
       "implementation_refs": [
         "docs/factory-workflow.catalog.json",
-        "scripts/factory_v2_kernel.py",
-        "scripts/factoryctl.py",
-        "schemas/factory-workflow-compiled-plan.schema.json",
-        "schemas/factory-command.schema.json",
-        "schemas/factory-run-event.schema.json",
-        "schemas/factory-run.schema.json",
-        "schemas/factory-decision-outbox.schema.json",
-        "schemas/factory-promotion-packet.schema.json",
-        "templates/factory-workflow-compiled-plan.json",
-        "templates/factory-command.json",
-        "templates/factory-run-event.json",
-        "templates/factory-run.json",
-        "templates/factory-decision-outbox.json",
-        "templates/factory-promotion-packet.json"
+        "factory/scripts/factory_v2_kernel.py",
+        "factory/scripts/factoryctl.py",
+        "factory/schemas/factory-workflow-compiled-plan.schema.json",
+        "factory/schemas/factory-command.schema.json",
+        "factory/schemas/factory-run-event.schema.json",
+        "factory/schemas/factory-run.schema.json",
+        "factory/schemas/factory-decision-outbox.schema.json",
+        "factory/schemas/factory-promotion-packet.schema.json",
+        "factory/templates/factory-workflow-compiled-plan.json",
+        "factory/templates/factory-command.json",
+        "factory/templates/factory-run-event.json",
+        "factory/templates/factory-run.json",
+        "factory/templates/factory-decision-outbox.json",
+        "factory/templates/factory-promotion-packet.json"
       ],
       "proof_refs": [
-        "tests/test_factory_v2_kernel.py",
-        "tests/test_factory_bridge.py",
-        "tests/test_factory_board_reconciler.py",
-        "tests/test_factory_incident_replay.py"
+        "factory/tests/test_factory_v2_kernel.py",
+        "factory/tests/test_factory_bridge.py",
+        "factory/tests/test_factory_board_reconciler.py",
+        "factory/tests/test_factory_incident_replay.py"
       ],
       "boundary": "This proves deterministic public control-plane contracts and regressions. A live product still requires current Hermes runtime state, worker results, Receipt Five, approvals and product-specific release evidence.",
       "boundary_refs": [
@@ -61,16 +61,16 @@
         "docs/getting-started/install-in-hermes.md"
       ],
       "implementation_refs": [
-        "adapters/hermes/live_kanban_adapter.py",
-        "adapters/hermes/transition_hook.py",
-        "scripts/hermes_runtime_proof.py",
-        "agents/hermes-profile-bindings.public.json"
+        "factory/adapters/hermes/live_kanban_adapter.py",
+        "factory/adapters/hermes/transition_hook.py",
+        "factory/scripts/hermes_runtime_proof.py",
+        "factory/agents/hermes-profile-bindings.public.json"
       ],
       "proof_refs": [
-        "tests/test_hermes_live_kanban_adapter.py",
-        "tests/test_hermes_transition_hook.py",
-        "tests/test_hermes_runtime_proof.py",
-        "tests/test_worker_profiles.py"
+        "factory/tests/test_hermes_live_kanban_adapter.py",
+        "factory/tests/test_hermes_transition_hook.py",
+        "factory/tests/test_hermes_runtime_proof.py",
+        "factory/tests/test_worker_profiles.py"
       ],
       "boundary": "The public repo proves local contracts and public-safe runtime proof ingestion. A real product run still requires an operator-owned Hermes runtime and current Hermes evidence.",
       "boundary_refs": [
@@ -88,20 +88,20 @@
         "docs/getting-started/first-external-operator-walkthrough.md"
       ],
       "implementation_refs": [
-        "scripts/factoryctl.py",
-        "scripts/quickstart_smoke.py",
-        "examples/minimal-hermes-project/card.md",
-        "examples/minimal-hermes-project/expected-flow.md"
+        "factory/scripts/factoryctl.py",
+        "factory/scripts/quickstart_smoke.py",
+        "factory/examples/minimal-hermes-project/card.md",
+        "factory/examples/minimal-hermes-project/expected-flow.md"
       ],
       "proof_refs": [
-        "tests/test_open_source_docs.py",
-        "tests/test_factoryctl.py",
-        "tests/test_release_integration_preflight.py"
+        "factory/tests/test_open_source_docs.py",
+        "factory/tests/test_factoryctl.py",
+        "factory/tests/test_release_integration_preflight.py"
       ],
       "boundary": "The minimal path writes local public-safe artifacts. It does not mutate a live Hermes board and does not establish production readiness for a real product.",
       "boundary_refs": [
         "docs/getting-started/quickstart-hermes.md",
-        "examples/minimal-hermes-project/README.md"
+        "factory/examples/minimal-hermes-project/README.md"
       ]
     },
     {
@@ -114,17 +114,17 @@
         "docs/reference/cli.md"
       ],
       "implementation_refs": [
-        "scripts/factoryctl.py",
-        "schemas/factory-start-conversation.schema.json",
-        "schemas/source-resolution-packet.schema.json",
-        "schemas/operator-understanding-confirmation.schema.json",
-        "templates/factory-start-conversation.json"
+        "factory/scripts/factoryctl.py",
+        "factory/schemas/factory-start-conversation.schema.json",
+        "factory/schemas/source-resolution-packet.schema.json",
+        "factory/schemas/operator-understanding-confirmation.schema.json",
+        "factory/templates/factory-start-conversation.json"
       ],
       "proof_refs": [
-        "tests/test_universal_signal_intake.py",
-        "tests/test_product_method_sot_planning.py",
-        "tests/test_operator_experience.py",
-        "tests/test_factory_route_registry.py"
+        "factory/tests/test_universal_signal_intake.py",
+        "factory/tests/test_product_method_sot_planning.py",
+        "factory/tests/test_operator_experience.py",
+        "factory/tests/test_factory_route_registry.py"
       ],
       "boundary": "Understanding confirmation is not execution approval. It gates Product SOT creation, while product execution still needs method, readiness, worker results and evidence.",
       "boundary_refs": [
@@ -142,21 +142,21 @@
         "docs/agents/permission-model.md"
       ],
       "implementation_refs": [
-        "scripts/factoryctl.py",
-        "schemas/autonomy-readiness-packet.schema.json",
-        "schemas/user-facing-autonomy-contract.schema.json",
-        "templates/autonomy-readiness-packet.json",
-        "templates/user-facing-autonomy-contract.json"
+        "factory/scripts/factoryctl.py",
+        "factory/schemas/autonomy-readiness-packet.schema.json",
+        "factory/schemas/user-facing-autonomy-contract.schema.json",
+        "factory/templates/autonomy-readiness-packet.json",
+        "factory/templates/user-facing-autonomy-contract.json"
       ],
       "proof_refs": [
-        "tests/test_user_facing_autonomy_help_router.py",
-        "tests/test_factoryctl.py",
-        "tests/test_worker_permission_classes.py"
+        "factory/tests/test_user_facing_autonomy_help_router.py",
+        "factory/tests/test_factoryctl.py",
+        "factory/tests/test_worker_permission_classes.py"
       ],
       "boundary": "Fast autonomy cannot approve human gates, release production, touch mainnet, funds, signing, secrets, billing or destructive actions.",
       "boundary_refs": [
         "docs/operations/fast-autonomy-lane.md",
-        "agents/worker-permission-classes.public.json"
+        "factory/agents/worker-permission-classes.public.json"
       ]
     },
     {
@@ -169,22 +169,22 @@
         "docs/agents/worker-profiles.md"
       ],
       "implementation_refs": [
-        "scripts/factoryctl.py",
-        "schemas/human-gate-packet.schema.json",
-        "schemas/approval-request.schema.json",
-        "schemas/operator-briefing-package.schema.json",
-        "templates/human-gate-record.json",
-        "templates/operator-briefing-package.json"
+        "factory/scripts/factoryctl.py",
+        "factory/schemas/human-gate-packet.schema.json",
+        "factory/schemas/approval-request.schema.json",
+        "factory/schemas/operator-briefing-package.schema.json",
+        "factory/templates/human-gate-record.json",
+        "factory/templates/operator-briefing-package.json"
       ],
       "proof_refs": [
-        "tests/test_factoryctl.py",
-        "tests/test_operator_experience.py",
-        "tests/test_open_source_docs.py"
+        "factory/tests/test_factoryctl.py",
+        "factory/tests/test_operator_experience.py",
+        "factory/tests/test_open_source_docs.py"
       ],
       "boundary": "A human-support worker can prepare and record decisions; it must not invent approval or ask for planning-only continuation as if it were authority.",
       "boundary_refs": [
         "docs/agents/worker-profiles.md",
-        "agents/worker-roster.md"
+        "factory/agents/worker-roster.md"
       ]
     },
     {
@@ -197,22 +197,22 @@
         "docs/agents/worker-profiles.md"
       ],
       "implementation_refs": [
-        "scripts/factoryctl.py",
-        "agents/capability-packs.public.json",
-        "agents/capability-pack-activation-ledger.public.json",
-        "agents/worker-registry.public.json",
-        "schemas/capability-pack-contract.schema.json"
+        "factory/scripts/factoryctl.py",
+        "factory/agents/capability-packs.public.json",
+        "factory/agents/capability-pack-activation-ledger.public.json",
+        "factory/agents/worker-registry.public.json",
+        "factory/schemas/capability-pack-contract.schema.json"
       ],
       "proof_refs": [
-        "tests/test_capability_packs.py",
-        "tests/test_worker_profiles.py",
-        "tests/test_full_product_worker_graph.py",
-        "tests/test_production_full_product_worker_graph.py"
+        "factory/tests/test_capability_packs.py",
+        "factory/tests/test_worker_profiles.py",
+        "factory/tests/test_full_product_worker_graph.py",
+        "factory/tests/test_production_full_product_worker_graph.py"
       ],
       "boundary": "Template packs are not executable by name. They block until activation evidence, profile bindings, smoke/eval proof and required gates exist.",
       "boundary_refs": [
         "docs/agents/capability-packs.md",
-        "agents/capability-pack-activation-ledger.public.json"
+        "factory/agents/capability-pack-activation-ledger.public.json"
       ]
     },
     {
@@ -225,17 +225,17 @@
         "docs/agents/worker-profiles.md"
       ],
       "implementation_refs": [
-        "scripts/factoryctl.py",
-        "agents/capability-packs.public.json",
-        "agents/worker-registry.public.json",
-        "schemas/worker-result.schema.json",
-        "templates/universal-signal-intake.json"
+        "factory/scripts/factoryctl.py",
+        "factory/agents/capability-packs.public.json",
+        "factory/agents/worker-registry.public.json",
+        "factory/schemas/worker-result.schema.json",
+        "factory/templates/universal-signal-intake.json"
       ],
       "proof_refs": [
-        "tests/test_capability_packs.py",
-        "tests/test_universal_signal_intake.py",
-        "tests/test_worker_profiles.py",
-        "tests/test_hermes_transition_hook.py"
+        "factory/tests/test_capability_packs.py",
+        "factory/tests/test_universal_signal_intake.py",
+        "factory/tests/test_worker_profiles.py",
+        "factory/tests/test_hermes_transition_hook.py"
       ],
       "boundary": "Solana AI Kit is the domain brain, not a substitute for Hermes gates, signer boundaries, Receipt Five, security review, remote proof or human approval.",
       "boundary_refs": [
@@ -253,17 +253,17 @@
         "docs/concepts/factory-flow.md"
       ],
       "implementation_refs": [
-        "scripts/product_face_proof.py",
-        "scripts/factoryctl.py",
-        "schemas/product-face-packet.schema.json",
-        "schemas/product-face-result.schema.json",
-        "schemas/project-design-system.schema.json",
-        "schemas/professional-design-process.schema.json"
+        "factory/scripts/product_face_proof.py",
+        "factory/scripts/factoryctl.py",
+        "factory/schemas/product-face-packet.schema.json",
+        "factory/schemas/product-face-result.schema.json",
+        "factory/schemas/project-design-system.schema.json",
+        "factory/schemas/professional-design-process.schema.json"
       ],
       "proof_refs": [
-        "tests/test_product_face_proof.py",
-        "tests/test_capability_packs.py",
-        "tests/test_public_json_artifact_validator.py"
+        "factory/tests/test_product_face_proof.py",
+        "factory/tests/test_capability_packs.py",
+        "factory/tests/test_public_json_artifact_validator.py"
       ],
       "boundary": "The public contracts require product experience proof. They do not guarantee a finished design unless a product-specific worker result and review pass.",
       "boundary_refs": [
@@ -280,14 +280,14 @@
         "docs/operator/overkill-factory-bridge.md"
       ],
       "implementation_refs": [
-        "scripts/factory_bridge.py",
-        "schemas/factory-bridge-event.schema.json",
-        "schemas/factory-bridge-decision.schema.json",
-        "schemas/factory-bridge-start-request.schema.json"
+        "factory/scripts/factory_bridge.py",
+        "factory/schemas/factory-bridge-event.schema.json",
+        "factory/schemas/factory-bridge-decision.schema.json",
+        "factory/schemas/factory-bridge-start-request.schema.json"
       ],
       "proof_refs": [
-        "tests/test_factory_bridge.py",
-        "tests/test_public_surface_sync.py"
+        "factory/tests/test_factory_bridge.py",
+        "factory/tests/test_public_surface_sync.py"
       ],
       "boundary": "The bridge does not run workers, mutate Hermes, watch the machine, approve human gates or become a source of truth.",
       "boundary_refs": [
@@ -305,15 +305,15 @@
         "docs/maintenance/hermes-learn-integration.md"
       ],
       "implementation_refs": [
-        "scripts/factory_self_improvement.py",
-        "schemas/execution-learnback-record.schema.json",
-        "schemas/factory-learning-proposal.schema.json",
-        "schemas/factory-improvement-issue-candidate.schema.json"
+        "factory/scripts/factory_self_improvement.py",
+        "factory/schemas/execution-learnback-record.schema.json",
+        "factory/schemas/factory-learning-proposal.schema.json",
+        "factory/schemas/factory-improvement-issue-candidate.schema.json"
       ],
       "proof_refs": [
-        "tests/test_factory_self_improvement.py",
-        "tests/test_open_source_docs.py",
-        "tests/test_public_json_artifact_validator.py"
+        "factory/tests/test_factory_self_improvement.py",
+        "factory/tests/test_open_source_docs.py",
+        "factory/tests/test_public_json_artifact_validator.py"
       ],
       "boundary": "Self-improvement outputs are candidates and do not mutate the factory. Critical changes still require review, validation and human gates before mutation.",
       "boundary_refs": [
@@ -329,25 +329,25 @@
         "README.md",
         "docs/operations/validation-and-release.md",
         "docs/operations/release-policy.md",
-        "CHANGELOG.md"
+        "docs/reference/CHANGELOG.md"
       ],
       "implementation_refs": [
-        "scripts/release_integration_preflight.py",
-        "scripts/worktree_release_inventory.py",
-        "scripts/factory_completion_audit.py",
-        "scripts/factory_production_readiness.py",
-        "scripts/validate_public_surface_sync.py",
-        "scripts/public_safety_scan.py",
-        "scripts/secret_safety_scan.py"
+        "factory/scripts/release_integration_preflight.py",
+        "factory/scripts/worktree_release_inventory.py",
+        "factory/scripts/factory_completion_audit.py",
+        "factory/scripts/factory_production_readiness.py",
+        "factory/scripts/validate_public_surface_sync.py",
+        "factory/scripts/public_safety_scan.py",
+        "factory/scripts/secret_safety_scan.py"
       ],
       "proof_refs": [
-        "tests/test_release_integration_preflight.py",
-        "tests/test_worktree_release_inventory.py",
-        "tests/test_factory_completion_audit.py",
-        "tests/test_factory_v1_completion_gate.py",
-        "tests/test_public_surface_sync.py",
-        "tests/test_public_safety_scan.py",
-        "tests/test_secret_safety_scan.py"
+        "factory/tests/test_release_integration_preflight.py",
+        "factory/tests/test_worktree_release_inventory.py",
+        "factory/tests/test_factory_completion_audit.py",
+        "factory/tests/test_factory_v1_completion_gate.py",
+        "factory/tests/test_public_surface_sync.py",
+        "factory/tests/test_public_safety_scan.py",
+        "factory/tests/test_secret_safety_scan.py"
       ],
       "boundary": "A public kernel release claim does not prove any product-specific production launch, mainnet launch, hosted service release or private runtime state.",
       "boundary_refs": [
@@ -365,19 +365,19 @@
         "docs/architecture/hermes-integration.md"
       ],
       "implementation_refs": [
-        "scripts/factoryctl.py",
-        "scripts/factory_no_idle_watchdog.py",
-        "adapters/hermes/live_kanban_adapter.py",
-        "schemas/factory-board-reconcile-plan.schema.json",
-        "schemas/factory-bridge-event.schema.json",
-        "schemas/hermes-typed-block-policy.schema.json",
-        "templates/hermes-typed-block-policy.json"
+        "factory/scripts/factoryctl.py",
+        "factory/scripts/factory_no_idle_watchdog.py",
+        "factory/adapters/hermes/live_kanban_adapter.py",
+        "factory/schemas/factory-board-reconcile-plan.schema.json",
+        "factory/schemas/factory-bridge-event.schema.json",
+        "factory/schemas/hermes-typed-block-policy.schema.json",
+        "factory/templates/hermes-typed-block-policy.json"
       ],
       "proof_refs": [
-        "tests/test_factory_board_reconciler.py",
-        "tests/test_factory_no_idle_watchdog.py",
-        "tests/test_hermes_live_kanban_adapter.py",
-        "tests/test_operator_experience.py"
+        "factory/tests/test_factory_board_reconciler.py",
+        "factory/tests/test_factory_no_idle_watchdog.py",
+        "factory/tests/test_hermes_live_kanban_adapter.py",
+        "factory/tests/test_operator_experience.py"
       ],
       "boundary": "The watchdog is a board-state controller. Silent boards must pass through deterministic board reconciliation before any remediation card is created. It must not become a shadow scheduler, approve gates, complete work, choose phases from prose or replace native Hermes dispatch. Native Hermes dependency_wait must not page the operator, and block_loop_detected must route deterministic triage instead of repeated same-cause blocking.",
       "boundary_refs": [

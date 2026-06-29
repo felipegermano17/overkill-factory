@@ -34,12 +34,12 @@ Packet or Product Experience Plan.
 - `agentic_interface`: task transcript, state transitions, approval boundaries,
   user control boundaries and recovery/error handling evidence.
 
-The repo runner in `scripts/product_face_proof.py` is a `web_visual_ui` runner.
+The repo runner in `factory/scripts/product_face_proof.py` is a `web_visual_ui` runner.
 It should not be used to claim CLI/TUI, docs/onboarding or agentic-interface
 PASS without the matching profile evidence.
 
 Surface evidence is only the visible/product-face layer. Product completion
-also consumes `templates/product-delivery-quality-profile.json` for
+also consumes `factory/templates/product-delivery-quality-profile.json` for
 surface-specific domain proof. CLI/TUI products need install/run, help, golden
 transcript, error-state and cross-platform shell proof. API/data products need
 contract, auth, error, migration, fixture, retention and operational safety
@@ -50,7 +50,7 @@ abuse and recovery proof.
 ## Project DESIGN.md Contract
 
 Product-facing vFinal cards must include `project_design_system`, backed by
-`schemas/project-design-system.schema.json`. This is the structured source for
+`factory/schemas/project-design-system.schema.json`. This is the structured source for
 a project-level `DESIGN.md` export that AI coding agents and frontend workers
 can read before implementation.
 
@@ -121,17 +121,17 @@ Face proof.
 - evidence refs;
 - next action.
 
-The public schema is `schemas/product-face-result.schema.json`.
+The public schema is `factory/schemas/product-face-result.schema.json`.
 
 ## Minimal Runner
 
 Use the repo runner for static HTML or a local/public URL:
 
 ```bash
-python scripts/product_face_proof.py \
-  --target examples/minimal-hermes-project \
+python factory/scripts/product_face_proof.py \
+  --target factory/examples/minimal-hermes-project \
   --out .tmp/product-face-result.json \
-  --card examples/minimal-hermes-project/card.md \
+  --card factory/examples/minimal-hermes-project/card.md \
   --force-fallback
 ```
 
@@ -142,7 +142,7 @@ Useful options:
   be proven before product acceptance.
 - `--journey "open target" --journey "inspect mobile viewport"` to declare
   journeys that must be proven before product acceptance.
-- `--driver templates/product-face-state-journey-driver.json` to execute named
+- `--driver factory/templates/product-face-state-journey-driver.json` to execute named
   browser journeys, setup steps and assertions instead of merely declaring
   coverage.
 - `--strict` to treat accessibility and overlap warnings as blocking.
@@ -240,7 +240,7 @@ surface to the active Product SOT and source-resolution packet through
 `rejected_stale_surface` candidates fail closed unless they are promoted by the
 SOT with a public-safe promotion ref.
 
-`templates/professional-design-process.json` is a starter contract. Its gates
+`factory/templates/professional-design-process.json` is a starter contract. Its gates
 are intentionally `PENDING`; copying that template into a card is not
 professional design approval. Product-specific implementation can proceed only
 after the card's Professional Design Process gates are `PASS`, or it remains on
@@ -249,24 +249,24 @@ the controlled blocker path named by the gate.
 Reusable product example:
 
 ```bash
-python scripts/product_face_proof.py \
+python factory/scripts/product_face_proof.py \
   --target http://127.0.0.1:3000 \
   --out .tmp/product-face-result.json \
-  --card examples/minimal-hermes-project/card.md \
+  --card factory/examples/minimal-hermes-project/card.md \
   --viewport desktop=1440x900 \
   --viewport mobile=390x844 \
   --state initial-render \
   --journey "open target" \
-  --driver templates/product-face-state-journey-driver.json \
-  --packet-ref examples/minimal-hermes-project/card.md#product_face_packet \
+  --driver factory/templates/product-face-state-journey-driver.json \
+  --packet-ref factory/examples/minimal-hermes-project/card.md#product_face_packet \
   --packet-comparison-basis "Screens, states and viewports match the Product Face Packet." \
   --source-promise-coverage-basis "The checked journey covers the stated product promise." \
   --design-fit-review-basis "The reviewer confirmed fit to the requested product direction." \
-  --project-design-system-ref templates/project-design-system.json \
+  --project-design-system-ref factory/templates/project-design-system.json \
   --project-design-system-comparison-basis "The checked surface satisfies the project DESIGN.md contract." \
-  --professional-design-process-ref examples/minimal-hermes-project/card.md#professional_design_process \
+  --professional-design-process-ref factory/examples/minimal-hermes-project/card.md#professional_design_process \
   --professional-design-process-comparison-basis "The checked surface satisfies the professional design process." \
-  --reference-quality-ref examples/minimal-hermes-project/card.md#professional_design_process.reference_research \
+  --reference-quality-ref factory/examples/minimal-hermes-project/card.md#professional_design_process.reference_research \
   --reference-quality-comparison-basis "The reviewer compared the surface against selected professional references." \
   --compared-reference-id 21st-dev-components \
   --compared-reference-id mobbin-workflow-patterns \
@@ -291,10 +291,10 @@ python scripts/product_face_proof.py \
 Use:
 
 ```bash
-python scripts/product_face_proof.py \
+python factory/scripts/product_face_proof.py \
   --target http://127.0.0.1:3000 \
   --out .tmp/product-face-result.json \
-  --card examples/minimal-hermes-project/card.md \
+  --card factory/examples/minimal-hermes-project/card.md \
   --strict
 ```
 

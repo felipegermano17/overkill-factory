@@ -18,7 +18,7 @@
       "completion_detection": ["sealed source envelope exists", "factory_bridge_start_request exists", "board policy is explicit"],
       "operator_visible_summary": "Factory has a sealed start packet before the production line begins.",
       "maintainer_visible_details": "Bridge/intake is a handoff boundary, not factory execution. New projects must create a fresh Hermes board through the factory start path.",
-      "related_schema_refs": ["schemas/factory-bridge-source-envelope.schema.json", "schemas/factory-bridge-start-request.schema.json", "schemas/factory-run.schema.json"],
+      "related_schema_refs": ["factory/schemas/factory-bridge-source-envelope.schema.json", "factory/schemas/factory-bridge-start-request.schema.json", "factory/schemas/factory-run.schema.json"],
       "related_command_refs": ["factoryctl validate-factory-run", "factoryctl validate-card"],
       "related_issue_refs": ["#443"]
     },
@@ -36,7 +36,7 @@
       "completion_detection": ["operator_interface_profile exists", "factory_start_conversation exists", "universal_signal_intake exists", "source_refs is non-empty", "source_resolution_packet exists"],
       "operator_visible_summary": "Factory has the input, the chosen interface and the conversational start boundary.",
       "maintainer_visible_details": "Normalize the input into a route contract without treating user prose as approved scope. The interface profile controls proactive status and briefing attachments.",
-      "related_schema_refs": ["schemas/operator-interface-profile.schema.json", "schemas/factory-start-conversation.schema.json", "schemas/universal-signal-intake.schema.json", "schemas/source-resolution-packet.schema.json"],
+      "related_schema_refs": ["factory/schemas/operator-interface-profile.schema.json", "factory/schemas/factory-start-conversation.schema.json", "factory/schemas/universal-signal-intake.schema.json", "factory/schemas/source-resolution-packet.schema.json"],
       "related_command_refs": ["factoryctl operator-interface", "factoryctl start-conversation", "factoryctl validate-signal-intake", "factoryctl source-resolution", "factoryctl validate-card"],
       "related_issue_refs": ["#112", "#117"]
     },
@@ -54,7 +54,7 @@
       "completion_detection": ["critical claims point to source refs", "product source ledger exists", "operator understanding confirmation is confirmed when Product SOT is required"],
       "operator_visible_summary": "Factory is separating facts, assumptions and gaps, then checking whether it understood the product.",
       "maintainer_visible_details": "Keep raw extraction private; publish only public-safe refs. The operator confirmation is product understanding, not execution approval.",
-      "related_schema_refs": ["schemas/reference-source-registry.schema.json", "schemas/product-source-ledger.schema.json", "schemas/operator-understanding-confirmation.schema.json"],
+      "related_schema_refs": ["factory/schemas/reference-source-registry.schema.json", "factory/schemas/product-source-ledger.schema.json", "factory/schemas/operator-understanding-confirmation.schema.json"],
       "related_command_refs": ["factoryctl source-ledger", "factoryctl understanding-confirmation", "factoryctl validate-source-ledger", "factoryctl validate-understanding-confirmation", "factoryctl gate-report"],
       "related_issue_refs": ["#103", "#112"]
     },
@@ -72,7 +72,7 @@
       "completion_detection": ["open gaps are resolved, blocked or owner-assigned"],
       "operator_visible_summary": "Factory is deciding what can be known safely.",
       "maintainer_visible_details": "Only authority/access/risk questions should reach the user.",
-      "related_schema_refs": ["schemas/discovery-brief.schema.json"],
+      "related_schema_refs": ["factory/schemas/discovery-brief.schema.json"],
       "related_command_refs": ["factoryctl help-next"],
       "related_issue_refs": ["#111", "#112"]
     },
@@ -90,7 +90,7 @@
       "completion_detection": ["operator understanding confirmation exists when needed", "operator briefing package exists for decision artifacts", "outcome, user, problem and success signals exist"],
       "operator_visible_summary": "Factory is turning confirmed understanding into a product outcome.",
       "maintainer_visible_details": "Outcome is still candidate until Product SOT approval or bounded acceptance. Product creation cannot skip understanding confirmation.",
-      "related_schema_refs": ["schemas/operator-understanding-confirmation.schema.json", "schemas/operator-briefing-package.schema.json", "schemas/outcome-contract.schema.json", "schemas/discovery-brief.schema.json"],
+      "related_schema_refs": ["factory/schemas/operator-understanding-confirmation.schema.json", "factory/schemas/operator-briefing-package.schema.json", "factory/schemas/outcome-contract.schema.json", "factory/schemas/discovery-brief.schema.json"],
       "related_command_refs": ["factoryctl understanding-confirmation", "factoryctl briefing-package", "factoryctl outcome-contract", "factoryctl validate-outcome-contract", "factoryctl validate-card"],
       "related_issue_refs": ["#108", "#112"]
     },
@@ -108,7 +108,7 @@
       "completion_detection": ["product_sot exists and scope is explicit", "operator briefing package includes markdown and PDF when a decision is needed", "factory_phase_lock.owner_surface_first.product_sot_review_packet_delivered is true before downstream phases", "product_sot.handoff.next_artifact points to full_product_sot_scope_coverage"],
       "operator_visible_summary": "Factory has a candidate source of truth and a deep review package for the product.",
       "maintainer_visible_details": "SOT can evolve beyond the input paper; paper is source, not final authority. The operator must not approve from a shallow message when a deep briefing is required.",
-      "related_schema_refs": ["schemas/product-sot.schema.json", "schemas/operator-briefing-package.schema.json", "schemas/full-product-sot-scope-coverage.schema.json", "schemas/factory-phase-lock.schema.json", "schemas/user-facing-autonomy-contract.schema.json"],
+      "related_schema_refs": ["factory/schemas/product-sot.schema.json", "factory/schemas/operator-briefing-package.schema.json", "factory/schemas/full-product-sot-scope-coverage.schema.json", "factory/schemas/factory-phase-lock.schema.json", "factory/schemas/user-facing-autonomy-contract.schema.json"],
       "related_command_refs": ["factoryctl product-sot", "factoryctl briefing-package", "factoryctl validate-product-sot", "factoryctl full-scope-coverage", "factoryctl validate-full-scope-coverage", "factoryctl help-next"],
       "related_issue_refs": ["#108", "#112"]
     },
@@ -126,7 +126,7 @@
       "completion_detection": ["selected method, gates, workers and evidence are recorded", "factory_phase_lock can advance only after method_contract is materialized"],
       "operator_visible_summary": "Factory is choosing the safest production path.",
       "maintainer_visible_details": "The router records decisions; it does not hand method selection to the user.",
-      "related_schema_refs": ["schemas/factory-phase-lock.schema.json", "schemas/method-contract.schema.json"],
+      "related_schema_refs": ["factory/schemas/factory-phase-lock.schema.json", "factory/schemas/method-contract.schema.json"],
       "related_command_refs": ["factoryctl method-contract", "factoryctl validate-method-contract", "factoryctl gate-report"],
       "related_issue_refs": ["#110", "#117"]
     },
@@ -144,7 +144,7 @@
       "completion_detection": ["required artifacts and workers are named"],
       "operator_visible_summary": "Factory has recorded how the work will be produced.",
       "maintainer_visible_details": "Any omitted method needs a reason, not silence.",
-      "related_schema_refs": ["schemas/factory-phase-lock.schema.json", "schemas/method-contract.schema.json"],
+      "related_schema_refs": ["factory/schemas/factory-phase-lock.schema.json", "factory/schemas/method-contract.schema.json"],
       "related_command_refs": ["factoryctl validate-card"],
       "related_issue_refs": ["#110"]
     },
@@ -190,12 +190,12 @@
       "operator_visible_summary": "Factory is choosing the capability packs and defining product surfaces, states, experience bar and proof before implementation.",
       "maintainer_visible_details": "Pack templates are not execution approval. Product-facing work cannot use generic implementation planning as a substitute for Product Experience and Product Face contracts.",
       "related_schema_refs": [
-        "schemas/capability-pack-contract.schema.json",
-        "schemas/product-experience-plan.schema.json",
-        "schemas/product-face-packet.schema.json",
-        "schemas/project-design-system.schema.json",
-        "schemas/professional-design-process.schema.json",
-        "schemas/product-delivery-quality-profile.schema.json"
+        "factory/schemas/capability-pack-contract.schema.json",
+        "factory/schemas/product-experience-plan.schema.json",
+        "factory/schemas/product-face-packet.schema.json",
+        "factory/schemas/project-design-system.schema.json",
+        "factory/schemas/professional-design-process.schema.json",
+        "factory/schemas/product-delivery-quality-profile.schema.json"
       ],
       "related_command_refs": ["factoryctl help-next", "factoryctl gate-report", "factoryctl validate-card"],
       "related_issue_refs": ["#215", "#194", "#198"]
@@ -214,7 +214,7 @@
       "completion_detection": ["required authority is granted, blocked or not needed"],
       "operator_visible_summary": "Factory will ask only for bounded authority, access or risk decisions.",
       "maintainer_visible_details": "Human approval must name scope and evidence.",
-      "related_schema_refs": ["schemas/access-capability.schema.json", "schemas/budget-contract.schema.json"],
+      "related_schema_refs": ["factory/schemas/access-capability.schema.json", "factory/schemas/budget-contract.schema.json"],
       "related_command_refs": ["factoryctl human-gate-record"],
       "related_issue_refs": ["#102", "#112", "#114"]
     },
@@ -232,7 +232,7 @@
       "completion_detection": ["controls, threats and reviewers are named"],
       "operator_visible_summary": "Factory is planning security before build work.",
       "maintainer_visible_details": "Security review is not a substitute for architecture.",
-      "related_schema_refs": ["schemas/factory-phase-lock.schema.json", "schemas/security-architecture-plan.schema.json"],
+      "related_schema_refs": ["factory/schemas/factory-phase-lock.schema.json", "factory/schemas/security-architecture-plan.schema.json"],
       "related_command_refs": ["factoryctl worker-packet"],
       "related_issue_refs": ["#113"]
     },
@@ -251,7 +251,7 @@
       "completion_detection": ["work units, checks, reviewers, dependencies and rollback are named in Product Creation Plan", "Product Creation Plan handoff points to decomposition_coverage_review", "declared data, metrics, docs and onboarding plans pass strict schema-backed runtime validation"],
       "operator_visible_summary": "Factory is creating the execution plan.",
       "maintainer_visible_details": "The user should see plan status, not internal planning machinery. F11 plans the complete product; F12 independently reviews the coverage before readiness can exist.",
-      "related_schema_refs": ["schemas/software-development-plan.schema.json", "schemas/spec-graph.schema.json", "schemas/loop-plan.schema.json", "schemas/product-creation-plan.schema.json", "schemas/data-metrics-plan.schema.json", "schemas/user-docs-onboarding-plan.schema.json"],
+      "related_schema_refs": ["factory/schemas/software-development-plan.schema.json", "factory/schemas/spec-graph.schema.json", "factory/schemas/loop-plan.schema.json", "factory/schemas/product-creation-plan.schema.json", "factory/schemas/data-metrics-plan.schema.json", "factory/schemas/user-docs-onboarding-plan.schema.json"],
       "related_command_refs": ["factoryctl product-creation-plan", "factoryctl help-next"],
       "related_issue_refs": ["#116", "#117"]
     },
@@ -269,7 +269,7 @@
       "completion_detection": ["Decomposition Coverage Review exists and is PASS", "every planned work-unit owner and reviewer signs the decomposition coverage matrix with evidence", "Product Implementation Readiness references the PASS Decomposition Coverage Review", "tools, accounts, environment and rollback are ready or blocked"],
       "operator_visible_summary": "Factory is checking whether it can act safely.",
       "maintainer_visible_details": "Missing access becomes a bounded request, not vague user labor. Decomposition review is independent of the planner and must pass before readiness or dispatch can exist.",
-      "related_schema_refs": ["schemas/decomposition-coverage-review.schema.json", "schemas/product-implementation-readiness.schema.json", "schemas/autonomy-readiness-packet.schema.json"],
+      "related_schema_refs": ["factory/schemas/decomposition-coverage-review.schema.json", "factory/schemas/product-implementation-readiness.schema.json", "factory/schemas/autonomy-readiness-packet.schema.json"],
       "related_command_refs": ["factoryctl decomposition-coverage-review", "factoryctl product-implementation-readiness", "factoryctl gate-report"],
       "related_issue_refs": ["#112", "#114"]
     },
@@ -287,7 +287,7 @@
       "completion_detection": ["gate_predicate_result is PASS", "ready worker task materialization is allowed only for reviewed work units"],
       "operator_visible_summary": "Factory can say whether execution may start.",
       "maintainer_visible_details": "Gate report must separate factory work from user decisions.",
-      "related_schema_refs": ["schemas/gate-report.schema.json"],
+      "related_schema_refs": ["factory/schemas/gate-report.schema.json"],
       "related_command_refs": ["factoryctl gate-report", "factoryctl help-next"],
       "related_issue_refs": ["#106", "#117"]
     },
@@ -305,7 +305,7 @@
       "completion_detection": ["required worker tasks exist in runtime"],
       "operator_visible_summary": "Factory is executing through routed workers.",
       "maintainer_visible_details": "The user does not manage the worker queue.",
-      "related_schema_refs": ["schemas/worker-packet.schema.json"],
+      "related_schema_refs": ["factory/schemas/worker-packet.schema.json"],
       "related_command_refs": ["factoryctl worker-packet"],
       "related_issue_refs": ["#100", "#112"]
     },
@@ -323,7 +323,7 @@
       "completion_detection": ["required workers returned valid records"],
       "operator_visible_summary": "Factory is collecting what workers actually proved.",
       "maintainer_visible_details": "Generated requests are not execution evidence.",
-      "related_schema_refs": ["schemas/worker-result.schema.json"],
+      "related_schema_refs": ["factory/schemas/worker-result.schema.json"],
       "related_command_refs": ["factoryctl evidence-record"],
       "related_issue_refs": ["#92", "#95"]
     },
@@ -344,7 +344,7 @@
       ],
       "operator_visible_summary": "Factory is proving the work with checks.",
       "maintainer_visible_details": "Verification is scoped to the card and cannot be implied.",
-      "related_schema_refs": ["schemas/qa-verification-plan.schema.json"],
+      "related_schema_refs": ["factory/schemas/qa-verification-plan.schema.json"],
       "related_command_refs": ["factoryctl validate-completion"],
       "related_issue_refs": ["#101", "#103"]
     },
@@ -362,7 +362,7 @@
       "completion_detection": ["reviewer is different from executor and result is attached"],
       "operator_visible_summary": "Factory is checking the work with an independent reviewer.",
       "maintainer_visible_details": "Review may find blockers; it is not ceremony.",
-      "related_schema_refs": ["schemas/reviewer-selection-plan.schema.json"],
+      "related_schema_refs": ["factory/schemas/reviewer-selection-plan.schema.json"],
       "related_command_refs": ["factoryctl worker-packet"],
       "related_issue_refs": ["#102", "#103"]
     },
@@ -380,7 +380,7 @@
       "completion_detection": ["closure result and next step are explicit"],
       "operator_visible_summary": "Factory is packaging what happened.",
       "maintainer_visible_details": "Handoff is replayable state, not a chat summary.",
-      "related_schema_refs": ["schemas/worker-closure-summary.schema.json"],
+      "related_schema_refs": ["factory/schemas/worker-closure-summary.schema.json"],
       "related_command_refs": ["factoryctl status-snapshot"],
       "related_issue_refs": ["#117"]
     },
@@ -401,7 +401,7 @@
       ],
       "operator_visible_summary": "Factory is preparing the done receipt.",
       "maintainer_visible_details": "Receipt Five is the durable proof boundary.",
-      "related_schema_refs": ["schemas/receipt-five.schema.json"],
+      "related_schema_refs": ["factory/schemas/receipt-five.schema.json"],
       "related_command_refs": ["factoryctl validate-completion"],
       "related_issue_refs": ["#92", "#103"]
     },
@@ -419,7 +419,7 @@
       "completion_detection": ["audit result is PASS, BLOCKED or PENDING with reasons"],
       "operator_visible_summary": "Factory is checking whether the promised work was actually delivered.",
       "maintainer_visible_details": "Audit must not inflate contract-level proof into runtime proof.",
-      "related_schema_refs": ["schemas/completion-audit.schema.json"],
+      "related_schema_refs": ["factory/schemas/completion-audit.schema.json"],
       "related_command_refs": ["factoryctl validate-completion"],
       "related_issue_refs": ["#93", "#119"]
     },
@@ -437,7 +437,7 @@
       "completion_detection": ["owner, rollback, health checks and approval rule exist"],
       "operator_visible_summary": "Factory is preparing production operation or blocking release.",
       "maintainer_visible_details": "Production readiness is stronger than passing tests.",
-      "related_schema_refs": ["schemas/production-readiness-plan.schema.json"],
+      "related_schema_refs": ["factory/schemas/production-readiness-plan.schema.json"],
       "related_command_refs": ["factoryctl gate-report"],
       "related_issue_refs": ["#101", "#109", "#119"]
     },
@@ -455,7 +455,7 @@
       "completion_detection": ["release or block has owner, evidence and next action"],
       "operator_visible_summary": "Factory is ready to release or can explain why not.",
       "maintainer_visible_details": "Blocked is a valid result when evidence is insufficient.",
-      "related_schema_refs": ["schemas/gate-report.schema.json"],
+      "related_schema_refs": ["factory/schemas/gate-report.schema.json"],
       "related_command_refs": ["factoryctl help-next"],
       "related_issue_refs": ["#98", "#101", "#117"]
     },
@@ -473,7 +473,7 @@
       "completion_detection": ["incident triggers, triage and escalation exist"],
       "operator_visible_summary": "Factory has a support and incident path.",
       "maintainer_visible_details": "Support is part of production, not afterthought docs.",
-      "related_schema_refs": ["schemas/incident-support-plan.schema.json"],
+      "related_schema_refs": ["factory/schemas/incident-support-plan.schema.json"],
       "related_command_refs": ["factoryctl validate-card"],
       "related_issue_refs": ["#109"]
     },
@@ -487,11 +487,11 @@
       "required_workers": ["skill-eval-distiller"],
       "allowed_next_actions": ["convert repeated failure into proposal"],
       "blocked_actions": ["auto-activate critical factory changes"],
-      "output_locations": ["templates/factory-learning-proposal.json"],
+      "output_locations": ["factory/templates/factory-learning-proposal.json"],
       "completion_detection": ["proposal is accepted, rejected or gated"],
       "operator_visible_summary": "Factory is learning from the run without changing critical rules silently.",
       "maintainer_visible_details": "Critical factory changes require explicit human approval.",
-      "related_schema_refs": ["schemas/factory-learning-proposal.schema.json"],
+      "related_schema_refs": ["factory/schemas/factory-learning-proposal.schema.json"],
       "related_command_refs": ["factoryctl validate-card"],
       "related_issue_refs": ["#112"]
     },
@@ -509,7 +509,7 @@
       "completion_detection": ["blind spots and actions are recorded"],
       "operator_visible_summary": "Factory is auditing its own process gaps.",
       "maintainer_visible_details": "Public repo gets proposals and contracts, not raw evidence.",
-      "related_schema_refs": ["schemas/factory-maturity-scorecard.schema.json"],
+      "related_schema_refs": ["factory/schemas/factory-maturity-scorecard.schema.json"],
       "related_command_refs": ["factoryctl status-snapshot"],
       "related_issue_refs": ["#115", "#120"]
     }

@@ -1,7 +1,7 @@
 # Telegram Operator Experience
 
 > Document status: CURRENT SUPPORTING GUIDE.
-> Current authority: `schemas/operator-interface-profile.schema.json`, `schemas/operator-briefing-package.schema.json`, `scripts/factoryctl.py`, Hermes Kanban state and tests.
+> Current authority: `factory/schemas/operator-interface-profile.schema.json`, `factory/schemas/operator-briefing-package.schema.json`, `factory/scripts/factoryctl.py`, Hermes Kanban state and tests.
 > Runtime boundary: Telegram is an operator interface. Hermes Kanban, receipts and factory contracts remain the source of truth.
 
 Telegram can be the only place where the human operator talks to the factory.
@@ -106,5 +106,5 @@ Use:
 
 ```bash
 python -m unittest tests.test_operator_experience -q
-python scripts/factoryctl.py validate-v2-runtime-contracts
+python factory/scripts/factoryctl.py validate-v2-runtime-contracts
 ```

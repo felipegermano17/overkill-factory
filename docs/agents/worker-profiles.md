@@ -1,17 +1,17 @@
 # Worker Profiles
 
 > Document status: CURRENT SUPPORTING GUIDE.
-> Current authority: `scripts/factoryctl.py`, schemas, tests and current public guides.
+> Current authority: `factory/scripts/factoryctl.py`, schemas, tests and current public guides.
 > Runtime boundary: This guide describes worker behavior; machine contracts, generated packets and gate reports are the executable source.
 
 This page is the public operator guide for the agent layer. Exact machine
 contracts live in:
 
-- `agents/worker-registry.public.json`;
-- `agents/worker-profiles.public.json`;
-- `agents/hermes-profile-bindings.public.json`;
-- `agents/capability-packs.public.json`;
-- `agents/worker-permission-classes.public.json`;
+- `factory/agents/worker-registry.public.json`;
+- `factory/agents/worker-profiles.public.json`;
+- `factory/agents/hermes-profile-bindings.public.json`;
+- `factory/agents/capability-packs.public.json`;
+- `factory/agents/worker-permission-classes.public.json`;
 - `docs/agents/capability-packs.md`;
 - `docs/agents/factory-stage-agent-map.md`;
 - `docs/agents/permission-model.md`;
@@ -37,7 +37,7 @@ This is phase coverage, not a promise that every product type is already
 covered by an executable specialist.
 
 Product-type coverage is handled by capability packs in
-`agents/capability-packs.public.json`. `factoryctl` blocks execution when a
+`factory/agents/capability-packs.public.json`. `factoryctl` blocks execution when a
 card asks for a surface that is not covered by a ready core pack or an activated
 optional pack.
 
@@ -145,10 +145,10 @@ that route. Real `PASS` results require a Solana AI Kit usage receipt.
 
 A worker is operable only when all four layers exist:
 
-1. process role in `agents/worker-registry.public.json`;
-2. agent profile in `agents/worker-profiles.public.json`;
-3. Hermes binding in `agents/hermes-profile-bindings.public.json`;
-4. card-specific worker packet from `scripts/factoryctl.py`.
+1. process role in `factory/agents/worker-registry.public.json`;
+2. agent profile in `factory/agents/worker-profiles.public.json`;
+3. Hermes binding in `factory/agents/hermes-profile-bindings.public.json`;
+4. card-specific worker packet from `factory/scripts/factoryctl.py`.
 
 Profile names alone are not enough. The binding must also define skill refs,
 queue policy, result schema, receipt field and evidence path policy.
@@ -158,19 +158,19 @@ queue policy, result schema, receipt field and evidence path policy.
 Preview local Hermes profile materialization:
 
 ```bash
-python scripts/materialize_hermes_profiles.py --profiles-dir ./.hermes-profiles
+python factory/scripts/materialize_hermes_profiles.py --profiles-dir ./.hermes-profiles
 ```
 
 Apply it only after reading the preview:
 
 ```bash
-python scripts/materialize_hermes_profiles.py --profiles-dir ./.hermes-profiles --apply
+python factory/scripts/materialize_hermes_profiles.py --profiles-dir ./.hermes-profiles --apply
 ```
 
 Run validation after any profile, registry or binding change:
 
 ```bash
-python scripts/validate_worker_profiles.py
-python scripts/validate_public_json_artifacts.py
+python factory/scripts/validate_worker_profiles.py
+python factory/scripts/validate_public_json_artifacts.py
 python -m unittest tests.test_worker_profiles -q
 ```

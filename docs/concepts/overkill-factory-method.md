@@ -1,7 +1,7 @@
 # Overkill Factory Method
 
 > Document status: CURRENT SUPPORTING GUIDE.
-> Current authority: `scripts/factoryctl.py`, `schemas/`, adapter hooks, tests and `README.md`.
+> Current authority: `factory/scripts/factoryctl.py`, `factory/schemas/`, adapter hooks, tests and `README.md`.
 > Runtime boundary: This guide explains the public method; executable gates and runtime receipts decide whether work can move.
 
 Overkill Factory is a gated production line for agentic product work. It turns

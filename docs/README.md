@@ -31,9 +31,9 @@ fix the mismatch and keep the runnable path authoritative.
 Run the document and public safety checks:
 
 ```bash
-python scripts/validate_document_governance.py
-python scripts/public_safety_scan.py
-python scripts/secret_safety_scan.py
+python factory/scripts/validate_document_governance.py
+python factory/scripts/public_safety_scan.py
+python factory/scripts/secret_safety_scan.py
 python -m unittest tests.test_open_source_docs -q
 ```
 

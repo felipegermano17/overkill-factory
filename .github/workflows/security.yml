@@ -21,7 +21,10 @@ jobs:
           python-version: "3.12"
       - name: Public safety scan
         run: python scripts/public_safety_scan.py
+        working-directory: factory
       - name: Secret safety scan
         run: python scripts/secret_safety_scan.py
+        working-directory: factory
       - name: Supply-chain proof
         run: python scripts/supply_chain_proof.py --check --no-write
+        working-directory: factory

@@ -1,8 +1,8 @@
 # Factory Learning And Skill Evolution OS
 
 > Document status: CURRENT SUPPORTING GUIDE.
-> Current authority: `schemas/factory-learning-proposal.schema.json`,
-> `scripts/factory_self_improvement.py`, `skill-eval-distiller`, tests.
+> Current authority: `factory/schemas/factory-learning-proposal.schema.json`,
+> `factory/scripts/factory_self_improvement.py`, `skill-eval-distiller`, tests.
 > Runtime boundary: this OS creates inactive proposals and public-safe issue
 > candidates. It does not auto-activate rules, skills, workers, hooks, MCPs,
 > install profiles or gates.
@@ -31,7 +31,7 @@ or public-safe issue links.
 
 ## Proposal Contract
 
-Use `templates/factory-learning-proposal.json` as the starting point. Each
+Use `factory/templates/factory-learning-proposal.json` as the starting point. Each
 proposal must name:
 
 - source evidence refs;

@@ -1,7 +1,7 @@
 # Critical Worker Automation V0
 
 > Document status: CURRENT SUPPORTING GUIDE.
-> Current authority: `scripts/factoryctl.py`, schemas, tests and current public guides.
+> Current authority: `factory/scripts/factoryctl.py`, schemas, tests and current public guides.
 > Runtime boundary: This guide explains worker automation; it cannot approve completion without worker results, receipts and current gates.
 
 This layer turns a Factory card into explicit worker execution requests.
@@ -46,14 +46,14 @@ Worker packets now include `profile_binding`.
 
 That binding connects the card to:
 
-- a public-safe agent profile in `agents/worker-profiles.public.json`;
+- a public-safe agent profile in `factory/agents/worker-profiles.public.json`;
 - a Hermes profile name;
 - a dispatch queue;
 - required skill refs;
 - the expected result schema;
 - the receipt field the worker must produce.
 - a public-safe profile readiness summary from
-  `agents/worker-profile-readiness.public.json`.
+  `factory/agents/worker-profile-readiness.public.json`.
 
 This is better than assigning by worker name alone. Hermes profile names can
 drift, skills can be missing and a worker can be too vague to operate. The
@@ -69,13 +69,13 @@ contract rows as current runtime readiness.
 Use the repo-level helper:
 
 ```bash
-python scripts/factoryctl.py validate-card examples/cards/v35_valid_product_face.md
-python scripts/factoryctl.py validate-receipt examples/receipts/v35_valid_completion_metadata.json
-python scripts/factoryctl.py gate-report --card examples/cards/v35_valid_onchain_auditor_scan.md
-python scripts/factoryctl.py worker-packet --worker all --card examples/cards/v35_valid_onchain_auditor_scan.md --out .tmp/worker-packets/onchain-card
-python scripts/validate_worker_profiles.py
-python scripts/factoryctl.py evidence-record --worker codex-security --card examples/cards/v35_valid_security_with_scan.md --result PASS --tool codex-security:security-scan --actor security-runner --evidence-ref reports/security-scan.md
-python scripts/factoryctl.py human-gate-record --card examples/cards/v35_valid_onchain_auditor_scan.md --decision approved --human-actor product-owner --evidence-ref decisions/r3-human-approval.md
+python factory/scripts/factoryctl.py validate-card factory/examples/cards/v35_valid_product_face.md
+python factory/scripts/factoryctl.py validate-receipt factory/examples/receipts/v35_valid_completion_metadata.json
+python factory/scripts/factoryctl.py gate-report --card factory/examples/cards/v35_valid_onchain_auditor_scan.md
+python factory/scripts/factoryctl.py worker-packet --worker all --card factory/examples/cards/v35_valid_onchain_auditor_scan.md --out .tmp/worker-packets/onchain-card
+python factory/scripts/validate_worker_profiles.py
+python factory/scripts/factoryctl.py evidence-record --worker codex-security --card factory/examples/cards/v35_valid_security_with_scan.md --result PASS --tool codex-security:security-scan --actor security-runner --evidence-ref reports/security-scan.md
+python factory/scripts/factoryctl.py human-gate-record --card factory/examples/cards/v35_valid_onchain_auditor_scan.md --decision approved --human-actor product-owner --evidence-ref decisions/r3-human-approval.md
 ```
 
 ## Workers Covered
@@ -135,7 +135,7 @@ This is separate from the gate report:
 - gate report says which workers are required before execution;
 - worker packets tell specialists what to do;
 - worker results prove what happened;
-- `scripts/evidence_reconciler.py` chooses the current result per receipt field,
+- `factory/scripts/evidence_reconciler.py` chooses the current result per receipt field,
   records superseded stale results and blocks unresolved current failures;
 - `external:kanban-artifact:` refs must include `artifact_readback` proof from a
   separate worker context before they can satisfy Receipt Five closure;
@@ -150,7 +150,7 @@ This avoids a common agent error: treating `requires_execution` in a preflight
 gate report as either proof of failure or proof of completion.
 
 Generated worker packets and gate reports are local run outputs. Keep them in
-`.tmp/` or a private evidence store, not under `examples/`.
+`.tmp/` or a private evidence store, not under `factory/examples/`.
 
 ## Hermes V2/V3.5 Completion Metadata
 
@@ -184,7 +184,7 @@ Hermes should use the executable transition hook instead of a simple helper
 call:
 
 ```bash
-python adapters/hermes/transition_hook.py \
+python factory/adapters/hermes/transition_hook.py \
   --card path/to/card.md \
   --from-status draft \
   --to-status ready \
@@ -193,7 +193,7 @@ python adapters/hermes/transition_hook.py \
   --operator-run-id example-run \
   --out path/to/ready-hook-result.json
 
-python adapters/hermes/transition_hook.py \
+python factory/adapters/hermes/transition_hook.py \
   --card path/to/card.md \
   --from-status ready \
   --to-status done \
@@ -221,7 +221,7 @@ At `done`, Hermes should:
 
 - reload the required-worker set for the card;
 - inspect delivered worker results;
-- run `scripts/evidence_reconciler.py` to produce the current evidence index,
+- run `factory/scripts/evidence_reconciler.py` to produce the current evidence index,
   supersession ledger and `receipt_five_reconciliation_result`;
 - reconcile each result against its expected Receipt Five field;
 - reject `external:kanban-artifact:` refs without successful downstream

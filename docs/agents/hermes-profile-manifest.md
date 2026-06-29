@@ -39,17 +39,17 @@ lifecycle, block/unblock and durable audit history.
 
 ## Result Schema Rule
 
-The result schema in `agents/hermes-profile-bindings.public.json` must match the
+The result schema in `factory/agents/hermes-profile-bindings.public.json` must match the
 result emitted by the worker result builder:
 
-- generic workers use `schemas/worker-result.schema.json`;
-- surface builders use `schemas/worker-result.schema.json` with their specific
+- generic workers use `factory/schemas/worker-result.schema.json`;
+- surface builders use `factory/schemas/worker-result.schema.json` with their specific
   receipt field, such as `frontend_build_result`,
   `backend_api_build_result`, `solana_quasar_build_result` or
   `agent_runtime_result`;
-- Product Face uses `schemas/product-face-result.schema.json`;
-- Solana/Quasar Auditor uses `schemas/auditor-result.schema.json`;
-- human decisions use `schemas/human-gate-record.schema.json`.
+- Product Face uses `factory/schemas/product-face-result.schema.json`;
+- Solana/Quasar Auditor uses `factory/schemas/auditor-result.schema.json`;
+- human decisions use `factory/schemas/human-gate-record.schema.json`.
 
 If the schema promised by the binding and the schema emitted by the result
 record differ, the worker result is invalid.
@@ -74,7 +74,7 @@ operable. Product evidence still belongs to the product card.
 ## Builder Routing Rule
 
 `implementation-worker` is a fallback. It must not be called when a card has a
-surface owned by a specialist builder. `scripts/factoryctl.py` owns this route:
+surface owned by a specialist builder. `factory/scripts/factoryctl.py` owns this route:
 
 - frontend/mobile/wallet UI -> `frontend-builder`;
 - backend/API/auth -> `backend-api-builder`;
@@ -83,7 +83,7 @@ surface owned by a specialist builder. `scripts/factoryctl.py` owns this route:
 - onchain QA/devnet/compute units -> `solana-quasar-qa-engineer`;
 - wallet/signing/transaction -> `wallet-transaction-builder`;
 - integration/fullstack/E2E -> `integration-builder`;
-- tests/evals/regression -> `test-automation-builder`;
+- factory/tests/evals/regression -> `test-automation-builder`;
 - infra/runtime/deploy -> `infra-devops-builder`;
 - Hermes/factory/agent/skill/MCP -> `agent-runtime-builder`.
 

@@ -2,7 +2,7 @@
 
 > Document status: CURRENT SUPPORTING GUIDE.
 > Current authority: `docs/promise-implementation-map.public.json`,
-> `scripts/validate_promise_implementation_map.py`, schemas, tests and the
+> `factory/scripts/validate_promise_implementation_map.py`, schemas, tests and the
 > runtime evidence named by each claim.
 > Runtime boundary: This audit does not replace Hermes runtime evidence,
 > worker results, Receipt Five, release receipts or human gate records.
@@ -53,7 +53,7 @@ For each claim it records:
 The validator is:
 
 ```bash
-python scripts/validate_promise_implementation_map.py
+python factory/scripts/validate_promise_implementation_map.py
 ```
 
 It checks schema shape, duplicate claims, required claim coverage, file refs,
@@ -102,9 +102,9 @@ Before editing README, docs, release notes or a public visual surface:
 5. Run:
 
 ```bash
-python scripts/validate_promise_implementation_map.py
-python scripts/validate_public_json_artifacts.py
-python scripts/validate_public_surface_sync.py
+python factory/scripts/validate_promise_implementation_map.py
+python factory/scripts/validate_public_json_artifacts.py
+python factory/scripts/validate_public_surface_sync.py
 python -m unittest tests.test_promise_implementation_map tests.test_open_source_docs -q
 ```
 

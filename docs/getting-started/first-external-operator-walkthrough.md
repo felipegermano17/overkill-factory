@@ -1,8 +1,8 @@
 # First External Operator Walkthrough
 
 > Document status: CURRENT SUPPORTING GUIDE.
-> Current authority: README.md, `scripts/factoryctl.py`,
-> `examples/minimal-hermes-project/`, tests.
+> Current authority: README.md, `factory/scripts/factoryctl.py`,
+> `factory/examples/minimal-hermes-project/`, tests.
 > Runtime boundary: this walkthrough proves the public factory path locally. It
 > does not mutate a real Hermes board.
 
@@ -32,16 +32,16 @@ Expected result: quickstart prints `PASS` and writes
 
 ## 3. Read The Minimal Product Input
 
-The sample input is `examples/minimal-hermes-project/input-paper.md`. It is a
+The sample input is `factory/examples/minimal-hermes-project/input-paper.md`. It is a
 domain-neutral paper used to prove the factory path. It is not evidence from a
 past run.
 
-The matching card is `examples/minimal-hermes-project/card.md`.
+The matching card is `factory/examples/minimal-hermes-project/card.md`.
 
 ## 4. Run The Ready Gate
 
 ```bash
-factoryctl gate-report --card examples/minimal-hermes-project/card.md
+factoryctl gate-report --card factory/examples/minimal-hermes-project/card.md
 ```
 
 The gate report explains:
@@ -59,7 +59,7 @@ This is a planning gate, not product completion.
 factoryctl worker-packet \
   --worker all \
   --required-only \
-  --card examples/minimal-hermes-project/card.md \
+  --card factory/examples/minimal-hermes-project/card.md \
   --out .tmp/external-operator-worker-packets
 ```
 
@@ -82,11 +82,11 @@ The minimal card stays honest about these boundaries:
 Before publishing a branch, run:
 
 ```bash
-python scripts/validate_public_json_artifacts.py
-python scripts/validate_worker_profiles.py
-python scripts/public_safety_scan.py
-python scripts/secret_safety_scan.py
-python scripts/supply_chain_proof.py --check --no-write
+python factory/scripts/validate_public_json_artifacts.py
+python factory/scripts/validate_worker_profiles.py
+python factory/scripts/public_safety_scan.py
+python factory/scripts/secret_safety_scan.py
+python factory/scripts/supply_chain_proof.py --check --no-write
 python -m unittest discover -s tests -p "test_*.py" -q
 ```
 

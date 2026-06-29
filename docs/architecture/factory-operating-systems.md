@@ -1,9 +1,9 @@
 # Factory Operating Systems
 
 > Document status: CURRENT SUPPORTING GUIDE.
-> Current authority: `templates/factory-operating-system-registry.json`,
-> `schemas/factory-operating-system-registry.schema.json`,
-> `scripts/factoryctl.py`, tests.
+> Current authority: `factory/templates/factory-operating-system-registry.json`,
+> `factory/schemas/factory-operating-system-registry.schema.json`,
+> `factory/scripts/factoryctl.py`, tests.
 > Runtime boundary: this registry maps owners and proof obligations. It does
 > not claim product-specific production readiness by itself.
 
@@ -20,7 +20,7 @@ Run:
 
 ```bash
 factoryctl operating-systems
-factoryctl validate-operating-systems templates/factory-operating-system-registry.json
+factoryctl validate-operating-systems factory/templates/factory-operating-system-registry.json
 factoryctl operating-system-scorecard
 factoryctl operating-system-scorecard --runtime-proof .tmp/factory-runs/hermes-runtime/hermes-worker-runtime-proof.json
 ```
@@ -47,7 +47,7 @@ Method OS is the first OS with a dedicated engine registry:
 
 ```bash
 factoryctl method-engines
-factoryctl validate-method-engines templates/method-engine-registry.json
+factoryctl validate-method-engines factory/templates/method-engine-registry.json
 ```
 
 The Method Contract must bind every selected method to a selected engine. For
@@ -83,7 +83,7 @@ Hermes Worker Runtime OS is the only P0 OS whose readiness cannot be proven by
 repo contracts alone. The public-safe proof path is:
 
 ```bash
-python scripts/hermes_runtime_proof.py \
+python factory/scripts/hermes_runtime_proof.py \
   --boards-json .tmp/hermes-runtime/boards.json \
   --profile-list-text .tmp/hermes-runtime/profile-list.txt \
   --status-text .tmp/hermes-runtime/status.txt \

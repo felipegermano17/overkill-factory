@@ -1,7 +1,7 @@
 # CLI Reference
 
 > Document status: CURRENT SUPPORTING GUIDE.
-> Current authority: scripts/factoryctl.py, README.md, tests/
+> Current authority: factory/scripts/factoryctl.py, README.md, factory/tests/
 > Runtime boundary: The CLI creates and validates local artifacts. Hermes remains
 > the runtime source of truth for real cards and transitions.
 
@@ -43,24 +43,24 @@ and do not mutate Hermes.
 ```bash
 factoryctl compile-workflow --out .tmp/factory-workflow-compiled-plan.json
 factoryctl validate-workflow-compiled-plan .tmp/factory-workflow-compiled-plan.json
-factoryctl validate-factory-command templates/factory-command.json
-factoryctl validate-factory-event-log templates/factory-run-event.json
-factoryctl validate-decision-outbox templates/factory-decision-outbox.json
-factoryctl validate-promotion-packet templates/factory-promotion-packet.json
-factoryctl validate-factory-run templates/factory-run.json
-factoryctl validate-phase-graph templates/factory-phase-graph.json
-factoryctl validate-v2-study-traceability templates/v2-study-traceability.json
-factoryctl validate-v2-doc-implementation-obligations templates/v2-doc-implementation-obligations.json --traceability templates/v2-study-traceability.json
+factoryctl validate-factory-command factory/templates/factory-command.json
+factoryctl validate-factory-event-log factory/templates/factory-run-event.json
+factoryctl validate-decision-outbox factory/templates/factory-decision-outbox.json
+factoryctl validate-promotion-packet factory/templates/factory-promotion-packet.json
+factoryctl validate-factory-run factory/templates/factory-run.json
+factoryctl validate-phase-graph factory/templates/factory-phase-graph.json
+factoryctl validate-v2-study-traceability factory/templates/v2-study-traceability.json
+factoryctl validate-v2-doc-implementation-obligations factory/templates/v2-doc-implementation-obligations.json --traceability factory/templates/v2-study-traceability.json
 factoryctl validate-v2-runtime-contracts
 factoryctl validate-agent-skill-boundaries
 factoryctl validate-reference-superiority
-factoryctl validate-worker-authority-contract templates/worker-authority-contract.json
-factoryctl validate-product-experience-control-plane templates/product-experience-control-plane.json
-factoryctl validate-capability-acquisition-contract templates/capability-acquisition-contract.json
+factoryctl validate-worker-authority-contract factory/templates/worker-authority-contract.json
+factoryctl validate-product-experience-control-plane factory/templates/product-experience-control-plane.json
+factoryctl validate-capability-acquisition-contract factory/templates/capability-acquisition-contract.json
 factoryctl capability-acquisition-run --capability-gap solana-ai-kit --surface solana --out .tmp/factory-runs/capability/solana-capability-acquisition-run.json
 factoryctl validate-capability-acquisition-run .tmp/factory-runs/capability/solana-capability-acquisition-run.json
-factoryctl validate-hermes-reducer-mutation-proof templates/hermes-reducer-mutation-proof.json
-factoryctl validate-readiness-claim templates/factory-v2-readiness-claim.json
+factoryctl validate-hermes-reducer-mutation-proof factory/templates/hermes-reducer-mutation-proof.json
+factoryctl validate-readiness-claim factory/templates/factory-v2-readiness-claim.json
 ```
 
 `compile-workflow` converts `docs/factory-workflow.catalog.json` into a
@@ -149,8 +149,8 @@ cannot be confused with a real product in production.
 ## Card And Worker Commands
 
 ```bash
-factoryctl validate-card examples/minimal-hermes-project/card.md
-factoryctl phase-engine --card examples/minimal-hermes-project/card.md
+factoryctl validate-card factory/examples/minimal-hermes-project/card.md
+factoryctl phase-engine --card factory/examples/minimal-hermes-project/card.md
 factoryctl route-registry --route-class product_creation
 factoryctl operator-interface --primary-interface telegram --out .tmp/operator-interface-profile.json
 factoryctl validate-operator-interface .tmp/operator-interface-profile.json
@@ -160,50 +160,50 @@ factoryctl intake --route-class product_creation --request-type product_new --si
 factoryctl validate-signal-intake .tmp/product-intake.json
 factoryctl intake --route-class bug_repair --request-type bug --signal-type bug_report --summary "Public-safe bug report enters reproduction and regression gates." --source-ref external:source-card-bug-001 --out .tmp/bug-intake.json
 factoryctl validate-signal-intake .tmp/bug-intake.json
-factoryctl source-resolution --intake templates/universal-signal-intake.json --intake-ref templates/universal-signal-intake.json --out .tmp/source-resolution-packet.json
-factoryctl validate-source-resolution templates/source-resolution-packet.json
-factoryctl source-ledger --source-resolution templates/source-resolution-packet.json --source-ref external:source-card-product-brief --out .tmp/product-source-ledger.json
-factoryctl validate-source-ledger templates/product-source-ledger.json
-factoryctl understanding-confirmation --source-ledger templates/product-source-ledger.json --operator-response-ref external:sanitized-operator-understanding-confirmed --confirmed --out .tmp/operator-understanding-confirmation.json
-factoryctl validate-understanding-confirmation templates/operator-understanding-confirmation.json
-factoryctl briefing-package --operator-interface templates/operator-interface-profile.json --artifact-type product_sot --artifact-ref templates/product-sot.json --decision-required --out .tmp/operator-briefing-package.json
-factoryctl validate-briefing-package templates/operator-briefing-package.json
-factoryctl outcome-contract --source-ledger templates/product-source-ledger.json --operator-understanding-confirmation-ref external:sanitized-operator-understanding-confirmed --out .tmp/outcome-contract.json
-factoryctl validate-outcome-contract templates/outcome-contract.json
-factoryctl product-sot --outcome-contract templates/outcome-contract.json --out .tmp/product-sot.json
-factoryctl validate-product-sot templates/product-sot.json
-factoryctl full-scope-coverage --product-sot templates/product-sot.json --out .tmp/full-product-sot-scope-coverage.json
-factoryctl validate-full-scope-coverage templates/full-product-sot-scope-coverage.json
-factoryctl method-contract --full-scope-coverage templates/full-product-sot-scope-coverage.json --out .tmp/method-contract.json
-factoryctl validate-method-contract templates/method-contract.json
+factoryctl source-resolution --intake factory/templates/universal-signal-intake.json --intake-ref factory/templates/universal-signal-intake.json --out .tmp/source-resolution-packet.json
+factoryctl validate-source-resolution factory/templates/source-resolution-packet.json
+factoryctl source-ledger --source-resolution factory/templates/source-resolution-packet.json --source-ref external:source-card-product-brief --out .tmp/product-source-ledger.json
+factoryctl validate-source-ledger factory/templates/product-source-ledger.json
+factoryctl understanding-confirmation --source-ledger factory/templates/product-source-ledger.json --operator-response-ref external:sanitized-operator-understanding-confirmed --confirmed --out .tmp/operator-understanding-confirmation.json
+factoryctl validate-understanding-confirmation factory/templates/operator-understanding-confirmation.json
+factoryctl briefing-package --operator-interface factory/templates/operator-interface-profile.json --artifact-type product_sot --artifact-ref factory/templates/product-sot.json --decision-required --out .tmp/operator-briefing-package.json
+factoryctl validate-briefing-package factory/templates/operator-briefing-package.json
+factoryctl outcome-contract --source-ledger factory/templates/product-source-ledger.json --operator-understanding-confirmation-ref external:sanitized-operator-understanding-confirmed --out .tmp/outcome-contract.json
+factoryctl validate-outcome-contract factory/templates/outcome-contract.json
+factoryctl product-sot --outcome-contract factory/templates/outcome-contract.json --out .tmp/product-sot.json
+factoryctl validate-product-sot factory/templates/product-sot.json
+factoryctl full-scope-coverage --product-sot factory/templates/product-sot.json --out .tmp/full-product-sot-scope-coverage.json
+factoryctl validate-full-scope-coverage factory/templates/full-product-sot-scope-coverage.json
+factoryctl method-contract --full-scope-coverage factory/templates/full-product-sot-scope-coverage.json --out .tmp/method-contract.json
+factoryctl validate-method-contract factory/templates/method-contract.json
 factoryctl method-engines --engine-id spec_first_sdd
-factoryctl validate-method-engines templates/method-engine-registry.json
-factoryctl product-creation-plan --method-contract templates/method-contract.json --out .tmp/product-creation-plan.json
-factoryctl validate-product-creation-plan templates/product-creation-plan.json
-factoryctl product-implementation-readiness --product-creation-plan templates/product-creation-plan.json --out .tmp/product-implementation-readiness.json
-factoryctl validate-product-implementation-readiness templates/product-implementation-readiness.json
+factoryctl validate-method-engines factory/templates/method-engine-registry.json
+factoryctl product-creation-plan --method-contract factory/templates/method-contract.json --out .tmp/product-creation-plan.json
+factoryctl validate-product-creation-plan factory/templates/product-creation-plan.json
+factoryctl product-implementation-readiness --product-creation-plan factory/templates/product-creation-plan.json --out .tmp/product-implementation-readiness.json
+factoryctl validate-product-implementation-readiness factory/templates/product-implementation-readiness.json
 factoryctl operating-systems --os-id hermes_worker_runtime_os
-factoryctl validate-operating-systems templates/factory-operating-system-registry.json
+factoryctl validate-operating-systems factory/templates/factory-operating-system-registry.json
 factoryctl operating-system-scorecard --out .tmp/factory-runs/operating-systems/factory-operating-system-scorecard.json
-python scripts/hermes_runtime_proof.py --boards-json .tmp/hermes-runtime/boards.json --profile-list-text .tmp/hermes-runtime/profile-list.txt --status-text .tmp/hermes-runtime/status.txt --task-list-json .tmp/hermes-runtime/task-list.json --done-task-runs-json .tmp/hermes-runtime/done-task-runs.json --blocked-task-show-json .tmp/hermes-runtime/blocked-task-show.json --out .tmp/factory-runs/hermes-runtime/hermes-worker-runtime-proof.json
+python factory/scripts/hermes_runtime_proof.py --boards-json .tmp/hermes-runtime/boards.json --profile-list-text .tmp/hermes-runtime/profile-list.txt --status-text .tmp/hermes-runtime/status.txt --task-list-json .tmp/hermes-runtime/task-list.json --done-task-runs-json .tmp/hermes-runtime/done-task-runs.json --blocked-task-show-json .tmp/hermes-runtime/blocked-task-show.json --out .tmp/factory-runs/hermes-runtime/hermes-worker-runtime-proof.json
 factoryctl operating-system-scorecard --runtime-proof .tmp/factory-runs/hermes-runtime/hermes-worker-runtime-proof.json --out .tmp/factory-runs/operating-systems/factory-operating-system-scorecard-runtime-proven.json
 factoryctl validate-operating-system-scorecard .tmp/factory-runs/operating-systems/factory-operating-system-scorecard.json
-python scripts/factory_completion_audit.py --runtime-proof .tmp/factory-runs/hermes-runtime/hermes-worker-runtime-proof.json --out-dir .tmp/factory-runs/completion-os-check
-factoryctl ready-work-unit-packets --product-creation-plan templates/product-creation-plan.json --product-implementation-readiness templates/product-implementation-readiness.json --forbidden-context-ref external:sanitized-off-limits-parallel-thread --out .tmp/ready-work-unit-packets
-factoryctl validate-ready-work-unit-packets templates/ready-work-unit-packets.json
-factoryctl validate-signal-corpus templates/universal-signal-golden-corpus.json
+python factory/scripts/factory_completion_audit.py --runtime-proof .tmp/factory-runs/hermes-runtime/hermes-worker-runtime-proof.json --out-dir .tmp/factory-runs/completion-os-check
+factoryctl ready-work-unit-packets --product-creation-plan factory/templates/product-creation-plan.json --product-implementation-readiness factory/templates/product-implementation-readiness.json --forbidden-context-ref external:sanitized-off-limits-parallel-thread --out .tmp/ready-work-unit-packets
+factoryctl validate-ready-work-unit-packets factory/templates/ready-work-unit-packets.json
+factoryctl validate-signal-corpus factory/templates/universal-signal-golden-corpus.json
 factoryctl signal-coverage --out .tmp/factory-runs/signal-coverage/factory-signal-coverage-scorecard.json
 factoryctl v1-completion-gate --release-preflight .tmp/factory-runs/release/release-integration-preflight.json --github-actions-result PASS --open-v1-blockers 0 --open-prs 0
-factoryctl validate-v1-completion-gate templates/factory-v1-completion-gate.json
-factoryctl gate-report --card examples/minimal-hermes-project/card.md
-factoryctl unblock-plan --card examples/minimal-hermes-project/card.md
-factoryctl recovery-plan --card examples/minimal-hermes-project/card.md --receipt .tmp/receipt.json --worker-results-dir .tmp/worker-results
-factoryctl help-next --card examples/minimal-hermes-project/card.md --worker-results-dir .tmp/worker-results --out .tmp/factory-help.json
+factoryctl validate-v1-completion-gate factory/templates/factory-v1-completion-gate.json
+factoryctl gate-report --card factory/examples/minimal-hermes-project/card.md
+factoryctl unblock-plan --card factory/examples/minimal-hermes-project/card.md
+factoryctl recovery-plan --card factory/examples/minimal-hermes-project/card.md --receipt .tmp/receipt.json --worker-results-dir .tmp/worker-results
+factoryctl help-next --card factory/examples/minimal-hermes-project/card.md --worker-results-dir .tmp/worker-results --out .tmp/factory-help.json
 factoryctl reconcile-board --board product-alpha --snapshot .tmp/hermes-board-snapshot.json --out .tmp/factory-board-reconcile-plan.json
 factoryctl validate-reconcile-board .tmp/factory-board-reconcile-plan.json
-factoryctl worker-packet --worker all --required-only --card examples/minimal-hermes-project/card.md --out .tmp/minimal-worker-packets
-factoryctl transition-plan --card examples/minimal-hermes-project/card.md --from-status draft --to-status ready
-factoryctl status-snapshot --card examples/minimal-hermes-project/card.md --out .tmp/factory-status-snapshot.json
+factoryctl worker-packet --worker all --required-only --card factory/examples/minimal-hermes-project/card.md --out .tmp/minimal-worker-packets
+factoryctl transition-plan --card factory/examples/minimal-hermes-project/card.md --from-status draft --to-status ready
+factoryctl status-snapshot --card factory/examples/minimal-hermes-project/card.md --out .tmp/factory-status-snapshot.json
 ```
 
 `validate-signal-intake` checks the first routing contract for any incoming
@@ -227,9 +227,9 @@ repair, and a single canonical card can create only the next artifact selected
 by the phase engine. It must not ask for a human gate unless
 `phase_engine.human_gate_allowed=true` and the decision package is complete.
 Unlike the public template validation path, board reconciliation runs the phase
-engine in runtime-strict mode: `templates/...`, `source-ledger.md`,
+engine in runtime-strict mode: `factory/templates/...`, `source-ledger.md`,
 `factoryctl:gate-report`, bare scaffold refs and placeholder packets copied from
-`templates/vfinal-factory-card.json` do not count as materialized product
+`factory/templates/vfinal-factory-card.json` do not count as materialized product
 evidence. A live board must carry product-specific artifacts before it can move
 from intake to SOT, method, architecture, readiness or execution.
 The reconcile task contract includes `workflow_template_id=overkill-vfinal`,
@@ -351,16 +351,16 @@ source of truth.
 
 ## Operator Bridge Commands
 
-`scripts/factory_bridge.py` is the secondary operator bridge helper. Use it when
+`factory/scripts/factory_bridge.py` is the secondary operator bridge helper. Use it when
 an operator-facing assistant or script needs a durable operator inbox without
 acting as a factory worker.
 
 ```bash
-python scripts/factory_bridge.py summarize-inbox --text
-python scripts/factory_bridge.py classify-prompt --prompt "status da fabrica"
-python scripts/factory_bridge.py source-envelope --run-id example-run --project-mode new_project --operator-goal "Start a new product project." --source-ref external:operator:brief --out .tmp/factory-runs/example/source-envelope.json
-python scripts/factory_bridge.py start-request --run-id example-run --project-mode new_project --operator-goal "Start a new product project." --source-envelope-ref external:operator:source-envelope --out .tmp/factory-runs/example/start-request.json
-python scripts/factory_bridge.py handoff --run-id example-run --out .tmp/factory-runs/example/bridge-handoff.json
+python factory/scripts/factory_bridge.py summarize-inbox --text
+python factory/scripts/factory_bridge.py classify-prompt --prompt "status da fabrica"
+python factory/scripts/factory_bridge.py source-envelope --run-id example-run --project-mode new_project --operator-goal "Start a new product project." --source-ref external:operator:brief --out .tmp/factory-runs/example/source-envelope.json
+python factory/scripts/factory_bridge.py start-request --run-id example-run --project-mode new_project --operator-goal "Start a new product project." --source-envelope-ref external:operator:source-envelope --out .tmp/factory-runs/example/start-request.json
+python factory/scripts/factory_bridge.py handoff --run-id example-run --out .tmp/factory-runs/example/bridge-handoff.json
 ```
 
 Bridge output is observability and operator response material. It does not
@@ -376,9 +376,9 @@ tasks, links, comments, runs and block/unblock events.
 
 ```bash
 factoryctl export-hermes-evidence --board my-board --workspace ../my-hermes-workspace --out .tmp/factory-runs/hermes-evidence/sanitized-package.json
-factoryctl evidence-graph --card examples/minimal-hermes-project/card.md --worker-results-dir .tmp/worker-results --out .tmp/factory-runs/evidence/evidence-graph.json
-factoryctl readiness-ledger --card examples/minimal-hermes-project/card.md --evidence-graph .tmp/factory-runs/evidence/evidence-graph.json --out .tmp/factory-runs/readiness/readiness-truth-ledger.json
-factoryctl truth --target issue-94 --card examples/minimal-hermes-project/card.md --out .tmp/factory-runs/truth/truth-packet.json
+factoryctl evidence-graph --card factory/examples/minimal-hermes-project/card.md --worker-results-dir .tmp/worker-results --out .tmp/factory-runs/evidence/evidence-graph.json
+factoryctl readiness-ledger --card factory/examples/minimal-hermes-project/card.md --evidence-graph .tmp/factory-runs/evidence/evidence-graph.json --out .tmp/factory-runs/readiness/readiness-truth-ledger.json
+factoryctl truth --target issue-94 --card factory/examples/minimal-hermes-project/card.md --out .tmp/factory-runs/truth/truth-packet.json
 factoryctl prepilot-checklist --evidence-graph .tmp/factory-runs/evidence/evidence-graph.json --readiness-ledger .tmp/factory-runs/readiness/readiness-truth-ledger.json
 ```
 
@@ -391,7 +391,7 @@ evidence into the public repository. A weaker truth layer such as
 ### Test Runner Fallback
 
 Worker packets should run commands as argv lists, not shell strings. Use
-`scripts/safe_shell.py` as the local pattern when a packet needs a fallback for
+`factory/scripts/safe_shell.py` as the local pattern when a packet needs a fallback for
 runner failures, timeouts, or Windows sandbox launch errors. A fallback result
 is `BLOCKED` until the same argv is rerun successfully or replaced by a
 traceable worker result.
@@ -402,15 +402,15 @@ Scripts outside `factoryctl` are maintainer tools or compatibility entrypoints.
 Promote repeated operator flows into `factoryctl` instead of adding another
 script name to the public path.
 
-### `scripts/factory_production_gate_receipts.py`
+### `factory/scripts/factory_production_gate_receipts.py`
 
 Materializes the public-safe receipts consumed by
-`scripts/factory_production_readiness.py`:
+`factory/scripts/factory_production_readiness.py`:
 
 ```bash
-python scripts/factory_production_gate_receipts.py
-python scripts/factory_production_gate_receipts.py --runtime-status-evidence .tmp/factory-runs/hermes-live/hermes-runtime-readonly-evidence.json
-python scripts/factory_production_gate_receipts.py --no-write
+python factory/scripts/factory_production_gate_receipts.py
+python factory/scripts/factory_production_gate_receipts.py --runtime-status-evidence .tmp/factory-runs/hermes-live/hermes-runtime-readonly-evidence.json
+python factory/scripts/factory_production_gate_receipts.py --no-write
 ```
 
 Materialization success is not production approval. The script fails closed by
@@ -418,31 +418,31 @@ writing `BLOCKED` receipts when live Hermes, private Control Tower evidence or
 release integration proof is not ready. The aggregate gate remains
 `factory_production_readiness.py`.
 
-### `scripts/factory_self_improvement.py`
+### `factory/scripts/factory_self_improvement.py`
 
 Creates dry-run self-improvement artifacts for maintainers:
 
 ```bash
-python scripts/factory_self_improvement.py reference-registry --out .tmp/reference-source-registry.json
-python scripts/factory_self_improvement.py missing-capability-plan --gate-report .tmp/gate-report.json --out .tmp/missing-capability-plan.json
-python scripts/factory_self_improvement.py learnback-issues --record .tmp/execution-learnback-record.json --out .tmp/issue-candidates.json
-python scripts/factory_self_improvement.py learning-proposals --record .tmp/execution-learnback-record.json --out .tmp/learning-proposals.json
-python scripts/factory_self_improvement.py issue-intake --config templates/owner-issue-intake-config.json --issues .tmp/issues.json --out .tmp/issue-intake-report.json
-python scripts/factory_self_improvement.py governance-audit --out .tmp/ai-codebase-governance-report.json
+python factory/scripts/factory_self_improvement.py reference-registry --out .tmp/reference-source-registry.json
+python factory/scripts/factory_self_improvement.py missing-capability-plan --gate-report .tmp/gate-report.json --out .tmp/missing-capability-plan.json
+python factory/scripts/factory_self_improvement.py learnback-issues --record .tmp/execution-learnback-record.json --out .tmp/issue-candidates.json
+python factory/scripts/factory_self_improvement.py learning-proposals --record .tmp/execution-learnback-record.json --out .tmp/learning-proposals.json
+python factory/scripts/factory_self_improvement.py issue-intake --config factory/templates/owner-issue-intake-config.json --issues .tmp/issues.json --out .tmp/issue-intake-report.json
+python factory/scripts/factory_self_improvement.py governance-audit --out .tmp/ai-codebase-governance-report.json
 ```
 
 These commands do not dispatch Hermes, activate workers, post GitHub comments or
 approve gates. They prepare public-safe plans and candidates for review.
 
-### `scripts/production_full_product_worker_graph.py`
+### `factory/scripts/production_full_product_worker_graph.py`
 
 Builds a production-scoped worker graph from a product contract. Use the default
 QVG contract for the product-shaped validation fixture, or pass `--graph-contract` for a
 different Product SOT/capability-pack set.
 
 ```bash
-python scripts/production_full_product_worker_graph.py --no-write
-python scripts/production_full_product_worker_graph.py --graph-contract path/to/production-full-product-graph.contract.json
+python factory/scripts/production_full_product_worker_graph.py --no-write
+python factory/scripts/production_full_product_worker_graph.py --graph-contract path/to/production-full-product-graph.contract.json
 ```
 
 The script validates evidence lanes. It does not create missing worker evidence,

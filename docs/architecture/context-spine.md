@@ -1,7 +1,7 @@
 # Context Spine
 
 > Document status: CURRENT SUPPORTING GUIDE.
-> Current authority: `scripts/factoryctl.py`, source ledgers, decision records, receipts and tests.
+> Current authority: `factory/scripts/factoryctl.py`, source ledgers, decision records, receipts and tests.
 > Runtime boundary: Memory helps the factory remember context. Memory is not truth by itself and cannot override source, Hermes state, gates or receipts.
 
 The context spine is the rule for using memory without letting memory become a

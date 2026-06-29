@@ -1,7 +1,7 @@
 # Repository Surface
 
 > Document status: CURRENT SUPPORTING GUIDE.
-> Current authority: README.md, scripts/factoryctl.py, tests/
+> Current authority: README.md, factory/scripts/factoryctl.py, factory/tests/
 > Runtime boundary: This guide keeps the repo maintainable. It does not override
 > executable gates.
 
@@ -13,18 +13,18 @@ Files a new operator should open first:
 - `docs/index.md`
 - `docs/getting-started/install-in-hermes.md`
 - `docs/reference/cli.md`
-- `examples/minimal-hermes-project/`
+- `factory/examples/minimal-hermes-project/`
 
 ## Maintainer internals
 
 Files maintainers change when contracts evolve:
 
-- `schemas/`
-- `templates/`
-- `agents/*.json`
-- `scripts/`
-- `adapters/`
-- `tests/`
+- `factory/schemas/`
+- `factory/templates/`
+- `factory/agents/*.json`
+- `factory/scripts/`
+- `factory/adapters/`
+- `factory/tests/`
 
 These are allowed to be dense. They should not be the first path a new user
 must understand.
@@ -39,7 +39,7 @@ Product-specific working folders such as `products/`, `planning-bundles/`,
 `pilots/`, raw research dumps and private operator materials do not belong in
 the public repository. Public examples must be small, rerunnable and
 domain-neutral unless a production-lane validator explicitly needs a realistic
-fixture under `fixtures/`.
+fixture under `factory/fixtures/`.
 
 ## Maintenance Rule
 

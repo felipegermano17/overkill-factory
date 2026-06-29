@@ -10,43 +10,43 @@ Use this before editing cards, docs or examples:
 ```bash
 factoryctl doctor
 factoryctl run minimal
-python scripts/swiss_watch_audit.py --out .tmp/swiss-watch-audit.json --markdown .tmp/swiss-watch-audit.md
-python scripts/factory_method_excellence_audit.py --out .tmp/factory-method-excellence-audit.json --markdown .tmp/factory-method-excellence-audit.md
-python scripts/factory_world_class_process_gap_audit.py --out .tmp/factory-world-class-process-gap-audit.json --markdown .tmp/factory-world-class-process-gap-audit.md
-python scripts/factory_executor_skill_ecosystem_audit.py --out .tmp/factory-executor-skill-ecosystem-audit.json --markdown .tmp/factory-executor-skill-ecosystem-audit.md
-python scripts/factory_security_excellence_audit.py --out .tmp/factory-security-excellence-audit.json --markdown .tmp/factory-security-excellence-audit.md
-python scripts/factory_operator_ui_ux_excellence_audit.py --out .tmp/factory-operator-ui-ux-excellence-audit.json --markdown .tmp/factory-operator-ui-ux-excellence-audit.md
-python scripts/factory_os_excellence_audit.py --out .tmp/factory-os-excellence-audit.json --markdown .tmp/factory-os-excellence-audit.md
-python scripts/factory_github_issue_pattern_audit.py --out .tmp/factory-github-issue-pattern-audit.json --markdown .tmp/factory-github-issue-pattern-audit.md
-python scripts/factory_master_update_plan_audit.py --out .tmp/factory-master-update-plan-audit.json --markdown .tmp/factory-master-update-plan-audit.md
-python scripts/factory_runtime_truth_spine_audit.py --out .tmp/factory-runtime-truth-spine-audit.json --markdown .tmp/factory-runtime-truth-spine-audit.md
-python scripts/factory_canonical_frontier_audit.py --out .tmp/factory-canonical-frontier-audit.json --markdown .tmp/factory-canonical-frontier-audit.md
-python scripts/factory_manager_agent_freshness_audit.py --out .tmp/factory-manager-agent-freshness-audit.json --markdown .tmp/factory-manager-agent-freshness-audit.md
-python scripts/factory_v3_release_readiness_audit.py --out .tmp/factory-v3-release-readiness-audit.json --markdown .tmp/factory-v3-release-readiness-audit.md
-python scripts/factory_master_plan_completion_audit.py --out .tmp/factory-master-plan-completion-audit.json --markdown .tmp/factory-master-plan-completion-audit.md
-python scripts/factory_master_plan_literal_dod_audit.py --out .tmp/factory-master-plan-literal-dod-audit.json --markdown .tmp/factory-master-plan-literal-dod-audit.md
-python scripts/factory_manager_intake_smoke.py --out .tmp/factory-manager-intake-smoke.json
-python scripts/factory_manager_profile_live_smoke.py --dry-run --out .tmp/factory-manager-profile-live-smoke.json
-python scripts/factory_operator_progress_card.py --out .tmp/operator-progress-card.json --text-out .tmp/operator-progress-card.txt
-python scripts/factory_operator_delivery_receipt.py --out .tmp/operator-delivery-receipt.json
-python scripts/factory_product_face_result.py --out .tmp/product-face-result.json
-python scripts/factory_learnback_proposal.py --out .tmp/factory-learnback-proposal.json
-python scripts/factory_telegram_start_smoke.py --dry-run --out .tmp/factory-telegram-start-smoke.json
-python scripts/factory_perfect_run.py --out .tmp/factory-perfect-run.json
-python scripts/factory_hermes_live_smoke.py --out .tmp/factory-hermes-live-smoke.json
-python scripts/render_human_gate_pdf.py --out .tmp/human-gate-decision-package.txt --pdf-out .tmp/human-gate-decision-package.pdf
-python scripts/factory_receipt_five_classifier.py --out .tmp/receipt-five-classification.json
-python scripts/factoryctl.py v3-production-activation-check
+python factory/scripts/swiss_watch_audit.py --out .tmp/swiss-watch-audit.json --markdown .tmp/swiss-watch-audit.md
+python factory/scripts/factory_method_excellence_audit.py --out .tmp/factory-method-excellence-audit.json --markdown .tmp/factory-method-excellence-audit.md
+python factory/scripts/factory_world_class_process_gap_audit.py --out .tmp/factory-world-class-process-gap-audit.json --markdown .tmp/factory-world-class-process-gap-audit.md
+python factory/scripts/factory_executor_skill_ecosystem_audit.py --out .tmp/factory-executor-skill-ecosystem-audit.json --markdown .tmp/factory-executor-skill-ecosystem-audit.md
+python factory/scripts/factory_security_excellence_audit.py --out .tmp/factory-security-excellence-audit.json --markdown .tmp/factory-security-excellence-audit.md
+python factory/scripts/factory_operator_ui_ux_excellence_audit.py --out .tmp/factory-operator-ui-ux-excellence-audit.json --markdown .tmp/factory-operator-ui-ux-excellence-audit.md
+python factory/scripts/factory_os_excellence_audit.py --out .tmp/factory-os-excellence-audit.json --markdown .tmp/factory-os-excellence-audit.md
+python factory/scripts/factory_github_issue_pattern_audit.py --out .tmp/factory-github-issue-pattern-audit.json --markdown .tmp/factory-github-issue-pattern-audit.md
+python factory/scripts/factory_master_update_plan_audit.py --out .tmp/factory-master-update-plan-audit.json --markdown .tmp/factory-master-update-plan-audit.md
+python factory/scripts/factory_runtime_truth_spine_audit.py --out .tmp/factory-runtime-truth-spine-audit.json --markdown .tmp/factory-runtime-truth-spine-audit.md
+python factory/scripts/factory_canonical_frontier_audit.py --out .tmp/factory-canonical-frontier-audit.json --markdown .tmp/factory-canonical-frontier-audit.md
+python factory/scripts/factory_manager_agent_freshness_audit.py --out .tmp/factory-manager-agent-freshness-audit.json --markdown .tmp/factory-manager-agent-freshness-audit.md
+python factory/scripts/factory_v3_release_readiness_audit.py --out .tmp/factory-v3-release-readiness-audit.json --markdown .tmp/factory-v3-release-readiness-audit.md
+python factory/scripts/factory_master_plan_completion_audit.py --out .tmp/factory-master-plan-completion-audit.json --markdown .tmp/factory-master-plan-completion-audit.md
+python factory/scripts/factory_master_plan_literal_dod_audit.py --out .tmp/factory-master-plan-literal-dod-audit.json --markdown .tmp/factory-master-plan-literal-dod-audit.md
+python factory/scripts/factory_manager_intake_smoke.py --out .tmp/factory-manager-intake-smoke.json
+python factory/scripts/factory_manager_profile_live_smoke.py --dry-run --out .tmp/factory-manager-profile-live-smoke.json
+python factory/scripts/factory_operator_progress_card.py --out .tmp/operator-progress-card.json --text-out .tmp/operator-progress-card.txt
+python factory/scripts/factory_operator_delivery_receipt.py --out .tmp/operator-delivery-receipt.json
+python factory/scripts/factory_product_face_result.py --out .tmp/product-face-result.json
+python factory/scripts/factory_learnback_proposal.py --out .tmp/factory-learnback-proposal.json
+python factory/scripts/factory_telegram_start_smoke.py --dry-run --out .tmp/factory-telegram-start-smoke.json
+python factory/scripts/factory_perfect_run.py --out .tmp/factory-perfect-run.json
+python factory/scripts/factory_hermes_live_smoke.py --out .tmp/factory-hermes-live-smoke.json
+python factory/scripts/render_human_gate_pdf.py --out .tmp/human-gate-decision-package.txt --pdf-out .tmp/human-gate-decision-package.pdf
+python factory/scripts/factory_receipt_five_classifier.py --out .tmp/receipt-five-classification.json
+python factory/scripts/factoryctl.py v3-production-activation-check
 python -m unittest discover -s tests
-python scripts/validate_document_governance.py
-python scripts/generate_factory_reference_docs.py --check
-python scripts/validate_public_json_artifacts.py
-python scripts/validate_promise_implementation_map.py
-python scripts/validate_public_surface_sync.py
-python scripts/validate_worker_profiles.py
-python scripts/secret_safety_scan.py
-python scripts/public_safety_scan.py
-python scripts/supply_chain_proof.py --check --no-write
+python factory/scripts/validate_document_governance.py
+python factory/scripts/generate_factory_reference_docs.py --check
+python factory/scripts/validate_public_json_artifacts.py
+python factory/scripts/validate_promise_implementation_map.py
+python factory/scripts/validate_public_surface_sync.py
+python factory/scripts/validate_worker_profiles.py
+python factory/scripts/secret_safety_scan.py
+python factory/scripts/public_safety_scan.py
+python factory/scripts/supply_chain_proof.py --check --no-write
 ```
 
 ## Factory Contract Check
@@ -54,10 +54,10 @@ python scripts/supply_chain_proof.py --check --no-write
 Use a card-specific check before sending work to Hermes:
 
 ```bash
-factoryctl validate-card examples/minimal-hermes-project/card.md
-factoryctl gate-report --card examples/minimal-hermes-project/card.md
-factoryctl worker-packet --worker all --required-only --card examples/minimal-hermes-project/card.md --out .tmp/minimal-worker-packets
-factoryctl status-snapshot --card examples/minimal-hermes-project/card.md --out .tmp/factory-status-snapshot.json
+factoryctl validate-card factory/examples/minimal-hermes-project/card.md
+factoryctl gate-report --card factory/examples/minimal-hermes-project/card.md
+factoryctl worker-packet --worker all --required-only --card factory/examples/minimal-hermes-project/card.md --out .tmp/minimal-worker-packets
+factoryctl status-snapshot --card factory/examples/minimal-hermes-project/card.md --out .tmp/factory-status-snapshot.json
 ```
 
 What this proves:
@@ -72,12 +72,12 @@ What this proves:
 Run this before a public branch, release tag or pull request:
 
 ```bash
-python scripts/release_integration_preflight.py --out .tmp/release-check.json
-python scripts/factory_production_gate_receipts.py \
+python factory/scripts/release_integration_preflight.py --out .tmp/release-check.json
+python factory/scripts/factory_production_gate_receipts.py \
   --runtime-status-evidence .tmp/factory-runs/hermes-live/hermes-runtime-readonly-evidence.json
-python scripts/factory_production_readiness.py --out .tmp/readiness-check.json
-python scripts/worktree_release_inventory.py --out .tmp/inventory-check.json
-python scripts/validate_public_surface_sync.py --check-published
+python factory/scripts/factory_production_readiness.py --out .tmp/readiness-check.json
+python factory/scripts/worktree_release_inventory.py --out .tmp/inventory-check.json
+python factory/scripts/validate_public_surface_sync.py --check-published
 ```
 
 These commands write local summaries under `.tmp` when an output path is
@@ -108,8 +108,8 @@ Run this whenever Hermes itself is updated or when a gateway restart is needed
 after an update:
 
 ```bash
-python scripts/hermes_update_guard.py plan --board <board-slug>
-python scripts/hermes_update_guard.py evaluate \
+python factory/scripts/hermes_update_guard.py plan --board <board-slug>
+python factory/scripts/hermes_update_guard.py evaluate \
   --doctor .tmp/hermes-update/doctor.txt \
   --gateway-status .tmp/hermes-update/gateway-status.txt \
   --kanban-stats .tmp/hermes-update/kanban-stats.txt \
@@ -152,13 +152,13 @@ Production completion uses a product-scoped worker graph. The default contract
 is the QVG product-shaped validation fixture:
 
 ```bash
-python scripts/production_full_product_worker_graph.py --no-write
+python factory/scripts/production_full_product_worker_graph.py --no-write
 ```
 
 For another product, provide a graph contract instead of editing the script:
 
 ```bash
-python scripts/production_full_product_worker_graph.py \
+python factory/scripts/production_full_product_worker_graph.py \
   --graph-contract path/to/production-full-product-graph.contract.json \
   --out .tmp/factory-runs/production/full-product-worker-graph.json
 ```
@@ -175,49 +175,49 @@ For a stronger local pass:
 ```bash
 factoryctl doctor
 factoryctl run minimal
-python scripts/swiss_watch_audit.py --out .tmp/swiss-watch-audit.json --markdown .tmp/swiss-watch-audit.md
-python scripts/factory_method_excellence_audit.py --out .tmp/factory-method-excellence-audit.json --markdown .tmp/factory-method-excellence-audit.md
-python scripts/factory_world_class_process_gap_audit.py --out .tmp/factory-world-class-process-gap-audit.json --markdown .tmp/factory-world-class-process-gap-audit.md
-python scripts/factory_executor_skill_ecosystem_audit.py --out .tmp/factory-executor-skill-ecosystem-audit.json --markdown .tmp/factory-executor-skill-ecosystem-audit.md
-python scripts/factory_security_excellence_audit.py --out .tmp/factory-security-excellence-audit.json --markdown .tmp/factory-security-excellence-audit.md
-python scripts/factory_operator_ui_ux_excellence_audit.py --out .tmp/factory-operator-ui-ux-excellence-audit.json --markdown .tmp/factory-operator-ui-ux-excellence-audit.md
-python scripts/factory_os_excellence_audit.py --out .tmp/factory-os-excellence-audit.json --markdown .tmp/factory-os-excellence-audit.md
-python scripts/factory_github_issue_pattern_audit.py --out .tmp/factory-github-issue-pattern-audit.json --markdown .tmp/factory-github-issue-pattern-audit.md
-python scripts/factory_master_update_plan_audit.py --out .tmp/factory-master-update-plan-audit.json --markdown .tmp/factory-master-update-plan-audit.md
-python scripts/factory_runtime_truth_spine_audit.py --out .tmp/factory-runtime-truth-spine-audit.json --markdown .tmp/factory-runtime-truth-spine-audit.md
-python scripts/factory_canonical_frontier_audit.py --out .tmp/factory-canonical-frontier-audit.json --markdown .tmp/factory-canonical-frontier-audit.md
-python scripts/factory_manager_agent_freshness_audit.py --out .tmp/factory-manager-agent-freshness-audit.json --markdown .tmp/factory-manager-agent-freshness-audit.md
-python scripts/factory_v3_release_readiness_audit.py --out .tmp/factory-v3-release-readiness-audit.json --markdown .tmp/factory-v3-release-readiness-audit.md
-python scripts/factory_master_plan_completion_audit.py --out .tmp/factory-master-plan-completion-audit.json --markdown .tmp/factory-master-plan-completion-audit.md
-python scripts/factory_master_plan_literal_dod_audit.py --out .tmp/factory-master-plan-literal-dod-audit.json --markdown .tmp/factory-master-plan-literal-dod-audit.md
-python scripts/factory_manager_intake_smoke.py --out .tmp/factory-manager-intake-smoke.json
-python scripts/factory_manager_profile_live_smoke.py --dry-run --out .tmp/factory-manager-profile-live-smoke.json
-python scripts/factory_operator_progress_card.py --out .tmp/operator-progress-card.json --text-out .tmp/operator-progress-card.txt
-python scripts/factory_operator_delivery_receipt.py --out .tmp/operator-delivery-receipt.json
-python scripts/factory_product_face_result.py --out .tmp/product-face-result.json
-python scripts/factory_learnback_proposal.py --out .tmp/factory-learnback-proposal.json
-python scripts/factory_telegram_start_smoke.py --dry-run --out .tmp/factory-telegram-start-smoke.json
-python scripts/factory_perfect_run.py --out .tmp/factory-perfect-run.json
-python scripts/factory_hermes_live_smoke.py --out .tmp/factory-hermes-live-smoke.json
-python scripts/render_human_gate_pdf.py --out .tmp/human-gate-decision-package.txt --pdf-out .tmp/human-gate-decision-package.pdf
-python scripts/factory_receipt_five_classifier.py --out .tmp/receipt-five-classification.json
-python scripts/factoryctl.py v3-production-activation-check
-python scripts/factory_battery.py
-python scripts/validate_document_governance.py
-python scripts/generate_factory_reference_docs.py --check
-python scripts/validate_worker_profiles.py
-python scripts/validate_public_json_artifacts.py
-python scripts/validate_promise_implementation_map.py
-python scripts/validate_public_surface_sync.py
-python scripts/public_safety_scan.py
-python scripts/secret_safety_scan.py
-python scripts/supply_chain_proof.py --check --no-write
+python factory/scripts/swiss_watch_audit.py --out .tmp/swiss-watch-audit.json --markdown .tmp/swiss-watch-audit.md
+python factory/scripts/factory_method_excellence_audit.py --out .tmp/factory-method-excellence-audit.json --markdown .tmp/factory-method-excellence-audit.md
+python factory/scripts/factory_world_class_process_gap_audit.py --out .tmp/factory-world-class-process-gap-audit.json --markdown .tmp/factory-world-class-process-gap-audit.md
+python factory/scripts/factory_executor_skill_ecosystem_audit.py --out .tmp/factory-executor-skill-ecosystem-audit.json --markdown .tmp/factory-executor-skill-ecosystem-audit.md
+python factory/scripts/factory_security_excellence_audit.py --out .tmp/factory-security-excellence-audit.json --markdown .tmp/factory-security-excellence-audit.md
+python factory/scripts/factory_operator_ui_ux_excellence_audit.py --out .tmp/factory-operator-ui-ux-excellence-audit.json --markdown .tmp/factory-operator-ui-ux-excellence-audit.md
+python factory/scripts/factory_os_excellence_audit.py --out .tmp/factory-os-excellence-audit.json --markdown .tmp/factory-os-excellence-audit.md
+python factory/scripts/factory_github_issue_pattern_audit.py --out .tmp/factory-github-issue-pattern-audit.json --markdown .tmp/factory-github-issue-pattern-audit.md
+python factory/scripts/factory_master_update_plan_audit.py --out .tmp/factory-master-update-plan-audit.json --markdown .tmp/factory-master-update-plan-audit.md
+python factory/scripts/factory_runtime_truth_spine_audit.py --out .tmp/factory-runtime-truth-spine-audit.json --markdown .tmp/factory-runtime-truth-spine-audit.md
+python factory/scripts/factory_canonical_frontier_audit.py --out .tmp/factory-canonical-frontier-audit.json --markdown .tmp/factory-canonical-frontier-audit.md
+python factory/scripts/factory_manager_agent_freshness_audit.py --out .tmp/factory-manager-agent-freshness-audit.json --markdown .tmp/factory-manager-agent-freshness-audit.md
+python factory/scripts/factory_v3_release_readiness_audit.py --out .tmp/factory-v3-release-readiness-audit.json --markdown .tmp/factory-v3-release-readiness-audit.md
+python factory/scripts/factory_master_plan_completion_audit.py --out .tmp/factory-master-plan-completion-audit.json --markdown .tmp/factory-master-plan-completion-audit.md
+python factory/scripts/factory_master_plan_literal_dod_audit.py --out .tmp/factory-master-plan-literal-dod-audit.json --markdown .tmp/factory-master-plan-literal-dod-audit.md
+python factory/scripts/factory_manager_intake_smoke.py --out .tmp/factory-manager-intake-smoke.json
+python factory/scripts/factory_manager_profile_live_smoke.py --dry-run --out .tmp/factory-manager-profile-live-smoke.json
+python factory/scripts/factory_operator_progress_card.py --out .tmp/operator-progress-card.json --text-out .tmp/operator-progress-card.txt
+python factory/scripts/factory_operator_delivery_receipt.py --out .tmp/operator-delivery-receipt.json
+python factory/scripts/factory_product_face_result.py --out .tmp/product-face-result.json
+python factory/scripts/factory_learnback_proposal.py --out .tmp/factory-learnback-proposal.json
+python factory/scripts/factory_telegram_start_smoke.py --dry-run --out .tmp/factory-telegram-start-smoke.json
+python factory/scripts/factory_perfect_run.py --out .tmp/factory-perfect-run.json
+python factory/scripts/factory_hermes_live_smoke.py --out .tmp/factory-hermes-live-smoke.json
+python factory/scripts/render_human_gate_pdf.py --out .tmp/human-gate-decision-package.txt --pdf-out .tmp/human-gate-decision-package.pdf
+python factory/scripts/factory_receipt_five_classifier.py --out .tmp/receipt-five-classification.json
+python factory/scripts/factoryctl.py v3-production-activation-check
+python factory/scripts/factory_battery.py
+python factory/scripts/validate_document_governance.py
+python factory/scripts/generate_factory_reference_docs.py --check
+python factory/scripts/validate_worker_profiles.py
+python factory/scripts/validate_public_json_artifacts.py
+python factory/scripts/validate_promise_implementation_map.py
+python factory/scripts/validate_public_surface_sync.py
+python factory/scripts/public_safety_scan.py
+python factory/scripts/secret_safety_scan.py
+python factory/scripts/supply_chain_proof.py --check --no-write
 factoryctl signal-coverage --out .tmp/factory-runs/signal-coverage/factory-signal-coverage-scorecard.json
-factoryctl validate-method-engines templates/method-engine-registry.json
+factoryctl validate-method-engines factory/templates/method-engine-registry.json
 factoryctl operating-system-scorecard --out .tmp/factory-runs/operating-systems/factory-operating-system-scorecard.json
-python scripts/hermes_runtime_proof.py --boards-json .tmp/hermes-runtime/boards.json --profile-list-text .tmp/hermes-runtime/profile-list.txt --status-text .tmp/hermes-runtime/status.txt --task-list-json .tmp/hermes-runtime/task-list.json --done-task-runs-json .tmp/hermes-runtime/done-task-runs.json --blocked-task-show-json .tmp/hermes-runtime/blocked-task-show.json --out .tmp/factory-runs/hermes-runtime/hermes-worker-runtime-proof.json
+python factory/scripts/hermes_runtime_proof.py --boards-json .tmp/hermes-runtime/boards.json --profile-list-text .tmp/hermes-runtime/profile-list.txt --status-text .tmp/hermes-runtime/status.txt --task-list-json .tmp/hermes-runtime/task-list.json --done-task-runs-json .tmp/hermes-runtime/done-task-runs.json --blocked-task-show-json .tmp/hermes-runtime/blocked-task-show.json --out .tmp/factory-runs/hermes-runtime/hermes-worker-runtime-proof.json
 factoryctl operating-system-scorecard --runtime-proof .tmp/factory-runs/hermes-runtime/hermes-worker-runtime-proof.json --out .tmp/factory-runs/operating-systems/factory-operating-system-scorecard-runtime-proven.json
-python scripts/factory_completion_audit.py --runtime-proof .tmp/factory-runs/hermes-runtime/hermes-worker-runtime-proof.json --no-write --require-complete
+python factory/scripts/factory_completion_audit.py --runtime-proof .tmp/factory-runs/hermes-runtime/hermes-worker-runtime-proof.json --no-write --require-complete
 python -m unittest discover -s tests -p "test_*.py" -q
 ```
 

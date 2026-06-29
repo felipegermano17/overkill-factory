@@ -1,7 +1,7 @@
 # Discord da Fabrica: Guia de Subida para Producao
 
 > Document status: CURRENT SUPPORTING GUIDE.
-> Current authority: `scripts/factoryctl.py`, schemas, tests and current public guides.
+> Current authority: `factory/scripts/factoryctl.py`, schemas, tests and current public guides.
 > Runtime boundary: Este guia configura operator console; placeholders de setup nao sao prova de runtime nem aprovacao de release.
 
 Este guia explica como transformar o Discord no painel de controle da Overkill
@@ -134,7 +134,7 @@ Ele so vira prova quando todos os campos vierem do Discord e do Hermes reais.
 Comandos:
 
 ```bash
-python scripts/operator_control_tower_private_evidence_doctor.py \
+python factory/scripts/operator_control_tower_private_evidence_doctor.py \
   --mapping /private/path/discord-control-tower-mapping.json \
   --runtime-registration-event /private/path/runtime-approval-event.json \
   --bridge-health /private/path/bridge-health.json
@@ -143,7 +143,7 @@ python scripts/operator_control_tower_private_evidence_doctor.py \
 Depois do doctor passar:
 
 ```bash
-python scripts/operator_control_tower_proof.py \
+python factory/scripts/operator_control_tower_proof.py \
   --mapping /private/path/discord-control-tower-mapping.json \
   --runtime-registration-event /private/path/runtime-approval-event.json \
   --bridge-health /private/path/bridge-health.json
@@ -351,7 +351,7 @@ o runtime; o Concierge consolida o que importa.
 A ponte real para projetar um projeto no Discord e:
 
 ```bash
-python scripts/factory_concierge_discord_bridge.py \
+python factory/scripts/factory_concierge_discord_bridge.py \
   --projection /private/path/project-projection.json \
   --state /private/path/discord-bridge-state.json \
   --env /private/path/hermes.env \
@@ -380,7 +380,7 @@ O recibo live atual esta em:
 A camada completa de automacao e:
 
 ```bash
-python scripts/factory_concierge_discord_automation.py \
+python factory/scripts/factory_concierge_discord_automation.py \
   --projection-dir /private/path/projections \
   --event-dir /private/path/events \
   --approval-dir /private/path/approvals \

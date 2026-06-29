@@ -2,7 +2,7 @@
 
 > Document status: CURRENT SUPPORTING GUIDE.
 > Current authority: Hermes runtime state, worker results, Receipt Five,
-> `scripts/factoryctl.py`, `scripts/factory_bridge.py`, schemas and tests.
+> `factory/scripts/factoryctl.py`, `factory/scripts/factory_bridge.py`, schemas and tests.
 > Runtime boundary: this bridge is an operator intake/start contract. It does
 > not execute factory work, close gates, approve human decisions or replace
 > Hermes.
@@ -87,7 +87,7 @@ There are two start modes:
 The deterministic Hermes start path is:
 
 ```bash
-python adapters/hermes/live_kanban_adapter.py materialize-bridge-start \
+python factory/adapters/hermes/live_kanban_adapter.py materialize-bridge-start \
   --start-request .tmp/factory-runs/<run-id>/start-request.json \
   --source-envelope .tmp/factory-runs/<run-id>/source-envelope.json \
   --out .tmp/factory-runs/<run-id>/hermes-start-result.json

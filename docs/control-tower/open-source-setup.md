@@ -1,7 +1,7 @@
 # Open Source Control Tower Setup
 
 > Document status: CURRENT SUPPORTING GUIDE.
-> Current authority: `scripts/factoryctl.py`, schemas, tests and current public guides.
+> Current authority: `factory/scripts/factoryctl.py`, schemas, tests and current public guides.
 > Runtime boundary: This guide configures the optional Control Tower; it does not create durable evidence or close factory gates.
 
 The Control Tower is optional. It can make factory work easier to watch, but it
@@ -36,8 +36,8 @@ runtime-gate completion basis; manual `100%` claims fail closed.
 Start with local validation:
 
 ```bash
-python scripts/factoryctl.py gate-report --card examples/minimal-hermes-project/card.md
-python scripts/factoryctl.py worker-packet --worker all --required-only --card examples/minimal-hermes-project/card.md --out .tmp/minimal-worker-packets
+python factory/scripts/factoryctl.py gate-report --card factory/examples/minimal-hermes-project/card.md
+python factory/scripts/factoryctl.py worker-packet --worker all --required-only --card factory/examples/minimal-hermes-project/card.md --out .tmp/minimal-worker-packets
 ```
 
 Add Discord only after the card and worker packet path is clear.

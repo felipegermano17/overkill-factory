@@ -35,7 +35,7 @@ report is ready for worker execution and how many required worker packets were
 created.
 
 Those files are local outputs. Keep generated worker packets and gate reports in
-`.tmp/`; do not copy them into `examples/`.
+`.tmp/`; do not copy them into `factory/examples/`.
 
 ## Optional Local CLI
 
@@ -46,10 +46,10 @@ python -m pip install -e .
 factoryctl doctor
 factoryctl run minimal
 factoryctl init --out ../my-product-factory --project-name my-product
-factoryctl gate-report --card examples/minimal-hermes-project/card.md
+factoryctl gate-report --card factory/examples/minimal-hermes-project/card.md
 ```
 
-`python scripts/quickstart_smoke.py` and `overkill-quickstart` remain available
+`python factory/scripts/quickstart_smoke.py` and `overkill-quickstart` remain available
 for compatibility.
 
 If the package is already installed, `factoryctl doctor`, `factoryctl run
@@ -60,7 +60,7 @@ checkout for Hermes adapter patching, maintainer scripts and source changes.
 
 After the smoke passes, inspect:
 
-- `examples/minimal-hermes-project/card.md`
+- `factory/examples/minimal-hermes-project/card.md`
 - `.tmp/quickstart-result.json`
 - `.tmp/minimal-worker-packets/`
 - `docs/agents/worker-profiles.md`
@@ -72,7 +72,7 @@ worker results, required reviews and Receipt Five agree.
 
 ## Connect Hermes
 
-Read `adapters/hermes/README.md` before patching your Hermes checkout. The
+Read `factory/adapters/hermes/README.md` before patching your Hermes checkout. The
 adapter provides:
 
 - a Kanban gate patch;
@@ -83,14 +83,14 @@ From a Hermes checkout:
 
 ```bash
 git switch -c overkill-factory-adapter
-git apply <path-to-overkill-factory>/adapters/hermes/patches/0001-overkill-factory-v35-gates-official-main.patch
-python -m pytest -q -o addopts='' tests/hermes_cli/test_overkill_factory_v35_gate.py
+git apply <path-to-overkill-factory>/factory/adapters/hermes/patches/0001-overkill-factory-v35-gates-official-main.patch
+python -m pytest -q -o addopts='' factory/tests/hermes_cli/test_overkill_factory_v35_gate.py
 ```
 
 Wire Hermes transition events to:
 
 ```bash
-python <path-to-overkill-factory>/adapters/hermes/transition_hook.py --help
+python <path-to-overkill-factory>/factory/adapters/hermes/transition_hook.py --help
 ```
 
 Introduce the adapter in a test runtime before any real product or release work.
@@ -101,7 +101,7 @@ For your own project:
 
 1. Run `factoryctl init --out ../my-product-factory --project-name my-product`.
 2. Start with a short paper or product brief.
-3. Create or edit a factory card from the relevant example in `examples/cards/`.
+3. Create or edit a factory card from the relevant example in `factory/examples/cards/`.
 4. Fill source refs, scope, risk, runtime, security, forbidden actions and done
    definition.
 5. Run `factoryctl validate-card`.

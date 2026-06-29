@@ -21,11 +21,11 @@ README remains the primary product entrypoint.
 
 Executable contracts remain authoritative:
 
-- `agents/worker-registry.public.json`
-- `agents/worker-profiles.public.json`
-- `agents/hermes-profile-bindings.public.json`
+- `factory/agents/worker-registry.public.json`
+- `factory/agents/worker-profiles.public.json`
+- `factory/agents/hermes-profile-bindings.public.json`
 - `docs/agents/factory-stage-agent-map.md`
-- `scripts/factoryctl.py`, schemas and tests
+- `factory/scripts/factoryctl.py`, schemas and tests
 
 The HTML visualizations explain those contracts; they do not replace them.
 
@@ -58,9 +58,9 @@ The durable inbox and start-request contract are defined in
 Before publishing a visual, check:
 
 ```bash
-python scripts/validate_public_json_artifacts.py
-python scripts/public_safety_scan.py
-python scripts/secret_safety_scan.py
+python factory/scripts/validate_public_json_artifacts.py
+python factory/scripts/public_safety_scan.py
+python factory/scripts/secret_safety_scan.py
 ```
 
 Then open the HTML in a browser and verify desktop, mobile, keyboard

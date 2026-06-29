@@ -4,9 +4,9 @@
   "manifest_version": "v2",
   "created_at": "2026-06-14T00:00:00Z",
   "canonical_sources": [
-    "agents/worker-registry.public.json",
-    "agents/worker-profiles.public.json",
-    "agents/hermes-profile-bindings.public.json",
+    "factory/agents/worker-registry.public.json",
+    "factory/agents/worker-profiles.public.json",
+    "factory/agents/hermes-profile-bindings.public.json",
     "docs/agents/factory-stage-agent-map.md",
     "docs/architecture/factory-v2-control-plane.md",
     "docs/architecture/factory-operating-systems.md",
@@ -19,23 +19,23 @@
     "docs/promise-implementation-map.public.json",
     "docs/operator/overkill-factory-bridge.md",
     "docs/reference/cli.md",
-    "schemas/",
-    "templates/hermes-production-proof.json",
-    "templates/factory-run.json",
-    "templates/factory-workflow-compiled-plan.json",
-    "templates/method-engine-registry.json",
-    "templates/factory-operating-system-registry.json",
-    "scripts/factoryctl.py",
-    "scripts/factory_v2_kernel.py",
-    "scripts/validate_promise_implementation_map.py",
-    "scripts/hermes_runtime_proof.py",
+    "factory/schemas/",
+    "factory/templates/hermes-production-proof.json",
+    "factory/templates/factory-run.json",
+    "factory/templates/factory-workflow-compiled-plan.json",
+    "factory/templates/method-engine-registry.json",
+    "factory/templates/factory-operating-system-registry.json",
+    "factory/scripts/factoryctl.py",
+    "factory/scripts/factory_v2_kernel.py",
+    "factory/scripts/validate_promise_implementation_map.py",
+    "factory/scripts/hermes_runtime_proof.py",
     "docs/reference/factory-kernel-reference.md",
-    "scripts/generate_factory_reference_docs.py",
+    "factory/scripts/generate_factory_reference_docs.py",
     "docs/operations/telegram-operator-experience.md",
     "docs/architecture/context-spine.md",
     "README.md",
-    "templates/factory-v3-release-readiness.json",
-    "scripts/factory_v3_release_readiness_audit.py"
+    "factory/templates/factory-v3-release-readiness.json",
+    "factory/scripts/factory_v3_release_readiness_audit.py"
   ],
   "published_check_policy": {
     "default_status_without_network": "not_checked",
@@ -49,20 +49,20 @@
       "surface_type": "conceptual_visual_map",
       "authority_level": "conceptual_supporting_surface",
       "source_refs": [
-        "agents/worker-registry.public.json",
-        "agents/worker-profiles.public.json",
-        "agents/hermes-profile-bindings.public.json",
+        "factory/agents/worker-registry.public.json",
+        "factory/agents/worker-profiles.public.json",
+        "factory/agents/hermes-profile-bindings.public.json",
         "docs/agents/factory-stage-agent-map.md",
         "docs/factory-workflow.catalog.json",
         "docs/concepts/factory-flow.md",
         "docs/operations/validation-and-release.md",
-        "templates/universal-signal-intake.json",
-        "templates/product-creation-plan.json",
-        "templates/decomposition-coverage-review.json",
-        "templates/product-implementation-readiness.json",
-        "templates/professional-design-process.json",
-        "templates/product-delivery-quality-profile.json",
-        "scripts/factoryctl.py"
+        "factory/templates/universal-signal-intake.json",
+        "factory/templates/product-creation-plan.json",
+        "factory/templates/decomposition-coverage-review.json",
+        "factory/templates/product-implementation-readiness.json",
+        "factory/templates/professional-design-process.json",
+        "factory/templates/product-delivery-quality-profile.json",
+        "factory/scripts/factoryctl.py"
       ],
       "claim_checks": [
         "metadata",
@@ -105,11 +105,11 @@
           "__all__"
         ],
         "required_template_refs": [
-          "templates/universal-signal-intake.json",
-          "templates/product-creation-plan.json",
-          "templates/product-implementation-readiness.json",
-          "templates/professional-design-process.json",
-          "templates/product-delivery-quality-profile.json"
+          "factory/templates/universal-signal-intake.json",
+          "factory/templates/product-creation-plan.json",
+          "factory/templates/product-implementation-readiness.json",
+          "factory/templates/professional-design-process.json",
+          "factory/templates/product-delivery-quality-profile.json"
         ],
         "required_terms": [
           "Universal Signal Intake",
@@ -313,9 +313,9 @@
         "stage_agent_map_ref": "docs/agents/factory-stage-agent-map.md",
         "required_workflow_phase_ids": [],
         "required_template_refs": [
-          "templates/universal-signal-intake.json",
-          "templates/product-creation-plan.json",
-          "templates/product-implementation-readiness.json"
+          "factory/templates/universal-signal-intake.json",
+          "factory/templates/product-creation-plan.json",
+          "factory/templates/product-implementation-readiness.json"
         ],
         "required_terms": [
           "Universal Signal Intake",
@@ -354,8 +354,8 @@
       "authority_level": "supporting_explanation_not_source_of_truth",
       "source_refs": [
         "docs/agents/factory-stage-agent-map.md",
-        "schemas/factory-card.schema.json",
-        "scripts/factoryctl.py"
+        "factory/schemas/factory-card.schema.json",
+        "factory/scripts/factoryctl.py"
       ],
       "claim_checks": [
         "source_refs_exist",
@@ -374,17 +374,17 @@
       "authority_level": "supporting_explanation_not_source_of_truth",
       "source_refs": [
         "docs/factory-workflow.catalog.json",
-        "scripts/factory_v2_kernel.py",
-        "scripts/factoryctl.py",
-        "schemas/factory-run.schema.json",
-        "schemas/factory-command.schema.json",
-        "schemas/factory-run-event.schema.json",
-        "schemas/factory-decision-outbox.schema.json",
-        "schemas/factory-promotion-packet.schema.json",
-        "templates/factory-run.json",
-        "schemas/hermes-typed-block-policy.schema.json",
-        "templates/hermes-typed-block-policy.json",
-        "tests/test_factory_v2_kernel.py"
+        "factory/scripts/factory_v2_kernel.py",
+        "factory/scripts/factoryctl.py",
+        "factory/schemas/factory-run.schema.json",
+        "factory/schemas/factory-command.schema.json",
+        "factory/schemas/factory-run-event.schema.json",
+        "factory/schemas/factory-decision-outbox.schema.json",
+        "factory/schemas/factory-promotion-packet.schema.json",
+        "factory/templates/factory-run.json",
+        "factory/schemas/hermes-typed-block-policy.schema.json",
+        "factory/templates/hermes-typed-block-policy.json",
+        "factory/tests/test_factory_v2_kernel.py"
       ],
       "claim_checks": [
         "source_refs_exist",
@@ -403,13 +403,13 @@
       "surface_type": "concept_doc",
       "authority_level": "supporting_explanation_not_source_of_truth",
       "source_refs": [
-        "scripts/generate_factory_reference_docs.py",
+        "factory/scripts/generate_factory_reference_docs.py",
         "docs/factory-workflow.catalog.json",
-        "agents/worker-registry.public.json",
-        "agents/worker-profiles.public.json",
-        "agents/hermes-profile-bindings.public.json",
-        "templates/factory-operating-system-registry.json",
-        "templates/method-engine-registry.json",
+        "factory/agents/worker-registry.public.json",
+        "factory/agents/worker-profiles.public.json",
+        "factory/agents/hermes-profile-bindings.public.json",
+        "factory/templates/factory-operating-system-registry.json",
+        "factory/templates/method-engine-registry.json",
         "docs/public-surface.manifest.json"
       ],
       "claim_checks": [
@@ -418,7 +418,7 @@
         "no_runtime_proof_claim"
       ],
       "required_phrases": [
-        "This file is generated by `scripts/generate_factory_reference_docs.py`",
+        "This file is generated by `factory/scripts/generate_factory_reference_docs.py`",
         "Hermes Kanban remains the runtime source of truth",
         "Agents do the work; contracts choose the path",
         "Done without evidence is only a claim",
@@ -433,7 +433,7 @@
       "source_refs": [
         "docs/agents/factory-stage-agent-map.md",
         "docs/factory-workflow.catalog.json",
-        "scripts/factoryctl.py"
+        "factory/scripts/factoryctl.py"
       ],
       "claim_checks": [
         "source_refs_exist",
@@ -451,16 +451,16 @@
       "surface_type": "concept_doc",
       "authority_level": "supporting_explanation_not_source_of_truth",
       "source_refs": [
-        "scripts/factory_bridge.py",
-        "adapters/hermes/transition_hook.py",
+        "factory/scripts/factory_bridge.py",
+        "factory/adapters/hermes/transition_hook.py",
         "docs/architecture/hermes-integration.md",
-        "schemas/factory-bridge-event.schema.json",
-        "schemas/factory-bridge-decision.schema.json",
-        "schemas/factory-bridge-handoff.schema.json",
-        "schemas/factory-bridge-run.schema.json",
-        "schemas/factory-bridge-source-envelope.schema.json",
-        "schemas/factory-bridge-start-request.schema.json",
-        "schemas/hermes-typed-block-policy.schema.json"
+        "factory/schemas/factory-bridge-event.schema.json",
+        "factory/schemas/factory-bridge-decision.schema.json",
+        "factory/schemas/factory-bridge-handoff.schema.json",
+        "factory/schemas/factory-bridge-run.schema.json",
+        "factory/schemas/factory-bridge-source-envelope.schema.json",
+        "factory/schemas/factory-bridge-start-request.schema.json",
+        "factory/schemas/hermes-typed-block-policy.schema.json"
       ],
       "claim_checks": [
         "source_refs_exist",
@@ -484,8 +484,8 @@
       "authority_level": "supporting_explanation_not_source_of_truth",
       "source_refs": [
         "docs/factory-workflow.catalog.json",
-        "schemas/factory-card.schema.json",
-        "scripts/factoryctl.py"
+        "factory/schemas/factory-card.schema.json",
+        "factory/scripts/factoryctl.py"
       ],
       "claim_checks": [
         "source_refs_exist",
@@ -504,9 +504,9 @@
       "surface_type": "concept_doc",
       "authority_level": "supporting_explanation_not_source_of_truth",
       "source_refs": [
-        "agents/worker-registry.public.json",
-        "agents/worker-profiles.public.json",
-        "agents/hermes-profile-bindings.public.json"
+        "factory/agents/worker-registry.public.json",
+        "factory/agents/worker-profiles.public.json",
+        "factory/agents/hermes-profile-bindings.public.json"
       ],
       "claim_checks": [
         "source_refs_exist",
@@ -527,9 +527,9 @@
       "authority_level": "supporting_explanation_not_source_of_truth",
       "source_refs": [
         "README.md",
-        "adapters/hermes/README.md",
-        "examples/minimal-hermes-project/card.md",
-        "scripts/factoryctl.py"
+        "factory/adapters/hermes/README.md",
+        "factory/examples/minimal-hermes-project/card.md",
+        "factory/scripts/factoryctl.py"
       ],
       "claim_checks": [
         "source_refs_exist",
@@ -542,8 +542,8 @@
         "Attach worker results and Receipt Five before any `done` transition."
       ],
       "expected_links": [
-        "adapters/hermes/README.md",
-        "examples/minimal-hermes-project/card.md"
+        "factory/adapters/hermes/README.md",
+        "factory/examples/minimal-hermes-project/card.md"
       ]
     },
     {
@@ -553,8 +553,8 @@
       "authority_level": "supporting_explanation_not_source_of_truth",
       "source_refs": [
         "README.md",
-        "scripts/factoryctl.py",
-        "tests/test_factoryctl.py"
+        "factory/scripts/factoryctl.py",
+        "factory/tests/test_factoryctl.py"
       ],
       "claim_checks": [
         "source_refs_exist",
@@ -572,13 +572,13 @@
       "surface_type": "concept_doc",
       "authority_level": "supporting_explanation_not_source_of_truth",
       "source_refs": [
-        "scripts/release_integration_preflight.py",
-        "scripts/worktree_release_inventory.py",
-        "scripts/validate_promise_implementation_map.py",
-        "scripts/validate_public_surface_sync.py",
-        "scripts/public_safety_scan.py",
-        "scripts/secret_safety_scan.py",
-        "scripts/supply_chain_proof.py"
+        "factory/scripts/release_integration_preflight.py",
+        "factory/scripts/worktree_release_inventory.py",
+        "factory/scripts/validate_promise_implementation_map.py",
+        "factory/scripts/validate_public_surface_sync.py",
+        "factory/scripts/public_safety_scan.py",
+        "factory/scripts/secret_safety_scan.py",
+        "factory/scripts/supply_chain_proof.py"
       ],
       "claim_checks": [
         "source_refs_exist",
@@ -598,9 +598,9 @@
       "authority_level": "supporting_explanation_not_source_of_truth",
       "source_refs": [
         "docs/promise-implementation-map.public.json",
-        "schemas/promise-implementation-map.schema.json",
-        "scripts/validate_promise_implementation_map.py",
-        "tests/test_promise_implementation_map.py",
+        "factory/schemas/promise-implementation-map.schema.json",
+        "factory/scripts/validate_promise_implementation_map.py",
+        "factory/tests/test_promise_implementation_map.py",
         "README.md",
         "README.pt-BR.md"
       ],
@@ -674,10 +674,10 @@
       "surface_type": "concept_doc",
       "authority_level": "supporting_explanation_not_source_of_truth",
       "source_refs": [
-        "schemas/operator-interface-profile.schema.json",
-        "schemas/operator-briefing-package.schema.json",
-        "scripts/factoryctl.py",
-        "tests/test_operator_experience.py"
+        "factory/schemas/operator-interface-profile.schema.json",
+        "factory/schemas/operator-briefing-package.schema.json",
+        "factory/scripts/factoryctl.py",
+        "factory/tests/test_operator_experience.py"
       ],
       "claim_checks": [
         "source_refs_exist",
@@ -696,7 +696,7 @@
       "surface_type": "concept_doc",
       "authority_level": "supporting_explanation_not_source_of_truth",
       "source_refs": [
-        "scripts/factoryctl.py",
+        "factory/scripts/factoryctl.py",
         "docs/concepts/operator-journey.md",
         "docs/maintenance/self-improvement-loop.md"
       ],

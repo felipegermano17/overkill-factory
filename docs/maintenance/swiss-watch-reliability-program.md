@@ -1,7 +1,7 @@
 # Swiss Watch Reliability Program
 
 > Document status: CURRENT MAINTAINER EXECUTION PLAN.
-> Current authority: Hermes native runtime state, `scripts/factoryctl.py`, adapters,
+> Current authority: Hermes native runtime state, `factory/scripts/factoryctl.py`, adapters,
 > schemas, tests and live Hermes evidence.
 > Runtime boundary: This document is a reliability plan. It does not replace
 > Hermes Kanban, factory contracts, Receipt Five, human gate records or tests.
@@ -263,9 +263,9 @@ A1. Reproduce the current failing unit test in isolation.
 
 A2. Trace root cause through Discord automation channel/guild resolution.
 
-- Files: `scripts/factory_concierge_discord_automation.py`,
-  `scripts/factory_concierge_discord_bridge.py`,
-  `tests/test_factory_concierge_discord_automation.py`.
+- Files: `factory/scripts/factory_concierge_discord_automation.py`,
+  `factory/scripts/factory_concierge_discord_bridge.py`,
+  `factory/tests/test_factory_concierge_discord_automation.py`.
 
 A3. Fix only the root cause.
 
@@ -350,19 +350,19 @@ F3. Convert duplication into Hermes-native use where safe, with tests.
 Required before claiming improvement:
 
 ```bash
-python scripts/swiss_watch_audit.py --out .tmp/swiss-watch-audit.json --markdown .tmp/swiss-watch-audit.md
-python scripts/factoryctl.py doctor
-python scripts/factoryctl.py run minimal
-python scripts/validate_document_governance.py
-python scripts/generate_factory_reference_docs.py --check
-python scripts/validate_public_json_artifacts.py
-python scripts/validate_worker_profiles.py
-python scripts/validate_promise_implementation_map.py
-python scripts/factoryctl.py validate-v2-runtime-contracts
-python scripts/factoryctl.py validate-agent-skill-boundaries
-python scripts/factoryctl.py validate-reference-superiority
-python scripts/public_safety_scan.py
-python scripts/secret_safety_scan.py
+python factory/scripts/swiss_watch_audit.py --out .tmp/swiss-watch-audit.json --markdown .tmp/swiss-watch-audit.md
+python factory/scripts/factoryctl.py doctor
+python factory/scripts/factoryctl.py run minimal
+python factory/scripts/validate_document_governance.py
+python factory/scripts/generate_factory_reference_docs.py --check
+python factory/scripts/validate_public_json_artifacts.py
+python factory/scripts/validate_worker_profiles.py
+python factory/scripts/validate_promise_implementation_map.py
+python factory/scripts/factoryctl.py validate-v2-runtime-contracts
+python factory/scripts/factoryctl.py validate-agent-skill-boundaries
+python factory/scripts/factoryctl.py validate-reference-superiority
+python factory/scripts/public_safety_scan.py
+python factory/scripts/secret_safety_scan.py
 python -m unittest discover -s tests -q
 ```
 

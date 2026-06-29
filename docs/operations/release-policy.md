@@ -1,8 +1,8 @@
 # Release Policy
 
 > Document status: CURRENT SUPPORTING GUIDE.
-> Current authority: README.md, CHANGELOG.md, pyproject.toml,
-> docs/operations/validation-and-release.md, tests/
+> Current authority: README.md, CHANGELOG.md, factory/pyproject.toml,
+> docs/operations/validation-and-release.md, factory/tests/
 > Runtime boundary: This policy governs public repository releases. It does not
 > approve production use of any user's product.
 
@@ -22,12 +22,12 @@ Run:
 factoryctl doctor
 factoryctl run minimal
 python -m unittest discover -s tests -p "test_*.py" -q
-python scripts/validate_document_governance.py
-python scripts/validate_public_json_artifacts.py
-python scripts/validate_worker_profiles.py
-python scripts/secret_safety_scan.py
-python scripts/public_safety_scan.py
-python scripts/supply_chain_proof.py --check --no-write
+python factory/scripts/validate_document_governance.py
+python factory/scripts/validate_public_json_artifacts.py
+python factory/scripts/validate_worker_profiles.py
+python factory/scripts/secret_safety_scan.py
+python factory/scripts/public_safety_scan.py
+python factory/scripts/supply_chain_proof.py --check --no-write
 ```
 
 ## Release Artifact Rules

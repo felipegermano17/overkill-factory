@@ -10,7 +10,7 @@ explicit runtime contracts.
 
 Machine-readable matrix:
 
-- `agents/worker-permission-classes.public.json`
+- `factory/agents/worker-permission-classes.public.json`
 
 ## Simple Rule
 
