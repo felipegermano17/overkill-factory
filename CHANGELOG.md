@@ -7,6 +7,8 @@ public releases.
 
 ## Unreleased
 
+## 3.0.2 - 2026-06-29
+
 - Add a literal 17-item master-plan Definition of Done audit that separates
   local implementation support from external live proof, so Telegram/operator
   gaps cannot be hidden behind a generic 100% score.
