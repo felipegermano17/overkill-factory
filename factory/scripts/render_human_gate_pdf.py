@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Render a human gate decision package to an operator-readable fallback.
+"""Render a human gate decision package to an emergency text/PDF fallback.
 
-The production path may attach a PDF renderer later, but this script already
-creates the required Telegram/Desktop-safe artifact-first fallback from the same
-schema-backed package. It refuses raw JSON-only gates.
+This is NOT the product-grade primary gate artifact for normal Product SOT,
+architecture, security or release gates. It exists only so Telegram/Desktop has
+an accessibility/readback fallback when the designed artifact renderer is
+unavailable. Operator-facing production gates must use a designed PDF/equivalent
+artifact plus this fallback, never raw JSON-only delivery.
 """
 from __future__ import annotations
 
