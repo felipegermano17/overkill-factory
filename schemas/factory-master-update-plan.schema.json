@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/factory-master-update-plan.schema.json",
+  "title": "Overkill Factory Master Update Plan",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "plan_id",
+    "created_at",
+    "release_target",
+    "goal",
+    "principles",
+    "runtime_boundary",
+    "audit_inputs",
+    "immediate_pending_items",
+    "workstreams",
+    "acceptance"
+  ],
+  "properties": {
+    "$schema": {"const": "https://overkill-factory.dev/schemas/factory-master-update-plan.schema.json"},
+    "record_type": {"const": "factory_master_update_plan"},
+    "plan_id": {"type": "string", "minLength": 3},
+    "created_at": {"type": "string", "minLength": 10},
+    "release_target": {"const": "V3"},
+    "goal": {"type": "string", "minLength": 40},
+    "principles": {
+      "type": "object",
+      "required": ["hermes_first", "kanban_first", "no_mini_hermes", "factory_code_scope", "manager_agent_freshness_required", "public_github_v3_required"],
+      "properties": {
+        "hermes_first": {"type": "boolean"},
+        "kanban_first": {"type": "boolean"},
+        "no_mini_hermes": {"type": "boolean"},
+        "factory_code_scope": {"type": "array", "minItems": 5, "items": {"type": "string", "minLength": 3}},
+        "manager_agent_freshness_required": {"type": "boolean"},
+        "public_github_v3_required": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "runtime_boundary": {
+      "type": "object",
+      "required": ["hermes_kanban_must_own", "factory_must_not_own", "factory_may_own"],
+      "properties": {
+        "hermes_kanban_must_own": {"type": "array", "minItems": 5, "items": {"type": "string", "minLength": 3}},
+        "factory_must_not_own": {"type": "array", "minItems": 5, "items": {"type": "string", "minLength": 3}},
+        "factory_may_own": {"type": "array", "minItems": 5, "items": {"type": "string", "minLength": 3}}
+      },
+      "additionalProperties": false
+    },
+    "audit_inputs": {"type": "array", "minItems": 8, "items": {"$ref": "#/$defs/audit_input"}},
+    "immediate_pending_items": {"type": "array", "minItems": 4, "items": {"$ref": "#/$defs/pending_item"}},
+    "workstreams": {"type": "array", "minItems": 10, "items": {"$ref": "#/$defs/workstream"}},
+    "acceptance": {
+      "type": "object",
+      "required": ["all_audits_mapped", "no_mini_hermes_guard", "manager_agent_freshness_guard", "v3_public_surface_guard", "factory_perfect_run_required", "validation_commands"],
+      "properties": {
+        "all_audits_mapped": {"type": "boolean"},
+        "no_mini_hermes_guard": {"type": "boolean"},
+        "manager_agent_freshness_guard": {"type": "boolean"},
+        "v3_public_surface_guard": {"type": "boolean"},
+        "factory_perfect_run_required": {"type": "boolean"},
+        "validation_commands": {"type": "array", "minItems": 5, "items": {"type": "string", "minLength": 3}}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "audit_input": {
+      "type": "object",
+      "required": ["id", "name", "artifact_ref", "result", "feeds_workstreams"],
+      "properties": {
+        "id": {"type": "string", "minLength": 3},
+        "name": {"type": "string", "minLength": 3},
+        "artifact_ref": {"type": "string", "minLength": 3},
+        "result": {"enum": ["PASS", "NOT_COMPLETE", "BLOCKED"]},
+        "feeds_workstreams": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 3}}
+      },
+      "additionalProperties": false
+    },
+    "pending_item": {
+      "type": "object",
+      "required": ["id", "priority", "item", "why_it_matters", "done_when"],
+      "properties": {
+        "id": {"type": "string", "minLength": 3},
+        "priority": {"enum": ["P0", "P1", "P2"]},
+        "item": {"type": "string", "minLength": 8},
+        "why_it_matters": {"type": "string", "minLength": 8},
+        "done_when": {"type": "string", "minLength": 8}
+      },
+      "additionalProperties": false
+    },
+    "workstream": {
+      "type": "object",
+      "required": ["id", "name", "wave", "priority", "purpose", "requirements", "must_not_build", "required_evidence", "depends_on", "source_audits", "done_when"],
+      "properties": {
+        "id": {"type": "string", "minLength": 3},
+        "name": {"type": "string", "minLength": 3},
+        "wave": {"type": "integer", "minimum": 0, "maximum": 9},
+        "priority": {"enum": ["P0", "P1", "P2"]},
+        "purpose": {"type": "string", "minLength": 10},
+        "requirements": {"type": "array", "minItems": 2, "items": {"type": "string", "minLength": 3}},
+        "must_not_build": {"type": "array", "items": {"type": "string", "minLength": 3}},
+        "required_evidence": {"type": "array", "minItems": 2, "items": {"type": "string", "minLength": 3}},
+        "depends_on": {"type": "array", "items": {"type": "string", "minLength": 3}},
+        "source_audits": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 3}},
+        "done_when": {"type": "string", "minLength": 10}
+      },
+      "additionalProperties": false
+    }
+  }
+}
