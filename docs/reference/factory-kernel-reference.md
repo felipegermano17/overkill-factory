@@ -36,8 +36,8 @@ Done without evidence is only a claim. Receipt Five, review, runtime state and p
 | Hermes profile bindings | 40 | `agents/hermes-profile-bindings.public.json` |
 | Operating systems | 17 | `templates/factory-operating-system-registry.json` |
 | Method engines | 8 | `templates/method-engine-registry.json` |
-| JSON schemas | 236 | `schemas/*.json` |
-| Templates | 149 | `templates/*` |
+| JSON schemas | 237 | `schemas/*.json` |
+| Templates | 150 | `templates/*` |
 | Public surfaces | 19 | `docs/public-surface.manifest.json` |
 
 ## Factory Phases
@@ -280,6 +280,7 @@ These are the public JSON schemas the factory exposes. They are not decoration; 
 - `schemas/factory-run-event.schema.json`
 - `schemas/factory-run-plan.schema.json`
 - `schemas/factory-run.schema.json`
+- `schemas/factory-runtime-truth-spine.schema.json`
 - `schemas/factory-sdlc-feedback-loop.schema.json`
 - `schemas/factory-sdlc-lifecycle-state.schema.json`
 - `schemas/factory-security-excellence-registry.schema.json`
@@ -498,6 +499,7 @@ Templates are starter records paired with schemas. They are examples of valid sh
 - `templates/factory-run-event.json`
 - `templates/factory-run-plan.json`
 - `templates/factory-run.json`
+- `templates/factory-runtime-truth-spine.json`
 - `templates/factory-sdlc-feedback-loop.json`
 - `templates/factory-sdlc-lifecycle-state.json`
 - `templates/factory-security-excellence-registry.json`

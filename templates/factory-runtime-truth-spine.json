@@ -1,0 +1,97 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-runtime-truth-spine.schema.json",
+  "record_type": "factory_runtime_truth_spine",
+  "spine_id": "factory-runtime-truth-spine-v1",
+  "created_at": "2026-06-29T00:00:00Z",
+  "runtime_authority": {
+    "hermes_kanban_owns_runtime": true,
+    "factory_owns_scheduler": false,
+    "factory_owns_queue": false,
+    "factory_owns_dispatch": false,
+    "factory_owns_task_lifecycle": false,
+    "factory_allowed_scope": [
+      "method contracts",
+      "gate predicates",
+      "routing rules",
+      "audit checks",
+      "schema validation",
+      "quality policies",
+      "operator-facing summaries derived from real runtime state"
+    ]
+  },
+  "state_equivalence_policy": {
+    "worker_packet_created": "contract_artifact_only",
+    "hermes_dispatch_requested": "runtime_request_not_execution",
+    "hermes_task_running": "runtime_execution_in_progress",
+    "worker_result_consumable": "verified_worker_output_ready_for_parent"
+  },
+  "worker_lifecycle_states": [
+    {
+      "id": "worker_packet_created",
+      "authority": "factory_contract",
+      "meaning": "A worker execution request was generated; no worker execution is proven yet.",
+      "proof_required": [
+        "worker packet validates against schema",
+        "profile_binding present"
+      ]
+    },
+    {
+      "id": "hermes_dispatch_requested",
+      "authority": "hermes_kanban",
+      "meaning": "Hermes/Kanban received or is expected to receive a dispatch request; execution is still not proven.",
+      "proof_required": [
+        "Hermes/Kanban task ref",
+        "dispatch request record"
+      ]
+    },
+    {
+      "id": "hermes_task_running",
+      "authority": "hermes_kanban",
+      "meaning": "Hermes/Kanban reports the task as running or assigned through native runtime state.",
+      "proof_required": [
+        "Hermes/Kanban task state readback",
+        "assigned worker/profile ref"
+      ]
+    },
+    {
+      "id": "worker_result_consumable",
+      "authority": "worker_result",
+      "meaning": "The worker result exists, validates, references evidence, and can be consumed by the parent reducer.",
+      "proof_required": [
+        "worker result schema pass",
+        "artifact/evidence refs read back",
+        "blocking findings state recorded"
+      ]
+    }
+  ],
+  "parent_resume_policy": {
+    "requires_durable_dependency_edges": true,
+    "requires_child_result_consumable": true,
+    "required_readbacks": [
+      "Hermes/Kanban dependency edge readback",
+      "child task state readback",
+      "worker result readback"
+    ],
+    "forbidden_parent_resume_conditions": [
+      "worker packet exists but no runtime task state",
+      "dispatch request exists but child is not consumable",
+      "child result exists but evidence readback failed",
+      "dependency edge missing or stale"
+    ]
+  },
+  "factory_run_links": [
+    "templates/factory-run.json",
+    "templates/factory-run-event.json",
+    "templates/factory-run-plan.json",
+    "schemas/factory-run.schema.json",
+    "schemas/factory-run-event.schema.json",
+    "schemas/worker-packet.schema.json",
+    "schemas/worker-result.schema.json"
+  ],
+  "acceptance": {
+    "packet_not_execution": true,
+    "no_mini_hermes": true,
+    "dependency_edges_required": true,
+    "hermes_state_readback_required": true
+  }
+}

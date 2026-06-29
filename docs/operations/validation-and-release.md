@@ -19,6 +19,7 @@ python scripts/factory_operator_ui_ux_excellence_audit.py --out .tmp/factory-ope
 python scripts/factory_os_excellence_audit.py --out .tmp/factory-os-excellence-audit.json --markdown .tmp/factory-os-excellence-audit.md
 python scripts/factory_github_issue_pattern_audit.py --out .tmp/factory-github-issue-pattern-audit.json --markdown .tmp/factory-github-issue-pattern-audit.md
 python scripts/factory_master_update_plan_audit.py --out .tmp/factory-master-update-plan-audit.json --markdown .tmp/factory-master-update-plan-audit.md
+python scripts/factory_runtime_truth_spine_audit.py --out .tmp/factory-runtime-truth-spine-audit.json --markdown .tmp/factory-runtime-truth-spine-audit.md
 python -m unittest discover -s tests
 python scripts/validate_document_governance.py
 python scripts/generate_factory_reference_docs.py --check
@@ -166,6 +167,7 @@ python scripts/factory_operator_ui_ux_excellence_audit.py --out .tmp/factory-ope
 python scripts/factory_os_excellence_audit.py --out .tmp/factory-os-excellence-audit.json --markdown .tmp/factory-os-excellence-audit.md
 python scripts/factory_github_issue_pattern_audit.py --out .tmp/factory-github-issue-pattern-audit.json --markdown .tmp/factory-github-issue-pattern-audit.md
 python scripts/factory_master_update_plan_audit.py --out .tmp/factory-master-update-plan-audit.json --markdown .tmp/factory-master-update-plan-audit.md
+python scripts/factory_runtime_truth_spine_audit.py --out .tmp/factory-runtime-truth-spine-audit.json --markdown .tmp/factory-runtime-truth-spine-audit.md
 python scripts/factory_battery.py
 python scripts/validate_document_governance.py
 python scripts/generate_factory_reference_docs.py --check
