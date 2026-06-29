@@ -313,35 +313,36 @@ Ignored local folders such as `.tmp/`, `build/`, `dist/`, `site/` and
 
 ## Current Release State
 
-Factory V2 is the current public kernel release line. The latest public release
-is v2.0.15.
+Factory V3 is the current public kernel release line. The latest public release
+is v3.0.0.
 
-V2 means the public kernel has executable contracts for the factory line:
+V3 means the public kernel has executable contracts for the factory line plus
+release-grade guards for the operating model itself:
 
 - deterministic phase graph, compiled workflow, command inbox, event log,
   decision outbox and promotion packets;
-- Hermes/Kanban as the real runtime source of truth for cards, workers and
-  transitions;
-- worker authority contracts: agents produce evidence, but they do not choose
-  the route, phase, human gate or promotion path;
+- Hermes/Kanban as the real runtime source of truth for cards, workers,
+  dependencies, typed blocks, dispatch and task lifecycle;
+- no mini-Hermes: the factory owns method, gates, rules, schemas, audits,
+  validations and release checks, not runtime queues or schedulers;
+- runtime truth spine: worker packet, dispatch request, running task and
+  consumable worker result are distinct states;
+- canonical frontier/no-idle guard: repairable gaps route to repair before
+  human input, and no-idle remains recovery/audit, not route authority;
+- gerente and agent freshness guard: factory changes must update manager and
+  affected agent skills, profiles, configs and bindings before E2E or release;
 - Product Experience control plane: product-facing work needs Product
   Experience Plan, Product Face Packet, professional design process, project
   design system, `DESIGN.md` and Product Face Result proof;
-- capability acquisition runtime lane: when a specialist is missing, the
-  factory searches skill providers, capability packs and reference sources,
-  writes a `capability_acquisition_run` receipt, and blocks only after that
-  search is complete;
-- Hermes typed block policy: dependency waits do not page the operator,
-  same-cause block loops become triage, capability blocks require acquisition,
-  and transient holds route repair/retry instead of generic human approval;
-- Solana AI Kit first-class routing for Solana/on-chain work, with usage
-  receipts, signer boundaries and onchain work packages;
-- strict human-gate packets: the operator receives material first, then the
-  decision question;
-- readiness claims that separate public kernel readiness from runtime,
-  product-run and production proof.
+- capability acquisition and security/release authority: missing specialists
+  route through capability acquisition, Solana/on-chain work requires Solana AI
+  Kit routing, and production/mainnet/funds/secrets/release decisions require
+  explicit authority;
+- artifact-first human gates and Receipt Five anti-overclaim: the operator gets
+  material before the decision question, and `done` requires evidence readback;
+- simplified public map and first-value path for external operators.
 
-That claim is intentionally scoped. Factory V2 does not mean a specific product
+That claim is intentionally scoped. Factory V3 does not mean a specific product
 is production-ready. A product built by the factory still needs its own source
 material, Product SOT, worker execution, evidence, reviews, human gates and
 production readiness proof.

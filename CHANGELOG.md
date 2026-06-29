@@ -7,6 +7,27 @@ public releases.
 
 ## Unreleased
 
+## 3.0.0 - 2026-06-29
+
+- Promote the public kernel to the V3 release line after the V3 master update
+  plan landed in PR #534.
+- Add executable V3 readiness guards for the master update plan, Hermes-first
+  runtime truth spine, canonical frontier/no-idle autonomy, gerente/agent
+  freshness and V3 release readiness.
+- Add a simplified public map at `docs/reference/public-map.md` so external
+  operators can understand the repository through a clear first-value path
+  instead of the older complex visual map.
+- Make the central boundaries executable: Hermes/Kanban own runtime state,
+  queues, dispatch, task lifecycle and boards; Overkill Factory owns method,
+  gates, rules, schemas, audits, validations and release checks.
+- Prevent the historical stale-gerente failure mode by requiring manager and
+  affected agent skills, profiles, configs and bindings to stay current with
+  factory contracts before E2E or release.
+- Consolidate waves 4-9 into a V3 release readiness policy covering
+  artifact-first human gates, Receipt Five anti-overclaim, Product SOT/method/
+  architecture boundaries, capability/security/release authority, Solana AI Kit
+  routing and the Factory Perfect Run bar.
+
 ## 2.0.15 - 2026-06-28
 
 - Add a schema-backed Decomposition Coverage Review between Product Creation

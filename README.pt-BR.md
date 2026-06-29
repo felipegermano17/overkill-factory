@@ -316,34 +316,36 @@ Pastas locais ignoradas como `.tmp/`, `build/`, `dist/`, `site/` e
 
 ## Estado Atual De Release
 
-Factory V2 é a linha atual de release do kernel público. A release pública mais
-recente é v2.0.15.
+Factory V3 é a linha atual de release do kernel público. A release pública mais
+recente é v3.0.0.
 
-V2 significa que o kernel público tem contratos executáveis para a linha da
-fábrica:
+V3 significa que o kernel público tem contratos executáveis para a linha da
+fábrica e também guards de release para o próprio modelo operacional:
 
 - phase graph determinístico, workflow compilado, command inbox, event log,
   decision outbox e promotion packets;
-- Hermes/Kanban como fonte de verdade real para cards, workers e transições;
-- contratos de autoridade dos workers: agentes produzem evidência, mas não
-  escolhem rota, fase, human gate ou promoção;
+- Hermes/Kanban como fonte de verdade real para cards, workers, dependências,
+  typed blocks, dispatch e ciclo de vida das tarefas;
+- sem mini-Hermes: a fábrica possui método, gates, regras, schemas, auditorias,
+  validações e checks de release, não filas, schedulers ou runtime paralelo;
+- runtime truth spine: worker packet, pedido de dispatch, tarefa rodando e
+  resultado consumível do worker são estados diferentes;
+- canonical frontier/no-idle: gaps reparáveis vão para repair antes de input
+  humano, e no-idle continua sendo recovery/auditoria, não autoridade de rota;
+- freshness de gerente e agentes: mudanças da fábrica precisam atualizar skills,
+  profiles, configs e bindings do gerente e dos agentes afetados antes de E2E
+  ou release;
 - Product Experience control plane: trabalho com interface precisa de Product
   Experience Plan, Product Face Packet, processo profissional de design, design
   system do projeto, `DESIGN.md` e Product Face Result;
-- lane runtime de aquisição de capability: quando falta especialista, a fábrica
-  pesquisa skill providers, capability packs e referências, escreve um receipt
-  `capability_acquisition_run` e só bloqueia depois da busca completa;
-- política Hermes de bloqueios tipados: espera de dependência não aciona o
-  operador, loops de bloqueio viram triagem, capability exige aquisição e holds
-  transitórios viram reparo/retry em vez de aprovação humana genérica;
-- Solana AI Kit como rota de primeira classe para Solana/on-chain, com usage
-  receipt, signer boundary e onchain work package;
-- human gates estritos: o operador recebe o material antes da pergunta de
-  decisão;
-- readiness claims que separam kernel público, runtime, run de produto e prova
-  de produção.
+- capability acquisition e autoridade de security/release: especialistas
+  faltantes passam por acquisition, Solana/on-chain exige Solana AI Kit, e
+  produção/mainnet/funds/secrets/release exigem autoridade explícita;
+- human gates artifact-first e Receipt Five anti-overclaim: o operador recebe o
+  material antes da pergunta, e `done` exige evidência lida de volta;
+- public map simplificado e first-value path para operadores externos.
 
-Esse claim é deliberadamente limitado. Factory V2 não significa que um produto
+Esse claim é deliberadamente limitado. Factory V3 não significa que um produto
 específico está pronto para produção. Um produto criado pela fábrica ainda
 exige fonte real, Product SOT, execução de workers, evidência, revisões, human
 gates e prova própria de production readiness.

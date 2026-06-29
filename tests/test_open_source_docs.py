@@ -65,7 +65,7 @@ class OpenSourceDocsTest(unittest.TestCase):
         self.assertIn('the factory is not "a smart chat" and not a', readme)
         self.assertIn("mini-Hermes", readme)
         self.assertIn(project_release_tag(), readme)
-        self.assertIn("Factory V2", readme)
+        self.assertIn("Factory V3", readme)
         self.assertIn("docs/architecture/factory-v2-control-plane.md", readme)
         self.assertIn("docs/reference/factory-kernel-reference.md", readme)
         self.assertIn("python scripts/generate_factory_reference_docs.py --check", readme)
@@ -138,7 +138,7 @@ class OpenSourceDocsTest(unittest.TestCase):
             "Hermes Kanban continua sendo a fonte de verdade",
             "Hermes e Receipt Five continuam sendo a fonte de verdade",
             project_release_tag(),
-            "Factory V2",
+            "Factory V3",
             "docs/architecture/factory-v2-control-plane.md",
             "docs/reference/factory-kernel-reference.md",
             "python scripts/generate_factory_reference_docs.py --check",
