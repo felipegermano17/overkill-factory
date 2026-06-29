@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/factory-canonical-frontier-policy.schema.json",
+  "title": "Factory Canonical Frontier Policy",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "policy_id",
+    "created_at",
+    "authority_model",
+    "recoverable_gap_policy",
+    "budget_policy",
+    "next_action_order",
+    "acceptance"
+  ],
+  "properties": {
+    "$schema": {"const": "https://overkill-factory.dev/schemas/factory-canonical-frontier-policy.schema.json"},
+    "record_type": {"const": "factory_canonical_frontier_policy"},
+    "policy_id": {"type": "string", "minLength": 3},
+    "created_at": {"type": "string", "minLength": 10},
+    "authority_model": {
+      "type": "object",
+      "required": ["hermes_kanban_state_required", "no_idle_role", "no_idle_is_scheduler", "state_sources"],
+      "properties": {
+        "hermes_kanban_state_required": {"type": "boolean"},
+        "no_idle_role": {"const": "integrity_auditor_and_recovery_path"},
+        "no_idle_is_scheduler": {"type": "boolean"},
+        "state_sources": {"type": "array", "minItems": 3, "items": {"type": "string", "minLength": 3}}
+      },
+      "additionalProperties": false
+    },
+    "recoverable_gap_policy": {
+      "type": "object",
+      "required": ["repair_before_needs_input", "recoverable_gap_types", "needs_input_only_when"],
+      "properties": {
+        "repair_before_needs_input": {"type": "boolean"},
+        "recoverable_gap_types": {"type": "array", "minItems": 5, "items": {"type": "string", "minLength": 3}},
+        "needs_input_only_when": {"type": "array", "minItems": 3, "items": {"type": "string", "minLength": 3}}
+      },
+      "additionalProperties": false
+    },
+    "budget_policy": {
+      "type": "object",
+      "required": ["budgets_schedule_work", "retry_budget", "repair_budget", "worker_budget"],
+      "properties": {
+        "budgets_schedule_work": {"type": "boolean"},
+        "retry_budget": {"$ref": "#/$defs/budget"},
+        "repair_budget": {"$ref": "#/$defs/budget"},
+        "worker_budget": {"$ref": "#/$defs/budget"}
+      },
+      "additionalProperties": false
+    },
+    "next_action_order": {"type": "array", "minItems": 5, "items": {"type": "string", "minLength": 3}},
+    "acceptance": {
+      "type": "object",
+      "required": ["safe_next_action_required", "repair_before_human", "no_scheduler_overlap", "typed_stop_required"],
+      "properties": {
+        "safe_next_action_required": {"type": "boolean"},
+        "repair_before_human": {"type": "boolean"},
+        "no_scheduler_overlap": {"type": "boolean"},
+        "typed_stop_required": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "budget": {
+      "type": "object",
+      "required": ["authority", "on_exhaustion"],
+      "properties": {
+        "authority": {"const": "gate_rule"},
+        "on_exhaustion": {"type": "string", "minLength": 3}
+      },
+      "additionalProperties": false
+    }
+  }
+}

@@ -36,8 +36,8 @@ Done without evidence is only a claim. Receipt Five, review, runtime state and p
 | Hermes profile bindings | 40 | `agents/hermes-profile-bindings.public.json` |
 | Operating systems | 17 | `templates/factory-operating-system-registry.json` |
 | Method engines | 8 | `templates/method-engine-registry.json` |
-| JSON schemas | 237 | `schemas/*.json` |
-| Templates | 150 | `templates/*` |
+| JSON schemas | 238 | `schemas/*.json` |
+| Templates | 151 | `templates/*` |
 | Public surfaces | 19 | `docs/public-surface.manifest.json` |
 
 ## Factory Phases
@@ -251,6 +251,7 @@ These are the public JSON schemas the factory exposes. They are not decoration; 
 - `schemas/factory-bridge-run.schema.json`
 - `schemas/factory-bridge-source-envelope.schema.json`
 - `schemas/factory-bridge-start-request.schema.json`
+- `schemas/factory-canonical-frontier-policy.schema.json`
 - `schemas/factory-card.schema.json`
 - `schemas/factory-command.schema.json`
 - `schemas/factory-completion-audit.schema.json`
@@ -479,6 +480,7 @@ Templates are starter records paired with schemas. They are examples of valid sh
 - `templates/factory-bridge-run.json`
 - `templates/factory-bridge-source-envelope.json`
 - `templates/factory-bridge-start-request.json`
+- `templates/factory-canonical-frontier-policy.json`
 - `templates/factory-card.json`
 - `templates/factory-command.json`
 - `templates/factory-decision-outbox.json`

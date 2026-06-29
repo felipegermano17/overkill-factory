@@ -1,0 +1,64 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-canonical-frontier-policy.schema.json",
+  "record_type": "factory_canonical_frontier_policy",
+  "policy_id": "factory-canonical-frontier-v1",
+  "created_at": "2026-06-29T00:00:00Z",
+  "authority_model": {
+    "hermes_kanban_state_required": true,
+    "no_idle_role": "integrity_auditor_and_recovery_path",
+    "no_idle_is_scheduler": false,
+    "state_sources": [
+      "Hermes/Kanban board state readback",
+      "FactoryRun event log",
+      "typed block state",
+      "worker result consumability state",
+      "Receipt Five/readback state"
+    ]
+  },
+  "recoverable_gap_policy": {
+    "repair_before_needs_input": true,
+    "recoverable_gap_types": [
+      "missing_declared_artifact",
+      "recoverable_readback_failure",
+      "stale_review_superseded_by_new_pass",
+      "invalid_json_reconstructable_from_worker_diff",
+      "missing_markdown_reconstructable_from_structured_metadata",
+      "missing_dependency_edge_repairable"
+    ],
+    "needs_input_only_when": [
+      "operator authority is genuinely required",
+      "risk/money/mainnet/secrets/release decision is material",
+      "source intent is ambiguous after repair/search exhausted",
+      "capability acquisition search completed without safe candidate"
+    ]
+  },
+  "budget_policy": {
+    "budgets_schedule_work": false,
+    "retry_budget": {
+      "authority": "gate_rule",
+      "on_exhaustion": "emit typed stop with smallest safe next action"
+    },
+    "repair_budget": {
+      "authority": "gate_rule",
+      "on_exhaustion": "emit blocked status and operator-safe summary"
+    },
+    "worker_budget": {
+      "authority": "gate_rule",
+      "on_exhaustion": "stop worker loop after valid evidence and reconcile status"
+    }
+  },
+  "next_action_order": [
+    "read Hermes/Kanban board state",
+    "read FactoryRun current phase/event state",
+    "consume completed worker result if dependency edge and result are durable",
+    "route recoverable gap to repair lane",
+    "dispatch next Hermes/Kanban-native work unit when ready",
+    "emit typed block or needs_input only when no safe autonomous action remains"
+  ],
+  "acceptance": {
+    "safe_next_action_required": true,
+    "repair_before_human": true,
+    "no_scheduler_overlap": true,
+    "typed_stop_required": true
+  }
+}
