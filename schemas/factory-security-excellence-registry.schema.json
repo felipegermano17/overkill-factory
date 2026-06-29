@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/factory-security-excellence-registry.schema.json",
+  "title": "Overkill Factory Security Excellence Registry",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "registry_id",
+    "purpose",
+    "security_culture_policy",
+    "pillar_coverage",
+    "greenfield_security_policy",
+    "change_security_policy",
+    "non_goals"
+  ],
+  "properties": {
+    "$schema": { "const": "https://overkill-factory.dev/schemas/factory-security-excellence-registry.schema.json" },
+    "record_type": { "const": "factory_security_excellence_registry" },
+    "registry_id": { "type": "string", "minLength": 3 },
+    "purpose": { "type": "string", "minLength": 40 },
+    "security_culture_policy": {
+      "type": "object",
+      "required": [
+        "security_is_culture_not_checklist",
+        "security_before_implementation",
+        "architecture_first_for_greenfield",
+        "applies_to_all_change_types",
+        "fail_closed_on_missing_security_evidence",
+        "forbid_unqualified_perfection_claims",
+        "allowed_security_claim_language",
+        "residual_risk_record_required"
+      ],
+      "properties": {
+        "security_is_culture_not_checklist": { "const": true },
+        "security_before_implementation": { "const": true },
+        "architecture_first_for_greenfield": { "const": true },
+        "applies_to_all_change_types": { "const": true },
+        "fail_closed_on_missing_security_evidence": { "const": true },
+        "forbid_unqualified_perfection_claims": { "const": true },
+        "allowed_security_claim_language": { "type": "string", "minLength": 20 },
+        "residual_risk_record_required": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "pillar_coverage": {
+      "type": "array",
+      "minItems": 10,
+      "items": {
+        "type": "object",
+        "required": [
+          "pillar_key",
+          "display_name",
+          "security_goal",
+          "coverage_status",
+          "existing_controls",
+          "required_artifacts",
+          "required_workers",
+          "required_gates",
+          "required_evidence",
+          "gap_or_upgrade",
+          "risk_if_missing",
+          "applies_when",
+          "shape"
+        ],
+        "properties": {
+          "pillar_key": { "type": "string", "minLength": 3 },
+          "display_name": { "type": "string", "minLength": 3 },
+          "security_goal": { "type": "string", "minLength": 20 },
+          "coverage_status": { "enum": ["strong", "partial", "missing", "needs_upgrade"] },
+          "existing_controls": { "type": "array", "items": { "type": "string", "minLength": 3 } },
+          "required_artifacts": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 3 } },
+          "required_workers": { "type": "array", "items": { "type": "string", "minLength": 3 }, "uniqueItems": true },
+          "required_gates": { "type": "array", "items": { "type": "string", "minLength": 3 }, "uniqueItems": true },
+          "required_evidence": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 3 } },
+          "gap_or_upgrade": { "type": "string", "minLength": 10 },
+          "risk_if_missing": { "type": "string", "minLength": 20 },
+          "applies_when": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 3 } },
+          "shape": { "enum": ["culture_policy", "architecture_gate", "parallel_lane", "specialist_gate", "worker_obligation", "release_gate", "runtime_guard", "capability_pack"] }
+        },
+        "additionalProperties": false
+      }
+    },
+    "greenfield_security_policy": {
+      "type": "object",
+      "required": ["secure_architecture_before_build", "threat_model_before_build", "trust_boundaries_before_build", "privacy_before_data", "secrets_before_integration", "observability_before_release"],
+      "properties": {
+        "secure_architecture_before_build": { "const": true },
+        "threat_model_before_build": { "const": true },
+        "trust_boundaries_before_build": { "const": true },
+        "privacy_before_data": { "const": true },
+        "secrets_before_integration": { "const": true },
+        "observability_before_release": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "change_security_policy": {
+      "type": "object",
+      "required": ["bug_fixes_can_trigger_security_review", "refactors_can_trigger_security_review", "dependency_changes_trigger_supply_chain_review", "ai_or_agent_changes_trigger_ai_security_review", "solana_changes_trigger_solana_ai_kit"],
+      "properties": {
+        "bug_fixes_can_trigger_security_review": { "const": true },
+        "refactors_can_trigger_security_review": { "const": true },
+        "dependency_changes_trigger_supply_chain_review": { "const": true },
+        "ai_or_agent_changes_trigger_ai_security_review": { "const": true },
+        "solana_changes_trigger_solana_ai_kit": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "non_goals": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 3 }, "uniqueItems": true }
+  },
+  "additionalProperties": false
+}

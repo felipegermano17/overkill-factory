@@ -1,0 +1,602 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-os-excellence-audit-registry.schema.json",
+  "record_type": "factory_os_excellence_audit_registry",
+  "registry_id": "factory-os-excellence-audit-v1",
+  "created_at": "2026-06-29T00:00:00+00:00",
+  "source_registry_ref": "templates/factory-operating-system-registry.json",
+  "audit_scope": {
+    "thesis": "The factory OS layer is the consolidation layer for all audits: every OS must have ownership, contracts, gates, runtime proof obligations and master-plan implementation work without claiming readiness from registry existence alone.",
+    "all_existing_os_required": true,
+    "new_os_creation_allowed": false,
+    "master_plan_allowed": false,
+    "runtime_migration_allowed": false
+  },
+  "audit_dimensions": [
+    {
+      "key": "ownership",
+      "name": "Owner and authority",
+      "question": "Does the OS have a clear owner worker and authority boundary?"
+    },
+    {
+      "key": "contracts",
+      "name": "Contracts and source of truth",
+      "question": "Does the OS have schemas/templates/docs that define the behavior?"
+    },
+    {
+      "key": "enforcement",
+      "name": "Enforcement commands and tests",
+      "question": "Can the OS be validated by executable commands and tests?"
+    },
+    {
+      "key": "runtime_proof",
+      "name": "Runtime proof",
+      "question": "Is live runtime behavior proven, or only contract-valid?"
+    },
+    {
+      "key": "product_specific_proof",
+      "name": "Product-specific proof",
+      "question": "Can the OS prove a real product result rather than a fixture or registry?"
+    },
+    {
+      "key": "integration",
+      "name": "Cross-OS integration",
+      "question": "Does the OS connect to neighboring OSs without manual coordination?"
+    },
+    {
+      "key": "operator_experience",
+      "name": "Operator experience",
+      "question": "Does the OS expose useful human projection without leaking internal bureaucracy?"
+    },
+    {
+      "key": "master_plan_readiness",
+      "name": "Master plan readiness",
+      "question": "Is the OS ready to become an implementation workstream in the master update plan?"
+    }
+  ],
+  "os_findings": [
+    {
+      "os_id": "deterministic_control_plane_os",
+      "display_name": "Deterministic Control Plane OS",
+      "priority": "P0",
+      "owner_worker": "factory-orchestrator",
+      "audit_state": "contract_active_product_proof_needed",
+      "contract_maturity": "strong",
+      "runtime_maturity": "partial",
+      "product_specific_proof_maturity": "partial",
+      "integration_maturity": "partial",
+      "missing_or_partial_proofs": [
+        "phase_graph_validated",
+        "command_event_log_replayable",
+        "decision_outbox_required_for_human_gate",
+        "promotion_packet_validated"
+      ],
+      "master_plan_implication": "Upgrade deterministic_control_plane_os from registry-level ownership into implemented runtime capacity with proofs, worker/profile readiness, gates and product-specific receipts where applicable.",
+      "must_not_claim": [
+        "OS is implementation-complete from registry alone",
+        "product-specific production readiness without runtime and product proof"
+      ],
+      "linked_prior_audits": [
+        "swiss_watch_reliability_audit"
+      ]
+    },
+    {
+      "os_id": "product_truth_research_os",
+      "display_name": "Product Truth and Research OS",
+      "priority": "P0",
+      "owner_worker": "source-ledger-worker",
+      "audit_state": "contract_active_product_proof_needed",
+      "contract_maturity": "strong",
+      "runtime_maturity": "partial",
+      "product_specific_proof_maturity": "partial",
+      "integration_maturity": "partial",
+      "missing_or_partial_proofs": [
+        "source_claim_ledger_created",
+        "operator_understanding_confirmation_recorded",
+        "specialist_research_decision_when_sources_are_insufficient"
+      ],
+      "master_plan_implication": "Upgrade product_truth_research_os from registry-level ownership into implemented runtime capacity with proofs, worker/profile readiness, gates and product-specific receipts where applicable.",
+      "must_not_claim": [
+        "OS is implementation-complete from registry alone",
+        "product-specific production readiness without runtime and product proof"
+      ],
+      "linked_prior_audits": [
+        "method_excellence_audit",
+        "world_class_process_gap_audit"
+      ]
+    },
+    {
+      "os_id": "method_os",
+      "display_name": "Method OS",
+      "priority": "P0",
+      "owner_worker": "factory-orchestrator",
+      "audit_state": "contract_active_product_proof_needed",
+      "contract_maturity": "strong",
+      "runtime_maturity": "partial",
+      "product_specific_proof_maturity": "partial",
+      "integration_maturity": "partial",
+      "missing_or_partial_proofs": [
+        "method_engine_registry_validated",
+        "method_engine_selected",
+        "method_contract_materialized",
+        "method_engine_acceptance_checked_before_execution"
+      ],
+      "master_plan_implication": "Upgrade method_os from registry-level ownership into implemented runtime capacity with proofs, worker/profile readiness, gates and product-specific receipts where applicable.",
+      "must_not_claim": [
+        "OS is implementation-complete from registry alone",
+        "product-specific production readiness without runtime and product proof"
+      ],
+      "linked_prior_audits": [
+        "method_excellence_audit",
+        "world_class_process_gap_audit"
+      ]
+    },
+    {
+      "os_id": "product_architecture_os",
+      "display_name": "Product Architecture OS",
+      "priority": "P0",
+      "owner_worker": "product-architect",
+      "audit_state": "contract_active_product_proof_needed",
+      "contract_maturity": "strong",
+      "runtime_maturity": "partial",
+      "product_specific_proof_maturity": "partial",
+      "integration_maturity": "partial",
+      "missing_or_partial_proofs": [
+        "architecture_candidate_has_sources",
+        "dependency_map_reviewed",
+        "architecture_before_decomposition_when_material"
+      ],
+      "master_plan_implication": "Upgrade product_architecture_os from registry-level ownership into implemented runtime capacity with proofs, worker/profile readiness, gates and product-specific receipts where applicable.",
+      "must_not_claim": [
+        "OS is implementation-complete from registry alone",
+        "product-specific production readiness without runtime and product proof"
+      ],
+      "linked_prior_audits": [
+        "method_excellence_audit",
+        "world_class_process_gap_audit"
+      ]
+    },
+    {
+      "os_id": "product_experience_design_brand_os",
+      "display_name": "Product Experience, Design and Brand OS",
+      "priority": "P0",
+      "owner_worker": "product-face",
+      "audit_state": "contract_active_product_proof_needed",
+      "contract_maturity": "strong",
+      "runtime_maturity": "partial",
+      "product_specific_proof_maturity": "partial",
+      "integration_maturity": "partial",
+      "missing_or_partial_proofs": [
+        "Product Face result when surface is visible",
+        "professional design process validated",
+        "project design system exported to DESIGN.md",
+        "product_specific_proof_bundle"
+      ],
+      "master_plan_implication": "Upgrade product_experience_design_brand_os from registry-level ownership into implemented runtime capacity with proofs, worker/profile readiness, gates and product-specific receipts where applicable.",
+      "must_not_claim": [
+        "OS is implementation-complete from registry alone",
+        "product-specific production readiness without runtime and product proof"
+      ],
+      "linked_prior_audits": []
+    },
+    {
+      "os_id": "work_unit_execution_dispatch_os",
+      "display_name": "Work Unit and Execution Dispatch OS",
+      "priority": "P0",
+      "owner_worker": "decomposition-planner",
+      "audit_state": "contract_active_product_proof_needed",
+      "contract_maturity": "strong",
+      "runtime_maturity": "partial",
+      "product_specific_proof_maturity": "partial",
+      "integration_maturity": "partial",
+      "missing_or_partial_proofs": [
+        "vertical_work_units_ready",
+        "worker_packets_materialized_from_readiness",
+        "Hermes plan starts blocked until runtime dispatch"
+      ],
+      "master_plan_implication": "Upgrade work_unit_execution_dispatch_os from registry-level ownership into implemented runtime capacity with proofs, worker/profile readiness, gates and product-specific receipts where applicable.",
+      "must_not_claim": [
+        "OS is implementation-complete from registry alone",
+        "product-specific production readiness without runtime and product proof"
+      ],
+      "linked_prior_audits": [
+        "executor_skill_ecosystem_audit"
+      ]
+    },
+    {
+      "os_id": "authority_autonomy_os",
+      "display_name": "Authority and Autonomy OS",
+      "priority": "P0",
+      "owner_worker": "factory-orchestrator",
+      "audit_state": "contract_active_product_proof_needed",
+      "contract_maturity": "strong",
+      "runtime_maturity": "partial",
+      "product_specific_proof_maturity": "partial",
+      "integration_maturity": "partial",
+      "missing_or_partial_proofs": [
+        "authority_classifier_result",
+        "non_human_block_recovery_route",
+        "human_gate_record_when_human_only_authority_is_required"
+      ],
+      "master_plan_implication": "Upgrade authority_autonomy_os from registry-level ownership into implemented runtime capacity with proofs, worker/profile readiness, gates and product-specific receipts where applicable.",
+      "must_not_claim": [
+        "OS is implementation-complete from registry alone",
+        "product-specific production readiness without runtime and product proof"
+      ],
+      "linked_prior_audits": [
+        "operator_ui_ux_excellence_audit"
+      ]
+    },
+    {
+      "os_id": "hermes_worker_runtime_os",
+      "display_name": "Hermes Worker Runtime OS",
+      "priority": "P0",
+      "owner_worker": "factory-orchestrator",
+      "audit_state": "runtime_blocked",
+      "contract_maturity": "strong",
+      "runtime_maturity": "blocked",
+      "product_specific_proof_maturity": "blocked",
+      "integration_maturity": "partial",
+      "missing_or_partial_proofs": [
+        "live_hermes_worker_orchestration",
+        "worker_profile_readiness_fresh",
+        "worker_result_artifact_consumable",
+        "no_idle_watchdog_classification"
+      ],
+      "master_plan_implication": "Upgrade hermes_worker_runtime_os from registry-level ownership into implemented runtime capacity with proofs, worker/profile readiness, gates and product-specific receipts where applicable.",
+      "must_not_claim": [
+        "OS is implementation-complete from registry alone",
+        "product-specific production readiness without runtime and product proof"
+      ],
+      "linked_prior_audits": [
+        "executor_skill_ecosystem_audit"
+      ]
+    },
+    {
+      "os_id": "evidence_receipt_os",
+      "display_name": "Evidence and Receipt OS",
+      "priority": "P0",
+      "owner_worker": "evidence-reconciler",
+      "audit_state": "contract_active_product_proof_needed",
+      "contract_maturity": "strong",
+      "runtime_maturity": "partial",
+      "product_specific_proof_maturity": "partial",
+      "integration_maturity": "partial",
+      "missing_or_partial_proofs": [
+        "receipt_five_reconciliation_result",
+        "evidence_freshness_checked",
+        "artifact_readback_checked",
+        "product_specific_proof_bundle"
+      ],
+      "master_plan_implication": "Upgrade evidence_receipt_os from registry-level ownership into implemented runtime capacity with proofs, worker/profile readiness, gates and product-specific receipts where applicable.",
+      "must_not_claim": [
+        "OS is implementation-complete from registry alone",
+        "product-specific production readiness without runtime and product proof"
+      ],
+      "linked_prior_audits": [
+        "swiss_watch_reliability_audit",
+        "operator_ui_ux_excellence_audit"
+      ]
+    },
+    {
+      "os_id": "capability_provider_os",
+      "display_name": "Capability Pack and Provider OS",
+      "priority": "P0",
+      "owner_worker": "factory-orchestrator",
+      "audit_state": "contract_active_product_proof_needed",
+      "contract_maturity": "strong",
+      "runtime_maturity": "partial",
+      "product_specific_proof_maturity": "partial",
+      "integration_maturity": "partial",
+      "missing_or_partial_proofs": [
+        "domain_signal_detected",
+        "capability_pack_activation_fresh",
+        "solana-ai-kit-core activated for Solana products",
+        "pack_worker_tool_bindings_ready"
+      ],
+      "master_plan_implication": "Upgrade capability_provider_os from registry-level ownership into implemented runtime capacity with proofs, worker/profile readiness, gates and product-specific receipts where applicable.",
+      "must_not_claim": [
+        "OS is implementation-complete from registry alone",
+        "product-specific production readiness without runtime and product proof"
+      ],
+      "linked_prior_audits": [
+        "executor_skill_ecosystem_audit",
+        "solana_ai_kit_mandatory_routing",
+        "security_excellence_audit"
+      ]
+    },
+    {
+      "os_id": "agent_profile_authority_os",
+      "display_name": "Agent and Profile Authority OS",
+      "priority": "P0",
+      "owner_worker": "factory-orchestrator",
+      "audit_state": "contract_active_product_proof_needed",
+      "contract_maturity": "strong",
+      "runtime_maturity": "partial",
+      "product_specific_proof_maturity": "partial",
+      "integration_maturity": "partial",
+      "missing_or_partial_proofs": [
+        "profile_schema_validated",
+        "permission_class_validated",
+        "profile_binding_freshness_checked",
+        "process_authority_lint_passed"
+      ],
+      "master_plan_implication": "Upgrade agent_profile_authority_os from registry-level ownership into implemented runtime capacity with proofs, worker/profile readiness, gates and product-specific receipts where applicable.",
+      "must_not_claim": [
+        "OS is implementation-complete from registry alone",
+        "product-specific production readiness without runtime and product proof"
+      ],
+      "linked_prior_audits": [
+        "executor_skill_ecosystem_audit",
+        "solana_ai_kit_mandatory_routing",
+        "security_excellence_audit"
+      ]
+    },
+    {
+      "os_id": "security_os",
+      "display_name": "Security OS",
+      "priority": "P0",
+      "owner_worker": "security-orchestrator",
+      "audit_state": "contract_active_product_proof_needed",
+      "contract_maturity": "strong",
+      "runtime_maturity": "partial",
+      "product_specific_proof_maturity": "partial",
+      "integration_maturity": "partial",
+      "missing_or_partial_proofs": [
+        "security_architecture_before_material_implementation",
+        "supply_chain_result",
+        "secret_delivery_policy_safe",
+        "specialist_security_result_when_risk_surface_matches"
+      ],
+      "master_plan_implication": "Upgrade security_os from registry-level ownership into implemented runtime capacity with proofs, worker/profile readiness, gates and product-specific receipts where applicable.",
+      "must_not_claim": [
+        "OS is implementation-complete from registry alone",
+        "product-specific production readiness without runtime and product proof"
+      ],
+      "linked_prior_audits": [
+        "world_class_process_gap_audit",
+        "solana_ai_kit_mandatory_routing",
+        "security_excellence_audit"
+      ]
+    },
+    {
+      "os_id": "quality_verification_os",
+      "display_name": "Quality and Verification OS",
+      "priority": "P1",
+      "owner_worker": "qa-verification-worker",
+      "audit_state": "contract_active_product_proof_needed",
+      "contract_maturity": "strong",
+      "runtime_maturity": "partial",
+      "product_specific_proof_maturity": "partial",
+      "integration_maturity": "partial",
+      "missing_or_partial_proofs": [
+        "verification_commands_ran",
+        "qa_result_attached",
+        "failed_checks_repaired_and_retested",
+        "independent_review_after_fix",
+        "product_specific_proof_bundle"
+      ],
+      "master_plan_implication": "Upgrade quality_verification_os from registry-level ownership into implemented runtime capacity with proofs, worker/profile readiness, gates and product-specific receipts where applicable.",
+      "must_not_claim": [
+        "OS is implementation-complete from registry alone",
+        "product-specific production readiness without runtime and product proof"
+      ],
+      "linked_prior_audits": [
+        "swiss_watch_reliability_audit",
+        "method_excellence_audit",
+        "world_class_process_gap_audit",
+        "security_excellence_audit"
+      ]
+    },
+    {
+      "os_id": "operator_experience_os",
+      "display_name": "Operator Experience OS",
+      "priority": "P0",
+      "owner_worker": "overkill-factory-gerente",
+      "audit_state": "contract_active_product_proof_needed",
+      "contract_maturity": "strong",
+      "runtime_maturity": "partial",
+      "product_specific_proof_maturity": "partial",
+      "integration_maturity": "partial",
+      "missing_or_partial_proofs": [
+        "Telegram-first operator interface profile",
+        "proactive_status_event",
+        "deep_briefing_package_for_decision",
+        "explicit_runtime_target_resolved_before_status",
+        "delivery_receipt_ref_when_human_gate"
+      ],
+      "master_plan_implication": "Upgrade operator_experience_os from registry-level ownership into implemented runtime capacity with proofs, worker/profile readiness, gates and product-specific receipts where applicable.",
+      "must_not_claim": [
+        "OS is implementation-complete from registry alone",
+        "product-specific production readiness without runtime and product proof"
+      ],
+      "linked_prior_audits": [
+        "world_class_process_gap_audit",
+        "operator_ui_ux_excellence_audit"
+      ]
+    },
+    {
+      "os_id": "release_operations_os",
+      "display_name": "Release and Operations OS",
+      "priority": "P0",
+      "owner_worker": "release-ops-worker",
+      "audit_state": "contract_active_product_proof_needed",
+      "contract_maturity": "strong",
+      "runtime_maturity": "partial",
+      "product_specific_proof_maturity": "partial",
+      "integration_maturity": "partial",
+      "missing_or_partial_proofs": [
+        "release_rollback_monitoring_proof",
+        "human_R4_gate_record",
+        "production_readiness_plan_valid",
+        "incident_support_path_ready",
+        "product_specific_proof_bundle"
+      ],
+      "master_plan_implication": "Upgrade release_operations_os from registry-level ownership into implemented runtime capacity with proofs, worker/profile readiness, gates and product-specific receipts where applicable.",
+      "must_not_claim": [
+        "OS is implementation-complete from registry alone",
+        "product-specific production readiness without runtime and product proof"
+      ],
+      "linked_prior_audits": [
+        "swiss_watch_reliability_audit",
+        "world_class_process_gap_audit",
+        "solana_ai_kit_mandatory_routing",
+        "security_excellence_audit"
+      ]
+    },
+    {
+      "os_id": "velocity_cost_throughput_os",
+      "display_name": "Velocity, Cost and Throughput OS",
+      "priority": "P1",
+      "owner_worker": "factory-orchestrator",
+      "audit_state": "contract_active_product_proof_needed",
+      "contract_maturity": "strong",
+      "runtime_maturity": "partial",
+      "product_specific_proof_maturity": "partial",
+      "integration_maturity": "partial",
+      "missing_or_partial_proofs": [
+        "parallel_lane_contract_when_parallel",
+        "retry_budget_and_stop_condition",
+        "status_dedupe",
+        "runtime_gate_projection_not_manual_estimate"
+      ],
+      "master_plan_implication": "Upgrade velocity_cost_throughput_os from registry-level ownership into implemented runtime capacity with proofs, worker/profile readiness, gates and product-specific receipts where applicable.",
+      "must_not_claim": [
+        "OS is implementation-complete from registry alone",
+        "product-specific production readiness without runtime and product proof"
+      ],
+      "linked_prior_audits": [
+        "operator_ui_ux_excellence_audit"
+      ]
+    },
+    {
+      "os_id": "factory_learning_os",
+      "display_name": "Factory Learning OS",
+      "priority": "P1",
+      "owner_worker": "skill-eval-distiller",
+      "audit_state": "hardened_existing_runtime_review_needed",
+      "contract_maturity": "strong",
+      "runtime_maturity": "partial",
+      "product_specific_proof_maturity": "partial",
+      "integration_maturity": "partial",
+      "missing_or_partial_proofs": [
+        "inactive_learning_proposal",
+        "validation_plan",
+        "independent_review",
+        "activation_policy_and_rollback"
+      ],
+      "master_plan_implication": "Upgrade factory_learning_os from registry-level ownership into implemented runtime capacity with proofs, worker/profile readiness, gates and product-specific receipts where applicable.",
+      "must_not_claim": [
+        "OS is implementation-complete from registry alone",
+        "product-specific production readiness without runtime and product proof"
+      ],
+      "linked_prior_audits": [
+        "world_class_process_gap_audit",
+        "executor_skill_ecosystem_audit"
+      ]
+    }
+  ],
+  "prior_audit_mapping": {
+    "swiss_watch_reliability_audit": {
+      "primary_os": [
+        "evidence_receipt_os",
+        "deterministic_control_plane_os"
+      ],
+      "secondary_os": [
+        "quality_verification_os",
+        "release_operations_os"
+      ],
+      "why_it_matters": "Reliability lives in fail-closed evidence, replayable control plane and anti-overclaim rules."
+    },
+    "method_excellence_audit": {
+      "primary_os": [
+        "method_os"
+      ],
+      "secondary_os": [
+        "product_truth_research_os",
+        "product_architecture_os",
+        "quality_verification_os"
+      ],
+      "why_it_matters": "World-class product methods must be executable method engines, not labels."
+    },
+    "world_class_process_gap_audit": {
+      "primary_os": [
+        "product_truth_research_os",
+        "product_architecture_os",
+        "method_os",
+        "quality_verification_os",
+        "release_operations_os"
+      ],
+      "secondary_os": [
+        "operator_experience_os",
+        "security_os",
+        "factory_learning_os"
+      ],
+      "why_it_matters": "Missing world-class product processes become OS-owned capacities, gates, packs or workers."
+    },
+    "executor_skill_ecosystem_audit": {
+      "primary_os": [
+        "agent_profile_authority_os",
+        "capability_provider_os",
+        "hermes_worker_runtime_os"
+      ],
+      "secondary_os": [
+        "work_unit_execution_dispatch_os",
+        "factory_learning_os"
+      ],
+      "why_it_matters": "Methods only work when real workers, profiles, skills and acquisition lanes exist."
+    },
+    "solana_ai_kit_mandatory_routing": {
+      "primary_os": [
+        "capability_provider_os",
+        "security_os"
+      ],
+      "secondary_os": [
+        "agent_profile_authority_os",
+        "release_operations_os"
+      ],
+      "why_it_matters": "Solana/onchain work must route through Solana AI Kit and remain behind signer/funds/mainnet gates."
+    },
+    "security_excellence_audit": {
+      "primary_os": [
+        "security_os"
+      ],
+      "secondary_os": [
+        "release_operations_os",
+        "capability_provider_os",
+        "quality_verification_os",
+        "agent_profile_authority_os"
+      ],
+      "why_it_matters": "Security must become architecture-first culture, specialist routing, testing, release and learnback."
+    },
+    "operator_ui_ux_excellence_audit": {
+      "primary_os": [
+        "operator_experience_os"
+      ],
+      "secondary_os": [
+        "velocity_cost_throughput_os",
+        "authority_autonomy_os",
+        "evidence_receipt_os"
+      ],
+      "why_it_matters": "The manager/Telegram/Discord experience must project progress and gates without exposing bureaucracy."
+    }
+  },
+  "completion_claim_policy": {
+    "audit_allows_master_plan_to_claim_implementation_complete": false,
+    "registry_alone_allows_os_ready_claim": false,
+    "runtime_proof_required": true,
+    "product_specific_proof_required": true,
+    "master_plan_next_after_audit": true
+  },
+  "acceptance": {
+    "audit_created": true,
+    "all_existing_os_covered": true,
+    "no_new_os_created": true,
+    "master_plan_deferred": true,
+    "evidence_refs": [
+      "schemas/factory-os-excellence-audit-registry.schema.json",
+      "templates/factory-os-excellence-audit-registry.json",
+      "scripts/factory_os_excellence_audit.py",
+      "tests/test_factory_os_excellence_audit.py"
+    ]
+  }
+}

@@ -11,6 +11,18 @@ Use this before editing cards, docs or examples:
 factoryctl doctor
 factoryctl run minimal
 python scripts/swiss_watch_audit.py --out .tmp/swiss-watch-audit.json --markdown .tmp/swiss-watch-audit.md
+python scripts/factory_method_excellence_audit.py --out .tmp/factory-method-excellence-audit.json --markdown .tmp/factory-method-excellence-audit.md
+python scripts/factory_world_class_process_gap_audit.py --out .tmp/factory-world-class-process-gap-audit.json --markdown .tmp/factory-world-class-process-gap-audit.md
+python scripts/factory_executor_skill_ecosystem_audit.py --out .tmp/factory-executor-skill-ecosystem-audit.json --markdown .tmp/factory-executor-skill-ecosystem-audit.md
+python scripts/factory_security_excellence_audit.py --out .tmp/factory-security-excellence-audit.json --markdown .tmp/factory-security-excellence-audit.md
+python scripts/factory_operator_ui_ux_excellence_audit.py --out .tmp/factory-operator-ui-ux-excellence-audit.json --markdown .tmp/factory-operator-ui-ux-excellence-audit.md
+python scripts/factory_os_excellence_audit.py --out .tmp/factory-os-excellence-audit.json --markdown .tmp/factory-os-excellence-audit.md
+python scripts/factory_github_issue_pattern_audit.py --out .tmp/factory-github-issue-pattern-audit.json --markdown .tmp/factory-github-issue-pattern-audit.md
+python scripts/factory_master_update_plan_audit.py --out .tmp/factory-master-update-plan-audit.json --markdown .tmp/factory-master-update-plan-audit.md
+python scripts/factory_runtime_truth_spine_audit.py --out .tmp/factory-runtime-truth-spine-audit.json --markdown .tmp/factory-runtime-truth-spine-audit.md
+python scripts/factory_canonical_frontier_audit.py --out .tmp/factory-canonical-frontier-audit.json --markdown .tmp/factory-canonical-frontier-audit.md
+python scripts/factory_manager_agent_freshness_audit.py --out .tmp/factory-manager-agent-freshness-audit.json --markdown .tmp/factory-manager-agent-freshness-audit.md
+python scripts/factory_v3_release_readiness_audit.py --out .tmp/factory-v3-release-readiness-audit.json --markdown .tmp/factory-v3-release-readiness-audit.md
 python -m unittest discover -s tests
 python scripts/validate_document_governance.py
 python scripts/generate_factory_reference_docs.py --check
@@ -150,6 +162,18 @@ For a stronger local pass:
 factoryctl doctor
 factoryctl run minimal
 python scripts/swiss_watch_audit.py --out .tmp/swiss-watch-audit.json --markdown .tmp/swiss-watch-audit.md
+python scripts/factory_method_excellence_audit.py --out .tmp/factory-method-excellence-audit.json --markdown .tmp/factory-method-excellence-audit.md
+python scripts/factory_world_class_process_gap_audit.py --out .tmp/factory-world-class-process-gap-audit.json --markdown .tmp/factory-world-class-process-gap-audit.md
+python scripts/factory_executor_skill_ecosystem_audit.py --out .tmp/factory-executor-skill-ecosystem-audit.json --markdown .tmp/factory-executor-skill-ecosystem-audit.md
+python scripts/factory_security_excellence_audit.py --out .tmp/factory-security-excellence-audit.json --markdown .tmp/factory-security-excellence-audit.md
+python scripts/factory_operator_ui_ux_excellence_audit.py --out .tmp/factory-operator-ui-ux-excellence-audit.json --markdown .tmp/factory-operator-ui-ux-excellence-audit.md
+python scripts/factory_os_excellence_audit.py --out .tmp/factory-os-excellence-audit.json --markdown .tmp/factory-os-excellence-audit.md
+python scripts/factory_github_issue_pattern_audit.py --out .tmp/factory-github-issue-pattern-audit.json --markdown .tmp/factory-github-issue-pattern-audit.md
+python scripts/factory_master_update_plan_audit.py --out .tmp/factory-master-update-plan-audit.json --markdown .tmp/factory-master-update-plan-audit.md
+python scripts/factory_runtime_truth_spine_audit.py --out .tmp/factory-runtime-truth-spine-audit.json --markdown .tmp/factory-runtime-truth-spine-audit.md
+python scripts/factory_canonical_frontier_audit.py --out .tmp/factory-canonical-frontier-audit.json --markdown .tmp/factory-canonical-frontier-audit.md
+python scripts/factory_manager_agent_freshness_audit.py --out .tmp/factory-manager-agent-freshness-audit.json --markdown .tmp/factory-manager-agent-freshness-audit.md
+python scripts/factory_v3_release_readiness_audit.py --out .tmp/factory-v3-release-readiness-audit.json --markdown .tmp/factory-v3-release-readiness-audit.md
 python scripts/factory_battery.py
 python scripts/validate_document_governance.py
 python scripts/generate_factory_reference_docs.py --check

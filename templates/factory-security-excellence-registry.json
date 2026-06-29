@@ -1,0 +1,726 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-security-excellence-registry.schema.json",
+  "record_type": "factory_security_excellence_registry",
+  "registry_id": "factory-security-excellence-v1",
+  "purpose": "Define the Overkill Factory security excellence bar so product creation is secure-by-design, architecture-first, evidence-gated and culturally fail-closed across all demand types.",
+  "security_culture_policy": {
+    "security_is_culture_not_checklist": true,
+    "security_before_implementation": true,
+    "architecture_first_for_greenfield": true,
+    "applies_to_all_change_types": true,
+    "fail_closed_on_missing_security_evidence": true,
+    "forbid_unqualified_perfection_claims": true,
+    "allowed_security_claim_language": "best possible with evidence, gates and explicit residual-risk ownership",
+    "residual_risk_record_required": true
+  },
+  "pillar_coverage": [
+    {
+      "pillar_key": "secure_by_design_culture",
+      "display_name": "Secure-by-Design Culture",
+      "security_goal": "Make security a default product culture and authority model, not a late review checklist.",
+      "coverage_status": "partial",
+      "existing_controls": [
+        "security-profile",
+        "worker permission classes",
+        "risk gates",
+        "human gates"
+      ],
+      "required_artifacts": [
+        "security culture policy",
+        "method contract security posture",
+        "residual risk record"
+      ],
+      "required_workers": [
+        "security-orchestrator"
+      ],
+      "required_gates": [
+        "method contract gate",
+        "risk gate"
+      ],
+      "required_evidence": [
+        "security policy in method contract",
+        "residual risk record"
+      ],
+      "gap_or_upgrade": "Make culture policy explicit across every product/change type.",
+      "risk_if_missing": "Security becomes a final checklist and product teams build unsafe defaults.",
+      "applies_when": [
+        "all factory work"
+      ],
+      "shape": "culture_policy"
+    },
+    {
+      "pillar_key": "security_architecture_first",
+      "display_name": "Architecture-First Security",
+      "security_goal": "Force security architecture before material build when product, data, identity, integration, cloud, AI, onchain or production risk exists.",
+      "coverage_status": "partial",
+      "existing_controls": [
+        "security-architecture-plan template",
+        "security_profile",
+        "security route contracts"
+      ],
+      "required_artifacts": [
+        "security architecture plan",
+        "trust boundary map",
+        "data-flow diagram",
+        "security owner record"
+      ],
+      "required_workers": [
+        "security-orchestrator",
+        "product-architect"
+      ],
+      "required_gates": [
+        "before implementation gate",
+        "human gate when R3/R4"
+      ],
+      "required_evidence": [
+        "architecture packet",
+        "gate verdict",
+        "owner assignment"
+      ],
+      "gap_or_upgrade": "Current template exists but needs stronger secure-by-default architecture packet.",
+      "risk_if_missing": "Greenfield products can bake in weak trust boundaries that are expensive to fix.",
+      "applies_when": [
+        "new product",
+        "material feature",
+        "integration",
+        "production change"
+      ],
+      "shape": "architecture_gate"
+    },
+    {
+      "pillar_key": "threat_modeling_abuse_cases",
+      "display_name": "Threat Modeling and Abuse Cases",
+      "security_goal": "Identify realistic attacker goals, abuse cases, trust boundaries and controls before build.",
+      "coverage_status": "partial",
+      "existing_controls": [
+        "threats field",
+        "abuse_cases field",
+        "security-orchestrator"
+      ],
+      "required_artifacts": [
+        "threat model",
+        "abuse-case matrix",
+        "control map"
+      ],
+      "required_workers": [
+        "security-orchestrator",
+        "appsec-owasp-specialist"
+      ],
+      "required_gates": [
+        "threat model gate"
+      ],
+      "required_evidence": [
+        "STRIDE/PASTA/abuse-case evidence",
+        "control-to-risk map"
+      ],
+      "gap_or_upgrade": "Make threat modeling a required artifact by trigger instead of a prose field.",
+      "risk_if_missing": "Likely abuse paths stay invisible until after release.",
+      "applies_when": [
+        "new external surface",
+        "auth",
+        "money",
+        "data",
+        "AI system",
+        "onchain"
+      ],
+      "shape": "architecture_gate"
+    },
+    {
+      "pillar_key": "trust_boundaries_data_flow",
+      "display_name": "Trust Boundaries and Data Flow",
+      "security_goal": "Make trust boundaries, data flows, assets and invariants explicit before implementation.",
+      "coverage_status": "partial",
+      "existing_controls": [
+        "security-architecture-plan fields",
+        "privacy-compliance-plan"
+      ],
+      "required_artifacts": [
+        "trust boundary map",
+        "data flow map",
+        "asset/invariant list"
+      ],
+      "required_workers": [
+        "product-architect",
+        "security-orchestrator"
+      ],
+      "required_gates": [
+        "architecture review gate"
+      ],
+      "required_evidence": [
+        "boundary diagram or structured map",
+        "asset classification"
+      ],
+      "gap_or_upgrade": "Needs structured validation beyond free-form arrays.",
+      "risk_if_missing": "Security controls may not match actual data movement or authority boundaries.",
+      "applies_when": [
+        "backend",
+        "frontend/backend boundary",
+        "third-party integration",
+        "data product"
+      ],
+      "shape": "architecture_gate"
+    },
+    {
+      "pillar_key": "identity_authorization_access",
+      "display_name": "Identity, Authorization and Access Control",
+      "security_goal": "Guarantee least privilege, explicit authorization, tenant/user isolation and permission checks.",
+      "coverage_status": "partial",
+      "existing_controls": [
+        "worker permission classes",
+        "authn_authz field"
+      ],
+      "required_artifacts": [
+        "authn/authz design",
+        "permission matrix",
+        "authorization test plan"
+      ],
+      "required_workers": [
+        "backend-api-builder",
+        "appsec-owasp-specialist",
+        "security-orchestrator"
+      ],
+      "required_gates": [
+        "access-control gate"
+      ],
+      "required_evidence": [
+        "permission matrix",
+        "negative authorization tests"
+      ],
+      "gap_or_upgrade": "Needs mandatory permission matrix and abuse tests.",
+      "risk_if_missing": "Broken access control becomes a product architecture flaw.",
+      "applies_when": [
+        "user accounts",
+        "roles",
+        "admin",
+        "multi-tenant",
+        "API"
+      ],
+      "shape": "specialist_gate"
+    },
+    {
+      "pillar_key": "secrets_keys_signing",
+      "display_name": "Secrets, Keys, Signing and Custody",
+      "security_goal": "Prevent accidental exposure or misuse of secrets, keys, signing authority, funds and production credentials.",
+      "coverage_status": "strong",
+      "existing_controls": [
+        "secret-delivery-policy",
+        "worker permission classes",
+        "signer boundary",
+        "human gates"
+      ],
+      "required_artifacts": [
+        "secret delivery policy",
+        "key custody plan",
+        "signer boundary",
+        "rotation/rollback plan"
+      ],
+      "required_workers": [
+        "crypto-key-management-specialist",
+        "security-orchestrator"
+      ],
+      "required_gates": [
+        "secret access gate",
+        "funds/signing human gate"
+      ],
+      "required_evidence": [
+        "secret scan",
+        "signer boundary proof",
+        "no-secret evidence"
+      ],
+      "gap_or_upgrade": "Strong but must remain fail-closed and product-specific.",
+      "risk_if_missing": "Secrets or signing authority could leak or be misused by workers.",
+      "applies_when": [
+        "secrets",
+        "keys",
+        "signing",
+        "wallet",
+        "funds",
+        "mainnet",
+        "cloud credentials"
+      ],
+      "shape": "specialist_gate"
+    },
+    {
+      "pillar_key": "data_privacy_governance",
+      "display_name": "Data Security and Privacy Governance",
+      "security_goal": "Minimize, classify, protect, retain and delete data with privacy/security ownership.",
+      "coverage_status": "partial",
+      "existing_controls": [
+        "privacy-compliance-plan",
+        "privacy/data governance gap from process audit"
+      ],
+      "required_artifacts": [
+        "data inventory",
+        "classification",
+        "retention policy",
+        "logging redaction plan",
+        "privacy boundary"
+      ],
+      "required_workers": [
+        "appsec-owasp-specialist",
+        "cloud-infra-security-specialist",
+        "security-orchestrator"
+      ],
+      "required_gates": [
+        "privacy/data gate"
+      ],
+      "required_evidence": [
+        "data inventory",
+        "retention decision",
+        "sensitive logging check"
+      ],
+      "gap_or_upgrade": "Needs dedicated privacy/data governance specialist or stronger pack.",
+      "risk_if_missing": "Products can be technically secure while mishandling personal/sensitive data.",
+      "applies_when": [
+        "personal data",
+        "analytics",
+        "logs",
+        "AI/RAG memory",
+        "third-party data"
+      ],
+      "shape": "parallel_lane"
+    },
+    {
+      "pillar_key": "secure_coding_app_api",
+      "display_name": "Secure Coding, App and API Security",
+      "security_goal": "Apply OWASP-style secure coding, validation, output encoding, session, API and browser/mobile controls.",
+      "coverage_status": "partial",
+      "existing_controls": [
+        "codex-security",
+        "appsec-owasp-specialist",
+        "public safety scan"
+      ],
+      "required_artifacts": [
+        "secure coding checklist",
+        "API security review",
+        "input/output validation proof",
+        "session/cookie/CORS policy"
+      ],
+      "required_workers": [
+        "appsec-owasp-specialist",
+        "codex-security",
+        "frontend-builder",
+        "backend-api-builder"
+      ],
+      "required_gates": [
+        "appsec gate"
+      ],
+      "required_evidence": [
+        "SAST/review result",
+        "negative input tests",
+        "API abuse tests"
+      ],
+      "gap_or_upgrade": "Needs product-specific ASVS/API/MASVS style checklist by surface.",
+      "risk_if_missing": "Common app/API flaws slip through because tests only prove happy paths.",
+      "applies_when": [
+        "frontend",
+        "backend",
+        "API",
+        "mobile",
+        "browser",
+        "CLI/TUI with untrusted input"
+      ],
+      "shape": "specialist_gate"
+    },
+    {
+      "pillar_key": "supply_chain_build_integrity",
+      "display_name": "Supply Chain and Build Integrity",
+      "security_goal": "Protect dependencies, CI, build provenance, packages and third-party code from compromise.",
+      "coverage_status": "partial",
+      "existing_controls": [
+        "supply-chain-gate",
+        "secret_safety_scan",
+        "public_safety_scan"
+      ],
+      "required_artifacts": [
+        "dependency risk report",
+        "SBOM/provenance note",
+        "CI/build integrity proof",
+        "license/security exception record"
+      ],
+      "required_workers": [
+        "supply-chain-gate",
+        "codex-security"
+      ],
+      "required_gates": [
+        "supply-chain gate"
+      ],
+      "required_evidence": [
+        "dependency scan",
+        "lockfile review",
+        "build reproducibility note"
+      ],
+      "gap_or_upgrade": "Needs stronger SBOM/provenance/SLSA-like artifact when release risk is high.",
+      "risk_if_missing": "Compromised dependencies or build pipeline can ship trusted malware.",
+      "applies_when": [
+        "dependency change",
+        "package release",
+        "CI change",
+        "container/build artifact"
+      ],
+      "shape": "specialist_gate"
+    },
+    {
+      "pillar_key": "cloud_infra_network_hardening",
+      "display_name": "Cloud, Infrastructure and Network Hardening",
+      "security_goal": "Ensure cloud/IaC/network/DNS/storage/KMS/service accounts are least-privilege and observable.",
+      "coverage_status": "partial",
+      "existing_controls": [
+        "cloud-infra-security-specialist",
+        "release-ops-worker"
+      ],
+      "required_artifacts": [
+        "IaC review",
+        "IAM matrix",
+        "network boundary",
+        "KMS/storage policy",
+        "cost/blast-radius plan"
+      ],
+      "required_workers": [
+        "cloud-infra-security-specialist",
+        "infra-devops-builder",
+        "release-ops-worker"
+      ],
+      "required_gates": [
+        "cloud security gate",
+        "release readiness gate"
+      ],
+      "required_evidence": [
+        "IAM diff",
+        "network/storage review",
+        "rollback plan"
+      ],
+      "gap_or_upgrade": "Needs infrastructure-specific architecture packet before production deployment.",
+      "risk_if_missing": "Cloud defaults can expose data, credentials, networks or destructive permissions.",
+      "applies_when": [
+        "cloud",
+        "IaC",
+        "DNS",
+        "KMS",
+        "storage",
+        "service account",
+        "production deploy"
+      ],
+      "shape": "parallel_lane"
+    },
+    {
+      "pillar_key": "ai_agentic_security",
+      "display_name": "AI and Agentic Security",
+      "security_goal": "Secure prompts, tools, memory, RAG, model outputs, autonomy, evals and data exfiltration paths.",
+      "coverage_status": "partial",
+      "existing_controls": [
+        "agentic-ai-security-specialist",
+        "AI eval/model risk gap",
+        "worker authority contracts"
+      ],
+      "required_artifacts": [
+        "AI threat model",
+        "tool boundary map",
+        "prompt injection controls",
+        "eval/red-team plan",
+        "memory/data policy"
+      ],
+      "required_workers": [
+        "agentic-ai-security-specialist",
+        "agent-runtime-builder",
+        "skill-eval-distiller"
+      ],
+      "required_gates": [
+        "AI security gate",
+        "model risk gate"
+      ],
+      "required_evidence": [
+        "prompt injection eval",
+        "tool permission review",
+        "model/system card"
+      ],
+      "gap_or_upgrade": "Needs formal AI security/model risk packet before AI/agent release.",
+      "risk_if_missing": "Agentic products can leak data, misuse tools or fail silently under prompt injection.",
+      "applies_when": [
+        "LLM",
+        "agent",
+        "RAG",
+        "tool use",
+        "memory",
+        "autonomy",
+        "model routing"
+      ],
+      "shape": "parallel_lane"
+    },
+    {
+      "pillar_key": "solana_onchain_security",
+      "display_name": "Solana and Onchain Security",
+      "security_goal": "Route every Solana/onchain product through Solana AI Kit, signer boundaries, Quasar/Auditor path and human gates for funds/mainnet.",
+      "coverage_status": "strong",
+      "existing_controls": [
+        "solana-ai-kit-core capability pack",
+        "Solana AI Kit usage receipt",
+        "solanabr-auditor",
+        "Quasar proof",
+        "signer boundary"
+      ],
+      "required_artifacts": [
+        "Solana AI Kit usage receipt",
+        "onchain work package",
+        "Auditor result",
+        "signer boundary",
+        "Quasar proof when used"
+      ],
+      "required_workers": [
+        "solana-quasar-builder",
+        "solana-quasar-qa-engineer",
+        "solana-quasar-auditor",
+        "wallet-transaction-builder",
+        "crypto-key-management-specialist"
+      ],
+      "required_gates": [
+        "Solana AI Kit gate",
+        "Auditor gate",
+        "signer/funds/mainnet human gate"
+      ],
+      "required_evidence": [
+        "solana-ai-kit receipt",
+        "auditor evidence",
+        "devnet/local proof",
+        "no-key proof"
+      ],
+      "gap_or_upgrade": "Strong and must remain mandatory; no generic Solana executor route.",
+      "risk_if_missing": "Onchain mistakes can cause irreversible fund loss, custody failure or exploitable program logic.",
+      "applies_when": [
+        "solana",
+        "onchain",
+        "wallet",
+        "token",
+        "PDA",
+        "CPI",
+        "mainnet",
+        "funds"
+      ],
+      "shape": "capability_pack"
+    },
+    {
+      "pillar_key": "testing_fuzzing_negative_security",
+      "display_name": "Security Testing, Fuzzing and Negative Cases",
+      "security_goal": "Prove controls under malicious, boundary and failure cases, not only happy path tests.",
+      "coverage_status": "partial",
+      "existing_controls": [
+        "qa-verification-worker",
+        "test-automation-builder",
+        "remote-proof-runner"
+      ],
+      "required_artifacts": [
+        "security test matrix",
+        "negative test plan",
+        "fuzz/property test where applicable",
+        "DAST/manual review note"
+      ],
+      "required_workers": [
+        "qa-verification-worker",
+        "test-automation-builder",
+        "codex-security",
+        "remote-proof-runner"
+      ],
+      "required_gates": [
+        "security verification gate"
+      ],
+      "required_evidence": [
+        "negative tests",
+        "fuzz/property evidence",
+        "scan output"
+      ],
+      "gap_or_upgrade": "Needs explicit security test matrix by risk class and surface.",
+      "risk_if_missing": "Vulnerabilities survive because verification only checks expected behavior.",
+      "applies_when": [
+        "all security-sensitive work",
+        "parser/input",
+        "auth",
+        "onchain",
+        "AI/tool use"
+      ],
+      "shape": "specialist_gate"
+    },
+    {
+      "pillar_key": "observability_detection_incident",
+      "display_name": "Detection, Monitoring and Incident Response",
+      "security_goal": "Ship with security-relevant telemetry, alerting, incident playbook and rollback/kill switch when needed.",
+      "coverage_status": "partial",
+      "existing_controls": [
+        "detection-monitoring-worker",
+        "release-ops-worker",
+        "logging_and_detection field"
+      ],
+      "required_artifacts": [
+        "security logging plan",
+        "alert plan",
+        "incident response plan",
+        "rollback/kill-switch plan"
+      ],
+      "required_workers": [
+        "detection-monitoring-worker",
+        "release-ops-worker",
+        "security-orchestrator"
+      ],
+      "required_gates": [
+        "release readiness gate"
+      ],
+      "required_evidence": [
+        "alert mapping",
+        "redaction check",
+        "incident playbook",
+        "rollback proof"
+      ],
+      "gap_or_upgrade": "Needs stronger pre-release security observability and incident response packet.",
+      "risk_if_missing": "A secure-looking product can fail catastrophically because nobody detects or recovers.",
+      "applies_when": [
+        "production",
+        "public launch",
+        "sensitive data",
+        "money",
+        "AI system",
+        "onchain"
+      ],
+      "shape": "release_gate"
+    },
+    {
+      "pillar_key": "release_residual_risk_acceptance",
+      "display_name": "Release Security and Residual Risk Acceptance",
+      "security_goal": "Require explicit residual risk, waiver authority, owner and security release decision before launch.",
+      "coverage_status": "partial",
+      "existing_controls": [
+        "human-gate-clerk",
+        "release-ops-worker",
+        "Receipt Five"
+      ],
+      "required_artifacts": [
+        "security release packet",
+        "residual risk record",
+        "waiver/acceptance record",
+        "security owner signoff"
+      ],
+      "required_workers": [
+        "security-orchestrator",
+        "release-ops-worker",
+        "human-gate-clerk",
+        "evidence-reconciler"
+      ],
+      "required_gates": [
+        "security release gate",
+        "human waiver gate"
+      ],
+      "required_evidence": [
+        "risk acceptance record",
+        "blocking findings false or waived",
+        "Receipt Five refs"
+      ],
+      "gap_or_upgrade": "Needs residual risk acceptance as structured field for all material security risk.",
+      "risk_if_missing": "Risk can be silently accepted by drift or chat instead of durable authority.",
+      "applies_when": [
+        "release",
+        "pilot",
+        "production",
+        "R3/R4",
+        "security findings"
+      ],
+      "shape": "release_gate"
+    },
+    {
+      "pillar_key": "vulnerability_management_learnback",
+      "display_name": "Vulnerability Management and Security Learnback",
+      "security_goal": "Turn findings, incidents, near-misses and repeated mistakes into stronger controls, skills, tests and workers.",
+      "coverage_status": "partial",
+      "existing_controls": [
+        "memory-steward",
+        "skill-eval-distiller",
+        "learnback"
+      ],
+      "required_artifacts": [
+        "vulnerability lifecycle",
+        "security learnback entry",
+        "control improvement PR",
+        "regression fixture"
+      ],
+      "required_workers": [
+        "memory-steward",
+        "skill-eval-distiller",
+        "security-orchestrator"
+      ],
+      "required_gates": [
+        "learnback gate"
+      ],
+      "required_evidence": [
+        "regression test",
+        "skill/update note",
+        "control diff"
+      ],
+      "gap_or_upgrade": "Needs explicit security learnback path from finding to control improvement.",
+      "risk_if_missing": "The factory repeats security mistakes because fixes do not become durable method changes.",
+      "applies_when": [
+        "security finding",
+        "incident",
+        "near miss",
+        "repeated bug",
+        "post-launch review"
+      ],
+      "shape": "worker_obligation"
+    },
+    {
+      "pillar_key": "public_private_evidence_safety",
+      "display_name": "Public/Private Evidence Safety",
+      "security_goal": "Prevent secrets, private paths, internal notes and sensitive evidence from leaking into public artifacts.",
+      "coverage_status": "strong",
+      "existing_controls": [
+        "public_safety_scan",
+        "secret_safety_scan",
+        "context-lock private rule"
+      ],
+      "required_artifacts": [
+        "public safety result",
+        "secret scan result",
+        "redacted evidence refs"
+      ],
+      "required_workers": [
+        "public-safety-gate",
+        "supply-chain-gate"
+      ],
+      "required_gates": [
+        "public safety gate",
+        "secret scan gate"
+      ],
+      "required_evidence": [
+        "scan output",
+        "negative fixture rejection"
+      ],
+      "gap_or_upgrade": "Strong but must stay in every public publication path.",
+      "risk_if_missing": "The open-source repo can leak private data, secrets or study noise.",
+      "applies_when": [
+        "public repo change",
+        "docs",
+        "generated reports",
+        "evidence publication"
+      ],
+      "shape": "runtime_guard"
+    }
+  ],
+  "greenfield_security_policy": {
+    "secure_architecture_before_build": true,
+    "threat_model_before_build": true,
+    "trust_boundaries_before_build": true,
+    "privacy_before_data": true,
+    "secrets_before_integration": true,
+    "observability_before_release": true
+  },
+  "change_security_policy": {
+    "bug_fixes_can_trigger_security_review": true,
+    "refactors_can_trigger_security_review": true,
+    "dependency_changes_trigger_supply_chain_review": true,
+    "ai_or_agent_changes_trigger_ai_security_review": true,
+    "solana_changes_trigger_solana_ai_kit": true
+  },
+  "non_goals": [
+    "do not claim perfect security",
+    "do not treat security as late checklist",
+    "do not skip threat modeling for greenfield architecture",
+    "do not route Solana/onchain outside Solana AI Kit",
+    "do not publish private security evidence"
+  ]
+}

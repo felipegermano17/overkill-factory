@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/factory-executor-skill-ecosystem-registry.schema.json",
+  "title": "Overkill Factory Executor and Skill Ecosystem Registry",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "registry_id",
+    "purpose",
+    "public_private_boundary",
+    "demand_coverage",
+    "adaptive_capability_acquisition",
+    "executor_policy",
+    "skill_policy",
+    "non_goals"
+  ],
+  "properties": {
+    "$schema": { "const": "https://overkill-factory.dev/schemas/factory-executor-skill-ecosystem-registry.schema.json" },
+    "record_type": { "const": "factory_executor_skill_ecosystem_registry" },
+    "registry_id": { "type": "string", "minLength": 3 },
+    "purpose": { "type": "string", "minLength": 40 },
+    "public_private_boundary": { "type": "string", "minLength": 20 },
+    "demand_coverage": {
+      "type": "array",
+      "minItems": 8,
+      "items": {
+        "type": "object",
+        "required": [
+          "demand_key",
+          "display_name",
+          "demand_class",
+          "trigger_conditions",
+          "current_worker_refs",
+          "current_skill_provider_refs",
+          "executor_coverage_status",
+          "skill_coverage_status",
+          "recommendation",
+          "needed_executor_capability",
+          "needed_skill_capability",
+          "evidence_or_eval_required",
+          "risk_if_unfixed",
+          "factory_shape"
+        ],
+        "properties": {
+          "demand_key": { "type": "string", "minLength": 3 },
+          "display_name": { "type": "string", "minLength": 3 },
+          "demand_class": { "type": "string", "minLength": 3 },
+          "trigger_conditions": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 3 } },
+          "current_worker_refs": { "type": "array", "items": { "type": "string", "minLength": 3 }, "uniqueItems": true },
+          "current_skill_provider_refs": { "type": "array", "items": { "type": "string", "minLength": 3 }, "uniqueItems": true },
+          "executor_coverage_status": { "enum": ["ready", "partial", "missing", "stale", "needs_upgrade", "duplicate_or_ambiguous"] },
+          "skill_coverage_status": { "enum": ["ready", "partial", "missing", "stale", "needs_upgrade", "duplicate_or_ambiguous"] },
+          "recommendation": { "type": "string", "minLength": 10 },
+          "needed_executor_capability": { "type": "string", "minLength": 10 },
+          "needed_skill_capability": { "type": "string", "minLength": 10 },
+          "evidence_or_eval_required": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 3 } },
+          "risk_if_unfixed": { "type": "string", "minLength": 20 },
+          "factory_shape": { "enum": ["worker_profile", "skill_provider", "capability_acquisition_lane", "gate_worker", "parallel_lane", "reviewer_worker", "domain_pack", "template_plus_worker"] }
+        },
+        "additionalProperties": false
+      }
+    },
+    "adaptive_capability_acquisition": {
+      "type": "object",
+      "required": [
+        "enabled",
+        "trusted_provider_search_required",
+        "agent_and_skill_symmetry_required",
+        "candidate_eval_required",
+        "promotion_requires_smoke_and_eval",
+        "demotion_required_on_repeated_failure",
+        "modular_adaptive_demand_routing_preserved"
+      ],
+      "properties": {
+        "enabled": { "const": true },
+        "trusted_provider_search_required": { "const": true },
+        "agent_and_skill_symmetry_required": { "const": true },
+        "candidate_eval_required": { "const": true },
+        "promotion_requires_smoke_and_eval": { "const": true },
+        "demotion_required_on_repeated_failure": { "const": true },
+        "modular_adaptive_demand_routing_preserved": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "executor_policy": {
+      "type": "object",
+      "required": ["agents_from_operational_contracts_not_vibes", "reviewer_executor_separation", "fresh_readiness_required", "least_privilege_tools"],
+      "properties": {
+        "agents_from_operational_contracts_not_vibes": { "const": true },
+        "reviewer_executor_separation": { "const": true },
+        "fresh_readiness_required": { "const": true },
+        "least_privilege_tools": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "skill_policy": {
+      "type": "object",
+      "required": ["skills_are_capability_not_authority", "trusted_reference_repos_only", "eval_before_promotion", "skill_ref_resolution_required"],
+      "properties": {
+        "skills_are_capability_not_authority": { "const": true },
+        "trusted_reference_repos_only": { "const": true },
+        "eval_before_promotion": { "const": true },
+        "skill_ref_resolution_required": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "non_goals": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 3 }, "uniqueItems": true }
+  },
+  "additionalProperties": false
+}

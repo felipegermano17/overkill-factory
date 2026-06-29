@@ -33,7 +33,11 @@
     "docs/reference/factory-kernel-reference.md",
     "scripts/generate_factory_reference_docs.py",
     "docs/operations/telegram-operator-experience.md",
-    "docs/architecture/context-spine.md"
+    "docs/architecture/context-spine.md",
+    "README.md",
+    "docs/reference/public-map.md",
+    "templates/factory-v3-release-readiness.json",
+    "scripts/factory_v3_release_readiness_audit.py"
   ],
   "published_check_policy": {
     "default_status_without_network": "not_checked",

@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/factory-github-issue-pattern-audit-registry.schema.json",
+  "title": "Overkill Factory GitHub Issue Pattern Audit Registry",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "registry_id",
+    "created_at",
+    "repo",
+    "source_policy",
+    "issue_snapshot_summary",
+    "issue_pattern_themes",
+    "master_plan_requirements",
+    "os_mapping",
+    "acceptance"
+  ],
+  "properties": {
+    "$schema": {"const": "https://overkill-factory.dev/schemas/factory-github-issue-pattern-audit-registry.schema.json"},
+    "record_type": {"const": "factory_github_issue_pattern_audit_registry"},
+    "registry_id": {"type": "string", "minLength": 3},
+    "created_at": {"type": "string", "minLength": 10},
+    "repo": {"type": "string", "minLength": 3},
+    "source_policy": {
+      "type": "object",
+      "required": ["live_github_issues_inspected", "raw_issue_snapshot_private", "raw_issue_bodies_committed", "public_registry_uses_representative_refs_only"],
+      "properties": {
+        "live_github_issues_inspected": {"type": "boolean"},
+        "raw_issue_snapshot_private": {"type": "boolean"},
+        "raw_issue_bodies_committed": {"type": "boolean"},
+        "public_registry_uses_representative_refs_only": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "issue_snapshot_summary": {
+      "type": "object",
+      "required": ["issue_count", "open_count", "closed_count", "first_issue_number", "last_issue_number", "fetched_snapshot_ref", "open_issues"],
+      "properties": {
+        "issue_count": {"type": "integer", "minimum": 1},
+        "open_count": {"type": "integer", "minimum": 0},
+        "closed_count": {"type": "integer", "minimum": 0},
+        "first_issue_number": {"type": "integer", "minimum": 1},
+        "last_issue_number": {"type": "integer", "minimum": 1},
+        "fetched_snapshot_ref": {"type": "string", "minLength": 3},
+        "open_issues": {"type": "array", "items": {"$ref": "#/$defs/issue_ref"}}
+      },
+      "additionalProperties": false
+    },
+    "issue_pattern_themes": {
+      "type": "array",
+      "minItems": 10,
+      "items": {
+        "type": "object",
+        "required": ["theme_key", "name", "issue_count", "severity", "pattern", "user_harm", "root_cause", "must_never_happen_again", "anti_regression_requirements", "master_plan_implication", "representative_issues"],
+        "properties": {
+          "theme_key": {"type": "string", "minLength": 3},
+          "name": {"type": "string", "minLength": 3},
+          "issue_count": {"type": "integer", "minimum": 1},
+          "severity": {"enum": ["P0", "P1", "P2"]},
+          "pattern": {"type": "string", "minLength": 10},
+          "user_harm": {"type": "string", "minLength": 10},
+          "root_cause": {"type": "string", "minLength": 10},
+          "must_never_happen_again": {"type": "boolean"},
+          "anti_regression_requirements": {"type": "array", "minItems": 2, "items": {"type": "string", "minLength": 3}},
+          "master_plan_implication": {"type": "string", "minLength": 10},
+          "representative_issues": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/issue_ref"}}
+        },
+        "additionalProperties": false
+      }
+    },
+    "master_plan_requirements": {"type": "array", "minItems": 10, "items": {"type": "string", "minLength": 8}},
+    "os_mapping": {
+      "type": "object",
+      "additionalProperties": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 3}}
+    },
+    "acceptance": {
+      "type": "object",
+      "required": ["audit_created", "all_issue_history_summarized", "user_experience_patterns_preserved", "master_plan_next", "evidence_refs"],
+      "properties": {
+        "audit_created": {"type": "boolean"},
+        "all_issue_history_summarized": {"type": "boolean"},
+        "user_experience_patterns_preserved": {"type": "boolean"},
+        "master_plan_next": {"type": "boolean"},
+        "evidence_refs": {"type": "array", "minItems": 2, "items": {"type": "string", "minLength": 3}}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "issue_ref": {
+      "type": "object",
+      "required": ["number", "title", "url", "state"],
+      "properties": {
+        "number": {"type": "integer", "minimum": 1},
+        "title": {"type": "string", "minLength": 3},
+        "url": {"type": "string", "minLength": 10},
+        "state": {"enum": ["open", "closed"]}
+      },
+      "additionalProperties": false
+    }
+  }
+}

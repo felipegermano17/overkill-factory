@@ -1,0 +1,503 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-executor-skill-ecosystem-registry.schema.json",
+  "record_type": "factory_executor_skill_ecosystem_registry",
+  "registry_id": "factory-executor-skill-ecosystem-v1",
+  "purpose": "Audit whether the factory has the right workers/agents and skill providers to execute world-class product processes, preserving modular adaptive capability acquisition.",
+  "public_private_boundary": "Productized public registry only; raw studies, chat context, private runtime smoke logs and local paths stay private.",
+  "demand_coverage": [
+    {
+      "demand_key": "opportunity_framing",
+      "display_name": "Opportunity Framing",
+      "demand_class": "product_strategy",
+      "trigger_conditions": [
+        "new product",
+        "ambiguous value proposition",
+        "major product bet"
+      ],
+      "current_worker_refs": [
+        "product-sot-planner"
+      ],
+      "current_skill_provider_refs": [
+        "overkill-factory"
+      ],
+      "executor_coverage_status": "partial",
+      "skill_coverage_status": "partial",
+      "recommendation": "upgrade product-sot-planner or add opportunity strategist capability",
+      "needed_executor_capability": "worker can produce opportunity brief, JTBD, success metric and non-goals",
+      "needed_skill_capability": "skill/process pack for opportunity framing and JTBD synthesis",
+      "evidence_or_eval_required": [
+        "opportunity brief smoke",
+        "source-to-opportunity traceability eval"
+      ],
+      "risk_if_unfixed": "Factory can execute a product without proving the opportunity is real.",
+      "factory_shape": "template_plus_worker"
+    },
+    {
+      "demand_key": "prd_grade_requirements",
+      "display_name": "PRD-grade Requirements",
+      "demand_class": "product_definition",
+      "trigger_conditions": [
+        "new product",
+        "material feature",
+        "cross-functional scope"
+      ],
+      "current_worker_refs": [
+        "product-sot-planner"
+      ],
+      "current_skill_provider_refs": [
+        "overkill-factory"
+      ],
+      "executor_coverage_status": "partial",
+      "skill_coverage_status": "partial",
+      "recommendation": "strengthen Product SOT planner or add PRD/requirements architect",
+      "needed_executor_capability": "worker can produce PRD-grade functional/non-functional requirements and acceptance criteria",
+      "needed_skill_capability": "PRD/spec-first skill pack with examples and anti-shallow evals",
+      "evidence_or_eval_required": [
+        "PRD completeness eval",
+        "acceptance criteria testability eval"
+      ],
+      "risk_if_unfixed": "Product SOT can remain a summary instead of a build-quality requirements contract.",
+      "factory_shape": "worker_profile"
+    },
+    {
+      "demand_key": "research_evidence_matrix",
+      "display_name": "Research Evidence Matrix",
+      "demand_class": "discovery_research",
+      "trigger_conditions": [
+        "uncertainty",
+        "source conflict",
+        "market/user unknown"
+      ],
+      "current_worker_refs": [
+        "source-ledger-worker",
+        "product-sot-planner"
+      ],
+      "current_skill_provider_refs": [
+        "overkill-factory"
+      ],
+      "executor_coverage_status": "partial",
+      "skill_coverage_status": "partial",
+      "recommendation": "add research/evidence matrix obligations before SOT freeze",
+      "needed_executor_capability": "worker can create research plan, confidence levels and assumption register",
+      "needed_skill_capability": "research synthesis skill pack with evidence grading",
+      "evidence_or_eval_required": [
+        "conflicting-source eval",
+        "assumption-resolution eval"
+      ],
+      "risk_if_unfixed": "Weak evidence can become frozen scope.",
+      "factory_shape": "template_plus_worker"
+    },
+    {
+      "demand_key": "user_story_mapping",
+      "display_name": "User Story Mapping and Flow Model",
+      "demand_class": "ux_requirements",
+      "trigger_conditions": [
+        "user journey",
+        "workflow product",
+        "multi-role flow"
+      ],
+      "current_worker_refs": [
+        "product-face",
+        "product-sot-planner"
+      ],
+      "current_skill_provider_refs": [
+        "browser"
+      ],
+      "executor_coverage_status": "missing",
+      "skill_coverage_status": "missing",
+      "recommendation": "add flow/story mapping executor or Product Face subcapability",
+      "needed_executor_capability": "worker can map journeys, states, handoffs and edge paths",
+      "needed_skill_capability": "story mapping / service blueprint skill source and templates",
+      "evidence_or_eval_required": [
+        "flow coverage eval",
+        "edge-state screenshot/proof eval"
+      ],
+      "risk_if_unfixed": "Individual requirements can pass while the real journey is broken.",
+      "factory_shape": "parallel_lane"
+    },
+    {
+      "demand_key": "system_design_review",
+      "display_name": "System Design Review",
+      "demand_class": "architecture_engineering",
+      "trigger_conditions": [
+        "backend",
+        "integration",
+        "data model",
+        "scale",
+        "security/cost risk"
+      ],
+      "current_worker_refs": [
+        "product-architect",
+        "backend-api-builder",
+        "data-persistence-builder"
+      ],
+      "current_skill_provider_refs": [
+        "overkill-factory"
+      ],
+      "executor_coverage_status": "partial",
+      "skill_coverage_status": "partial",
+      "recommendation": "add system design packet and review gate capability",
+      "needed_executor_capability": "worker can produce concrete system design packet, APIs, data model, tradeoffs and ADRs",
+      "needed_skill_capability": "system design/RFC/ADR skill pack with review rubric",
+      "evidence_or_eval_required": [
+        "system design packet eval",
+        "tradeoff/ADR completeness eval"
+      ],
+      "risk_if_unfixed": "Architecture remains abstract and misses executable technical decisions.",
+      "factory_shape": "parallel_lane"
+    },
+    {
+      "demand_key": "design_review_accessibility",
+      "display_name": "Design Review and Accessibility",
+      "demand_class": "ux_product_experience",
+      "trigger_conditions": [
+        "human-facing UI",
+        "onboarding/docs surface",
+        "CLI/TUI/agentic UI"
+      ],
+      "current_worker_refs": [
+        "product-face",
+        "frontend-builder"
+      ],
+      "current_skill_provider_refs": [
+        "browser"
+      ],
+      "executor_coverage_status": "partial",
+      "skill_coverage_status": "partial",
+      "recommendation": "upgrade Product Face with design review/accessibility gate",
+      "needed_executor_capability": "worker can review visual quality, states, copy, accessibility and design-system consistency",
+      "needed_skill_capability": "design review/WCAG/design-system skill pack",
+      "evidence_or_eval_required": [
+        "accessibility eval",
+        "state matrix screenshot eval"
+      ],
+      "risk_if_unfixed": "Product may work but feel generic, confusing or inaccessible.",
+      "factory_shape": "parallel_lane"
+    },
+    {
+      "demand_key": "product_analytics",
+      "display_name": "Product Analytics Plan",
+      "demand_class": "analytics_learning",
+      "trigger_conditions": [
+        "public product",
+        "launch",
+        "learning from usage",
+        "growth goal"
+      ],
+      "current_worker_refs": [],
+      "current_skill_provider_refs": [],
+      "executor_coverage_status": "missing",
+      "skill_coverage_status": "missing",
+      "recommendation": "add analytics planner worker and skill/provider path",
+      "needed_executor_capability": "worker can define event taxonomy, funnels, dashboard spec and decision metrics",
+      "needed_skill_capability": "product analytics/funnel/north-star skill pack from trusted provider",
+      "evidence_or_eval_required": [
+        "analytics plan fixture eval",
+        "privacy-safe event taxonomy eval"
+      ],
+      "risk_if_unfixed": "Factory cannot learn whether shipped products succeed.",
+      "factory_shape": "capability_acquisition_lane"
+    },
+    {
+      "demand_key": "go_to_market_distribution",
+      "display_name": "Go-To-Market and Distribution Review",
+      "demand_class": "growth_distribution",
+      "trigger_conditions": [
+        "public launch",
+        "open-source release",
+        "landing/product distribution"
+      ],
+      "current_worker_refs": [],
+      "current_skill_provider_refs": [],
+      "executor_coverage_status": "missing",
+      "skill_coverage_status": "missing",
+      "recommendation": "add GTM/distribution reviewer capability",
+      "needed_executor_capability": "worker can define target segment, positioning, channel, activation and launch metric",
+      "needed_skill_capability": "GTM/positioning/growth loop skill pack from trusted provider",
+      "evidence_or_eval_required": [
+        "GTM packet eval",
+        "activation path eval"
+      ],
+      "risk_if_unfixed": "The factory can build excellent products nobody understands or adopts.",
+      "factory_shape": "capability_acquisition_lane"
+    },
+    {
+      "demand_key": "experiment_design",
+      "display_name": "Experiment Design",
+      "demand_class": "discovery_learning",
+      "trigger_conditions": [
+        "uncertain demand",
+        "uncertain UX",
+        "uncertain technical approach"
+      ],
+      "current_worker_refs": [
+        "product-sot-planner"
+      ],
+      "current_skill_provider_refs": [
+        "overkill-factory"
+      ],
+      "executor_coverage_status": "missing",
+      "skill_coverage_status": "partial",
+      "recommendation": "add experiment designer or obligation before overbuilding",
+      "needed_executor_capability": "worker can create falsifiable experiment, decision metric, duration/sample and risk bound",
+      "needed_skill_capability": "Lean experiment/assumption testing skill pack",
+      "evidence_or_eval_required": [
+        "hypothesis falsifiability eval",
+        "decision-rule eval"
+      ],
+      "risk_if_unfixed": "Factory may build full product before testing the riskiest assumption.",
+      "factory_shape": "template_plus_worker"
+    },
+    {
+      "demand_key": "qa_strategy_matrix",
+      "display_name": "QA Strategy and Test Matrix",
+      "demand_class": "quality_engineering",
+      "trigger_conditions": [
+        "code delivery",
+        "multi-surface product",
+        "regression risk"
+      ],
+      "current_worker_refs": [
+        "qa-verification-worker",
+        "test-automation-builder"
+      ],
+      "current_skill_provider_refs": [
+        "qa-verification",
+        "test-automation"
+      ],
+      "executor_coverage_status": "partial",
+      "skill_coverage_status": "partial",
+      "recommendation": "upgrade QA into risk-based strategy, not only verification",
+      "needed_executor_capability": "worker can produce test matrix by risk and evidence type",
+      "needed_skill_capability": "risk-based QA/test strategy skill pack",
+      "evidence_or_eval_required": [
+        "QA matrix completeness eval",
+        "risk-to-test traceability eval"
+      ],
+      "risk_if_unfixed": "Tests remain ad hoc and miss product-critical failures.",
+      "factory_shape": "gate_worker"
+    },
+    {
+      "demand_key": "release_readiness",
+      "display_name": "Release Readiness Review",
+      "demand_class": "release_operations",
+      "trigger_conditions": [
+        "release",
+        "deploy",
+        "migration",
+        "public product"
+      ],
+      "current_worker_refs": [
+        "release-ops-worker",
+        "detection-monitoring-worker"
+      ],
+      "current_skill_provider_refs": [
+        "release-ops",
+        "detection-monitoring"
+      ],
+      "executor_coverage_status": "partial",
+      "skill_coverage_status": "partial",
+      "recommendation": "strengthen release ops worker with readiness packet",
+      "needed_executor_capability": "worker can verify rollback, monitoring, support, changelog and owner",
+      "needed_skill_capability": "release readiness/SRE operational review skill pack",
+      "evidence_or_eval_required": [
+        "release readiness smoke",
+        "rollback/monitoring proof eval"
+      ],
+      "risk_if_unfixed": "Product ships without operational safety or support readiness.",
+      "factory_shape": "gate_worker"
+    },
+    {
+      "demand_key": "post_launch_review",
+      "display_name": "Post-Launch Review",
+      "demand_class": "learning_operations",
+      "trigger_conditions": [
+        "pilot",
+        "release",
+        "production monitoring"
+      ],
+      "current_worker_refs": [
+        "release-ops-worker",
+        "memory-steward",
+        "skill-eval-distiller"
+      ],
+      "current_skill_provider_refs": [
+        "release-ops",
+        "memory-steward",
+        "skill-eval"
+      ],
+      "executor_coverage_status": "partial",
+      "skill_coverage_status": "partial",
+      "recommendation": "add post-launch review as learnback executor obligation",
+      "needed_executor_capability": "worker can compare metrics/feedback/bugs to success criteria and create method updates",
+      "needed_skill_capability": "post-launch review and learnback skill pack",
+      "evidence_or_eval_required": [
+        "post-launch receipt eval",
+        "method update eval"
+      ],
+      "risk_if_unfixed": "Learnback stays internal and misses real-world outcomes.",
+      "factory_shape": "reviewer_worker"
+    },
+    {
+      "demand_key": "privacy_data_governance",
+      "display_name": "Privacy and Data Governance Review",
+      "demand_class": "security_privacy",
+      "trigger_conditions": [
+        "personal data",
+        "analytics",
+        "AI/RAG",
+        "third-party integration"
+      ],
+      "current_worker_refs": [
+        "security-orchestrator",
+        "appsec-owasp-specialist",
+        "cloud-infra-security-specialist"
+      ],
+      "current_skill_provider_refs": [
+        "appsec-owasp",
+        "agentic-ai-security"
+      ],
+      "executor_coverage_status": "partial",
+      "skill_coverage_status": "missing",
+      "recommendation": "add data governance/privacy specialist or pack",
+      "needed_executor_capability": "worker can map data inventory, retention, access, privacy boundary and consent/basis",
+      "needed_skill_capability": "privacy/data governance skill pack and checklist",
+      "evidence_or_eval_required": [
+        "data inventory eval",
+        "privacy boundary eval"
+      ],
+      "risk_if_unfixed": "Secure implementation can still mishandle data governance and privacy.",
+      "factory_shape": "parallel_lane"
+    },
+    {
+      "demand_key": "ai_eval_model_risk",
+      "display_name": "AI Eval and Model Risk Review",
+      "demand_class": "ai_data_evaluation",
+      "trigger_conditions": [
+        "LLM/agent/RAG/model feature",
+        "autonomy",
+        "model routing"
+      ],
+      "current_worker_refs": [
+        "agent-runtime-builder",
+        "agentic-ai-security-specialist",
+        "skill-eval-distiller"
+      ],
+      "current_skill_provider_refs": [
+        "agentic-ai-security",
+        "skill-eval"
+      ],
+      "executor_coverage_status": "partial",
+      "skill_coverage_status": "partial",
+      "recommendation": "add AI eval/model risk executor obligations",
+      "needed_executor_capability": "worker can produce eval plan, golden cases, failure taxonomy, red-team and model/system card",
+      "needed_skill_capability": "AI eval/RAG eval/model risk skill pack",
+      "evidence_or_eval_required": [
+        "golden-case eval",
+        "model risk review eval",
+        "red-team fixture eval"
+      ],
+      "risk_if_unfixed": "AI/agent features can demo well and fail silently or unsafely.",
+      "factory_shape": "parallel_lane"
+    },
+    {
+      "demand_key": "solana_domain_execution",
+      "display_name": "Solana Domain Execution via Solana AI Kit",
+      "demand_class": "solana_onchain_domain",
+      "trigger_conditions": [
+        "Solana surface",
+        "onchain work",
+        "wallet transaction",
+        "PDA/CPI/account model",
+        "SPL token or Token-2022",
+        "DeFi/NFT/Metaplex/Jupiter/Orca/Raydium/Helius integration"
+      ],
+      "current_worker_refs": [
+        "solana-quasar-builder",
+        "solana-quasar-qa-engineer",
+        "wallet-transaction-builder",
+        "solana-quasar-auditor",
+        "crypto-key-management-specialist",
+        "security-orchestrator",
+        "codex-security"
+      ],
+      "current_skill_provider_refs": [
+        "solana-ai-kit",
+        "solanabr-auditor"
+      ],
+      "executor_coverage_status": "ready",
+      "skill_coverage_status": "ready",
+      "recommendation": "keep Solana AI Kit as the mandatory official domain brain for every Solana/onchain planning or execution path; do not route Solana execution to generic or external non-Solana-AI-Kit agents.",
+      "needed_executor_capability": "Workers must execute Solana tasks only after the Solana AI Kit core pack/domain-brain provider is loaded and recorded, with signer, funds, mainnet and human gates still overriding provider guidance.",
+      "needed_skill_capability": "Solana AI Kit from solanabr/solana-ai-kit remains the mandatory pinned provider for Solana domain knowledge, agents, commands, MCP guidance, Anchor/Pinocchio/Unity/Mobile/security rules and usage receipts.",
+      "evidence_or_eval_required": [
+        "Solana AI Kit usage receipt",
+        "solana-ai-kit-core capability pack activation",
+        "onchain work package",
+        "signer boundary",
+        "Auditor result for R3/R4/security/onchain risk",
+        "Quasar proof when Quasar lane is used"
+      ],
+      "risk_if_unfixed": "Generic agents can make unsafe Solana assumptions, skip signer boundaries, ignore ecosystem-specific guidance or execute onchain work without the approved Solana domain brain.",
+      "factory_shape": "domain_pack"
+    },
+    {
+      "demand_key": "capability_acquisition_system",
+      "display_name": "Capability Acquisition System",
+      "demand_class": "adaptive_modular_factory",
+      "trigger_conditions": [
+        "demand lacks ready worker",
+        "demand lacks ready skill",
+        "new technology/domain"
+      ],
+      "current_worker_refs": [
+        "factory-orchestrator",
+        "skill-eval-distiller",
+        "memory-steward"
+      ],
+      "current_skill_provider_refs": [
+        "overkill-factory",
+        "skill-eval"
+      ],
+      "executor_coverage_status": "partial",
+      "skill_coverage_status": "partial",
+      "recommendation": "harden acquisition lane with candidate search, eval, promotion and demotion rules",
+      "needed_executor_capability": "orchestrator can trigger acquisition without treating missing capability as immediate human blocker",
+      "needed_skill_capability": "trusted provider search plus candidate testing protocol for agents and skills",
+      "evidence_or_eval_required": [
+        "candidate acquisition fixture eval",
+        "promotion/demotion policy eval",
+        "trusted-provider-only eval"
+      ],
+      "risk_if_unfixed": "Factory loses modular adaptive promise when new demands lack good executors or skills.",
+      "factory_shape": "capability_acquisition_lane"
+    }
+  ],
+  "adaptive_capability_acquisition": {
+    "enabled": true,
+    "trusted_provider_search_required": true,
+    "agent_and_skill_symmetry_required": true,
+    "candidate_eval_required": true,
+    "promotion_requires_smoke_and_eval": true,
+    "demotion_required_on_repeated_failure": true,
+    "modular_adaptive_demand_routing_preserved": true
+  },
+  "executor_policy": {
+    "agents_from_operational_contracts_not_vibes": true,
+    "reviewer_executor_separation": true,
+    "fresh_readiness_required": true,
+    "least_privilege_tools": true
+  },
+  "skill_policy": {
+    "skills_are_capability_not_authority": true,
+    "trusted_reference_repos_only": true,
+    "eval_before_promotion": true,
+    "skill_ref_resolution_required": true
+  },
+  "non_goals": [
+    "do not create agents from vibes",
+    "do not turn skills into route authority",
+    "do not publish raw studies or private runtime evidence",
+    "do not abandon modular adaptive demand routing"
+  ]
+}

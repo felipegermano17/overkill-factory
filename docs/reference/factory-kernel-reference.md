@@ -36,8 +36,8 @@ Done without evidence is only a claim. Receipt Five, review, runtime state and p
 | Hermes profile bindings | 40 | `agents/hermes-profile-bindings.public.json` |
 | Operating systems | 17 | `templates/factory-operating-system-registry.json` |
 | Method engines | 8 | `templates/method-engine-registry.json` |
-| JSON schemas | 228 | `schemas/*.json` |
-| Templates | 141 | `templates/*` |
+| JSON schemas | 240 | `schemas/*.json` |
+| Templates | 153 | `templates/*` |
 | Public surfaces | 19 | `docs/public-surface.manifest.json` |
 
 ## Factory Phases
@@ -251,17 +251,25 @@ These are the public JSON schemas the factory exposes. They are not decoration; 
 - `schemas/factory-bridge-run.schema.json`
 - `schemas/factory-bridge-source-envelope.schema.json`
 - `schemas/factory-bridge-start-request.schema.json`
+- `schemas/factory-canonical-frontier-policy.schema.json`
 - `schemas/factory-card.schema.json`
 - `schemas/factory-command.schema.json`
 - `schemas/factory-completion-audit.schema.json`
 - `schemas/factory-decision-outbox.schema.json`
 - `schemas/factory-doctor-result.schema.json`
+- `schemas/factory-executor-skill-ecosystem-registry.schema.json`
+- `schemas/factory-github-issue-pattern-audit-registry.schema.json`
 - `schemas/factory-help.schema.json`
 - `schemas/factory-improvement-issue-candidate.schema.json`
 - `schemas/factory-learning-proposal.schema.json`
+- `schemas/factory-manager-agent-freshness-policy.schema.json`
+- `schemas/factory-master-update-plan.schema.json`
 - `schemas/factory-maturity-scorecard.schema.json`
+- `schemas/factory-method-excellence-registry.schema.json`
 - `schemas/factory-operating-system-registry.schema.json`
 - `schemas/factory-operating-system-scorecard.schema.json`
+- `schemas/factory-operator-ui-ux-excellence-registry.schema.json`
+- `schemas/factory-os-excellence-audit-registry.schema.json`
 - `schemas/factory-phase-engine-state.schema.json`
 - `schemas/factory-phase-graph.schema.json`
 - `schemas/factory-phase-lock.schema.json`
@@ -274,17 +282,21 @@ These are the public JSON schemas the factory exposes. They are not decoration; 
 - `schemas/factory-run-event.schema.json`
 - `schemas/factory-run-plan.schema.json`
 - `schemas/factory-run.schema.json`
+- `schemas/factory-runtime-truth-spine.schema.json`
 - `schemas/factory-sdlc-feedback-loop.schema.json`
 - `schemas/factory-sdlc-lifecycle-state.schema.json`
+- `schemas/factory-security-excellence-registry.schema.json`
 - `schemas/factory-signal-coverage-scorecard.schema.json`
 - `schemas/factory-start-conversation.schema.json`
 - `schemas/factory-status-snapshot.schema.json`
 - `schemas/factory-truth-packet.schema.json`
 - `schemas/factory-v1-completion-gate.schema.json`
 - `schemas/factory-v2-readiness-claim.schema.json`
+- `schemas/factory-v3-release-readiness.schema.json`
 - `schemas/factory-vfinal-provider-model-audit.schema.json`
 - `schemas/factory-workflow-catalog.schema.json`
 - `schemas/factory-workflow-compiled-plan.schema.json`
+- `schemas/factory-world-class-process-registry.schema.json`
 - `schemas/full-product-run-manifest.schema.json`
 - `schemas/full-product-sot-scope-coverage.schema.json`
 - `schemas/full-product-worker-graph.schema.json`
@@ -470,12 +482,20 @@ Templates are starter records paired with schemas. They are examples of valid sh
 - `templates/factory-bridge-run.json`
 - `templates/factory-bridge-source-envelope.json`
 - `templates/factory-bridge-start-request.json`
+- `templates/factory-canonical-frontier-policy.json`
 - `templates/factory-card.json`
 - `templates/factory-command.json`
 - `templates/factory-decision-outbox.json`
+- `templates/factory-executor-skill-ecosystem-registry.json`
+- `templates/factory-github-issue-pattern-audit-registry.json`
 - `templates/factory-learning-proposal.json`
+- `templates/factory-manager-agent-freshness-policy.json`
+- `templates/factory-master-update-plan.json`
 - `templates/factory-maturity-scorecard.json`
+- `templates/factory-method-excellence-registry.json`
 - `templates/factory-operating-system-registry.json`
+- `templates/factory-operator-ui-ux-excellence-registry.json`
+- `templates/factory-os-excellence-audit-registry.json`
 - `templates/factory-phase-engine-state.json`
 - `templates/factory-phase-graph.json`
 - `templates/factory-promotion-packet.json`
@@ -484,13 +504,17 @@ Templates are starter records paired with schemas. They are examples of valid sh
 - `templates/factory-run-event.json`
 - `templates/factory-run-plan.json`
 - `templates/factory-run.json`
+- `templates/factory-runtime-truth-spine.json`
 - `templates/factory-sdlc-feedback-loop.json`
 - `templates/factory-sdlc-lifecycle-state.json`
+- `templates/factory-security-excellence-registry.json`
 - `templates/factory-start-conversation.json`
 - `templates/factory-status-snapshot.json`
 - `templates/factory-v1-completion-gate.json`
 - `templates/factory-v2-readiness-claim.json`
+- `templates/factory-v3-release-readiness.json`
 - `templates/factory-workflow-compiled-plan.json`
+- `templates/factory-world-class-process-registry.json`
 - `templates/full-product-run-manifest.json`
 - `templates/full-product-sot-scope-coverage.json`
 - `templates/hermes-blocked-first-protocol-receipt.json`

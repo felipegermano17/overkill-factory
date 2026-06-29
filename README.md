@@ -12,6 +12,9 @@ It exists for operators who want agents to work with speed without letting chat,
 enthusiasm or a partial demo become the source of truth.
 
 Public map:
+`docs/reference/public-map.md`
+
+The older visual map remains available as a supporting artifact:
 https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.3.html
 
 ## What It Is Technologically

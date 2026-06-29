@@ -1,0 +1,62 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-manager-agent-freshness-policy.schema.json",
+  "record_type": "factory_manager_agent_freshness_policy",
+  "policy_id": "factory-manager-agent-freshness-v1",
+  "created_at": "2026-06-29T00:00:00Z",
+  "freshness_gate": {
+    "required_for_every_factory_change": true,
+    "required_layers": [
+      "manager_profile",
+      "agent_profiles",
+      "agent_bindings",
+      "skills",
+      "configs",
+      "runtime_contracts",
+      "operator_interface_profile"
+    ],
+    "affected_agent_policy": "Every factory change must identify affected gerente/worker profiles and prove their skills, configs and bindings point to current factory contracts before E2E or release."
+  },
+  "manager_contract": {
+    "manager_profile": "overkill-factory-gerente",
+    "manager_may_replace_factory_code": false,
+    "must_call_current_factory_contracts": true,
+    "required_factory_audits": [
+      "factory_master_update_plan_audit",
+      "factory_runtime_truth_spine_audit",
+      "factory_canonical_frontier_audit",
+      "factory_manager_agent_freshness_audit"
+    ],
+    "forbidden_patterns": [
+      "manager prompt attempts to be the factory",
+      "manager uses stale skills/configs/bindings",
+      "worker contacts operator directly",
+      "operator must interpret raw Kanban state",
+      "factory change ships without profile freshness smoke"
+    ]
+  },
+  "operator_bridge_policy": {
+    "single_human_facing_profile": "overkill-factory-gerente",
+    "direct_worker_operator_contact_allowed": false,
+    "operator_polling_kanban_required": false
+  },
+  "freshness_smoke": {
+    "required": true,
+    "proves": [
+      "gerente profile references the current overkill-factory skill",
+      "gerente reads current factory contracts instead of recreating factory logic",
+      "affected worker bindings reference current result schemas and receipt fields",
+      "operator interface routes human contact through gerente only"
+    ],
+    "commands": [
+      "python scripts/factory_manager_agent_freshness_audit.py --out .tmp/factory-manager-agent-freshness-audit.json --markdown .tmp/factory-manager-agent-freshness-audit.md",
+      "python scripts/validate_worker_profiles.py",
+      "python scripts/validate_public_json_artifacts.py"
+    ]
+  },
+  "acceptance": {
+    "manager_current": true,
+    "agents_current": true,
+    "manager_uses_factory_code": true,
+    "manager_only_bridge": true
+  }
+}

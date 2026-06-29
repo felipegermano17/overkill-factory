@@ -1,0 +1,577 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-master-update-plan.schema.json",
+  "record_type": "factory_master_update_plan",
+  "plan_id": "overkill-factory-v3-master-update-plan",
+  "created_at": "2026-06-29T00:00:00Z",
+  "release_target": "V3",
+  "goal": "Transform the factory from strong contracts into a Hermes-first, Kanban-first product operating system that runs fluently through gerente, proves work with real evidence and presents a professional V3 open-source surface.",
+  "principles": {
+    "hermes_first": true,
+    "kanban_first": true,
+    "no_mini_hermes": true,
+    "factory_code_scope": [
+      "method",
+      "gates",
+      "rules",
+      "processes",
+      "audits",
+      "contracts",
+      "schemas",
+      "validations",
+      "product-specific controls"
+    ],
+    "manager_agent_freshness_required": true,
+    "public_github_v3_required": true
+  },
+  "runtime_boundary": {
+    "hermes_kanban_must_own": [
+      "runtime state",
+      "task queues",
+      "board graph",
+      "worker dispatch",
+      "task lifecycle",
+      "typed blocks",
+      "session orchestration"
+    ],
+    "factory_must_not_own": [
+      "scheduler",
+      "queue",
+      "board",
+      "dispatch",
+      "task lifecycle",
+      "parallel runtime",
+      "mini Hermes"
+    ],
+    "factory_may_own": [
+      "method",
+      "gate",
+      "rule",
+      "audit",
+      "contract",
+      "schema",
+      "validation",
+      "quality criteria",
+      "process policy"
+    ]
+  },
+  "audit_inputs": [
+    {
+      "id": "swiss_watch_audit",
+      "name": "Swiss Watch Reliability Audit",
+      "artifact_ref": "scripts/swiss_watch_audit.py",
+      "result": "PASS",
+      "feeds_workstreams": [
+        "W01-runtime-truth-spine",
+        "W06-receipt-five-anti-overclaim",
+        "W10-factory-perfect-run"
+      ]
+    },
+    {
+      "id": "method_excellence_audit",
+      "name": "Method Excellence Audit",
+      "artifact_ref": "scripts/factory_method_excellence_audit.py",
+      "result": "PASS",
+      "feeds_workstreams": [
+        "W07-product-method-architecture"
+      ]
+    },
+    {
+      "id": "world_class_process_gap_audit",
+      "name": "World-Class Process Gap Audit",
+      "artifact_ref": "scripts/factory_world_class_process_gap_audit.py",
+      "result": "PASS",
+      "feeds_workstreams": [
+        "W07-product-method-architecture",
+        "W09-public-github-v3"
+      ]
+    },
+    {
+      "id": "executor_skill_ecosystem_audit",
+      "name": "Executor and Skill Ecosystem Audit",
+      "artifact_ref": "scripts/factory_executor_skill_ecosystem_audit.py",
+      "result": "PASS",
+      "feeds_workstreams": [
+        "W03-manager-agent-freshness",
+        "W08-capability-security-release-authority"
+      ]
+    },
+    {
+      "id": "security_excellence_audit",
+      "name": "Security Excellence Audit",
+      "artifact_ref": "scripts/factory_security_excellence_audit.py",
+      "result": "PASS",
+      "feeds_workstreams": [
+        "W05-human-gate-package",
+        "W06-receipt-five-anti-overclaim",
+        "W08-capability-security-release-authority"
+      ]
+    },
+    {
+      "id": "operator_ui_ux_excellence_audit",
+      "name": "Operator UI/UX Excellence Audit",
+      "artifact_ref": "scripts/factory_operator_ui_ux_excellence_audit.py",
+      "result": "PASS",
+      "feeds_workstreams": [
+        "W03-manager-agent-freshness",
+        "W04-operator-experience",
+        "W05-human-gate-package",
+        "W09-public-github-v3"
+      ]
+    },
+    {
+      "id": "os_excellence_audit",
+      "name": "OS Excellence Audit",
+      "artifact_ref": "scripts/factory_os_excellence_audit.py",
+      "result": "PASS",
+      "feeds_workstreams": [
+        "W01-runtime-truth-spine",
+        "W08-capability-security-release-authority",
+        "W10-factory-perfect-run"
+      ]
+    },
+    {
+      "id": "github_issue_pattern_audit",
+      "name": "GitHub Issue Pattern Audit",
+      "artifact_ref": "scripts/factory_github_issue_pattern_audit.py",
+      "result": "PASS",
+      "feeds_workstreams": [
+        "W01-runtime-truth-spine",
+        "W02-autonomy-no-idle",
+        "W03-manager-agent-freshness",
+        "W04-operator-experience",
+        "W06-receipt-five-anti-overclaim",
+        "W09-public-github-v3"
+      ]
+    }
+  ],
+  "immediate_pending_items": [
+    {
+      "id": "PENDING-branch-publication",
+      "priority": "P0",
+      "item": "Publish or PR the current audit stack before broad implementation",
+      "why_it_matters": "The master execution should not hide the audit basis in an unshared branch.",
+      "done_when": "The branch/PR strategy is explicit and audit commits are visible to the chosen target."
+    },
+    {
+      "id": "PENDING-skill-approval",
+      "priority": "P0",
+      "item": "Approve pending overkill-factory skill updates",
+      "why_it_matters": "Gerente and implementers must carry Hermes-first/no-mini-Hermes and agent freshness rules.",
+      "done_when": "The active skill includes the new operating rules."
+    },
+    {
+      "id": "PENDING-open-issues",
+      "priority": "P0",
+      "item": "Track open issues #419 #529 #531 as active V3 requirements",
+      "why_it_matters": "Known active regressions must not disappear behind the master plan.",
+      "done_when": "Each issue is mapped into a workstream fixture or explicit closeout decision."
+    },
+    {
+      "id": "PENDING-gerente-smoke",
+      "priority": "P0",
+      "item": "Add gerente/agent freshness smoke early",
+      "why_it_matters": "Factory changes are useless if the gerente continues with stale skills or config.",
+      "done_when": "A smoke proves gerente and affected agents use current factory code/contracts."
+    },
+    {
+      "id": "PENDING-public-map",
+      "priority": "P0",
+      "item": "Simplify the public map for V3",
+      "why_it_matters": "The repository must be easy to understand and use as an open-source product.",
+      "done_when": "README/getting-started/public map expose a clear first-value path."
+    }
+  ],
+  "workstreams": [
+    {
+      "id": "W00-master-plan-registry",
+      "name": "Master update plan registry and audit",
+      "wave": 0,
+      "priority": "P0",
+      "purpose": "Make the master plan a public validated product artifact generated from audit evidence instead of chat memory.",
+      "requirements": [
+        "Create factory-master-update-plan schema/template/audit/tests",
+        "Map every existing audit into at least one workstream",
+        "Keep the private planning document out of the public repo",
+        "Expose immediate pending items before execution"
+      ],
+      "must_not_build": [
+        "Do not put raw private study notes into the public repository"
+      ],
+      "required_evidence": [
+        "schema validation passes",
+        "factory_master_update_plan_audit PASS",
+        "reference docs regenerated"
+      ],
+      "depends_on": [],
+      "source_audits": [
+        "swiss_watch_audit",
+        "method_excellence_audit",
+        "world_class_process_gap_audit",
+        "executor_skill_ecosystem_audit",
+        "security_excellence_audit",
+        "operator_ui_ux_excellence_audit",
+        "os_excellence_audit",
+        "github_issue_pattern_audit"
+      ],
+      "done_when": "Public master update plan is validated and every audit feeds execution."
+    },
+    {
+      "id": "W01-runtime-truth-spine",
+      "name": "Runtime Truth Spine",
+      "wave": 1,
+      "priority": "P0",
+      "purpose": "Make Hermes/Kanban/FactoryRun the real execution truth without building a parallel runtime.",
+      "requirements": [
+        "FactoryRun graph is materialized at project start",
+        "Command/event/decision/promotion records link to Hermes/Kanban state",
+        "Worker packet, dispatch, execution and consumable result are distinct states",
+        "Dependency edges are durable before parent resume"
+      ],
+      "must_not_build": [
+        "scheduler",
+        "queue",
+        "board",
+        "dispatcher",
+        "task lifecycle",
+        "parallel runtime"
+      ],
+      "required_evidence": [
+        "runtime truth fixture",
+        "packet != execution regression test",
+        "dependency edge readback",
+        "Hermes/Kanban state reference"
+      ],
+      "depends_on": [
+        "W00-master-plan-registry"
+      ],
+      "source_audits": [
+        "swiss_watch_audit",
+        "os_excellence_audit",
+        "github_issue_pattern_audit"
+      ],
+      "done_when": "A minimal run proves graph, events, packet, dispatch state, dependency edges and result status from durable Hermes/Kanban evidence."
+    },
+    {
+      "id": "W02-autonomy-no-idle",
+      "name": "Autonomy and no-idle canonical frontier",
+      "wave": 2,
+      "priority": "P0",
+      "purpose": "Keep the factory moving automatically when a safe next action exists.",
+      "requirements": [
+        "Canonical frontier reducer selects next action from Hermes/Kanban state",
+        "Recoverable gaps route to repair before needs_input",
+        "Retry/repair/worker budgets are gates and rules, not a scheduler",
+        "No-idle is integrity auditor and recovery path, not normal route authority"
+      ],
+      "must_not_build": [
+        "scheduler alternative",
+        "sidecar runtime authority",
+        "chat-memory next-action router"
+      ],
+      "required_evidence": [
+        "frontier fixture matrix",
+        "no-idle regression tests",
+        "typed block next-action outputs"
+      ],
+      "depends_on": [
+        "W01-runtime-truth-spine"
+      ],
+      "source_audits": [
+        "swiss_watch_audit",
+        "github_issue_pattern_audit",
+        "os_excellence_audit"
+      ],
+      "done_when": "Critical phase fixtures either continue to the next safe Hermes/Kanban action or block with typed reason and useful operator status."
+    },
+    {
+      "id": "W03-manager-agent-freshness",
+      "name": "Gerente and agent freshness",
+      "wave": 3,
+      "priority": "P0",
+      "purpose": "Prevent stale gerente/agent profiles from trying to be the factory instead of operating current factory code.",
+      "requirements": [
+        "Gerente skills, profiles, configs and bindings are updated with every factory change",
+        "Affected worker profiles and bindings are freshness-checked",
+        "Gerente must call factory code/contracts and must not recreate the factory inside its prompt",
+        "Manager-only operator contact is enforced"
+      ],
+      "must_not_build": [
+        "manager prompt as fake factory",
+        "stale profile acceptance",
+        "worker direct operator contact"
+      ],
+      "required_evidence": [
+        "gerente profile/config/skill freshness smoke",
+        "agent binding freshness ledger",
+        "smoke proves gerente calls factory code",
+        "manager-only test"
+      ],
+      "depends_on": [
+        "W00-master-plan-registry",
+        "W01-runtime-truth-spine"
+      ],
+      "source_audits": [
+        "executor_skill_ecosystem_audit",
+        "operator_ui_ux_excellence_audit",
+        "github_issue_pattern_audit"
+      ],
+      "done_when": "No factory update can pass without gerente and affected agents proving current skills/configs/bindings and factory-code use."
+    },
+    {
+      "id": "W04-operator-experience",
+      "name": "Manager-only operator experience",
+      "wave": 3,
+      "priority": "P0",
+      "purpose": "Make the human experience fluid, Telegram-first, Discord-consistent and progress-aware.",
+      "requirements": [
+        "Telegram progress cards include percent, done, current work, next action, risk and possible gate",
+        "Discord carries same semantics without board dump",
+        "Operator never has to poll Kanban for progress",
+        "Needs_input messages are PT-BR, short and artifact-aware"
+      ],
+      "must_not_build": [
+        "raw Kanban dump as UX",
+        "raw JSON gate prompt",
+        "worker-to-human direct messaging"
+      ],
+      "required_evidence": [
+        "operator progress card fixtures",
+        "PT-BR policy test",
+        "delivery receipt",
+        "cross-channel semantic test"
+      ],
+      "depends_on": [
+        "W03-manager-agent-freshness"
+      ],
+      "source_audits": [
+        "operator_ui_ux_excellence_audit",
+        "github_issue_pattern_audit"
+      ],
+      "done_when": "An operator can follow a project through gerente messages without reading Kanban or worker internals."
+    },
+    {
+      "id": "W05-human-gate-package",
+      "name": "Artifact-first human gate package",
+      "wave": 4,
+      "priority": "P0",
+      "purpose": "Make human gates rare, scoped, well packaged and useful.",
+      "requirements": [
+        "Gate package includes context, decision, options, consequences, approved scope, forbidden scope and next safe action",
+        "PDF renderer or Telegram-safe fallback exists",
+        "Delivery receipt proves package was sent/readable",
+        "Human gate happens only for material decisions"
+      ],
+      "must_not_build": [
+        "approval-first prompt",
+        "JSON-only gate",
+        "gate for planning-only low-risk work"
+      ],
+      "required_evidence": [
+        "human gate package schema/test",
+        "PDF or fallback fixture",
+        "delivery receipt"
+      ],
+      "depends_on": [
+        "W04-operator-experience"
+      ],
+      "source_audits": [
+        "operator_ui_ux_excellence_audit",
+        "security_excellence_audit",
+        "github_issue_pattern_audit"
+      ],
+      "done_when": "A sample R2/R3 decision is delivered with package, options and receipt, not a bare approval request."
+    },
+    {
+      "id": "W06-receipt-five-anti-overclaim",
+      "name": "Receipt Five readback and anti-overclaim",
+      "wave": 5,
+      "priority": "P0",
+      "purpose": "Make done mean done by separating contract pass from runtime/product/release proof.",
+      "requirements": [
+        "Receipt Five separates public artifact refs, private evidence refs, runtime proof and product-specific proof",
+        "Durable artifact readback required for evidence-bearing completions",
+        "Scaffold/stale/template evidence fails closed",
+        "Completion classifier distinguishes contract_pass, runtime_pass, product_pass and release_pass"
+      ],
+      "must_not_build": [
+        "artifact existence as proof",
+        "fixture as production evidence",
+        "contract PASS as product done"
+      ],
+      "required_evidence": [
+        "Receipt Five v2 tests",
+        "readback fixture",
+        "stale/scaffold rejection tests"
+      ],
+      "depends_on": [
+        "W01-runtime-truth-spine"
+      ],
+      "source_audits": [
+        "swiss_watch_audit",
+        "github_issue_pattern_audit",
+        "security_excellence_audit"
+      ],
+      "done_when": "No completion path can claim done without readback and appropriate runtime/product/release proof."
+    },
+    {
+      "id": "W07-product-method-architecture",
+      "name": "Product truth, method and architecture spine",
+      "wave": 6,
+      "priority": "P0",
+      "purpose": "Build the right product before building fast.",
+      "requirements": [
+        "Owner-approved Product SOT blocks downstream promotion",
+        "Source ledger, SOT candidate, owner-approved SOT, Method Contract and architecture review are distinct",
+        "Planning review is never architecture review",
+        "Architecture repair routes to architecture regeneration, not readback loop"
+      ],
+      "must_not_build": [
+        "downstream execution from unapproved Product SOT",
+        "architecture duplicate loops",
+        "planning review as architecture authority"
+      ],
+      "required_evidence": [
+        "phase promotion tests",
+        "Product SOT approval fixture",
+        "architecture repair fixture"
+      ],
+      "depends_on": [
+        "W01-runtime-truth-spine",
+        "W06-receipt-five-anti-overclaim"
+      ],
+      "source_audits": [
+        "method_excellence_audit",
+        "world_class_process_gap_audit",
+        "github_issue_pattern_audit"
+      ],
+      "done_when": "Downstream work cannot promote without required Product SOT/method/architecture proof."
+    },
+    {
+      "id": "W08-capability-security-release-authority",
+      "name": "Capability, security, release and authority",
+      "wave": 7,
+      "priority": "P0",
+      "purpose": "Keep autonomy high while blocking production/security/mainnet/funds/secrets risks correctly.",
+      "requirements": [
+        "Capability acquisition runs before human blocker",
+        "Solana/onchain routes through Solana AI Kit",
+        "Security architecture precedes material security-risk implementation",
+        "Release gate is separate from tests-passed",
+        "R3/R4/mainnet/funds/secrets/production require explicit authority"
+      ],
+      "must_not_build": [
+        "generic Solana executor route",
+        "security review as substitute for security architecture",
+        "release as tests-only"
+      ],
+      "required_evidence": [
+        "capability acquisition run fixture",
+        "Solana AI Kit usage receipt",
+        "security/release authority tests"
+      ],
+      "depends_on": [
+        "W07-product-method-architecture"
+      ],
+      "source_audits": [
+        "executor_skill_ecosystem_audit",
+        "security_excellence_audit",
+        "os_excellence_audit"
+      ],
+      "done_when": "Solana, security-sensitive and release cards route differently with correct authority and no unnecessary low-risk human gate."
+    },
+    {
+      "id": "W09-public-github-v3",
+      "name": "Public GitHub V3 open-source surface",
+      "wave": 8,
+      "priority": "P0",
+      "purpose": "Make the public repository feel professional, clear, easy to understand and easy to use as a V3 open-source product surface.",
+      "requirements": [
+        "README explains what the open source factory is and gives first-value path",
+        "public map is simple, intuitive and usage-oriented",
+        "getting-started and operator journey are concise and professional",
+        "release notes prepare V3, not V2",
+        "private/raw/internal context is absent",
+        "repo structure is not a dumping ground"
+      ],
+      "must_not_build": [
+        "public map as internal complexity dump",
+        "hype copy claiming excellence instead of demonstrating it",
+        "private study in public repo"
+      ],
+      "required_evidence": [
+        "github_public_surface_audit PASS",
+        "README/public map review",
+        "mkdocs strict build",
+        "public/secret safety scans"
+      ],
+      "depends_on": [
+        "W00-master-plan-registry"
+      ],
+      "source_audits": [
+        "github_issue_pattern_audit",
+        "world_class_process_gap_audit",
+        "operator_ui_ux_excellence_audit"
+      ],
+      "done_when": "An external operator understands the repo in minutes, finds first value, and V3 public surface is ready."
+    },
+    {
+      "id": "W10-factory-perfect-run",
+      "name": "Factory Perfect Run E2E proof",
+      "wave": 9,
+      "priority": "P0",
+      "purpose": "Prove the complete factory loop end to end.",
+      "requirements": [
+        "Telegram-origin signal creates FactoryRun through gerente",
+        "Hermes/Kanban cards/workers execute or block with typed reasons",
+        "No-idle continues until real blocker",
+        "Human gate, if required, has package and receipt",
+        "Receipt Five closes with readback",
+        "Gerente final summary includes evidence, risk and next step"
+      ],
+      "must_not_build": [
+        "manual hidden success path",
+        "chat-memory proof",
+        "E2E without gerente/agent freshness"
+      ],
+      "required_evidence": [
+        "E2E fixture/run log",
+        "gerente smoke",
+        "Receipt Five proof bundle",
+        "all audits PASS"
+      ],
+      "depends_on": [
+        "W01-runtime-truth-spine",
+        "W02-autonomy-no-idle",
+        "W03-manager-agent-freshness",
+        "W04-operator-experience",
+        "W05-human-gate-package",
+        "W06-receipt-five-anti-overclaim",
+        "W07-product-method-architecture",
+        "W08-capability-security-release-authority",
+        "W09-public-github-v3"
+      ],
+      "source_audits": [
+        "swiss_watch_audit",
+        "operator_ui_ux_excellence_audit",
+        "os_excellence_audit",
+        "github_issue_pattern_audit"
+      ],
+      "done_when": "A full product run completes without false pause, overclaim, stale gerente behavior or requiring the user to interpret Kanban."
+    }
+  ],
+  "acceptance": {
+    "all_audits_mapped": true,
+    "no_mini_hermes_guard": true,
+    "manager_agent_freshness_guard": true,
+    "v3_public_surface_guard": true,
+    "factory_perfect_run_required": true,
+    "validation_commands": [
+      "python3 -m unittest discover -s tests -q",
+      "python3 scripts/validate_document_governance.py",
+      "python3 scripts/validate_public_json_artifacts.py",
+      "python3 scripts/generate_factory_reference_docs.py --check",
+      "python3 scripts/public_safety_scan.py",
+      "python3 scripts/secret_safety_scan.py"
+    ]
+  }
+}
