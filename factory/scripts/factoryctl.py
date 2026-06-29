@@ -23,6 +23,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path, PureWindowsPath
 from typing import Any, Callable, Iterator
+from urllib.parse import urlparse
 
 
 CODE_ROOT = Path(__file__).resolve().parents[1]
@@ -15690,12 +15691,17 @@ def validate_quasar_toolchain_proof(proof: object) -> list[str]:
     missing = [field for field in QUASAR_TOOLCHAIN_PROOF_REQUIRED if proof.get(field) in (None, "", [], {})]
     if missing:
         errors.append("auditor_result quasar_toolchain_proof missing " + ", ".join(missing))
-    install_source = str(proof.get("install_source") or "").lower()
+    install_source = str(proof.get("install_source") or "").strip().lower()
     source_head = str(proof.get("source_head") or "").strip()
     source_head_expected = str(proof.get("source_head_expected") or "").strip()
     container_image = str(proof.get("container_image") or "").strip()
     solana_install_url = str(proof.get("solana_install_url") or "").strip().lower()
-    if "crates.io" in install_source and not source_head:
+    parsed_install_source = urlparse(
+        install_source if "://" in install_source else f"https://{install_source}"
+    )
+    install_source_host = (parsed_install_source.hostname or "").lower()
+    install_source_is_crates = install_source_host == "crates.io"
+    if install_source_is_crates and not source_head:
         errors.append("auditor_result quasar_toolchain_proof cannot rely on crates.io quasar-cli without a source_head pin")
     if source_head and len(source_head) < 7:
         errors.append("auditor_result quasar_toolchain_proof source_head must be a commit-like pin")
