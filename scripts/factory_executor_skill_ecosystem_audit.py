@@ -29,6 +29,7 @@ REQUIRED_DEMAND_KEYS = {
     "go_to_market_distribution",
     "ai_eval_model_risk",
     "capability_acquisition_system",
+    "solana_domain_execution",
 }
 
 
@@ -153,6 +154,24 @@ def validate_executor_skill_registry(
         errors.append("registry must expose missing or partial skill/provider coverage instead of claiming the skill set is already sufficient")
     if acquisition_entries < 2:
         errors.append("registry must include capability acquisition lane entries for modular adaptive gaps")
+
+    solana_entry = by_key.get("solana_domain_execution")
+    if not solana_entry:
+        errors.append("registry must include solana_domain_execution coverage")
+    else:
+        solana_providers = set(list_field(solana_entry, "current_skill_provider_refs"))
+        if "solana-ai-kit" not in solana_providers:
+            errors.append("solana_domain_execution must require solana-ai-kit as mandatory provider")
+        recommendation = str(solana_entry.get("recommendation") or "").lower()
+        capability_text = " ".join([
+            str(solana_entry.get("needed_executor_capability") or ""),
+            str(solana_entry.get("needed_skill_capability") or ""),
+            recommendation,
+        ]).lower()
+        if "mandatory" not in capability_text or "domain brain" not in capability_text:
+            errors.append("solana_domain_execution must say Solana AI Kit is the mandatory domain brain")
+        if "external non-solana-ai-kit" not in recommendation and "non-solana-ai-kit" not in recommendation:
+            errors.append("solana_domain_execution must reject external non-Solana-AI-Kit execution routes")
 
     non_goals = [str(item).lower() for item in list_field(registry, "non_goals")]
     if not any("vibes" in item for item in non_goals):

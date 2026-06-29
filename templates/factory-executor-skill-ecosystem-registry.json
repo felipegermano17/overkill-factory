@@ -401,6 +401,47 @@
       "factory_shape": "parallel_lane"
     },
     {
+      "demand_key": "solana_domain_execution",
+      "display_name": "Solana Domain Execution via Solana AI Kit",
+      "demand_class": "solana_onchain_domain",
+      "trigger_conditions": [
+        "Solana surface",
+        "onchain work",
+        "wallet transaction",
+        "PDA/CPI/account model",
+        "SPL token or Token-2022",
+        "DeFi/NFT/Metaplex/Jupiter/Orca/Raydium/Helius integration"
+      ],
+      "current_worker_refs": [
+        "solana-quasar-builder",
+        "solana-quasar-qa-engineer",
+        "wallet-transaction-builder",
+        "solana-quasar-auditor",
+        "crypto-key-management-specialist",
+        "security-orchestrator",
+        "codex-security"
+      ],
+      "current_skill_provider_refs": [
+        "solana-ai-kit",
+        "solanabr-auditor"
+      ],
+      "executor_coverage_status": "ready",
+      "skill_coverage_status": "ready",
+      "recommendation": "keep Solana AI Kit as the mandatory official domain brain for every Solana/onchain planning or execution path; do not route Solana execution to generic or external non-Solana-AI-Kit agents.",
+      "needed_executor_capability": "Workers must execute Solana tasks only after the Solana AI Kit core pack/domain-brain provider is loaded and recorded, with signer, funds, mainnet and human gates still overriding provider guidance.",
+      "needed_skill_capability": "Solana AI Kit from solanabr/solana-ai-kit remains the mandatory pinned provider for Solana domain knowledge, agents, commands, MCP guidance, Anchor/Pinocchio/Unity/Mobile/security rules and usage receipts.",
+      "evidence_or_eval_required": [
+        "Solana AI Kit usage receipt",
+        "solana-ai-kit-core capability pack activation",
+        "onchain work package",
+        "signer boundary",
+        "Auditor result for R3/R4/security/onchain risk",
+        "Quasar proof when Quasar lane is used"
+      ],
+      "risk_if_unfixed": "Generic agents can make unsafe Solana assumptions, skip signer boundaries, ignore ecosystem-specific guidance or execute onchain work without the approved Solana domain brain.",
+      "factory_shape": "domain_pack"
+    },
+    {
       "demand_key": "capability_acquisition_system",
       "display_name": "Capability Acquisition System",
       "demand_class": "adaptive_modular_factory",

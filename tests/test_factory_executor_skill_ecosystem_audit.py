@@ -105,3 +105,23 @@ class FactoryExecutorSkillEcosystemAuditTest(unittest.TestCase):
         self.assertIn("modular adaptive", text)
         self.assertIn("PRD-grade Requirements", text)
         self.assertIn("trusted provider search", text)
+
+
+    def test_solana_execution_requires_solana_ai_kit(self) -> None:
+        module = load_module()
+        registry = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
+        solana = next(item for item in registry["demand_coverage"] if item["demand_key"] == "solana_domain_execution")
+        self.assertIn("solana-ai-kit", solana["current_skill_provider_refs"])
+        self.assertIn("mandatory", (solana["recommendation"] + solana["needed_skill_capability"]).lower())
+
+        solana["current_skill_provider_refs"] = ["solanabr-auditor"]
+        solana["recommendation"] = "route to any available external agent"
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "broken.json"
+            path.write_text(json.dumps(registry), encoding="utf-8")
+            audit = module.build_executor_skill_ecosystem_audit(path, WORKER_REGISTRY_PATH, SKILL_PROVIDER_PATH)
+
+        self.assertEqual(audit["result"], "FAIL")
+        joined = "\n".join(audit["errors"])
+        self.assertIn("solana-ai-kit", joined)
+        self.assertIn("external non-Solana-AI-Kit", joined)
