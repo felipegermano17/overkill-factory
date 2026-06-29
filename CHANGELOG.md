@@ -7,6 +7,8 @@ public releases.
 
 ## Unreleased
 
+## 3.0.1 - 2026-06-29
+
 - Activate the V3 master plan operationally instead of leaving it as release
   bookkeeping: worker profiles, Hermes profile bindings and the worker registry
   now carry `v3.0.0-master-plan-100` activation metadata, required checks,

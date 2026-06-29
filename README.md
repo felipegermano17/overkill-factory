@@ -323,7 +323,7 @@ Ignored local folders such as `.tmp/`, `build/`, `dist/`, `site/` and
 ## Current Release State
 
 Factory V3 is the current public kernel release line. The latest public release
-is v3.0.0.
+is v3.0.1.
 
 V3 means the public kernel has executable contracts for the factory line plus
 release-grade guards for the operating model itself:

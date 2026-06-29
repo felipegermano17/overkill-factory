@@ -328,7 +328,7 @@ Pastas locais ignoradas como `.tmp/`, `build/`, `dist/`, `site/` e
 ## Estado Atual De Release
 
 Factory V3 é a linha atual de release do kernel público. A release pública mais
-recente é v3.0.0.
+recente é v3.0.1.
 
 V3 significa que o kernel público tem contratos executáveis para a linha da
 fábrica e também guards de release para o próprio modelo operacional:
