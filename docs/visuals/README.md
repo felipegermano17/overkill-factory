@@ -31,29 +31,27 @@ The HTML visualizations explain those contracts; they do not replace them.
 
 ## Version Boundary
 
-The current public map is `v1.0.3`. That is the visual surface version, not the
-repository release tag. The map is an explanation layer. The authoritative
-contracts for Solana AI Kit routing, the Codex Bridge plugin, Solana/on-chain R4
-gate hardening, project design-system / `DESIGN.md`, Hermes update/no-idle
-controls and Fast Autonomy Lane live in schemas, templates, registries, docs and
-tests.
+The current public map file remains `v1.0.3` to preserve the published URL, but
+the content now explains Factory V3. The map is an explanation layer. The
+authoritative contracts for Solana AI Kit routing, Solana/on-chain R4 gate
+hardening, project design-system / `DESIGN.md`, Hermes update/no-idle controls
+and Fast Autonomy Lane live in schemas, templates, registries, docs and tests.
 
 For Solana work, capability packs, `input_contract.surface_router`,
 `domain_brain_provider` and `solana_ai_kit_usage_receipt` are authoritative.
 Legacy worker IDs that still contain product-specific labels are stable public
 routing IDs only; they do not mean the old provider is still the Solana brain.
 
-For bridge operation, the map's control/operator nodes are conceptual. The
-plugin install path, hook trust boundary and durable inbox behavior are defined
-in `docs/operator/overkill-factory-bridge.md` and
-`docs/operator/overkill-factory-bridge-plugin.md`.
+For operator start routing, the map's control/operator nodes are conceptual.
+The durable inbox and start-request contract are defined in
+`docs/operator/overkill-factory-bridge.md`.
 
 ## Current Visuals
 
 | File | Purpose |
 | --- | --- |
 | `overkill-factory-map-v1.0.3.svg` | Static README preview of the factory line and public boundary. |
-| `overkill-factory-map-v1.0.3.html` | Interactive map of the production line, R0-R4 risk tiers and the 40 public factory agents. |
+| `overkill-factory-map-v1.0.3.html` | Simple V3 public map for non-technical operators: how the factory routes work, what Hermes owns and why evidence gates matter. |
 
 ## Validation
 

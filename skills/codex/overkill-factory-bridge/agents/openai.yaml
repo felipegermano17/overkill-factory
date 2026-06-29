@@ -1,4 +1,0 @@
-interface:
-  display_name: "Overkill Factory Bridge"
-  short_description: "Bridge human operator to factory runs"
-  default_prompt: "Use Overkill Factory Bridge to read the durable operator inbox, report status, capture decisions, process changes, and hand responses back to Overkill Factory without acting as a worker."

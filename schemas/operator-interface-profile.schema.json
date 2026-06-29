@@ -23,7 +23,7 @@
     "record_type": { "const": "operator_interface_profile" },
     "profile_id": { "type": "string", "minLength": 3 },
     "created_at": { "type": "string", "minLength": 10 },
-    "primary_interface": { "enum": ["telegram", "discord", "cockpit", "codex_bridge", "cli", "api"] },
+    "primary_interface": { "enum": ["telegram", "discord", "cockpit", "cli", "api"] },
     "primary_language": { "type": "string", "minLength": 2 },
     "language_policy": {
       "type": "object",

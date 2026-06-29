@@ -618,7 +618,7 @@ SOLANA_AI_KIT_USAGE_RECEIPT_FIELD = "solana_ai_kit_usage_receipt"
 SOLANA_AI_KIT_SOURCE = "https://github.com/solanabr/solana-ai-kit"
 SOLANA_AI_KIT_PINNED_REF = "v2.0.2"
 SOLANA_AI_KIT_PINNED_COMMIT = "4fb9d3d619467e068c1cf3120d3933aa933aeb21"
-PRIMARY_OPERATOR_INTERFACES = {"telegram", "discord", "cockpit", "codex_bridge", "cli", "api"}
+PRIMARY_OPERATOR_INTERFACES = {"telegram", "discord", "cockpit", "cli", "api"}
 USER_FACING_LANGUAGE_SURFACES = [
     "operator_messages",
     "operator_status",
@@ -9385,16 +9385,6 @@ def build_operator_interface_profile(
             "message_rendering_mode": "rich_supported",
             "rich_bot_messages_allowed": True,
             "standard_file_attachments_only": False,
-        },
-        "codex_bridge": {
-            "max_short_message_chars": 3500,
-            "supports_file_attachments": True,
-            "supports_threads": True,
-            "supports_buttons": False,
-            "supported_attachment_formats": ["markdown", "pdf", "json", "link"],
-            "message_rendering_mode": "plain_text",
-            "rich_bot_messages_allowed": False,
-            "standard_file_attachments_only": True,
         },
         "cli": {
             "max_short_message_chars": 8000,

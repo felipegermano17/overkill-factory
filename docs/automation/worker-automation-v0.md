@@ -254,7 +254,7 @@ The hook writes a durable worker ledger and returns a machine-readable action:
 silently ignore the gate.
 
 When `--operator-inbox` is provided, the hook also writes a public-safe bridge
-event to the Durable Operator Inbox. That event is for Codex/operator
+event to the Durable Operator Inbox. That event is for operator
 observability only. It does not approve a gate, create worker proof, close a
 card or replace Receipt Five.
 

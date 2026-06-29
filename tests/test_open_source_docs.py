@@ -76,13 +76,14 @@ class OpenSourceDocsTest(unittest.TestCase):
         self.assertIn("templates/factory-v2-readiness-claim.json", readme)
         self.assertNotIn("Para você, como usuário leigo", readme)
         self.assertNotIn("## What It Does Not Do", readme)
+        self.assertNotIn("codex plugin add overkill-factory-bridge@overkill-factory", readme)
+        self.assertNotIn("docs/reference/public-map.md", readme)
+        self.assertNotIn("docs/operator/overkill-factory-bridge-plugin.md", readme)
 
         for rel in [
             "README.pt-BR.md",
-            ".agents/README.md",
             "docs/index.md",
             "docs/operator/overkill-factory-bridge.md",
-            "docs/operator/overkill-factory-bridge-plugin.md",
             "docs/getting-started/quickstart-hermes.md",
             "docs/getting-started/install-in-hermes.md",
             "docs/reference/cli.md",
@@ -102,8 +103,6 @@ class OpenSourceDocsTest(unittest.TestCase):
             "factoryctl doctor",
             "factoryctl init",
             "factoryctl run minimal",
-            "codex plugin marketplace add .",
-            "codex plugin add overkill-factory-bridge@overkill-factory",
         ]:
             with self.subTest(command=command):
                 self.assertIn(command, readme)
@@ -142,12 +141,9 @@ class OpenSourceDocsTest(unittest.TestCase):
             "docs/architecture/factory-v2-control-plane.md",
             "docs/reference/factory-kernel-reference.md",
             "python scripts/generate_factory_reference_docs.py --check",
-            "codex plugin marketplace add .",
-            "codex plugin add overkill-factory-bridge@overkill-factory",
             "docs/operations/promise-to-implementation.md",
             "docs/promise-implementation-map.public.json",
             "docs/operator/overkill-factory-bridge.md",
-            "docs/operator/overkill-factory-bridge-plugin.md",
             "templates/v2-doc-implementation-obligations.json",
             "fixtures/README.md",
             "https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.3.html",
@@ -156,6 +152,8 @@ class OpenSourceDocsTest(unittest.TestCase):
             with self.subTest(expected=expected):
                 self.assertIn(expected, readme_pt)
         self.assertNotIn("Para você, como usuário leigo", readme_pt)
+        self.assertNotIn("codex plugin add overkill-factory-bridge@overkill-factory", readme_pt)
+        self.assertNotIn("docs/operator/overkill-factory-bridge-plugin.md", readme_pt)
 
     def test_public_docs_skeleton_exists(self) -> None:
         required_paths = [
@@ -207,13 +205,7 @@ class OpenSourceDocsTest(unittest.TestCase):
             ".github/ISSUE_TEMPLATE/feature_request.yml",
             ".github/ISSUE_TEMPLATE/config.yml",
             ".github/pull_request_template.md",
-            ".agents/README.md",
-            ".agents/plugins/marketplace.json",
-            ".codex/README.md",
-            "plugins/README.md",
-            "plugins/overkill-factory-bridge/README.md",
             "docs/operator/overkill-factory-bridge.md",
-            "docs/operator/overkill-factory-bridge-plugin.md",
             "docs/operations/promise-to-implementation.md",
             "README.pt-BR.md",
         ]
@@ -280,18 +272,52 @@ class OpenSourceDocsTest(unittest.TestCase):
         self.assertIn("--out .tmp/worker-packets/onchain-card", automation_doc)
         self.assertNotIn("--out examples/worker-packets", automation_doc)
 
+    def test_v3_public_surface_excludes_unfinished_codex_plugin(self) -> None:
+        removed_paths = [
+            ".agents",
+            ".codex",
+            "plugins",
+            "docs/operator/overkill-factory-bridge-plugin.md",
+            "skills/codex/overkill-factory-bridge",
+            "tests/test_overkill_factory_bridge_plugin.py",
+            "docs/reference/public-map.md",
+        ]
+
+        for rel in removed_paths:
+            with self.subTest(rel=rel):
+                self.assertFalse((ROOT / rel).exists())
+
+        searchable = [
+            "README.md",
+            "README.pt-BR.md",
+            "mkdocs.yml",
+            "docs/public-surface.manifest.json",
+            "pyproject.toml",
+        ]
+        forbidden = [
+            "codex plugin add overkill-factory-bridge@overkill-factory",
+            "docs/operator/overkill-factory-bridge-plugin.md",
+            ".agents/README.md",
+            ".codex/README.md",
+            "plugins/overkill-factory-bridge",
+            "docs/reference/public-map.md",
+        ]
+        for rel in searchable:
+            text = read_text(rel)
+            for phrase in forbidden:
+                with self.subTest(rel=rel, phrase=phrase):
+                    self.assertNotIn(phrase, text)
+
+
     def test_repository_shape_explains_every_public_top_level_folder(self) -> None:
         readme = read_text("README.md")
         expected_public_dirs = [
-            ".agents/",
-            ".codex/",
             ".github/",
             "adapters/",
             "agents/",
             "docs/",
             "examples/",
             "fixtures/",
-            "plugins/",
             "schemas/",
             "scripts/",
             "skills/",
@@ -307,8 +333,6 @@ class OpenSourceDocsTest(unittest.TestCase):
 
     def test_high_noise_public_directories_have_entrypoint_guides(self) -> None:
         required_entrypoints = {
-            ".agents/README.md": ["Codex plugin marketplace", "Bridge plugin"],
-            ".codex/README.md": ["Codex", "hooks"],
             "adapters/README.md": ["runtime integrations", "Hermes"],
             ".github/PROJECT_SURFACE.md": ["GitHub project surface", "Dependabot"],
             "agents/README.md": ["worker registry", "Hermes bindings"],
@@ -316,7 +340,6 @@ class OpenSourceDocsTest(unittest.TestCase):
             "examples/README.md": ["source examples", ".tmp/"],
             "fixtures/README.md": ["regression", "public-safe"],
             "fixtures/product-validation/README.md": ["product-shaped fixtures", "not public products"],
-            "plugins/README.md": ["Codex plugin packages", "Bridge plugin"],
             "schemas/README.md": ["machine contracts", "JSON Schema"],
             "scripts/README.md": ["CLI", "validation"],
             "skills/README.md": ["Codex skill", "public-safe"],
@@ -682,7 +705,6 @@ class OpenSourceDocsTest(unittest.TestCase):
             "share/overkill-factory/templates",
             "share/overkill-factory/adapters/hermes",
             "share/overkill-factory/skills/codex/overkill-factory",
-            "share/overkill-factory/skills/codex/overkill-factory-bridge",
         ]:
             with self.subTest(expected=expected):
                 self.assertIn(expected, pyproject)

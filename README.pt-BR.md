@@ -33,7 +33,6 @@ A divisão tecnológica é:
 | CLI e validadores | `factoryctl` e scripts | Geram, inspecionam e validam cards, pacotes, receipts, workflows, worker profiles, docs públicas e readiness de release. |
 | Adapter de runtime | `adapters/hermes/` | Conecta os contratos da fábrica ao estado real do Hermes Kanban sem substituir o Hermes como fonte de verdade. |
 | Catálogo de workers | `agents/`, `skills/`, `templates/` | Define o que especialistas podem fazer, quais skills/capabilities precisam e qual evidência devem devolver. |
-| Ponte do operador | Plugin/hooks Codex Bridge | Permite que o Codex atue como ponte do operador humano para intake, status e human gates. Ele não roda a fábrica nem aprova trabalho. |
 
 Então a versão curta é:
 
@@ -45,8 +44,7 @@ Humanos só decidem gates humanos reais.
 ```
 
 O repositório contém o kernel público: schemas, templates, docs, exemplos,
-fixtures, testes, registries de workers/profiles, integração Hermes e material
-do Codex Bridge. Uma execução real de produto ainda precisa de um runtime
+fixtures, testes, registries de workers/profiles e integração Hermes. Uma execução real de produto ainda precisa de um runtime
 Hermes do operador, onde vivem os cards, workers, resultados e evidências
 reais.
 
@@ -124,7 +122,19 @@ fábrica. Gate humano continua sendo decisão humana.
 
 ## Como A Fábrica Funciona
 
-O método público é uma linha de produção em etapas para trabalho de produto controlado:
+O método público é uma linha de produção em etapas para trabalho de produto
+controlado, mas a Factory V3 não é uma esteira única e reta. Em resumo, ela é
+uma linha de produção em etapas para trabalho de produto controlado com rotas,
+gates e reparos dinâmicos.
+
+Existe um caminho feliz padrão, mostrado abaixo, porque qualquer pessoa precisa
+entender a fábrica rapidamente. Na execução real, ela funciona mais como um
+grafo controlado: route registry, method contract, gates de risco, capability
+packs, dependências do Hermes e evidência atual decidem o que roda agora, o que
+pode rodar em paralelo, o que precisa se reparar e o que realmente precisa de
+um humano.
+
+Caminho feliz padrão:
 
 ```text
 sinal bruto
@@ -185,8 +195,8 @@ pronto para produção. Produção ainda exige estado Hermes, resultados de
 workers, Receipt Five, prova específica do produto e gates humanos quando o
 risco exigir.
 
-A prova runtime do Hermes é public-safe e redigida: ela prova gateway, auth do
-Codex, Telegram, perfil gerente, conclusão de worker e bloqueio de human gate
+A prova runtime do Hermes é public-safe e redigida: ela prova gateway,
+roteamento Telegram/operador, perfil gerente, conclusão de worker e bloqueio de human gate
 sem publicar conteúdo privado do board. Ela prova a espinha operacional da
 fábrica, não o release de um produto específico.
 
@@ -232,28 +242,17 @@ fábrica.
 
 ## Formas De Usar
 
-Existem três caminhos práticos de operação:
+Existem dois caminhos práticos de operação:
 
 | Caminho | Use quando | O que acontece |
 | --- | --- | --- |
 | `factoryctl` | Você quer inspecionar, validar ou gerar pacotes localmente. | A CLI escreve artefatos public-safe em `.tmp/`. Ela não muda um board Hermes real. |
 | Hermes runtime | Você quer a fábrica rodando cards e workers reais. | Hermes Kanban possui cards, workers, comentários, runs e transições. |
-| Plugin Bridge do Codex | Você quer o Codex como ponte do operador humano. | Codex lê o Durable Operator Inbox e encaminha decisões sem virar a fábrica. |
 
-O bridge não roda a fábrica. Ele ajuda a coletar o sinal inicial, iniciar uma
-run aprovada, ler eventos pendentes do operador, mostrar human gates, registrar
-a resposta do operador e devolver essa resposta para a fábrica.
-
-Instale o plugin Bridge do Codex a partir da raiz do repo:
-
-```bash
-codex plugin marketplace add .
-codex plugin add overkill-factory-bridge@overkill-factory
-```
-
-Leia `docs/operator/overkill-factory-bridge.md` para a arquitetura da ponte e
-`docs/operator/overkill-factory-bridge-plugin.md` para instalação, resolução do
-inbox e confiança dos hooks.
+A ponte de start do operador continua como contrato, não como plugin de produto.
+Ela pode criar source envelopes e `factory_bridge_start_request`, mas o caminho
+Factory/Hermes é quem cria board, cards, roteamento e bloqueios. Leia
+`docs/operator/overkill-factory-bridge.md` para esse contrato.
 
 ## Primeira Execução
 
@@ -314,18 +313,15 @@ primeiro, qual é sua fonte de verdade e como drift é evitado.
 
 | Caminho | Propósito público |
 | --- | --- |
-| `.agents/` | Marketplace local de plugins Codex para instalar a ponte. Veja `.agents/README.md`. |
-| `.codex/` | Hooks locais do Codex para a ponte de operador. Veja `.codex/README.md`. |
 | `.github/` | Workflows, templates, Dependabot e higiene do repositório. Veja `.github/PROJECT_SURFACE.md`. |
 | `adapters/` | Integrações de runtime, hoje hooks e patches Hermes. Veja `adapters/README.md`. |
 | `agents/` | Worker registry, profiles, permissões, capability packs e bindings Hermes. Veja `agents/README.md`. |
 | `docs/` | Guias humanos para onboarding, conceitos, operação, segurança e manutenção. Veja `docs/README.md`. |
 | `examples/` | Exemplos públicos pequenos e fixtures de fonte para a esteira da fábrica. Veja `examples/README.md`. |
 | `fixtures/` | Fixtures públicas mínimas de regressão, incluindo validações avançadas com formato de produto. Veja `fixtures/README.md`. |
-| `plugins/` | Pacotes públicos de plugin Codex, hoje o Overkill Factory Bridge. Veja `plugins/README.md`. |
 | `schemas/` | Contratos de máquina para cards, receipts, workers, gates e artefatos públicos. Veja `schemas/README.md`. |
 | `scripts/` | CLI, ferramentas de validação, helpers de prova e checks de manutenção. Veja `scripts/README.md`. |
-| `skills/` | Material instalável de skill Codex para operar a fábrica a partir do clone público. Veja `skills/README.md`. |
+| `skills/` | Material instalável de skill da fábrica para operadores/agentes. Veja `skills/README.md`. |
 | `templates/` | Contratos iniciais pareados com schemas e testes. Veja `templates/README.md`. |
 | `tests/` | Regressão para contratos públicos, docs, adapters e exemplos. Veja `tests/README.md`. |
 
@@ -405,7 +401,7 @@ python scripts/factoryctl.py validate-v2-study-traceability templates/v2-study-t
 python scripts/factoryctl.py validate-v2-doc-implementation-obligations templates/v2-doc-implementation-obligations.json --traceability templates/v2-study-traceability.json
 python scripts/public_safety_scan.py
 python scripts/secret_safety_scan.py
-python scripts/validate_public_surface_sync.py --check-published
+python scripts/validate_public_surface_sync.py
 python -m unittest discover -s tests -q
 ```
 

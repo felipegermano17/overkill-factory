@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Overkill Factory bridge between a human operator, Codex hooks and Hermes.
+"""Overkill Factory bridge between a human operator and Hermes.
 
 The bridge is deliberately not a factory worker. It records operator-facing
 signals, summarizes pending decisions and carries responses back to the
-factory runtime without granting itself gate authority.
+factory runtime without granting itself gate authority. The unfinished Codex
+plugin surface is not part of Factory V3; this module remains the generic
+operator start/inbox contract.
 """
 
 from __future__ import annotations
@@ -54,7 +56,6 @@ SEVERITIES = {"info", "notice", "warning", "blocked", "failed", "requires_user"}
 SOURCES = {
     "automation",
     "bridge",
-    "codex_hook",
     "factoryctl",
     "hermes_transition_hook",
     "human",
@@ -497,8 +498,8 @@ def format_hook_context(summary: dict[str, Any], classification: dict[str, Any] 
     lines = [
         "Overkill Factory Bridge context",
         "Durable Operator Inbox: repo-local JSONL queue under .tmp/factory-runs/operator-inbox.",
-        "Codex hooks are wake-up/context hooks, not a runtime watcher.",
-        "Codex hooks do not watch the machine while Codex is closed.",
+        "Operator bridge hooks are wake-up/context hooks, not a runtime watcher.",
+        "Operator bridge hooks do not watch the machine while no operator session is active.",
         "Hermes, worker results and Receipt Five remain the source of truth.",
         "The bridge must not close gates, execute factory work or auto-approve human gates.",
         "For intake_bridge, create or point to a sealed source envelope; do not summarize or interpret source material.",
@@ -552,34 +553,6 @@ def prompt_from_hook_payload(payload: dict[str, Any]) -> str:
         if isinstance(value, str):
             return value
     return ""
-
-
-def codex_hook_response(payload: dict[str, Any], *, inbox_dir: Path | str | None = None) -> dict[str, Any]:
-    name = hook_event_name(payload)
-    summary = summarize_inbox(inbox_dir=inbox_dir)
-    if name == "UserPromptSubmit":
-        classification = classify_prompt(prompt_from_hook_payload(payload))
-        return {
-            "hookSpecificOutput": {
-                "hookEventName": "UserPromptSubmit",
-                "additionalContext": format_hook_context(summary, classification),
-            }
-        }
-    if name == "SessionStart":
-        return {
-            "hookSpecificOutput": {
-                "hookEventName": "SessionStart",
-                "additionalContext": format_hook_context(summary),
-            }
-        }
-    if name == "Stop":
-        return {"continue": True}
-    return {
-        "hookSpecificOutput": {
-            "hookEventName": name,
-            "additionalContext": format_hook_context(summary),
-        }
-    }
 
 
 def build_decision_record(
@@ -909,13 +882,6 @@ def command_handoff(args: argparse.Namespace) -> int:
     return 0
 
 
-def command_codex_hook(args: argparse.Namespace) -> int:
-    payload = read_stdin_json()
-    response = codex_hook_response(payload, inbox_dir=args.inbox_dir)
-    write_json(None, response)
-    return 0
-
-
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Operate the Overkill Factory bridge inbox.")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -1008,10 +974,6 @@ def build_parser() -> argparse.ArgumentParser:
     handoff.add_argument("--run-id", required=True)
     handoff.add_argument("--out", type=Path)
     handoff.set_defaults(func=command_handoff)
-
-    hook = subparsers.add_parser("codex-hook", help="Read a Codex hook payload from stdin and emit hook JSON.")
-    hook.add_argument("--inbox-dir", type=Path, default=DEFAULT_INBOX)
-    hook.set_defaults(func=command_codex_hook)
 
     return parser
 

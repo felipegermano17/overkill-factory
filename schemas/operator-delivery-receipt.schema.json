@@ -21,7 +21,7 @@
     "record_type": { "const": "operator_delivery_receipt" },
     "delivery_id": { "type": "string", "minLength": 3 },
     "created_at": { "type": "string", "minLength": 10 },
-    "operator_channel": { "enum": ["telegram", "discord", "cockpit", "codex_bridge", "cli", "api"] },
+    "operator_channel": { "enum": ["telegram", "discord", "cockpit", "cli", "api"] },
     "primary_language": { "enum": ["pt-BR", "en-US"] },
     "decision_id": { "type": "string", "minLength": 3 },
     "package_refs": {

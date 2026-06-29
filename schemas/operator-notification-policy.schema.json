@@ -27,7 +27,7 @@
         "type": "object",
         "required": ["channel", "channel_pack_ref", "delivery_receipt_required", "material_before_question_required"],
         "properties": {
-          "channel": { "enum": ["telegram", "discord", "cockpit", "codex_bridge", "cli", "api"] },
+          "channel": { "enum": ["telegram", "discord", "cockpit", "cli", "api"] },
           "channel_pack_ref": { "type": "string", "minLength": 3 },
           "delivery_receipt_required": { "const": true },
           "material_before_question_required": { "const": true }

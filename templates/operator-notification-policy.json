@@ -11,12 +11,6 @@
       "channel_pack_ref": "templates/operator-channel-pack.json",
       "delivery_receipt_required": true,
       "material_before_question_required": true
-    },
-    {
-      "channel": "codex_bridge",
-      "channel_pack_ref": "templates/operator-channel-pack.json",
-      "delivery_receipt_required": true,
-      "material_before_question_required": true
     }
   ],
   "forbidden_patterns": [

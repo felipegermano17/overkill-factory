@@ -273,29 +273,25 @@
     },
     {
       "claim_id": "bridge-operator-only",
-      "public_promise": "The Codex Bridge plugin is an operator bridge that can collect signals, surface pending events and record operator answers without becoming the factory.",
+      "public_promise": "The operator start bridge can collect sealed source material, surface pending events and record operator answers without becoming the factory.",
       "claim_level": "operator_bridge_proof",
       "documentation_refs": [
         "README.md",
-        "docs/operator/overkill-factory-bridge.md",
-        "docs/operator/overkill-factory-bridge-plugin.md"
+        "docs/operator/overkill-factory-bridge.md"
       ],
       "implementation_refs": [
         "scripts/factory_bridge.py",
-        "plugins/overkill-factory-bridge/scripts/factory_bridge.py",
-        "plugins/overkill-factory-bridge/hooks/overkill_factory_bridge_hook.py",
         "schemas/factory-bridge-event.schema.json",
-        "schemas/factory-bridge-decision.schema.json"
+        "schemas/factory-bridge-decision.schema.json",
+        "schemas/factory-bridge-start-request.schema.json"
       ],
       "proof_refs": [
         "tests/test_factory_bridge.py",
-        "tests/test_overkill_factory_bridge_plugin.py",
         "tests/test_public_surface_sync.py"
       ],
-      "boundary": "Codex hooks do not watch the machine while Codex is closed, do not run workers, do not mutate Hermes and do not approve human gates.",
+      "boundary": "The bridge does not run workers, mutate Hermes, watch the machine, approve human gates or become a source of truth.",
       "boundary_refs": [
-        "docs/operator/overkill-factory-bridge.md",
-        "docs/operator/overkill-factory-bridge-plugin.md"
+        "docs/operator/overkill-factory-bridge.md"
       ]
     },
     {

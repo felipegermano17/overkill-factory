@@ -7,6 +7,15 @@ public releases.
 
 ## Unreleased
 
+- Replace the mistaken markdown public map with a simpler V3 update to the
+  existing published visual map, keeping the public GCS URL as the entrypoint.
+- Remove the unfinished Codex Bridge plugin from the Factory V3 public surface:
+  repo-local marketplace, project hooks, plugin package, plugin docs, bridge
+  skill package, plugin test and Codex-specific operator channel are no longer
+  part of the current product claim.
+- Reframe the operator bridge as a narrow start/inbox contract owned by
+  `scripts/factory_bridge.py`, not a product plugin or shadow runtime.
+
 ## 3.0.2 - 2026-06-29
 
 - Add a literal 17-item master-plan Definition of Done audit that separates
@@ -46,7 +55,7 @@ public releases.
 - Add executable V3 readiness guards for the master update plan, Hermes-first
   runtime truth spine, canonical frontier/no-idle autonomy, gerente/agent
   freshness and V3 release readiness.
-- Add a simplified public map at `docs/reference/public-map.md` so external
+- Add a simplified public map at `docs/visuals/overkill-factory-map-v1.0.3.html` so external
   operators can understand the repository through a clear first-value path
   instead of the older complex visual map.
 - Make the central boundaries executable: Hermes/Kanban own runtime state,

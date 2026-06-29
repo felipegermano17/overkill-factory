@@ -49,7 +49,7 @@
       "name": "Public GitHub V3 open-source surface",
       "evidence_refs": [
         "README.md",
-        "docs/reference/public-map.md",
+        "docs/visuals/overkill-factory-map-v1.0.3.html",
         "docs/public-surface.manifest.json",
         "docs/concepts/factory-flow.md",
         "docs/concepts/operator-journey.md"

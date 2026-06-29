@@ -470,7 +470,7 @@
         "operator_refs": [
           "README.md",
           "README.pt-BR.md",
-          "docs/reference/public-map.md",
+          "docs/visuals/overkill-factory-map-v1.0.3.html",
           "docs/concepts/operator-journey.md"
         ],
         "evidence_refs": [
@@ -558,7 +558,7 @@
         "evidence_refs": [
           "templates/factory-v3-release-readiness.json",
           "templates/human-gate-decision-package.json",
-          "docs/reference/public-map.md",
+          "docs/visuals/overkill-factory-map-v1.0.3.html",
           "scripts/factory_hermes_live_smoke.py",
           "schemas/factory-master-plan-literal-dod.schema.json",
           "scripts/factory_master_plan_literal_dod_audit.py"

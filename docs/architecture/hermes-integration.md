@@ -24,7 +24,7 @@ factory card
 | `adapters/hermes/README.md` | Human-readable adapter contract and patch notes. |
 | `adapters/hermes/patches/0001-overkill-factory-v35-gates-official-main.patch` | Kanban gate patch for Hermes. |
 | `adapters/hermes/transition_hook.py` | Transition planning and done-time reconciliation helper. |
-| `scripts/factory_bridge.py` | Operator inbox, Codex hook context and handoff helper. |
+| `scripts/factory_bridge.py` | Operator inbox, start-request and handoff helper. |
 | `agents/worker-registry.public.json` | Process role registry. |
 | `agents/worker-profiles.public.json` | Public agent identity, authority and evidence contract. |
 | `agents/hermes-profile-bindings.public.json` | Hermes profile name, skill refs, queue policy and receipt field. |
@@ -158,9 +158,9 @@ blocks are dependency waits, capability blocks go through capability
 acquisition, and only `needs_input` becomes an operator decision request.
 
 The bridge is a view and response channel. It is not a worker, not a human gate
-record and not a second source of truth. Codex hooks can read this inbox on
-`SessionStart` or `UserPromptSubmit` to brief the operator after Codex was
-closed.
+record and not a second source of truth. Operator-facing assistants or scripts
+may read this inbox to brief the operator, but they do not watch the machine or
+become the runtime.
 
 ## First Integration Path
 

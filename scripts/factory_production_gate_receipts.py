@@ -298,9 +298,9 @@ def build_prepilot_master(paths: GatePaths, *, created_at: str | None = None) ->
         task(
             4,
             "operator-bridge",
-            "Expose a Codex/Claude bridge that observes and relays operator gates without taking factory authority.",
+            "Expose an operator start bridge that observes and relays operator-facing gates without taking factory authority.",
             "PASS_PUBLIC_CONTRACT",
-            "The bridge CLI, schemas, hook and public skill are present and covered by focused tests.",
+            "The bridge CLI and schemas are present and covered by focused tests; plugin/hook packaging is not part of V3.",
             [
                 evidence("script", "scripts/factory_bridge.py", "operator bridge command surface"),
                 evidence("schema", "schemas/factory-bridge-run.schema.json", "bridge run contract"),
