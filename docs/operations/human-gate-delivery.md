@@ -1,9 +1,10 @@
 # Human Gate Delivery
 
-Human gates are artifact-first.
+Human gates are artifact-first. A gate package that asks for approval without delivering the actual artifact under review is invalid.
 
-The gerente must send the decision package before asking for a decision. A gate
-is valid only when the operator receives:
+The gerente must send the decision package before asking for a decision. For Product SOT review, architecture review, Product Face review, security/risk review, release review, or any similar artifact review, the package must include the artifact itself or a faithful owner-readable projection plus the complete artifact as attachment/reference. A summary-only approval packet is not a valid operator package.
+
+A gate is valid only when the operator receives:
 
 - executive summary;
 - context;

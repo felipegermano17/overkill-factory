@@ -103,8 +103,8 @@ support, learnback and factory maturity audit.
 | 5. Source Resolution | Facts, inference, decisions, conflicts and gaps are separated. | Source resolution. |
 | 6. Understanding Confirmation | The factory summarizes its product understanding and asks for correction or confirmation. | Operator understanding confirmation. |
 | 7. Product Outcome & Discovery | The desired result, user, problem and assumptions are clarified. | Outcome and discovery notes. |
-| 8. Operator Briefing | Major decisions receive a deep document, PDF and optional diagram/video/audio explanation. | Operator briefing package. |
-| 9. Product SOT | The product or slice is defined in one source-of-truth candidate. | Product SOT. |
+| 8. Operator Briefing | Major decisions receive a deep document, PDF and optional diagram/video/audio explanation. Artifact-review decisions must include the artifact itself, not only a formal approval cover sheet. | Operator briefing package. |
+| 9. Product SOT | The product or slice is defined in one source-of-truth candidate. Product SOT review delivers the SOT candidate itself plus clear deltas/questions before asking for approval or correction. | Product SOT. |
 | 10. Method Router | The factory chooses the right process weight. | Router decision. |
 | 11. Method Contract | The chosen method, exclusions, evidence and blockers are recorded. | Method contract. |
 | 12. Pack Selection | Product and surface capability needs are identified. | Required packs and missing packs. |
