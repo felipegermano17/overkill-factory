@@ -15,7 +15,7 @@ They can notify, request approval or show progress, but they must not close work
 without the same receipts and gates.
 
 The same rule applies to the Overkill Factory Bridge. A bridge inbox event or
-Codex status response can wake the operator and carry an answer back, but it
+operator status response can wake the operator and carry an answer back, but it
 does not replace Hermes, worker results or Receipt Five.
 
 ## Product Process Projection

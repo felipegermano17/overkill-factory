@@ -18,7 +18,7 @@
     "record_type": { "const": "operator_channel_pack" },
     "pack_id": { "type": "string", "minLength": 3 },
     "created_at": { "type": "string", "minLength": 10 },
-    "channel": { "enum": ["telegram", "discord", "cockpit", "codex_bridge", "cli", "api"] },
+    "channel": { "enum": ["telegram", "discord", "cockpit", "cli", "api"] },
     "message_shape": {
       "type": "object",
       "required": ["max_summary_lines", "plain_language_required", "decision_options_required"],

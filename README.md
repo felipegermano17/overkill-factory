@@ -12,9 +12,6 @@ It exists for operators who want agents to work with speed without letting chat,
 enthusiasm or a partial demo become the source of truth.
 
 Public map:
-`docs/reference/public-map.md`
-
-The older visual map remains available as a supporting artifact:
 https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.3.html
 
 ## What It Is Technologically
@@ -36,7 +33,6 @@ The technology split is:
 | CLI and validators | `factoryctl` and scripts | Generate, inspect and validate cards, packets, receipts, workflows, worker profiles, public docs and release readiness. |
 | Runtime adapter | `adapters/hermes/` | Connects factory contracts to the real Hermes Kanban state without replacing Hermes as the source of truth. |
 | Worker catalog | `agents/`, `skills/`, `templates/` | Defines what specialist workers are allowed to do, which skills/capabilities they need and what evidence they must return. |
-| Operator bridge | Codex Bridge plugin/hooks | Lets Codex act as a human-operator bridge for intake, status and human gates. It does not run the factory or approve work. |
 
 So the short version is:
 
@@ -48,8 +44,7 @@ Humans only decide real human gates.
 ```
 
 The repository contains the public kernel: schemas, templates, docs, examples,
-fixtures, tests, worker/profile registries, Hermes integration code and Codex
-bridge material. A real product run still needs an operator-owned Hermes
+fixtures, tests, worker/profile registries and Hermes integration code. A real product run still needs an operator-owned Hermes
 runtime where the actual cards, workers, results and evidence live.
 
 ## Plain Explanation
@@ -124,7 +119,16 @@ Human gates remain human gates.
 
 ## How The Factory Works
 
-The public method is a staged production line for controlled product work:
+The public method is a staged production line for controlled product work, but
+Factory V3 is not a single straight conveyor belt.
+
+There is a default happy path, shown below, because people need a simple way to
+understand the factory. At runtime, the factory behaves more like a controlled
+graph: the route registry, method contract, risk gates, capability packs,
+Hermes dependencies and current evidence decide what can run now, what can run
+in parallel, what must repair itself, and what truly needs a human.
+
+Default happy path:
 
 ```text
 raw signal
@@ -184,8 +188,8 @@ runtime boundary and required proof. It does not claim a product is production
 ready. Production still requires Hermes state, worker results, Receipt Five,
 product-specific proof and human gates when risk requires them.
 
-Hermes runtime proof is public-safe and redacted: it proves gateway, Codex auth,
-Telegram, manager profile, worker completion and human-gate blocking without
+Hermes runtime proof is public-safe and redacted: it proves gateway,
+Telegram/operator routing, manager profile, worker completion and human-gate blocking without
 publishing private board content. It proves the factory operating spine, not a
 specific product release.
 
@@ -228,28 +232,18 @@ Hermes and Receipt Five remain the source of truth for real factory execution.
 
 ## Ways To Use It
 
-There are three practical operating paths:
+There are two practical operating paths:
 
 | Path | Use when | What happens |
 | --- | --- | --- |
 | `factoryctl` only | You want to inspect, validate or generate packets locally. | The CLI writes public-safe artifacts under `.tmp/`. It does not mutate a live Hermes board. |
 | Hermes runtime | You want the factory to run real cards and workers. | Hermes Kanban owns cards, workers, comments, runs and transitions. |
-| Codex Bridge plugin | You want Codex to act as the human operator bridge. | Codex reads the Durable Operator Inbox and forwards operator decisions without becoming the factory. |
 
-The bridge does not run the factory. It helps collect the initial signal, start
-an approved factory run, read pending operator events, surface human gates,
-record the operator's answer and hand that answer back to the factory.
-
-Install the Codex Bridge plugin from the repo root:
-
-```bash
-codex plugin marketplace add .
-codex plugin add overkill-factory-bridge@overkill-factory
-```
-
-Read `docs/operator/overkill-factory-bridge.md` for the bridge architecture and
-`docs/operator/overkill-factory-bridge-plugin.md` for install, inbox resolution
-and hook trust.
+The operator-facing start bridge remains a contract, not a product plugin. It
+can create sealed source envelopes and `factory_bridge_start_request` records,
+but the factory/Hermes start path owns board creation, card creation, routing and
+blocking state. Read `docs/operator/overkill-factory-bridge.md` for that
+contract.
 
 ## First Run
 
@@ -309,18 +303,15 @@ first, what its source of truth is and how drift is prevented.
 
 | Path | Public purpose |
 | --- | --- |
-| `.agents/` | Repo-local Codex plugin marketplace for installing the bridge. See `.agents/README.md`. |
-| `.codex/` | Project-local Codex hooks for the operator bridge. See `.codex/README.md`. |
 | `.github/` | GitHub workflows, templates, Dependabot and repository hygiene. See `.github/PROJECT_SURFACE.md`. |
 | `adapters/` | Runtime integrations, currently Hermes hooks and patches. See `adapters/README.md`. |
 | `agents/` | Public worker registry, profiles, permissions, capability packs and Hermes bindings. See `agents/README.md`. |
 | `docs/` | Human guides for onboarding, concepts, operations, security and maintenance. See `docs/README.md`. |
 | `examples/` | Small public examples and source fixtures for the factory path. See `examples/README.md`. |
 | `fixtures/` | Minimal public-safe regression fixtures, including advanced product-shaped validation fixtures. See `fixtures/README.md`. |
-| `plugins/` | Public Codex plugin packages, currently the Overkill Factory Bridge. See `plugins/README.md`. |
 | `schemas/` | Machine contracts for cards, receipts, workers, gates and public artifacts. See `schemas/README.md`. |
 | `scripts/` | CLI entrypoints, validation tools, proof helpers and maintainer checks. See `scripts/README.md`. |
-| `skills/` | Installable Codex skill material for operating the factory from a public clone. See `skills/README.md`. |
+| `skills/` | Installable factory skill material for operators/agents. See `skills/README.md`. |
 | `templates/` | Starter contracts paired with schemas and tests. See `templates/README.md`. |
 | `tests/` | Regression coverage for public contracts, docs, adapters and examples. See `tests/README.md`. |
 
@@ -400,7 +391,7 @@ python scripts/factoryctl.py validate-v2-study-traceability templates/v2-study-t
 python scripts/factoryctl.py validate-v2-doc-implementation-obligations templates/v2-doc-implementation-obligations.json --traceability templates/v2-study-traceability.json
 python scripts/public_safety_scan.py
 python scripts/secret_safety_scan.py
-python scripts/validate_public_surface_sync.py --check-published
+python scripts/validate_public_surface_sync.py
 python -m unittest discover -s tests -q
 ```
 

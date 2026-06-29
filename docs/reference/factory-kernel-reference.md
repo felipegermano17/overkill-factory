@@ -38,7 +38,7 @@ Done without evidence is only a claim. Receipt Five, review, runtime state and p
 | Method engines | 8 | `templates/method-engine-registry.json` |
 | JSON schemas | 244 | `schemas/*.json` |
 | Templates | 157 | `templates/*` |
-| Public surfaces | 19 | `docs/public-surface.manifest.json` |
+| Public surfaces | 18 | `docs/public-surface.manifest.json` |
 
 ## Factory Phases
 

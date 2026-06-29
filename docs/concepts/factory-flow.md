@@ -118,7 +118,7 @@ state. This is the runtime rule for silent boards:
 - a human gate can be requested only when the phase engine allows it and the
   decision package is complete.
 
-This keeps Telegram, Discord, Codex bridge and status messages as operator
+This keeps Telegram, Discord, CLI/API bridge and status messages as operator
 views. They can show the reconciled state, but they do not choose F1, F2, F3 or
 F9 from conversation history.
 

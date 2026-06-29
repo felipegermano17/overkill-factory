@@ -12,7 +12,6 @@ nav:
   - Install In Your Hermes: getting-started/install-in-hermes.md
   - First Operator Walkthrough: getting-started/first-external-operator-walkthrough.md
   - CLI Reference: reference/cli.md
-  - Public Map: reference/public-map.md
   - Factory Kernel Reference: reference/factory-kernel-reference.md
   - Examples: examples/gallery.md
   - Concepts:
@@ -48,7 +47,6 @@ nav:
       - Troubleshooting: operations/troubleshooting.md
   - Operator:
       - Overkill Factory Bridge: operator/overkill-factory-bridge.md
-      - Bridge Plugin: operator/overkill-factory-bridge-plugin.md
   - Control Tower:
       - Discord Control Tower OS: control-tower/discord-control-tower-os.md
       - Discord Control Tower Setup: control-tower/discord-control-tower-setup-pt-br.md
@@ -58,7 +56,7 @@ nav:
   - Product Face:
       - Proof Runner: product-face/proof-runner.md
   - Visuals:
-      - Public Visual Surfaces: visuals/README.md
+      - Public Visual Map: visuals/README.md
   - Maintainer Internals:
       - Repo Surface: maintenance/repo-surface.md
       - Swiss Watch Reliability Program: maintenance/swiss-watch-reliability-program.md

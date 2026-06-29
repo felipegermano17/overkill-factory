@@ -25,7 +25,7 @@
     "conversation_id": { "type": "string", "minLength": 3 },
     "created_at": { "type": "string", "minLength": 10 },
     "primary_interface_ref": { "type": "string", "minLength": 3 },
-    "primary_interface": { "enum": ["telegram", "discord", "cockpit", "codex_bridge", "cli", "api"] },
+    "primary_interface": { "enum": ["telegram", "discord", "cockpit", "cli", "api"] },
     "source_envelope_ref": { "type": "string", "minLength": 3 },
     "start_mode": { "const": "conversational_intake_before_factory_start" },
     "conversation_state": {

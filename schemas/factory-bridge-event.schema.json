@@ -54,7 +54,6 @@
       "enum": [
         "automation",
         "bridge",
-        "codex_hook",
         "factoryctl",
         "hermes_transition_hook",
         "human",

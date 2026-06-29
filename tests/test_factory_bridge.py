@@ -94,7 +94,7 @@ class FactoryBridgeTest(unittest.TestCase):
                 self.assertFalse(result["authority"]["bridge_may_execute_factory_work"])
                 self.assertFalse(result["authority"]["bridge_may_auto_approve_human_gate"])
 
-    def test_codex_hooks_add_context_without_claiming_watchdog_authority(self) -> None:
+    def test_operator_bridge_context_adds_context_without_claiming_watchdog_authority(self) -> None:
         bridge = load_bridge()
         with tempfile.TemporaryDirectory(dir=ROOT) as tmp:
             inbox = Path(tmp) / "operator-inbox"
@@ -109,27 +109,20 @@ class FactoryBridgeTest(unittest.TestCase):
                 requires_user=True,
             )
 
-            session_response = bridge.codex_hook_response(
-                {"hook_event_name": "SessionStart", "source": "startup"},
-                inbox_dir=inbox,
+            session_context = bridge.format_hook_context(bridge.summarize_inbox(inbox_dir=inbox))
+            prompt_context = bridge.format_hook_context(
+                bridge.summarize_inbox(inbox_dir=inbox),
+                bridge.classify_prompt("status da fabrica"),
             )
-            prompt_response = bridge.codex_hook_response(
-                {"hook_event_name": "UserPromptSubmit", "prompt": "status da fabrica"},
-                inbox_dir=inbox,
-            )
-
-        session_context = session_response["hookSpecificOutput"]["additionalContext"]
-        prompt_context = prompt_response["hookSpecificOutput"]["additionalContext"]
 
         self.assertIn("transition_blocked", session_context)
         self.assertIn("Durable Operator Inbox", session_context)
-        self.assertIn("Codex hooks are wake-up/context hooks", session_context)
+        self.assertIn("Operator bridge hooks are wake-up/context hooks", session_context)
         self.assertIn("factory_bridge_start_request", session_context)
         self.assertIn("the bridge must not create Hermes boards or cards", session_context)
         self.assertIn("status_bridge", prompt_context)
         self.assertIn("explicit factory runtime target", prompt_context)
         self.assertIn("ambient/default Hermes store", prompt_context)
-        self.assertEqual(prompt_response["hookSpecificOutput"]["hookEventName"], "UserPromptSubmit")
 
     def test_new_project_bridge_contract_addresses_factory_without_creating_board(self) -> None:
         bridge = load_bridge()
@@ -311,30 +304,27 @@ class FactoryBridgeTest(unittest.TestCase):
                     summary="Approved in chat only.",
                 )
 
-    def test_corrupt_or_missing_inbox_is_reported_in_hook_context(self) -> None:
+    def test_corrupt_or_missing_inbox_is_reported_in_bridge_context(self) -> None:
         bridge = load_bridge()
         with tempfile.TemporaryDirectory(dir=ROOT) as tmp:
-            missing_response = bridge.codex_hook_response(
-                {"hook_event_name": "UserPromptSubmit", "prompt": "status da fabrica"},
-                inbox_dir=Path(tmp) / "missing-inbox",
+            missing_context = bridge.format_hook_context(
+                bridge.summarize_inbox(inbox_dir=Path(tmp) / "missing-inbox"),
+                bridge.classify_prompt("status da fabrica"),
             )
             inbox = Path(tmp) / "operator-inbox"
             inbox.mkdir()
             (inbox / "pending.jsonl").write_text("{bad json\n", encoding="utf-8")
-            corrupt_response = bridge.codex_hook_response(
-                {"hook_event_name": "UserPromptSubmit", "prompt": "status da fabrica"},
-                inbox_dir=inbox,
+            corrupt_context = bridge.format_hook_context(
+                bridge.summarize_inbox(inbox_dir=inbox),
+                bridge.classify_prompt("status da fabrica"),
             )
 
-        missing_context = missing_response["hookSpecificOutput"]["additionalContext"]
-        corrupt_context = corrupt_response["hookSpecificOutput"]["additionalContext"]
         self.assertIn("Inbox health: warning", missing_context)
         self.assertIn("operator inbox directory does not exist yet", missing_context)
         self.assertIn("Runtime target: explicit board/run ref required", missing_context)
         self.assertIn("invalid JSONL record", corrupt_context)
 
-    def test_public_skill_and_architecture_document_the_bridge_modes(self) -> None:
-        skill = (ROOT / "skills" / "codex" / "overkill-factory-bridge" / "SKILL.md").read_text(encoding="utf-8")
+    def test_operator_bridge_architecture_documents_the_bridge_modes(self) -> None:
         architecture = (ROOT / "docs" / "operator" / "overkill-factory-bridge.md").read_text(encoding="utf-8")
 
         for expected in [
@@ -348,18 +338,18 @@ class FactoryBridgeTest(unittest.TestCase):
             "learnback_forwarding",
         ]:
             with self.subTest(expected=expected):
-                self.assertIn(expected, skill)
                 self.assertIn(expected, architecture)
 
-        self.assertIn("must not act as a factory worker", skill)
-        self.assertIn("factory_bridge_start_request", skill)
-        self.assertIn("overkill-factory-gerente", skill)
-        self.assertIn("factory-orchestrator", skill)
+        self.assertIn("not execute factory work", architecture)
+        self.assertIn("factory_bridge_start_request", architecture)
+        self.assertIn("overkill-factory-gerente", architecture)
+        self.assertIn("factory-orchestrator", architecture)
         self.assertIn("Durable Operator Inbox", architecture)
-        self.assertIn("Codex hooks do not watch the machine while Codex is closed", architecture)
         self.assertIn("default Hermes store", architecture)
         self.assertIn("Factory Mechanic remains the self-improvement owner", architecture)
-        self.assertIn("The bridge does not create Hermes boards or cards", architecture)
+        self.assertIn("The bridge cannot", architecture)
+        self.assertNotIn("Codex plugin", architecture)
+        self.assertNotIn("Codex hooks", architecture)
 
 
 if __name__ == "__main__":

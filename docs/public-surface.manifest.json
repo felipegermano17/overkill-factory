@@ -18,7 +18,6 @@
     "docs/operations/validation-and-release.md",
     "docs/promise-implementation-map.public.json",
     "docs/operator/overkill-factory-bridge.md",
-    "docs/operator/overkill-factory-bridge-plugin.md",
     "docs/reference/cli.md",
     "schemas/",
     "templates/hermes-production-proof.json",
@@ -35,7 +34,6 @@
     "docs/operations/telegram-operator-experience.md",
     "docs/architecture/context-spine.md",
     "README.md",
-    "docs/reference/public-map.md",
     "templates/factory-v3-release-readiness.json",
     "scripts/factory_v3_release_readiness_audit.py"
   ],
@@ -95,10 +93,10 @@
         "v1 blocker",
         "Mapa != Prova",
         "Hermes segue como fonte da verdade",
-        "n\u00e3o provam entrega",
+        "não provam entrega",
         "uma ideia entra por um lado",
-        "a f\u00e1brica entende, escolhe o trilho seguro",
-        "Hermes, contratos e evid\u00eancias concordam"
+        "a fábrica entende, escolhe o trilho seguro",
+        "Hermes, contratos e evidências concordam"
       ],
       "fidelity_contract": {
         "workflow_catalog_ref": "docs/factory-workflow.catalog.json",
@@ -155,11 +153,11 @@
           },
           {
             "node_id": "router",
-            "title": "Roteador de M\u00e9todo"
+            "title": "Roteador de Método"
           },
           {
             "node_id": "contract",
-            "title": "Contrato de M\u00e9todo"
+            "title": "Contrato de Método"
           },
           {
             "node_id": "packs",
@@ -167,7 +165,7 @@
           },
           {
             "node_id": "securityplan",
-            "title": "Arquitetura de Seguran\u00e7a"
+            "title": "Arquitetura de Segurança"
           },
           {
             "node_id": "devplan",
@@ -192,7 +190,7 @@
           },
           {
             "node_id": "specgraph",
-            "title": "Grafo de Especifica\u00e7\u00e3o"
+            "title": "Grafo de Especificação"
           },
           {
             "node_id": "riskgates",
@@ -204,7 +202,7 @@
           },
           {
             "node_id": "autonomy",
-            "title": "Prontid\u00e3o de Autonomia"
+            "title": "Prontidão de Autonomia"
           },
           {
             "node_id": "ready",
@@ -212,7 +210,7 @@
           },
           {
             "node_id": "controltower",
-            "title": "Proje\u00e7\u00e3o da Control Tower"
+            "title": "Projeção da Control Tower"
           },
           {
             "node_id": "humangate",
@@ -228,11 +226,11 @@
           },
           {
             "node_id": "verification",
-            "title": "Verifica\u00e7\u00e3o"
+            "title": "Verificação"
           },
           {
             "node_id": "review",
-            "title": "Revis\u00e3o Independente"
+            "title": "Revisão Independente"
           },
           {
             "node_id": "closure",
@@ -252,7 +250,7 @@
           },
           {
             "node_id": "prodops",
-            "title": "Opera\u00e7\u00e3o de Produ\u00e7\u00e3o"
+            "title": "Operação de Produção"
           },
           {
             "node_id": "release",
@@ -471,41 +469,12 @@
       ],
       "required_phrases": [
         "Durable Operator Inbox",
-        "Codex hooks do not watch the machine while Codex is closed",
         "Factory Mechanic remains the self-improvement owner",
         "factory_bridge_start_request",
         "overkill-factory-gerente",
         "factory-orchestrator",
-        "act as a factory worker",
+        "not execute factory work",
         "dependency_wait"
-      ]
-    },
-    {
-      "surface_id": "overkill-factory-bridge-plugin",
-      "path": "docs/operator/overkill-factory-bridge-plugin.md",
-      "surface_type": "concept_doc",
-      "authority_level": "supporting_explanation_not_source_of_truth",
-      "source_refs": [
-        ".agents/plugins/marketplace.json",
-        "plugins/overkill-factory-bridge/.codex-plugin/plugin.json",
-        "plugins/overkill-factory-bridge/hooks/hooks.json",
-        "plugins/overkill-factory-bridge/hooks/overkill_factory_bridge_hook.py",
-        "plugins/overkill-factory-bridge/scripts/factory_bridge.py",
-        "plugins/overkill-factory-bridge/skills/overkill-factory-bridge/SKILL.md",
-        "tests/test_overkill_factory_bridge_plugin.py"
-      ],
-      "claim_checks": [
-        "source_refs_exist",
-        "source_of_truth_disclaimer",
-        "no_runtime_proof_claim"
-      ],
-      "required_phrases": [
-        "Plugin hooks require trust review before they run",
-        "They must not approve human gates",
-        "factory_bridge_start_request",
-        "overkill-factory-gerente",
-        "factory-orchestrator",
-        "This supports queue catch-up when Codex was closed"
       ]
     },
     {
@@ -652,10 +621,7 @@
       "surface_type": "root_readme",
       "authority_level": "supporting_explanation_not_source_of_truth",
       "source_refs": [
-        ".agents/README.md",
-        "plugins/README.md",
         "docs/operator/overkill-factory-bridge.md",
-        "docs/operator/overkill-factory-bridge-plugin.md",
         "docs/visuals/README.md",
         "docs/public-surface.manifest.json",
         "docs/operations/promise-to-implementation.md",
@@ -682,10 +648,7 @@
       "authority_level": "supporting_explanation_not_source_of_truth",
       "source_refs": [
         "README.md",
-        ".agents/README.md",
-        "plugins/README.md",
         "docs/operator/overkill-factory-bridge.md",
-        "docs/operator/overkill-factory-bridge-plugin.md",
         "docs/visuals/README.md",
         "docs/public-surface.manifest.json",
         "docs/operations/promise-to-implementation.md",

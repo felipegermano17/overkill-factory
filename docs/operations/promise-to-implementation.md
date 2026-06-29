@@ -68,7 +68,7 @@ state a limit.
 | Deterministic control-plane proof | Factory V2 compiled workflow, commands, event log, decision outbox and promotion packet | The public repo can fail closed when state does not match the V2 contracts. | The operator's current Hermes board advanced or a product was released. |
 | Runtime integration proof | Hermes runtime floor, no-idle watchdog | The adapter/proof path is implemented and test-covered. | The operator's current Hermes is healthy unless current runtime evidence is supplied. |
 | Capability routing proof | modular packs, Solana AI Kit routing | The router selects packs/workers/proof requirements deterministically. | A missing pack is magically executable. |
-| Operator bridge proof | Codex Bridge plugin and durable inbox | The bridge can forward operator context and decisions. | Codex becomes a worker, watcher, approver or source of truth. |
+| Operator bridge proof | Durable inbox and start bridge | The bridge can forward operator context and decisions. | The bridge becomes a worker, watcher, approver or source of truth. |
 | Public release proof | release preflight and Factory v1 Completion Gate | The public kernel can be released when checks pass. | Product-specific production or mainnet readiness. |
 | Bounded process proof | start conversation, fast autonomy, learnback | The factory has safe process rails. | Unlimited autonomous execution or self-mutation. |
 

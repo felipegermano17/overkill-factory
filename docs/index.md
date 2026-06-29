@@ -89,12 +89,9 @@ Use `operations/promise-to-implementation.md` before changing README, release
 notes, public docs or visual surfaces. It maps public promises to implementation,
 proof and explicit boundaries.
 
-Use `operator/overkill-factory-bridge.md` when Codex or another assistant is
-bridging a human operator to the factory without acting as a factory worker.
-
-Use `operator/overkill-factory-bridge-plugin.md` when installing the Codex
-Bridge plugin, reviewing hook trust or checking how inbox catch-up works after
-Codex was closed.
+Use `operator/overkill-factory-bridge.md` when an operator start request needs
+to be sealed, handed to `overkill-factory-gerente` / `factory-orchestrator`, or
+explained without turning the bridge into a factory worker.
 
 ## Maintainer Internals
 

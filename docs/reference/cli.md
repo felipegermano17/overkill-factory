@@ -352,8 +352,8 @@ source of truth.
 ## Operator Bridge Commands
 
 `scripts/factory_bridge.py` is the secondary operator bridge helper. Use it when
-Codex or another assistant needs a durable operator inbox without acting as a
-factory worker.
+an operator-facing assistant or script needs a durable operator inbox without
+acting as a factory worker.
 
 ```bash
 python scripts/factory_bridge.py summarize-inbox --text

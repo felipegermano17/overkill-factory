@@ -71,7 +71,7 @@
       ],
       "properties": {
         "operator_interface": {
-          "enum": ["telegram", "discord", "cockpit", "codex_bridge", "cli", "api"]
+          "enum": ["telegram", "discord", "cockpit", "cli", "api"]
         },
         "primary_language": { "enum": ["pt-BR", "en-US"] },
         "push_required": { "const": true },
