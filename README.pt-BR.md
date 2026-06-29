@@ -265,12 +265,23 @@ cd overkill-factory
 python -m pip install -e .
 factoryctl doctor
 factoryctl run minimal
+factoryctl v3-production-activation-check
 ```
 
-A execução mínima escreve saídas locais em `.tmp/`, incluindo o resultado do
-quickstart e pacotes de worker para o card público de exemplo. Pacotes de worker
-e gate reports gerados pertencem a `.tmp/`, artefatos de release ou evidence
-store privado, não ao repo público.
+Para provar um runtime Hermes vivo, rode o smoke mutável em um board
+descartável:
+
+```bash
+factoryctl v3-production-activation-check --live-hermes
+```
+
+Esse comando precisa passar antes de qualquer claim de ativação/release V3. Ele
+escreve um Factory Perfect Run e um smoke Hermes Kanban vivo em `.tmp/`; o smoke
+cria, comenta, bloqueia, desbloqueia e conclui um card descartável com metadata
+de Receipt Five.
+
+Pacotes de worker e gate reports gerados pertencem a `.tmp/`, artefatos de
+release ou evidence store privado, não ao repo público.
 
 Crie um workspace de produto quando estiver pronto para conectar o método ao
 seu próprio material:

@@ -7,6 +7,23 @@ public releases.
 
 ## Unreleased
 
+- Activate the V3 master plan operationally instead of leaving it as release
+  bookkeeping: worker profiles, Hermes profile bindings and the worker registry
+  now carry `v3.0.0-master-plan-100` activation metadata, required checks,
+  evidence policy and manager-only operator routing.
+- Add a strict `factory-master-plan-completion` audit covering waves 0-9 with
+  code, tests, commands, runtime refs, agent refs, operator refs and evidence
+  refs for every wave.
+- Add Factory Perfect Run proof commands, including a deterministic E2E record
+  and a live Hermes Kanban smoke that creates, comments, blocks, unblocks and
+  completes a disposable runtime card with Receipt Five metadata.
+- Make `factoryctl v3-production-activation-check --live-hermes` the explicit
+  activation path, and harden V3 release readiness so release is blocked when
+  Factory Perfect Run evidence or commands are missing.
+- Make the Hermes adapter enforce V3 runtime truth, canonical frontier/no-idle
+  boundaries, manager/agent freshness, artifact-first human gates and Receipt
+  Five readback before reporting V3 production activation.
+
 ## 3.0.0 - 2026-06-29
 
 - Promote the public kernel to the V3 release line after the V3 master update

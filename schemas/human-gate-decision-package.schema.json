@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/human-gate-decision-package.schema.json",
+  "title": "Human Gate Decision Package",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "package_id",
+    "risk_class",
+    "operator_language",
+    "executive_summary",
+    "context",
+    "decision_requested",
+    "options",
+    "approved_scope",
+    "forbidden_scope",
+    "evidence_refs",
+    "urgency",
+    "next_safe_action",
+    "telegram_fallback",
+    "delivery_receipt_required"
+  ],
+  "properties": {
+    "$schema": { "const": "https://overkill-factory.dev/schemas/human-gate-decision-package.schema.json" },
+    "record_type": { "const": "human_gate_decision_package" },
+    "package_id": { "type": "string", "minLength": 3 },
+    "risk_class": { "enum": ["R2", "R3", "R4"] },
+    "operator_language": { "const": "pt-BR-simple" },
+    "executive_summary": { "type": "string", "minLength": 20 },
+    "context": { "type": "string", "minLength": 20 },
+    "decision_requested": { "type": "string", "minLength": 10 },
+    "options": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": ["option_id", "label", "consequence", "next_action"],
+        "properties": {
+          "option_id": { "type": "string", "minLength": 1 },
+          "label": { "type": "string", "minLength": 3 },
+          "consequence": { "type": "string", "minLength": 10 },
+          "next_action": { "type": "string", "minLength": 10 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "approved_scope": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 3 } },
+    "forbidden_scope": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 3 } },
+    "evidence_refs": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 3 } },
+    "urgency": { "type": "string", "minLength": 3 },
+    "next_safe_action": { "type": "string", "minLength": 10 },
+    "telegram_fallback": { "type": "string", "minLength": 40 },
+    "delivery_receipt_required": { "type": "boolean" }
+  },
+  "additionalProperties": false
+}

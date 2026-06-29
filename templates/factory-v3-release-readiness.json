@@ -62,7 +62,11 @@
         "templates/factory-master-update-plan.json",
         "templates/factory-runtime-truth-spine.json",
         "templates/factory-canonical-frontier-policy.json",
-        "templates/factory-manager-agent-freshness-policy.json"
+        "templates/factory-manager-agent-freshness-policy.json",
+        "scripts/factory_perfect_run.py",
+        "scripts/factory_hermes_live_smoke.py",
+        "scripts/factory_master_plan_completion_audit.py",
+        "tests/test_factory_master_plan_completion.py"
       ]
     }
   ],
@@ -132,14 +136,20 @@
       "public-safe examples"
     ]
   },
-  "factory_perfect_run_policy": {
+    "factory_perfect_run_policy": {
     "requires_manager_agent_freshness": true,
     "requires_runtime_truth_spine": true,
     "requires_canonical_frontier": true,
     "requires_receipt_five_readback": true,
     "requires_public_github_v3_surface": true,
     "operator_does_not_interpret_kanban": true,
-    "no_mini_hermes": true
+    "no_mini_hermes": true,
+    "release_blocks_without_factory_perfect_run": true,
+    "required_commands": [
+      "command:factoryctl factory-perfect-run",
+      "command:factoryctl master-plan-completion",
+      "command:factoryctl v3-production-activation-check --live-hermes"
+    ]
   },
   "acceptance": {
     "waves_4_to_9_covered": true,

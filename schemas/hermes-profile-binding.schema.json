@@ -12,6 +12,7 @@
     "$schema": { "type": "string", "minLength": 3 },
     "binding_version": { "type": "string", "minLength": 3 },
     "profile_registry_ref": { "type": "string", "minLength": 3 },
+    "production_activation_version": { "type": "string", "minLength": 3 },
     "bindings": {
       "type": "object",
       "minProperties": 1,
@@ -116,7 +117,17 @@
           "profile_description_ref": { "type": "string", "minLength": 3 },
           "toolset_policy": { "type": "string", "minLength": 8 },
           "skill_install_ref": { "type": "string", "minLength": 3 },
-          "last_hermes_smoke_ref": { "type": "string", "minLength": 3 }
+          "last_hermes_smoke_ref": { "type": "string", "minLength": 3 },
+          "v3_production_activation": {
+            "type": "object",
+            "required": ["runtime_authority", "can_contact_operator_directly", "required_release_checks"],
+            "properties": {
+              "runtime_authority": { "const": "hermes_kanban" },
+              "can_contact_operator_directly": { "type": "boolean" },
+              "required_release_checks": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 3 } }
+            },
+            "additionalProperties": false
+          }
         },
         "additionalProperties": false
       }

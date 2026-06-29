@@ -1,0 +1,42 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/human-gate-decision-package.schema.json",
+  "record_type": "human_gate_decision_package",
+  "package_id": "human-gate-r3-release-authority-sample",
+  "risk_class": "R3",
+  "operator_language": "pt-BR-simple",
+  "executive_summary": "A fábrica precisa de uma decisão humana porque o próximo passo muda autoridade de release e não deve ser aprovado por worker.",
+  "context": "O runtime Hermes/Kanban chegou a um blocker real. Todos os reparos seguros já foram tentados ou não se aplicam. O gate é necessário para escolher o próximo caminho permitido.",
+  "decision_requested": "Escolher se a fábrica deve seguir para release controlado ou bloquear até nova revisão.",
+  "options": [
+    {
+      "option_id": "approve-controlled-release",
+      "label": "Aprovar release controlado",
+      "consequence": "A fábrica continua com escopo aprovado, sem ampliar autoridade, mantendo rollback e evidência obrigatória.",
+      "next_action": "Registrar decisão, criar promotion packet e seguir para Receipt Five readback."
+    },
+    {
+      "option_id": "block-for-review",
+      "label": "Bloquear para revisão",
+      "consequence": "A fábrica não promove release e cria pacote de revisão com riscos, evidências faltantes e responsáveis.",
+      "next_action": "Registrar bloqueio tipado e materializar review packet para o gerente."
+    }
+  ],
+  "approved_scope": [
+    "Somente o escopo listado no promotion packet atual",
+    "Somente ações sem secrets, fundos, mainnet ou produção irreversível"
+  ],
+  "forbidden_scope": [
+    "Aumentar escopo sem novo pacote",
+    "Executar mainnet/funds/secrets/produção sem autoridade explícita",
+    "Tratar teste verde como release authority"
+  ],
+  "evidence_refs": [
+    "templates/factory-v3-release-readiness.json",
+    "templates/factory-runtime-truth-spine.json",
+    "templates/receipt-five.json"
+  ],
+  "urgency": "normal",
+  "next_safe_action": "Aguardar escolha do operador ou manter blocker tipado sem executar release.",
+  "telegram_fallback": "Decisão necessária: aprovar release controlado ou bloquear para revisão. Escopo aprovado e proibido estão listados; sem resposta, a fábrica permanece bloqueada com segurança.",
+  "delivery_receipt_required": true
+}

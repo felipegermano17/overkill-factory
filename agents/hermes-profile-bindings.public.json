@@ -36,7 +36,20 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
+      "v3_production_activation": {
+        "runtime_authority": "hermes_kanban",
+        "can_contact_operator_directly": false,
+        "required_release_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "manager-agent-freshness",
+          "receipt-five-readback",
+          "runtime-truth-spine",
+          "canonical-frontier",
+          "v3-production-activation-check"
+        ]
+      }
     },
     "source-ledger-worker": {
       "worker_id": "source-ledger-worker",
@@ -66,7 +79,17 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
+      "v3_production_activation": {
+        "runtime_authority": "hermes_kanban",
+        "can_contact_operator_directly": false,
+        "required_release_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "manager-agent-freshness",
+          "receipt-five-readback"
+        ]
+      }
     },
     "product-sot-planner": {
       "worker_id": "product-sot-planner",
@@ -96,7 +119,17 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
+      "v3_production_activation": {
+        "runtime_authority": "hermes_kanban",
+        "can_contact_operator_directly": false,
+        "required_release_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "manager-agent-freshness",
+          "receipt-five-readback"
+        ]
+      }
     },
     "product-architect": {
       "worker_id": "product-architect",
@@ -126,7 +159,17 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
+      "v3_production_activation": {
+        "runtime_authority": "hermes_kanban",
+        "can_contact_operator_directly": false,
+        "required_release_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "manager-agent-freshness",
+          "receipt-five-readback"
+        ]
+      }
     },
     "product-face": {
       "worker_id": "product-face",
@@ -158,7 +201,17 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
+      "v3_production_activation": {
+        "runtime_authority": "hermes_kanban",
+        "can_contact_operator_directly": false,
+        "required_release_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "manager-agent-freshness",
+          "receipt-five-readback"
+        ]
+      }
     },
     "solana-quasar-auditor": {
       "worker_id": "solana-quasar-auditor",
@@ -192,7 +245,17 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
+      "v3_production_activation": {
+        "runtime_authority": "hermes_kanban",
+        "can_contact_operator_directly": false,
+        "required_release_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "manager-agent-freshness",
+          "receipt-five-readback"
+        ]
+      }
     },
     "codex-security": {
       "worker_id": "codex-security",
@@ -225,7 +288,17 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
+      "v3_production_activation": {
+        "runtime_authority": "hermes_kanban",
+        "can_contact_operator_directly": false,
+        "required_release_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "manager-agent-freshness",
+          "receipt-five-readback"
+        ]
+      }
     },
     "appsec-owasp-specialist": {
       "worker_id": "appsec-owasp-specialist",
@@ -257,7 +330,17 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
+      "v3_production_activation": {
+        "runtime_authority": "hermes_kanban",
+        "can_contact_operator_directly": false,
+        "required_release_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "manager-agent-freshness",
+          "receipt-five-readback"
+        ]
+      }
     },
     "agentic-ai-security-specialist": {
       "worker_id": "agentic-ai-security-specialist",
@@ -290,7 +373,17 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
+      "v3_production_activation": {
+        "runtime_authority": "hermes_kanban",
+        "can_contact_operator_directly": false,
+        "required_release_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "manager-agent-freshness",
+          "receipt-five-readback"
+        ]
+      }
     },
     "autoreview-gate": {
       "worker_id": "autoreview-gate",
@@ -321,7 +414,17 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
+      "v3_production_activation": {
+        "runtime_authority": "hermes_kanban",
+        "can_contact_operator_directly": false,
+        "required_release_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "manager-agent-freshness",
+          "receipt-five-readback"
+        ]
+      }
     },
     "remote-proof-runner": {
       "worker_id": "remote-proof-runner",
@@ -352,7 +455,17 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
+      "v3_production_activation": {
+        "runtime_authority": "hermes_kanban",
+        "can_contact_operator_directly": false,
+        "required_release_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "manager-agent-freshness",
+          "receipt-five-readback"
+        ]
+      }
     },
     "handoff-packer": {
       "worker_id": "handoff-packer",
@@ -385,7 +498,17 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
+      "v3_production_activation": {
+        "runtime_authority": "hermes_kanban",
+        "can_contact_operator_directly": false,
+        "required_release_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "manager-agent-freshness",
+          "receipt-five-readback"
+        ]
+      }
     },
     "independent-reviewer": {
       "worker_id": "independent-reviewer",
@@ -416,7 +539,17 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
+      "v3_production_activation": {
+        "runtime_authority": "hermes_kanban",
+        "can_contact_operator_directly": false,
+        "required_release_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "manager-agent-freshness",
+          "receipt-five-readback"
+        ]
+      }
     },
     "evidence-reconciler": {
       "worker_id": "evidence-reconciler",
@@ -449,7 +582,17 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
+      "v3_production_activation": {
+        "runtime_authority": "hermes_kanban",
+        "can_contact_operator_directly": false,
+        "required_release_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "manager-agent-freshness",
+          "receipt-five-readback"
+        ]
+      }
     },
     "human-gate-clerk": {
       "worker_id": "human-gate-clerk",
@@ -483,7 +626,17 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
+      "v3_production_activation": {
+        "runtime_authority": "hermes_kanban",
+        "can_contact_operator_directly": false,
+        "required_release_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "manager-agent-freshness",
+          "receipt-five-readback"
+        ]
+      }
     },
     "docs-os-worker": {
       "worker_id": "docs-os-worker",
@@ -514,7 +667,17 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
+      "v3_production_activation": {
+        "runtime_authority": "hermes_kanban",
+        "can_contact_operator_directly": false,
+        "required_release_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "manager-agent-freshness",
+          "receipt-five-readback"
+        ]
+      }
     },
     "decomposition-planner": {
       "worker_id": "decomposition-planner",
@@ -546,7 +709,17 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
+      "v3_production_activation": {
+        "runtime_authority": "hermes_kanban",
+        "can_contact_operator_directly": false,
+        "required_release_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "manager-agent-freshness",
+          "receipt-five-readback"
+        ]
+      }
     },
     "implementation-worker": {
       "worker_id": "implementation-worker",
@@ -577,7 +750,17 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
+      "v3_production_activation": {
+        "runtime_authority": "hermes_kanban",
+        "can_contact_operator_directly": false,
+        "required_release_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "manager-agent-freshness",
+          "receipt-five-readback"
+        ]
+      }
     },
     "qa-verification-worker": {
       "worker_id": "qa-verification-worker",
@@ -608,7 +791,17 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
+      "v3_production_activation": {
+        "runtime_authority": "hermes_kanban",
+        "can_contact_operator_directly": false,
+        "required_release_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "manager-agent-freshness",
+          "receipt-five-readback"
+        ]
+      }
     },
     "security-orchestrator": {
       "worker_id": "security-orchestrator",
@@ -642,7 +835,17 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
+      "v3_production_activation": {
+        "runtime_authority": "hermes_kanban",
+        "can_contact_operator_directly": false,
+        "required_release_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "manager-agent-freshness",
+          "receipt-five-readback"
+        ]
+      }
     },
     "cloud-infra-security-specialist": {
       "worker_id": "cloud-infra-security-specialist",
@@ -674,7 +877,17 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
+      "v3_production_activation": {
+        "runtime_authority": "hermes_kanban",
+        "can_contact_operator_directly": false,
+        "required_release_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "manager-agent-freshness",
+          "receipt-five-readback"
+        ]
+      }
     },
     "crypto-key-management-specialist": {
       "worker_id": "crypto-key-management-specialist",
@@ -706,7 +919,17 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
+      "v3_production_activation": {
+        "runtime_authority": "hermes_kanban",
+        "can_contact_operator_directly": false,
+        "required_release_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "manager-agent-freshness",
+          "receipt-five-readback"
+        ]
+      }
     },
     "release-ops-worker": {
       "worker_id": "release-ops-worker",
@@ -737,7 +960,17 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
+      "v3_production_activation": {
+        "runtime_authority": "hermes_kanban",
+        "can_contact_operator_directly": false,
+        "required_release_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "manager-agent-freshness",
+          "receipt-five-readback"
+        ]
+      }
     },
     "memory-steward": {
       "worker_id": "memory-steward",
@@ -770,7 +1003,17 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
+      "v3_production_activation": {
+        "runtime_authority": "hermes_kanban",
+        "can_contact_operator_directly": false,
+        "required_release_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "manager-agent-freshness",
+          "receipt-five-readback"
+        ]
+      }
     },
     "skill-eval-distiller": {
       "worker_id": "skill-eval-distiller",
@@ -801,7 +1044,17 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
+      "v3_production_activation": {
+        "runtime_authority": "hermes_kanban",
+        "can_contact_operator_directly": false,
+        "required_release_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "manager-agent-freshness",
+          "receipt-five-readback"
+        ]
+      }
     },
     "public-safety-gate": {
       "worker_id": "public-safety-gate",
@@ -832,7 +1085,17 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
+      "v3_production_activation": {
+        "runtime_authority": "hermes_kanban",
+        "can_contact_operator_directly": false,
+        "required_release_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "manager-agent-freshness",
+          "receipt-five-readback"
+        ]
+      }
     },
     "supply-chain-gate": {
       "worker_id": "supply-chain-gate",
@@ -866,7 +1129,17 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
+      "v3_production_activation": {
+        "runtime_authority": "hermes_kanban",
+        "can_contact_operator_directly": false,
+        "required_release_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "manager-agent-freshness",
+          "receipt-five-readback"
+        ]
+      }
     },
     "detection-monitoring-worker": {
       "worker_id": "detection-monitoring-worker",
@@ -898,7 +1171,17 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
+      "v3_production_activation": {
+        "runtime_authority": "hermes_kanban",
+        "can_contact_operator_directly": false,
+        "required_release_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "manager-agent-freshness",
+          "receipt-five-readback"
+        ]
+      }
     },
     "frontend-builder": {
       "worker_id": "frontend-builder",
@@ -931,7 +1214,17 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
+      "v3_production_activation": {
+        "runtime_authority": "hermes_kanban",
+        "can_contact_operator_directly": false,
+        "required_release_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "manager-agent-freshness",
+          "receipt-five-readback"
+        ]
+      }
     },
     "backend-api-builder": {
       "worker_id": "backend-api-builder",
@@ -963,7 +1256,17 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
+      "v3_production_activation": {
+        "runtime_authority": "hermes_kanban",
+        "can_contact_operator_directly": false,
+        "required_release_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "manager-agent-freshness",
+          "receipt-five-readback"
+        ]
+      }
     },
     "data-persistence-builder": {
       "worker_id": "data-persistence-builder",
@@ -995,7 +1298,17 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
+      "v3_production_activation": {
+        "runtime_authority": "hermes_kanban",
+        "can_contact_operator_directly": false,
+        "required_release_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "manager-agent-freshness",
+          "receipt-five-readback"
+        ]
+      }
     },
     "solana-quasar-builder": {
       "worker_id": "solana-quasar-builder",
@@ -1029,7 +1342,17 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
+      "v3_production_activation": {
+        "runtime_authority": "hermes_kanban",
+        "can_contact_operator_directly": false,
+        "required_release_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "manager-agent-freshness",
+          "receipt-five-readback"
+        ]
+      }
     },
     "solana-quasar-qa-engineer": {
       "worker_id": "solana-quasar-qa-engineer",
@@ -1063,7 +1386,17 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
+      "v3_production_activation": {
+        "runtime_authority": "hermes_kanban",
+        "can_contact_operator_directly": false,
+        "required_release_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "manager-agent-freshness",
+          "receipt-five-readback"
+        ]
+      }
     },
     "wallet-transaction-builder": {
       "worker_id": "wallet-transaction-builder",
@@ -1096,7 +1429,17 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
+      "v3_production_activation": {
+        "runtime_authority": "hermes_kanban",
+        "can_contact_operator_directly": false,
+        "required_release_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "manager-agent-freshness",
+          "receipt-five-readback"
+        ]
+      }
     },
     "integration-builder": {
       "worker_id": "integration-builder",
@@ -1129,7 +1472,17 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
+      "v3_production_activation": {
+        "runtime_authority": "hermes_kanban",
+        "can_contact_operator_directly": false,
+        "required_release_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "manager-agent-freshness",
+          "receipt-five-readback"
+        ]
+      }
     },
     "test-automation-builder": {
       "worker_id": "test-automation-builder",
@@ -1161,7 +1514,17 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
+      "v3_production_activation": {
+        "runtime_authority": "hermes_kanban",
+        "can_contact_operator_directly": false,
+        "required_release_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "manager-agent-freshness",
+          "receipt-five-readback"
+        ]
+      }
     },
     "infra-devops-builder": {
       "worker_id": "infra-devops-builder",
@@ -1193,7 +1556,17 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
+      "v3_production_activation": {
+        "runtime_authority": "hermes_kanban",
+        "can_contact_operator_directly": false,
+        "required_release_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "manager-agent-freshness",
+          "receipt-five-readback"
+        ]
+      }
     },
     "agent-runtime-builder": {
       "worker_id": "agent-runtime-builder",
@@ -1225,7 +1598,17 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
+      "v3_production_activation": {
+        "runtime_authority": "hermes_kanban",
+        "can_contact_operator_directly": false,
+        "required_release_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "manager-agent-freshness",
+          "receipt-five-readback"
+        ]
+      }
     },
     "control-tower-projection-worker": {
       "worker_id": "control-tower-projection-worker",
@@ -1258,7 +1641,17 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
+      "v3_production_activation": {
+        "runtime_authority": "hermes_kanban",
+        "can_contact_operator_directly": false,
+        "required_release_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "manager-agent-freshness",
+          "receipt-five-readback"
+        ]
+      }
     },
     "discord-control-tower-bridge": {
       "worker_id": "discord-control-tower-bridge",
@@ -1292,7 +1685,18 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
+      "v3_production_activation": {
+        "runtime_authority": "hermes_kanban",
+        "can_contact_operator_directly": false,
+        "required_release_checks": [
+          "factory-master-plan-completion",
+          "factory-perfect-run",
+          "manager-agent-freshness",
+          "receipt-five-readback"
+        ]
+      }
     }
-  }
+  },
+  "production_activation_version": "v3.0.0-master-plan-100"
 }

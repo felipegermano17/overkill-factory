@@ -261,10 +261,19 @@ cd overkill-factory
 python -m pip install -e .
 factoryctl doctor
 factoryctl run minimal
+factoryctl v3-production-activation-check
 ```
 
-The minimal run writes local output under `.tmp/`, including a quickstart result
-and worker packets for the public example card.
+For a live Hermes runtime proof, run the mutating smoke on a disposable board:
+
+```bash
+factoryctl v3-production-activation-check --live-hermes
+```
+
+That command must pass before a V3 activation/release claim. It writes a
+Factory Perfect Run record and a live Hermes Kanban smoke under `.tmp/`; the live
+smoke creates, comments, blocks, unblocks and completes a disposable card with
+Receipt Five metadata.
 Generated worker packets and gate reports belong in `.tmp/`. Release artifacts
 and private evidence stores are valid homes for evidence that should not be
 tracked in the public repo.

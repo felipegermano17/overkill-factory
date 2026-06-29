@@ -2872,7 +2872,48 @@ def build_doctor_report(hermes_home: Path | None = None) -> dict[str, Any]:
         doctor_check(
             "public_cli",
             "PASS",
-            "Use factoryctl doctor, factoryctl init, and factoryctl run minimal as the public operator path.",
+            "Use factoryctl doctor, factoryctl init, factoryctl run minimal and v3-production-activation-check as the public operator path.",
+        )
+    )
+
+    activation_detail: dict[str, Any] = {}
+    activation_proc = subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "scripts" / "factory_master_plan_completion_audit.py"),
+            "--out",
+            str(ROOT / ".tmp" / "factory-doctor-master-plan-completion-audit.json"),
+            "--markdown",
+            str(ROOT / ".tmp" / "factory-doctor-master-plan-completion-audit.md"),
+        ],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    perfect_proc = subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "scripts" / "factory_perfect_run.py"),
+            "--out",
+            str(ROOT / ".tmp" / "factory-doctor-perfect-run.json"),
+        ],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    activation_ok = activation_proc.returncode == 0 and perfect_proc.returncode == 0
+    activation_detail = {
+        "master_plan_completion_returncode": activation_proc.returncode,
+        "factory_perfect_run_returncode": perfect_proc.returncode,
+    }
+    checks.append(
+        doctor_check(
+            "v3_production_activation",
+            "PASS" if activation_ok else "FAIL",
+            "Master-plan completion and Factory Perfect Run pass." if activation_ok else "V3 production activation checks failed.",
+            activation_detail,
         )
     )
 
@@ -23964,6 +24005,57 @@ def command_run_minimal(args: argparse.Namespace) -> int:
     return 0 if result["result"] == "PASS" else 1
 
 
+def _run_python_script(script: Path, extra_args: list[str]) -> int:
+    proc = subprocess.run([sys.executable, str(script), *extra_args], cwd=ROOT, text=True, check=False)
+    return int(proc.returncode)
+
+
+def command_master_plan_completion(args: argparse.Namespace) -> int:
+    script = ROOT / "scripts" / "factory_master_plan_completion_audit.py"
+    argv = ["--record", str(args.record), "--out", str(args.out), "--markdown", str(args.markdown)]
+    return _run_python_script(script, argv)
+
+
+def command_v3_production_activation_check(args: argparse.Namespace) -> int:
+    completion = command_master_plan_completion(args)
+    if completion != 0:
+        return completion
+    perfect_script = ROOT / "scripts" / "factory_perfect_run.py"
+    perfect = _run_python_script(perfect_script, ["--out", str(args.perfect_run_out)])
+    if perfect != 0 or not getattr(args, "live_hermes", False):
+        return perfect
+    smoke_script = ROOT / "scripts" / "factory_hermes_live_smoke.py"
+    return _run_python_script(smoke_script, ["--board", str(args.live_board), "--out", str(args.live_hermes_out), "--cwd", str(ROOT)])
+
+
+def command_hermes_live_smoke(args: argparse.Namespace) -> int:
+    script = ROOT / "scripts" / "factory_hermes_live_smoke.py"
+    return _run_python_script(script, ["--board", str(args.board), "--out", str(args.out), "--cwd", str(args.cwd)])
+
+
+def command_factory_perfect_run(args: argparse.Namespace) -> int:
+    script = ROOT / "scripts" / "factory_perfect_run.py"
+    argv = ["--out", str(args.out)]
+    if getattr(args, "check", False):
+        argv.append("--check")
+    return _run_python_script(script, argv)
+
+
+def command_human_gate_package(args: argparse.Namespace) -> int:
+    script = ROOT / "scripts" / "render_human_gate_pdf.py"
+    return _run_python_script(script, ["--package", str(args.package), "--out", str(args.out)])
+
+
+def command_validate_human_gate_package(args: argparse.Namespace) -> int:
+    script = ROOT / "scripts" / "render_human_gate_pdf.py"
+    return _run_python_script(script, ["--package", str(args.package), "--check"])
+
+
+def command_receipt_five_classify(args: argparse.Namespace) -> int:
+    script = ROOT / "scripts" / "factory_receipt_five_classifier.py"
+    return _run_python_script(script, ["--receipt", str(args.receipt), "--out", str(args.out)])
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Overkill Factory control helper")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -24669,6 +24761,46 @@ def build_parser() -> argparse.ArgumentParser:
     truth_parser.add_argument("--out", type=Path, default=DEFAULT_TRUTH_OUT)
     truth_parser.add_argument("--md-out", type=Path)
     truth_parser.set_defaults(func=command_truth)
+    receipt_five_classify_parser = sub.add_parser("receipt-five-classify", help="Classify Receipt Five proof without overclaiming done.")
+    receipt_five_classify_parser.add_argument("--receipt", type=Path, default=ROOT / "templates" / "receipt-five.json")
+    receipt_five_classify_parser.add_argument("--out", type=Path, default=ROOT / ".tmp" / "receipt-five-classification.json")
+    receipt_five_classify_parser.set_defaults(func=command_receipt_five_classify)
+
+    human_gate_package_parser = sub.add_parser("human-gate-package", help="Render an artifact-first human gate package fallback.")
+    human_gate_package_parser.add_argument("--package", type=Path, default=ROOT / "templates" / "human-gate-decision-package.json")
+    human_gate_package_parser.add_argument("--out", type=Path, default=ROOT / ".tmp" / "human-gate-decision-package.txt")
+    human_gate_package_parser.set_defaults(func=command_human_gate_package)
+
+    validate_human_gate_package_parser = sub.add_parser("validate-human-gate-package", help="Validate an artifact-first human gate package.")
+    validate_human_gate_package_parser.add_argument("--package", type=Path, default=ROOT / "templates" / "human-gate-decision-package.json")
+    validate_human_gate_package_parser.set_defaults(func=command_validate_human_gate_package)
+
+    factory_perfect_run_parser = sub.add_parser("factory-perfect-run", help="Materialize the no-spawn Factory Perfect Run E2E proof.")
+    factory_perfect_run_parser.add_argument("--out", type=Path, default=ROOT / ".tmp" / "factory-perfect-run.json")
+    factory_perfect_run_parser.add_argument("--check", action="store_true")
+    factory_perfect_run_parser.set_defaults(func=command_factory_perfect_run)
+
+    hermes_live_smoke_parser = sub.add_parser("hermes-live-smoke", help="Mutate a disposable Hermes Kanban board and prove live create/block/unblock/complete runtime behavior.")
+    hermes_live_smoke_parser.add_argument("--board", default="of-v3-production-activation")
+    hermes_live_smoke_parser.add_argument("--out", type=Path, default=ROOT / ".tmp" / "factory-hermes-live-smoke.json")
+    hermes_live_smoke_parser.add_argument("--cwd", type=Path, default=ROOT)
+    hermes_live_smoke_parser.set_defaults(func=command_hermes_live_smoke)
+
+    master_plan_completion_parser = sub.add_parser("master-plan-completion", help="Audit 100%% implementation of every master-plan wave.")
+    master_plan_completion_parser.add_argument("--record", type=Path, default=ROOT / "templates" / "factory-master-plan-completion.json")
+    master_plan_completion_parser.add_argument("--out", type=Path, default=ROOT / ".tmp" / "factory-master-plan-completion-audit.json")
+    master_plan_completion_parser.add_argument("--markdown", type=Path, default=ROOT / ".tmp" / "factory-master-plan-completion-audit.md")
+    master_plan_completion_parser.set_defaults(func=command_master_plan_completion)
+
+    v3_activation_parser = sub.add_parser("v3-production-activation-check", help="Run master-plan completion plus Factory Perfect Run proof.")
+    v3_activation_parser.add_argument("--record", type=Path, default=ROOT / "templates" / "factory-master-plan-completion.json")
+    v3_activation_parser.add_argument("--out", type=Path, default=ROOT / ".tmp" / "factory-master-plan-completion-audit.json")
+    v3_activation_parser.add_argument("--markdown", type=Path, default=ROOT / ".tmp" / "factory-master-plan-completion-audit.md")
+    v3_activation_parser.add_argument("--perfect-run-out", type=Path, default=ROOT / ".tmp" / "factory-perfect-run.json")
+    v3_activation_parser.add_argument("--live-hermes", action="store_true", help="Also run the mutating live Hermes Kanban smoke.")
+    v3_activation_parser.add_argument("--live-board", default="of-v3-production-activation")
+    v3_activation_parser.add_argument("--live-hermes-out", type=Path, default=ROOT / ".tmp" / "factory-hermes-live-smoke.json")
+    v3_activation_parser.set_defaults(func=command_v3_production_activation_check)
 
     return parser
 

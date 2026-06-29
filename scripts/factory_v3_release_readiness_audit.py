@@ -28,6 +28,11 @@ REQUIRED_TRACKS = {
 }
 REQUIRED_COMPLETION_CLASSES = {"contract_pass", "runtime_pass", "product_pass", "release_pass"}
 REQUIRED_AUTHORITY = {"R3", "R4", "mainnet", "funds", "secrets", "production", "release"}
+REQUIRED_PERFECT_RUN_COMMANDS = {
+    "command:factoryctl factory-perfect-run",
+    "command:factoryctl master-plan-completion",
+    "command:factoryctl v3-production-activation-check --live-hermes",
+}
 REQUIRED_HUMAN_FIELDS = {
     "executive_summary",
     "decision_needed",
@@ -53,7 +58,7 @@ def _require(condition: bool, errors: list[str], message: str) -> None:
 
 
 def _ref_exists(ref: str) -> bool:
-    if ref.startswith("http://") or ref.startswith("https://") or ref.startswith("external:"):
+    if ref.startswith(("command:", "http://", "https://", "external:")):
         return True
     return (ROOT / ref).exists()
 
@@ -122,8 +127,11 @@ def audit(registry: dict[str, Any]) -> dict[str, Any]:
     _require(public.get("hype_claims_allowed") is False, errors, "hype claims must not replace demonstrated quality")
 
     perfect = registry.get("factory_perfect_run_policy", {}) if isinstance(registry.get("factory_perfect_run_policy"), dict) else {}
-    for key in ("requires_manager_agent_freshness", "requires_runtime_truth_spine", "requires_canonical_frontier", "requires_receipt_five_readback", "requires_public_github_v3_surface", "operator_does_not_interpret_kanban", "no_mini_hermes"):
+    for key in ("requires_manager_agent_freshness", "requires_runtime_truth_spine", "requires_canonical_frontier", "requires_receipt_five_readback", "requires_public_github_v3_surface", "operator_does_not_interpret_kanban", "no_mini_hermes", "release_blocks_without_factory_perfect_run"):
         _require(perfect.get(key) is True, errors, f"factory_perfect_run_policy.{key} must be true")
+    perfect_commands = set(str(item) for item in _as_list(perfect.get("required_commands")))
+    missing_perfect_commands = sorted(REQUIRED_PERFECT_RUN_COMMANDS - perfect_commands)
+    _require(not missing_perfect_commands, errors, "factory_perfect_run_policy.required_commands missing: " + ", ".join(missing_perfect_commands))
 
     acceptance = registry.get("acceptance", {}) if isinstance(registry.get("acceptance"), dict) else {}
     for key in ("waves_4_to_9_covered", "v3_release_required", "human_gates_artifact_first", "overclaim_blocked", "public_github_product_surface_required", "factory_perfect_run_required"):

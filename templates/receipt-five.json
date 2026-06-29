@@ -1,20 +1,46 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/receipt-five.schema.json",
   "receipt_five": {
-    "changed": "What changed.",
-    "artifact_paths": ["path/to/artifact"],
-    "verification_commands": ["command that was run"],
+    "changed": "V3 production activation proof with runtime, product-specific and release evidence.",
+    "artifact_paths": [
+      "templates/factory-master-plan-completion.json",
+      "templates/factory-v3-release-readiness.json",
+      "docs/reference/public-map.md"
+    ],
+    "verification_commands": [
+      "python3 scripts/factory_master_plan_completion_audit.py",
+      "python3 scripts/factory_v3_release_readiness_audit.py",
+      "python3 scripts/factory_perfect_run.py --out .tmp/factory-perfect-run.json"
+    ],
     "verification_result": "PASS",
     "reviewer_required": true,
-    "reviewer_result": "PASS by independent reviewer",
-    "next_action": "What should happen next."
+    "reviewer_result": "PASS by independent reviewer after durable artifact readback",
+    "runtime_proof": "Hermes/Kanban runtime proof is required; worker packet is not execution.",
+    "product_specific_proof": "Product-specific proof must reference Product SOT, Product Face Result or equivalent artifact readback when product-visible.",
+    "release_proof": "Release proof is separate from tests-passed and requires V3 release readiness plus authority checks.",
+    "artifact_readback": "All listed artifacts must be read back from durable refs before done is claimed.",
+    "not_valid_evidence": [
+      "scaffold",
+      "template-only",
+      "stale review",
+      "chat summary"
+    ],
+    "next_action": "Only claim done when contract_pass, runtime_pass, product_pass and release_pass are all true."
   },
   "kanban_transition_event": {
     "from_status": "ready",
     "to_status": "done",
-    "actor": "worker-or-operator",
-    "worker": "executor-profile",
-    "receipt_refs": ["receipt_five"],
-    "artifact_refs": ["path/to/artifact"]
+    "actor": "factory-orchestrator",
+    "worker": "factory-orchestrator",
+    "receipt_refs": [
+      "receipt_five",
+      "receipt_five_classification"
+    ],
+    "artifact_refs": [
+      "templates/factory-master-plan-completion.json",
+      "templates/factory-v3-release-readiness.json"
+    ],
+    "allowed": true,
+    "result": "PASS"
   }
 }

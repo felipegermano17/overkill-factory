@@ -1,0 +1,20 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/product-experience-evidence-stack.schema.json",
+  "record_type": "product_experience_evidence_stack",
+  "stack_id": "v3-product-experience-evidence-stack",
+  "design_system_ref": "external:project-DESIGN.md-or-product-design-system",
+  "product_face_result_required": true,
+  "visual_evidence": [
+    "screenshots",
+    "viewports",
+    "checked states",
+    "user journeys"
+  ],
+  "accessibility_evidence": [
+    "a11y notes",
+    "overlap check",
+    "keyboard/state review"
+  ],
+  "performance_note": "Visible product proof must include a bounded performance note before Product Face Result can be accepted.",
+  "readback_required": true
+}
