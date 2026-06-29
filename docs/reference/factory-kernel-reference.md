@@ -36,8 +36,8 @@ Done without evidence is only a claim. Receipt Five, review, runtime state and p
 | Hermes profile bindings | 40 | `agents/hermes-profile-bindings.public.json` |
 | Operating systems | 17 | `templates/factory-operating-system-registry.json` |
 | Method engines | 8 | `templates/method-engine-registry.json` |
-| JSON schemas | 234 | `schemas/*.json` |
-| Templates | 147 | `templates/*` |
+| JSON schemas | 235 | `schemas/*.json` |
+| Templates | 148 | `templates/*` |
 | Public surfaces | 19 | `docs/public-surface.manifest.json` |
 
 ## Factory Phases
@@ -257,6 +257,7 @@ These are the public JSON schemas the factory exposes. They are not decoration; 
 - `schemas/factory-decision-outbox.schema.json`
 - `schemas/factory-doctor-result.schema.json`
 - `schemas/factory-executor-skill-ecosystem-registry.schema.json`
+- `schemas/factory-github-issue-pattern-audit-registry.schema.json`
 - `schemas/factory-help.schema.json`
 - `schemas/factory-improvement-issue-candidate.schema.json`
 - `schemas/factory-learning-proposal.schema.json`
@@ -480,6 +481,7 @@ Templates are starter records paired with schemas. They are examples of valid sh
 - `templates/factory-command.json`
 - `templates/factory-decision-outbox.json`
 - `templates/factory-executor-skill-ecosystem-registry.json`
+- `templates/factory-github-issue-pattern-audit-registry.json`
 - `templates/factory-learning-proposal.json`
 - `templates/factory-maturity-scorecard.json`
 - `templates/factory-method-excellence-registry.json`

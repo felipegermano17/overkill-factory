@@ -1,0 +1,904 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-github-issue-pattern-audit-registry.schema.json",
+  "record_type": "factory_github_issue_pattern_audit_registry",
+  "registry_id": "factory-github-issue-pattern-audit-v1",
+  "created_at": "2026-06-29T00:00:00+00:00",
+  "repo": "public:overkill-factory",
+  "source_policy": {
+    "live_github_issues_inspected": true,
+    "raw_issue_snapshot_private": true,
+    "raw_issue_bodies_committed": false,
+    "public_registry_uses_representative_refs_only": true
+  },
+  "issue_snapshot_summary": {
+    "issue_count": 269,
+    "open_count": 3,
+    "closed_count": 266,
+    "first_issue_number": 1,
+    "last_issue_number": 532,
+    "fetched_snapshot_ref": "private:.tmp/github-issues-snapshot.json",
+    "open_issues": [
+      {
+        "number": 531,
+        "title": "Enforce owner-approved Product SOT before downstream phase promotion",
+        "url": "github:issue/531",
+        "state": "open"
+      },
+      {
+        "number": 529,
+        "title": "Fix operator needs_input delivery and global language policy",
+        "url": "github:issue/529",
+        "state": "open"
+      },
+      {
+        "number": 419,
+        "title": "Require durable artifact readback for evidence-bearing Hermes completions",
+        "url": "github:issue/419",
+        "state": "open"
+      }
+    ]
+  },
+  "issue_pattern_themes": [
+    {
+      "theme_key": "runtime_kanban_worker",
+      "name": "Runtime, Kanban and worker orchestration failures",
+      "issue_count": 131,
+      "severity": "P0",
+      "pattern": "The factory repeatedly failed by treating local scripts, packets, board projections or worker names as real durable runtime execution.",
+      "user_harm": "The user sees a factory that appears to run but then stalls, duplicates work, loses dependencies or cannot prove worker execution.",
+      "root_cause": "Runtime state, Hermes Kanban graph, worker packets, profile readiness and dispatch authority were not unified as a single proven control plane.",
+      "must_never_happen_again": true,
+      "anti_regression_requirements": [
+        "Hermes/Kanban runtime state must be the execution source of truth.",
+        "Worker packet creation must never be reported as worker execution.",
+        "Dependency edges must be durable before parent tasks can resume.",
+        "Profile readiness and worker results must be fresh before claiming runtime capability."
+      ],
+      "master_plan_implication": "Master plan must include a workstream/regression guard for Runtime, Kanban and worker orchestration failures.",
+      "representative_issues": [
+        {
+          "number": 528,
+          "title": "Harden Kanban-native phase rail autonomy",
+          "url": "github:issue/528",
+          "state": "closed"
+        },
+        {
+          "number": 525,
+          "title": "Require review tasks to create durable dependency edges before parent can respawn",
+          "url": "github:issue/525",
+          "state": "closed"
+        },
+        {
+          "number": 522,
+          "title": "No-idle must materialize ready work-unit Hermes plans into native cards",
+          "url": "github:issue/522",
+          "state": "closed"
+        },
+        {
+          "number": 520,
+          "title": "No-idle stops after worker packet instead of materializing ready work-unit cards",
+          "url": "github:issue/520",
+          "state": "closed"
+        },
+        {
+          "number": 518,
+          "title": "No-idle stops after Ready Gate instead of creating worker packet",
+          "url": "github:issue/518",
+          "state": "closed"
+        },
+        {
+          "number": 508,
+          "title": "No-idle must normalize absolute workspace paths before Hermes create",
+          "url": "github:issue/508",
+          "state": "closed"
+        },
+        {
+          "number": 506,
+          "title": "No-idle must recover Hermes create idempotency replay when stdout is empty",
+          "url": "github:issue/506",
+          "state": "closed"
+        },
+        {
+          "number": 504,
+          "title": "No-idle must flag running factory tasks without deterministic runtime contract",
+          "url": "github:issue/504",
+          "state": "closed"
+        },
+        {
+          "number": 428,
+          "title": "Blocked Hermes task creation must be unassigned-first to avoid dispatch race",
+          "url": "github:issue/428",
+          "state": "closed"
+        },
+        {
+          "number": 420,
+          "title": "Make Hermes board routing deterministic before agent interpretation",
+          "url": "github:issue/420",
+          "state": "closed"
+        }
+      ]
+    },
+    {
+      "theme_key": "operator_ux_friction",
+      "name": "Operator UX, gerente bridge and human-gate friction",
+      "issue_count": 60,
+      "severity": "P0",
+      "pattern": "The factory repeatedly asked too much, delivered too little context, routed contact outside the manager, or made the operator parse internal state.",
+      "user_harm": "The product owner experiences bureaucracy, interruptions, silence, unclear approvals, wrong-language packages or manual Kanban polling.",
+      "root_cause": "The gerente/operator interface was not enforced as a manager-only, artifact-first, PT-BR, progress-aware product experience with delivery receipts.",
+      "must_never_happen_again": true,
+      "anti_regression_requirements": [
+        "Manager-only operator contact must be enforced.",
+        "Human gate questions must be artifact-first, not approval-first.",
+        "Operator messages and packages must follow the pt-BR language policy.",
+        "Human gate delivery must include context, scope, options and receipt.",
+        "The operator must never be required to poll Kanban for progress."
+      ],
+      "master_plan_implication": "Master plan must include a workstream/regression guard for Operator UX, gerente bridge and human-gate friction.",
+      "representative_issues": [
+        {
+          "number": 530,
+          "title": "Enforce manager-only operator contact",
+          "url": "github:issue/530",
+          "state": "closed"
+        },
+        {
+          "number": 529,
+          "title": "Fix operator needs_input delivery and global language policy",
+          "url": "github:issue/529",
+          "state": "open"
+        },
+        {
+          "number": 471,
+          "title": "No-idle must create owner gate package after Product SOT candidate requires review",
+          "url": "github:issue/471",
+          "state": "closed"
+        },
+        {
+          "number": 461,
+          "title": "Telegram Desktop must use plain-text decision packages",
+          "url": "github:issue/461",
+          "state": "closed"
+        },
+        {
+          "number": 440,
+          "title": "Require canonical localized Product SOT for human gates",
+          "url": "github:issue/440",
+          "state": "closed"
+        },
+        {
+          "number": 438,
+          "title": "Classify delivered Product SOT owner packages as human gates",
+          "url": "github:issue/438",
+          "state": "closed"
+        },
+        {
+          "number": 432,
+          "title": "No-idle must surface pending operator understanding confirmation as input required",
+          "url": "github:issue/432",
+          "state": "closed"
+        },
+        {
+          "number": 425,
+          "title": "No-idle must route factory-owned gate-package gaps to repair, not human input",
+          "url": "github:issue/425",
+          "state": "closed"
+        },
+        {
+          "number": 414,
+          "title": "Make Telegram owner surface phase-aware and artifact-first",
+          "url": "github:issue/414",
+          "state": "closed"
+        },
+        {
+          "number": 411,
+          "title": "Prevent planning-only work from becoming human approval gates",
+          "url": "github:issue/411",
+          "state": "closed"
+        }
+      ]
+    },
+    {
+      "theme_key": "autonomy_idle_stop",
+      "name": "Autonomy, no-idle and stopped-flow failures",
+      "issue_count": 54,
+      "severity": "P0",
+      "pattern": "No-idle and autonomy often stopped at an intermediate artifact, looped on repair, or failed to resume the next safe factory action.",
+      "user_harm": "The factory feels non-autonomous: it pauses, asks again, loops, or waits even when a safe next step exists.",
+      "root_cause": "The next-action reducer, phase rail, artifact materializer and recovery policy were not deterministic enough across all phases.",
+      "must_never_happen_again": true,
+      "anti_regression_requirements": [
+        "No-idle must materialize the next ready native card instead of stopping at packets or gates.",
+        "Recoverable gaps must route to repair before human interruption.",
+        "Budget and retry loops must stop safely with useful status, not spin.",
+        "Canonical frontier resume must be deterministic after reconciled evidence."
+      ],
+      "master_plan_implication": "Master plan must include a workstream/regression guard for Autonomy, no-idle and stopped-flow failures.",
+      "representative_issues": [
+        {
+          "number": 532,
+          "title": "Fix deterministic no-idle resume for reconciled canonical frontier",
+          "url": "github:issue/532",
+          "state": "closed"
+        },
+        {
+          "number": 528,
+          "title": "Harden Kanban-native phase rail autonomy",
+          "url": "github:issue/528",
+          "state": "closed"
+        },
+        {
+          "number": 527,
+          "title": "Materialize Factory Run Graph at project start",
+          "url": "github:issue/527",
+          "state": "closed"
+        },
+        {
+          "number": 524,
+          "title": "Prevent over-budget workers from looping after producing valid evidence",
+          "url": "github:issue/524",
+          "state": "closed"
+        },
+        {
+          "number": 522,
+          "title": "No-idle must materialize ready work-unit Hermes plans into native cards",
+          "url": "github:issue/522",
+          "state": "closed"
+        },
+        {
+          "number": 520,
+          "title": "No-idle stops after worker packet instead of materializing ready work-unit cards",
+          "url": "github:issue/520",
+          "state": "closed"
+        },
+        {
+          "number": 518,
+          "title": "No-idle stops after Ready Gate instead of creating worker packet",
+          "url": "github:issue/518",
+          "state": "closed"
+        },
+        {
+          "number": 516,
+          "title": "No-idle stops after implementation readiness instead of creating ready gate report",
+          "url": "github:issue/516",
+          "state": "closed"
+        },
+        {
+          "number": 514,
+          "title": "No-idle stops after Product Creation Plan instead of creating implementation readiness",
+          "url": "github:issue/514",
+          "state": "closed"
+        },
+        {
+          "number": 512,
+          "title": "No-idle loops on reviewed architecture artifact readback",
+          "url": "github:issue/512",
+          "state": "closed"
+        },
+        {
+          "number": 510,
+          "title": "No-idle must route blocked artifact readback repair to architecture regeneration",
+          "url": "github:issue/510",
+          "state": "closed"
+        }
+      ]
+    },
+    {
+      "theme_key": "evidence_truth_overclaim",
+      "name": "Evidence, receipt, artifact readback and overclaim failures",
+      "issue_count": 84,
+      "severity": "P0",
+      "pattern": "The factory repeatedly risked treating stale, missing, synthetic, scaffold or wrong-format artifacts as evidence of done.",
+      "user_harm": "The user cannot trust status or completion because PASS/done may mean the wrong kind of proof.",
+      "root_cause": "Contract proof, artifact existence, runtime proof and product-specific proof were not always separated and read back.",
+      "must_never_happen_again": true,
+      "anti_regression_requirements": [
+        "Receipt Five must separate public artifact refs from private evidence refs.",
+        "Evidence-bearing completions require durable artifact readback.",
+        "Stale or scaffold evidence must fail closed.",
+        "Done/completion claims require product-specific proof, not fixture or contract proof."
+      ],
+      "master_plan_implication": "Master plan must include a workstream/regression guard for Evidence, receipt, artifact readback and overclaim failures.",
+      "representative_issues": [
+        {
+          "number": 526,
+          "title": "Separate private evidence refs from public artifact refs in Receipt Five closeout",
+          "url": "github:issue/526",
+          "state": "closed"
+        },
+        {
+          "number": 524,
+          "title": "Prevent over-budget workers from looping after producing valid evidence",
+          "url": "github:issue/524",
+          "state": "closed"
+        },
+        {
+          "number": 512,
+          "title": "No-idle loops on reviewed architecture artifact readback",
+          "url": "github:issue/512",
+          "state": "closed"
+        },
+        {
+          "number": 510,
+          "title": "No-idle must route blocked artifact readback repair to architecture regeneration",
+          "url": "github:issue/510",
+          "state": "closed"
+        },
+        {
+          "number": 502,
+          "title": "No-idle must supersede stale architecture review failures after PASS reruns",
+          "url": "github:issue/502",
+          "state": "closed"
+        },
+        {
+          "number": 500,
+          "title": "Materializer must reconstruct architecture Markdown from artifacts dict metadata",
+          "url": "github:issue/500",
+          "state": "closed"
+        },
+        {
+          "number": 498,
+          "title": "Failed architecture review must route architecture repair instead of readback loop",
+          "url": "github:issue/498",
+          "state": "closed"
+        },
+        {
+          "number": 488,
+          "title": "No-idle must reconstruct missing Markdown readbacks from structured metadata",
+          "url": "github:issue/488",
+          "state": "closed"
+        },
+        {
+          "number": 477,
+          "title": "No-idle must replace stale terminal declared-artifact repair tasks",
+          "url": "github:issue/477",
+          "state": "closed"
+        },
+        {
+          "number": 469,
+          "title": "Artifact materializer should prefer worker log diffs over summary metadata",
+          "url": "github:issue/469",
+          "state": "closed"
+        },
+        {
+          "number": 419,
+          "title": "Require durable artifact readback for evidence-bearing Hermes completions",
+          "url": "github:issue/419",
+          "state": "open"
+        }
+      ]
+    },
+    {
+      "theme_key": "method_product_architecture",
+      "name": "Product SOT, method, architecture and phase sequencing failures",
+      "issue_count": 104,
+      "severity": "P0",
+      "pattern": "The factory often advanced downstream before Product SOT, method, architecture, readiness or gate sequencing was truly closed.",
+      "user_harm": "The factory may build the wrong product, duplicate architecture, or require late correction from the user.",
+      "root_cause": "Product truth, method contract, architecture review and phase promotion were not always bound by strict upstream authority.",
+      "must_never_happen_again": true,
+      "anti_regression_requirements": [
+        "Owner-approved Product SOT must be required before downstream promotion.",
+        "Planning review must not be confused with architecture review.",
+        "Architecture failures must route to architecture repair, not readback loops.",
+        "Phase promotion must use deterministic phase rail evidence."
+      ],
+      "master_plan_implication": "Master plan must include a workstream/regression guard for Product SOT, method, architecture and phase sequencing failures.",
+      "representative_issues": [
+        {
+          "number": 531,
+          "title": "Enforce owner-approved Product SOT before downstream phase promotion",
+          "url": "github:issue/531",
+          "state": "open"
+        },
+        {
+          "number": 518,
+          "title": "No-idle stops after Ready Gate instead of creating worker packet",
+          "url": "github:issue/518",
+          "state": "closed"
+        },
+        {
+          "number": 516,
+          "title": "No-idle stops after implementation readiness instead of creating ready gate report",
+          "url": "github:issue/516",
+          "state": "closed"
+        },
+        {
+          "number": 514,
+          "title": "No-idle stops after Product Creation Plan instead of creating implementation readiness",
+          "url": "github:issue/514",
+          "state": "closed"
+        },
+        {
+          "number": 512,
+          "title": "No-idle loops on reviewed architecture artifact readback",
+          "url": "github:issue/512",
+          "state": "closed"
+        },
+        {
+          "number": 510,
+          "title": "No-idle must route blocked artifact readback repair to architecture regeneration",
+          "url": "github:issue/510",
+          "state": "closed"
+        },
+        {
+          "number": 502,
+          "title": "No-idle must supersede stale architecture review failures after PASS reruns",
+          "url": "github:issue/502",
+          "state": "closed"
+        },
+        {
+          "number": 498,
+          "title": "Failed architecture review must route architecture repair instead of readback loop",
+          "url": "github:issue/498",
+          "state": "closed"
+        },
+        {
+          "number": 494,
+          "title": "No-idle must not treat planning review as architecture review",
+          "url": "github:issue/494",
+          "state": "closed"
+        },
+        {
+          "number": 490,
+          "title": "No-idle must route completed architecture candidates to review instead of duplicating architecture",
+          "url": "github:issue/490",
+          "state": "closed"
+        },
+        {
+          "number": 486,
+          "title": "No-idle must continue from terminal planning review to architecture",
+          "url": "github:issue/486",
+          "state": "closed"
+        }
+      ]
+    },
+    {
+      "theme_key": "security_release_authority",
+      "name": "Security, release, authority and high-risk operation failures",
+      "issue_count": 43,
+      "severity": "P0",
+      "pattern": "High-risk operations needed sharper boundaries between safe autonomy, human authority, release proof and security gates.",
+      "user_harm": "The factory may either ask too often for low-risk work or fail to block where production, secrets, funds or release authority matter.",
+      "root_cause": "Authority taxonomy, release gates, security architecture and runtime risk surfaces were not consolidated enough.",
+      "must_never_happen_again": true,
+      "anti_regression_requirements": [
+        "Planning-only work must not become human approval by default.",
+        "Production/mainnet/funds/secrets/release actions require explicit authority.",
+        "Security architecture must precede material security-risk implementation.",
+        "Release is not tests-passed; it needs rollback, monitoring and human gate when required."
+      ],
+      "master_plan_implication": "Master plan must include a workstream/regression guard for Security, release, authority and high-risk operation failures.",
+      "representative_issues": [
+        {
+          "number": 407,
+          "title": "Add Security and Release OS for high-risk production operations",
+          "url": "github:issue/407",
+          "state": "closed"
+        },
+        {
+          "number": 402,
+          "title": "Add Authority and Autonomy OS to reduce unnecessary human gates safely",
+          "url": "github:issue/402",
+          "state": "closed"
+        },
+        {
+          "number": 399,
+          "title": "Add Fast Autonomy Lane without global YOLO authority",
+          "url": "github:issue/399",
+          "state": "closed"
+        },
+        {
+          "number": 380,
+          "title": "Require explicit phase, risk, and surfaces on route-repair cards",
+          "url": "github:issue/380",
+          "state": "closed"
+        },
+        {
+          "number": 366,
+          "title": "Consume release-readiness review results into deterministic product closeout",
+          "url": "github:issue/366",
+          "state": "closed"
+        },
+        {
+          "number": 360,
+          "title": "Require fresh post-repair authority per reviewed retry attempt",
+          "url": "github:issue/360",
+          "state": "closed"
+        },
+        {
+          "number": 356,
+          "title": "Consume post-repair authority decision results",
+          "url": "github:issue/356",
+          "state": "closed"
+        },
+        {
+          "number": 354,
+          "title": "Route missing retry/done authority after repair review PASS",
+          "url": "github:issue/354",
+          "state": "closed"
+        },
+        {
+          "number": 321,
+          "title": "Add explicit release gate for blocked ready work-unit tasks",
+          "url": "github:issue/321",
+          "state": "closed"
+        },
+        {
+          "number": 232,
+          "title": "Separate scope-accounted completion from production-complete acceptance",
+          "url": "github:issue/232",
+          "state": "closed"
+        },
+        {
+          "number": 211,
+          "title": "Structure production operations and incident support gates beyond prose",
+          "url": "github:issue/211",
+          "state": "closed"
+        }
+      ]
+    },
+    {
+      "theme_key": "capability_provider_agent",
+      "name": "Capability, provider, agent and Solana routing failures",
+      "issue_count": 28,
+      "severity": "P0",
+      "pattern": "Domain capability could be missing, stale, generic, or not activated even when the product surface required it.",
+      "user_harm": "The factory might route specialized work to the wrong executor or block unnecessarily instead of acquiring the right capability.",
+      "root_cause": "Capability activation, provider readiness, Solana AI Kit routing and worker profile freshness were not always enforced together.",
+      "must_never_happen_again": true,
+      "anti_regression_requirements": [
+        "Solana/onchain work must route through Solana AI Kit before execution.",
+        "Missing capability must enter acquisition lane before human blocker.",
+        "Registered providers must not be treated as activated providers.",
+        "Generic fallback must not hide missing specialist capability."
+      ],
+      "master_plan_implication": "Master plan must include a workstream/regression guard for Capability, provider, agent and Solana routing failures.",
+      "representative_issues": [
+        {
+          "number": 426,
+          "title": "Solana AI Kit route must be enforced as factory-owned planning repair",
+          "url": "github:issue/426",
+          "state": "closed"
+        },
+        {
+          "number": 417,
+          "title": "Enforce Solana AI Kit route before Solana F4+ planning",
+          "url": "github:issue/417",
+          "state": "closed"
+        },
+        {
+          "number": 405,
+          "title": "Add Capability and Domain Pack OS for deterministic domain activation",
+          "url": "github:issue/405",
+          "state": "closed"
+        },
+        {
+          "number": 244,
+          "title": "Model Hermes async subagents as reconciled factory lanes",
+          "url": "github:issue/244",
+          "state": "closed"
+        },
+        {
+          "number": 207,
+          "title": "Activate non-core product packs with real smoke/eval/profile bindings",
+          "url": "github:issue/207",
+          "state": "closed"
+        },
+        {
+          "number": 205,
+          "title": "Define surface-specific Product Face evidence profiles",
+          "url": "github:issue/205",
+          "state": "closed"
+        },
+        {
+          "number": 193,
+          "title": "Reconcile capability pack structured proofs into delivery gates",
+          "url": "github:issue/193",
+          "state": "closed"
+        },
+        {
+          "number": 190,
+          "title": "Resolve product delivery profile refs before enforcing product gates",
+          "url": "github:issue/190",
+          "state": "closed"
+        },
+        {
+          "number": 168,
+          "title": "Quasar proof runners must pin execution inputs",
+          "url": "github:issue/168",
+          "state": "closed"
+        },
+        {
+          "number": 105,
+          "title": "Require current worker profile smoke and eval ledger before claiming profile readiness",
+          "url": "github:issue/105",
+          "state": "closed"
+        },
+        {
+          "number": 104,
+          "title": "Harden capability surface matching and pack activation validation",
+          "url": "github:issue/104",
+          "state": "closed"
+        }
+      ]
+    },
+    {
+      "theme_key": "public_docs_onboarding",
+      "name": "Public docs, onboarding and repo-surface hygiene failures",
+      "issue_count": 39,
+      "severity": "P1",
+      "pattern": "The public repo risked exposing private context, confusing users, or preserving generated/manual surfaces without a clear operator path.",
+      "user_harm": "External operators cannot understand or trust the factory, and private/internal evidence may leak into public artifacts.",
+      "root_cause": "Public product surface, generated references, onboarding and evidence boundaries needed stricter validation.",
+      "must_never_happen_again": true,
+      "anti_regression_requirements": [
+        "Public repo must contain product/operator artifacts, not raw private studies.",
+        "Generated references must be regenerated after surface changes.",
+        "Public onboarding must expose a first-value path.",
+        "Private evidence/local paths must never leak into public artifacts."
+      ],
+      "master_plan_implication": "Master plan must include a workstream/regression guard for Public docs, onboarding and repo-surface hygiene failures.",
+      "representative_issues": [
+        {
+          "number": 526,
+          "title": "Separate private evidence refs from public artifact refs in Receipt Five closeout",
+          "url": "github:issue/526",
+          "state": "closed"
+        },
+        {
+          "number": 422,
+          "title": "Ignore local no-idle watchdog state in public JSON validation",
+          "url": "github:issue/422",
+          "state": "closed"
+        },
+        {
+          "number": 408,
+          "title": "Add Product Quality OS across UX, API, performance, data and docs",
+          "url": "github:issue/408",
+          "state": "closed"
+        },
+        {
+          "number": 406,
+          "title": "Add Operator Experience OS for Telegram-first factory operation",
+          "url": "github:issue/406",
+          "state": "closed"
+        },
+        {
+          "number": 394,
+          "title": "Require project DESIGN.md contract for product-facing frontend work",
+          "url": "github:issue/394",
+          "state": "closed"
+        },
+        {
+          "number": 307,
+          "title": "Add Product Implementation Readiness runner after Product Creation Plan",
+          "url": "github:issue/307",
+          "state": "closed"
+        },
+        {
+          "number": 301,
+          "title": "Add full Product SOT scope coverage runner",
+          "url": "github:issue/301",
+          "state": "closed"
+        },
+        {
+          "number": 291,
+          "title": "Add public map fidelity gate against canonical factory sources",
+          "url": "github:issue/291",
+          "state": "closed"
+        },
+        {
+          "number": 245,
+          "title": "Add automation run target and public-safe run history contracts",
+          "url": "github:issue/245",
+          "state": "closed"
+        },
+        {
+          "number": 169,
+          "title": "CLI helpers must not print absolute private local paths",
+          "url": "github:issue/169",
+          "state": "closed"
+        },
+        {
+          "number": 155,
+          "title": "Generated public artifacts must not expose raw Kanban task markers",
+          "url": "github:issue/155",
+          "state": "closed"
+        }
+      ]
+    },
+    {
+      "theme_key": "product_quality_surface",
+      "name": "Product experience and visible quality failures",
+      "issue_count": 39,
+      "severity": "P1",
+      "pattern": "Visible product quality could be under-proven when mechanical checks passed but UX/design evidence was missing.",
+      "user_harm": "A product can be technically present but ugly, unclear, inaccessible or below the factory quality bar.",
+      "root_cause": "Product Experience OS, Product Face proof, design system and visual evidence needed stronger enforcement.",
+      "must_never_happen_again": true,
+      "anti_regression_requirements": [
+        "Visible product completion requires Product Face result, screenshots and state evidence.",
+        "Project DESIGN.md/design system must be consumed before product-facing implementation.",
+        "Mechanical pass cannot equal visual or UX quality pass."
+      ],
+      "master_plan_implication": "Master plan must include a workstream/regression guard for Product experience and visible quality failures.",
+      "representative_issues": [
+        {
+          "number": 408,
+          "title": "Add Product Quality OS across UX, API, performance, data and docs",
+          "url": "github:issue/408",
+          "state": "closed"
+        },
+        {
+          "number": 394,
+          "title": "Require project DESIGN.md contract for product-facing frontend work",
+          "url": "github:issue/394",
+          "state": "closed"
+        },
+        {
+          "number": 242,
+          "title": "Add public Product Face Result template",
+          "url": "github:issue/242",
+          "state": "closed"
+        },
+        {
+          "number": 241,
+          "title": "Normalize Product Experience OS surface taxonomy to evidence profiles",
+          "url": "github:issue/241",
+          "state": "closed"
+        },
+        {
+          "number": 234,
+          "title": "Separate user-facing agentic product proofs from internal agent runtime readiness",
+          "url": "github:issue/234",
+          "state": "closed"
+        },
+        {
+          "number": 205,
+          "title": "Define surface-specific Product Face evidence profiles",
+          "url": "github:issue/205",
+          "state": "closed"
+        },
+        {
+          "number": 188,
+          "title": "Add archetype-specific product delivery quality profiles",
+          "url": "github:issue/188",
+          "state": "closed"
+        }
+      ]
+    },
+    {
+      "theme_key": "velocity_cost_loop_control",
+      "name": "Velocity, cost, loops and throughput control failures",
+      "issue_count": 20,
+      "severity": "P1",
+      "pattern": "Attempts to make the factory fast sometimes created retry loops, over-budget work, or unreconciled parallel lanes.",
+      "user_harm": "The user sees wasted time/cost or slow progress despite many background activities.",
+      "root_cause": "Retry budgets, stop conditions, parallel lane reconciliation and status cadence were not always first-class.",
+      "must_never_happen_again": true,
+      "anti_regression_requirements": [
+        "Workers over budget must stop after valid evidence and reconcile status.",
+        "Retry loops require explicit stop conditions and repair routing.",
+        "Parallelism must be reconciled into Receipt Five before status/progress claims."
+      ],
+      "master_plan_implication": "Master plan must include a workstream/regression guard for Velocity, cost, loops and throughput control failures.",
+      "representative_issues": [
+        {
+          "number": 524,
+          "title": "Prevent over-budget workers from looping after producing valid evidence",
+          "url": "github:issue/524",
+          "state": "closed"
+        },
+        {
+          "number": 512,
+          "title": "No-idle loops on reviewed architecture artifact readback",
+          "url": "github:issue/512",
+          "state": "closed"
+        },
+        {
+          "number": 498,
+          "title": "Failed architecture review must route architecture repair instead of readback loop",
+          "url": "github:issue/498",
+          "state": "closed"
+        },
+        {
+          "number": 344,
+          "title": "Add ready work-unit post-release repair/retry reconciliation route",
+          "url": "github:issue/344",
+          "state": "closed"
+        },
+        {
+          "number": 342,
+          "title": "Let ready work-unit release report post-release blocked tasks instead of failing",
+          "url": "github:issue/342",
+          "state": "closed"
+        },
+        {
+          "number": 332,
+          "title": "Respect ready work-unit dependency waves before release and dispatch",
+          "url": "github:issue/332",
+          "state": "closed"
+        }
+      ]
+    }
+  ],
+  "master_plan_requirements": [
+    "Make manager-only operator contact a hard runtime rule.",
+    "Make Telegram/Discord progress cards stateful, percentage-based and receipt-backed.",
+    "Make human gates rare, artifact-first, scoped and language-correct.",
+    "Make no-idle resume deterministic from the canonical frontier.",
+    "Make worker packets distinct from worker execution results everywhere.",
+    "Make evidence readback and Receipt Five mandatory for done/completion claims.",
+    "Make Product SOT/method/architecture upstream gates block downstream promotion.",
+    "Make Hermes Worker Runtime OS the blocking runtime proof workstream.",
+    "Make missing capability acquisition run before human blocker escalation.",
+    "Make Solana AI Kit mandatory for Solana/onchain execution.",
+    "Make security/release authority explicit for production, secrets, funds, mainnet and R4.",
+    "Make public/private evidence boundaries non-regressable.",
+    "Make Product Experience/visible quality proof stronger than mechanical checks.",
+    "Make retry budgets, loop stops and parallel lane reconciliation explicit."
+  ],
+  "os_mapping": {
+    "operator_ux_friction": [
+      "operator_experience_os",
+      "authority_autonomy_os",
+      "velocity_cost_throughput_os"
+    ],
+    "autonomy_idle_stop": [
+      "deterministic_control_plane_os",
+      "velocity_cost_throughput_os",
+      "work_unit_execution_dispatch_os"
+    ],
+    "runtime_kanban_worker": [
+      "hermes_worker_runtime_os",
+      "work_unit_execution_dispatch_os",
+      "agent_profile_authority_os"
+    ],
+    "evidence_truth_overclaim": [
+      "evidence_receipt_os",
+      "quality_verification_os",
+      "deterministic_control_plane_os"
+    ],
+    "method_product_architecture": [
+      "product_truth_research_os",
+      "method_os",
+      "product_architecture_os"
+    ],
+    "security_release_authority": [
+      "security_os",
+      "release_operations_os",
+      "authority_autonomy_os"
+    ],
+    "capability_provider_agent": [
+      "capability_provider_os",
+      "agent_profile_authority_os",
+      "hermes_worker_runtime_os"
+    ],
+    "public_docs_onboarding": [
+      "evidence_receipt_os",
+      "operator_experience_os",
+      "factory_learning_os"
+    ],
+    "product_quality_surface": [
+      "product_experience_design_brand_os",
+      "quality_verification_os"
+    ],
+    "velocity_cost_loop_control": [
+      "velocity_cost_throughput_os",
+      "deterministic_control_plane_os"
+    ]
+  },
+  "acceptance": {
+    "audit_created": true,
+    "all_issue_history_summarized": true,
+    "user_experience_patterns_preserved": true,
+    "master_plan_next": true,
+    "evidence_refs": [
+      "schemas/factory-github-issue-pattern-audit-registry.schema.json",
+      "templates/factory-github-issue-pattern-audit-registry.json",
+      "scripts/factory_github_issue_pattern_audit.py",
+      "tests/test_factory_github_issue_pattern_audit.py"
+    ]
+  }
+}
