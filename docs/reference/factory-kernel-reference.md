@@ -36,8 +36,8 @@ Done without evidence is only a claim. Receipt Five, review, runtime state and p
 | Hermes profile bindings | 40 | `agents/hermes-profile-bindings.public.json` |
 | Operating systems | 17 | `templates/factory-operating-system-registry.json` |
 | Method engines | 8 | `templates/method-engine-registry.json` |
-| JSON schemas | 233 | `schemas/*.json` |
-| Templates | 146 | `templates/*` |
+| JSON schemas | 234 | `schemas/*.json` |
+| Templates | 147 | `templates/*` |
 | Public surfaces | 19 | `docs/public-surface.manifest.json` |
 
 ## Factory Phases
@@ -265,6 +265,7 @@ These are the public JSON schemas the factory exposes. They are not decoration; 
 - `schemas/factory-operating-system-registry.schema.json`
 - `schemas/factory-operating-system-scorecard.schema.json`
 - `schemas/factory-operator-ui-ux-excellence-registry.schema.json`
+- `schemas/factory-os-excellence-audit-registry.schema.json`
 - `schemas/factory-phase-engine-state.schema.json`
 - `schemas/factory-phase-graph.schema.json`
 - `schemas/factory-phase-lock.schema.json`
@@ -484,6 +485,7 @@ Templates are starter records paired with schemas. They are examples of valid sh
 - `templates/factory-method-excellence-registry.json`
 - `templates/factory-operating-system-registry.json`
 - `templates/factory-operator-ui-ux-excellence-registry.json`
+- `templates/factory-os-excellence-audit-registry.json`
 - `templates/factory-phase-engine-state.json`
 - `templates/factory-phase-graph.json`
 - `templates/factory-promotion-packet.json`

@@ -16,6 +16,7 @@ python scripts/factory_world_class_process_gap_audit.py --out .tmp/factory-world
 python scripts/factory_executor_skill_ecosystem_audit.py --out .tmp/factory-executor-skill-ecosystem-audit.json --markdown .tmp/factory-executor-skill-ecosystem-audit.md
 python scripts/factory_security_excellence_audit.py --out .tmp/factory-security-excellence-audit.json --markdown .tmp/factory-security-excellence-audit.md
 python scripts/factory_operator_ui_ux_excellence_audit.py --out .tmp/factory-operator-ui-ux-excellence-audit.json --markdown .tmp/factory-operator-ui-ux-excellence-audit.md
+python scripts/factory_os_excellence_audit.py --out .tmp/factory-os-excellence-audit.json --markdown .tmp/factory-os-excellence-audit.md
 python -m unittest discover -s tests
 python scripts/validate_document_governance.py
 python scripts/generate_factory_reference_docs.py --check
@@ -160,6 +161,7 @@ python scripts/factory_world_class_process_gap_audit.py --out .tmp/factory-world
 python scripts/factory_executor_skill_ecosystem_audit.py --out .tmp/factory-executor-skill-ecosystem-audit.json --markdown .tmp/factory-executor-skill-ecosystem-audit.md
 python scripts/factory_security_excellence_audit.py --out .tmp/factory-security-excellence-audit.json --markdown .tmp/factory-security-excellence-audit.md
 python scripts/factory_operator_ui_ux_excellence_audit.py --out .tmp/factory-operator-ui-ux-excellence-audit.json --markdown .tmp/factory-operator-ui-ux-excellence-audit.md
+python scripts/factory_os_excellence_audit.py --out .tmp/factory-os-excellence-audit.json --markdown .tmp/factory-os-excellence-audit.md
 python scripts/factory_battery.py
 python scripts/validate_document_governance.py
 python scripts/generate_factory_reference_docs.py --check

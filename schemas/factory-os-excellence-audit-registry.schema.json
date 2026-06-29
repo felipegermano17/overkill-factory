@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/factory-os-excellence-audit-registry.schema.json",
+  "title": "Overkill Factory OS Excellence Audit Registry",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "registry_id",
+    "created_at",
+    "source_registry_ref",
+    "audit_scope",
+    "audit_dimensions",
+    "os_findings",
+    "prior_audit_mapping",
+    "completion_claim_policy",
+    "acceptance"
+  ],
+  "properties": {
+    "$schema": {"const": "https://overkill-factory.dev/schemas/factory-os-excellence-audit-registry.schema.json"},
+    "record_type": {"const": "factory_os_excellence_audit_registry"},
+    "registry_id": {"type": "string", "minLength": 3},
+    "created_at": {"type": "string", "minLength": 10},
+    "source_registry_ref": {"type": "string", "minLength": 3},
+    "audit_scope": {
+      "type": "object",
+      "required": ["thesis", "all_existing_os_required", "new_os_creation_allowed", "master_plan_allowed", "runtime_migration_allowed"],
+      "properties": {
+        "thesis": {"type": "string", "minLength": 20},
+        "all_existing_os_required": {"type": "boolean"},
+        "new_os_creation_allowed": {"type": "boolean"},
+        "master_plan_allowed": {"type": "boolean"},
+        "runtime_migration_allowed": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "audit_dimensions": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "required": ["key", "name", "question"],
+        "properties": {
+          "key": {"type": "string", "minLength": 3},
+          "name": {"type": "string", "minLength": 3},
+          "question": {"type": "string", "minLength": 12}
+        },
+        "additionalProperties": false
+      }
+    },
+    "os_findings": {
+      "type": "array",
+      "minItems": 17,
+      "items": {
+        "type": "object",
+        "required": [
+          "os_id",
+          "display_name",
+          "priority",
+          "owner_worker",
+          "audit_state",
+          "contract_maturity",
+          "runtime_maturity",
+          "product_specific_proof_maturity",
+          "integration_maturity",
+          "missing_or_partial_proofs",
+          "master_plan_implication",
+          "must_not_claim",
+          "linked_prior_audits"
+        ],
+        "properties": {
+          "os_id": {"type": "string", "minLength": 3},
+          "display_name": {"type": "string", "minLength": 3},
+          "priority": {"enum": ["P0", "P1"]},
+          "owner_worker": {"type": "string", "minLength": 3},
+          "audit_state": {"enum": ["runtime_blocked", "contract_active_product_proof_needed", "hardened_existing_runtime_review_needed", "missing"]},
+          "contract_maturity": {"enum": ["strong", "partial", "missing"]},
+          "runtime_maturity": {"enum": ["proven", "partial", "blocked", "not_claimed"]},
+          "product_specific_proof_maturity": {"enum": ["proven", "partial", "blocked", "not_claimed"]},
+          "integration_maturity": {"enum": ["strong", "partial", "missing"]},
+          "missing_or_partial_proofs": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 3}},
+          "master_plan_implication": {"type": "string", "minLength": 10},
+          "must_not_claim": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 3}},
+          "linked_prior_audits": {"type": "array", "items": {"type": "string", "minLength": 3}}
+        },
+        "additionalProperties": false
+      }
+    },
+    "prior_audit_mapping": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["primary_os", "secondary_os", "why_it_matters"],
+        "properties": {
+          "primary_os": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 3}},
+          "secondary_os": {"type": "array", "items": {"type": "string", "minLength": 3}},
+          "why_it_matters": {"type": "string", "minLength": 10}
+        },
+        "additionalProperties": false
+      }
+    },
+    "completion_claim_policy": {
+      "type": "object",
+      "required": ["audit_allows_master_plan_to_claim_implementation_complete", "registry_alone_allows_os_ready_claim", "runtime_proof_required", "product_specific_proof_required", "master_plan_next_after_audit"],
+      "properties": {
+        "audit_allows_master_plan_to_claim_implementation_complete": {"type": "boolean"},
+        "registry_alone_allows_os_ready_claim": {"type": "boolean"},
+        "runtime_proof_required": {"type": "boolean"},
+        "product_specific_proof_required": {"type": "boolean"},
+        "master_plan_next_after_audit": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "acceptance": {
+      "type": "object",
+      "required": ["audit_created", "all_existing_os_covered", "no_new_os_created", "master_plan_deferred", "evidence_refs"],
+      "properties": {
+        "audit_created": {"type": "boolean"},
+        "all_existing_os_covered": {"type": "boolean"},
+        "no_new_os_created": {"type": "boolean"},
+        "master_plan_deferred": {"type": "boolean"},
+        "evidence_refs": {"type": "array", "minItems": 2, "items": {"type": "string", "minLength": 3}}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
