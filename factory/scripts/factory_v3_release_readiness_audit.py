@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = ROOT.parent if (ROOT.parent / ".github").exists() else ROOT
 DEFAULT_REGISTRY = ROOT / "templates" / "factory-v3-release-readiness.json"
 DEFAULT_OUT = ROOT / ".tmp" / "factory-v3-release-readiness-audit.json"
 DEFAULT_MD = ROOT / ".tmp" / "factory-v3-release-readiness-audit.md"
@@ -61,7 +62,7 @@ def _require(condition: bool, errors: list[str], message: str) -> None:
 def _ref_exists(ref: str) -> bool:
     if ref.startswith(("command:", "http://", "https://", "external:")):
         return True
-    return (ROOT / ref).exists()
+    return (ROOT / ref).exists() or (REPO_ROOT / ref).exists()
 
 
 def audit(registry: dict[str, Any]) -> dict[str, Any]:

@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = ROOT.parent if (ROOT.parent / ".github").exists() else ROOT
 DEFAULT_MATRIX = ROOT / "templates" / "factory-master-plan-literal-dod.json"
 DEFAULT_OUT = ROOT / ".tmp" / "factory-master-plan-literal-dod-audit.json"
 DEFAULT_MD = ROOT / ".tmp" / "factory-master-plan-literal-dod-audit.md"
@@ -45,7 +46,7 @@ def load_json(path: Path) -> dict[str, Any]:
 def _exists(root: Path, ref: str) -> bool:
     if ref.startswith(("command:", "external:", "release:", "github:", "http://", "https://")):
         return True
-    return (root / ref).exists()
+    return (root / ref).exists() or (REPO_ROOT / ref).exists()
 
 
 def audit(matrix: dict[str, Any], root: Path = ROOT) -> dict[str, Any]:

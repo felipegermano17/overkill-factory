@@ -18,6 +18,7 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = ROOT.parent if (ROOT.parent / ".github").exists() else ROOT
 
 PRIVATE_WINDOWS_PATH = "C:" + "\\\\" + "Users"
 PRIVATE_SYNC_ROOT = "One" + "Drive"
@@ -123,7 +124,7 @@ def build_runtime_status(
     live_evidence: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     worker_registry_present = (ROOT / "agents" / "worker-registry.public.json").is_file()
-    worker_profiles_present = (ROOT / "docs" / "agents" / "worker-profiles.md").is_file()
+    worker_profiles_present = (REPO_ROOT / "docs" / "agents" / "worker-profiles.md").is_file()
     evidence_is_public_safe = live_evidence is None or public_safe(live_evidence)
     checks = {
         "hermes_status_readonly_passed": evidence_bool(live_evidence, "hermes_status_readonly_passed"),

@@ -20,6 +20,7 @@ import subprocess
 import sys
 import sysconfig
 import site
+import urllib.parse
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path, PureWindowsPath
@@ -15698,7 +15699,11 @@ def validate_quasar_toolchain_proof(proof: object) -> list[str]:
     source_head_expected = str(proof.get("source_head_expected") or "").strip()
     container_image = str(proof.get("container_image") or "").strip()
     solana_install_url = str(proof.get("solana_install_url") or "").strip().lower()
-    if "crates.io" in install_source and not source_head:
+    parsed_install_source = urllib.parse.urlparse(
+        install_source if "://" in install_source else f"//{install_source}"
+    )
+    install_source_host = parsed_install_source.hostname or ""
+    if install_source_host == "crates.io" and not source_head:
         errors.append("auditor_result quasar_toolchain_proof cannot rely on crates.io quasar-cli without a source_head pin")
     if source_head and len(source_head) < 7:
         errors.append("auditor_result quasar_toolchain_proof source_head must be a commit-like pin")
@@ -17317,13 +17322,29 @@ def _evidence_ref_errors(refs: list[str], evidence_root: Path | None) -> list[st
             errors.append(f"evidence ref must be public-relative or explicit external ref: {ref}")
             continue
         if evidence_root is not None:
-            candidate = (evidence_root / normalized).resolve()
-            try:
-                candidate.relative_to(evidence_root.resolve())
-            except ValueError:
+            if ".." in Path(normalized).parts:
                 errors.append(f"evidence ref escapes evidence root: {ref}")
                 continue
-            if not candidate.exists():
+            roots = [evidence_root.resolve()]
+            repo_root = REPO_ROOT.resolve()
+            if repo_root not in roots:
+                roots.append(repo_root)
+            ref_exists = False
+            escaped_all_roots = True
+            for root in roots:
+                candidate = (root / normalized).resolve()
+                try:
+                    candidate.relative_to(root)
+                except ValueError:
+                    continue
+                escaped_all_roots = False
+                if candidate.exists():
+                    ref_exists = True
+                    break
+            if escaped_all_roots:
+                errors.append(f"evidence ref escapes evidence root: {ref}")
+                continue
+            if not ref_exists:
                 errors.append(f"evidence ref does not exist: {ref}")
     return errors
 
@@ -24164,7 +24185,7 @@ def build_parser() -> argparse.ArgumentParser:
         "compile-workflow",
         help="Compile the public factory workflow catalog into a deterministic executable phase plan.",
     )
-    compile_workflow_parser.add_argument("--catalog", type=Path, default=ROOT / "docs" / "factory-workflow.catalog.json")
+    compile_workflow_parser.add_argument("--catalog", type=Path, default=REPO_ROOT / "docs" / "factory-workflow.catalog.json")
     compile_workflow_parser.add_argument("--catalog-ref", default="docs/factory-workflow.catalog.json")
     compile_workflow_parser.add_argument("--plan-id")
     compile_workflow_parser.add_argument("--compiled-at")
@@ -24187,7 +24208,7 @@ def build_parser() -> argparse.ArgumentParser:
     validate_phase_sources_parser.add_argument(
         "--workflow-catalog",
         type=Path,
-        default=ROOT / "docs" / "factory-workflow.catalog.json",
+        default=REPO_ROOT / "docs" / "factory-workflow.catalog.json",
     )
     validate_phase_sources_parser.add_argument(
         "--compiled-plan",

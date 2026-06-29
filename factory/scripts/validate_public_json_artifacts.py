@@ -66,11 +66,12 @@ def default_root() -> Path:
 
 
 ROOT = default_root()
+REPO_ROOT = ROOT.parent if (ROOT.parent / ".github").exists() else ROOT
 SCHEMA_DIR = ROOT / "schemas"
 PUBLIC_SCHEMA_DIRS = [
     SCHEMA_DIR,
     ROOT / "agents",
-    ROOT / "docs",
+    REPO_ROOT / "docs",
     ROOT / "examples",
     ROOT / "fixtures" / "product-validation",
     ROOT / "templates",
@@ -79,7 +80,7 @@ SCAN_DIRS = [
     ROOT / "examples",
     ROOT / "agents",
     ROOT / "templates",
-    ROOT / "docs",
+    REPO_ROOT / "docs",
     ROOT / "fixtures" / "product-validation",
 ]
 RUNTIME_LOCAL_JSON_DIRS = [

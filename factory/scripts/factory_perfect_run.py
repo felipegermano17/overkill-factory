@@ -15,6 +15,7 @@ import site
 from pathlib import Path
 
 CODE_ROOT = Path(__file__).resolve().parents[1]
+CODE_REPO_ROOT = CODE_ROOT.parent if (CODE_ROOT.parent / ".github").exists() else CODE_ROOT
 def _asset_root() -> Path:
     candidates = [
         CODE_ROOT,
@@ -24,6 +25,7 @@ def _asset_root() -> Path:
     ]
     return next((candidate for candidate in candidates if (candidate / "templates" / "factory-run.json").exists()), CODE_ROOT)
 ROOT = _asset_root()
+REPO_ROOT = CODE_REPO_ROOT if ROOT == CODE_ROOT else ROOT
 DEFAULT_OUT = ROOT / ".tmp" / "factory-perfect-run.json"
 
 STAGES = [
@@ -113,7 +115,7 @@ def audit_record(record: dict) -> list[str]:
     if missing:
         errors.append("missing stage(s): " + ", ".join(sorted(missing)))
     for key, ref in (record.get("proof_bundle") or {}).items():
-        if isinstance(ref, str) and not ref.startswith("external:") and not (ROOT / ref).exists():
+        if isinstance(ref, str) and not ref.startswith("external:") and not ((ROOT / ref).exists() or (REPO_ROOT / ref).exists()):
             errors.append(f"missing proof bundle ref {key}: {ref}")
     return errors
 

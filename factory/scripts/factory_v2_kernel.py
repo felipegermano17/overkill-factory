@@ -19,7 +19,8 @@ from validate_public_json_artifacts import load_schemas, validate_node
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_WORKFLOW_CATALOG = ROOT / "docs" / "factory-workflow.catalog.json"
+REPO_ROOT = ROOT.parent if (ROOT.parent / ".github").exists() else ROOT
+DEFAULT_WORKFLOW_CATALOG = REPO_ROOT / "docs" / "factory-workflow.catalog.json"
 DEFAULT_PHASE_GRAPH = ROOT / "templates" / "factory-phase-graph.json"
 LEGACY_NON_PRODUCT_PHASE_IDS = {"F8A", "F14", "F19"}
 
@@ -456,11 +457,12 @@ def validate_phase_sources_sync(
             schema_ref = _artifact_schema_ref(artifact)
             if not schema_ref:
                 continue
-            if schema_ref not in related_schema_refs:
+            schema_ref_variants = {schema_ref, f"factory/{schema_ref}"}
+            if not (schema_ref_variants & related_schema_refs):
                 errors.append(
                     f"{at}.workflow_catalog.{phase_id}.related_schema_refs: missing {schema_ref} for required artifact {artifact}"
                 )
-            if artifact in output_artifacts and schema_ref not in exit_contract_refs:
+            if artifact in output_artifacts and not (schema_ref_variants & exit_contract_refs):
                 errors.append(
                     f"{at}.phase_graph.{phase_id}.exit_contract_refs: missing {schema_ref} for output artifact {artifact}"
                 )

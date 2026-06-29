@@ -66,7 +66,7 @@ def term_variants(value: str) -> list[str]:
 
 
 def repo_path(root: Path, rel: str) -> Path:
-    candidates = [root / rel, REPO_ROOT / rel]
+    candidates = [root / rel, REPO_ROOT / rel, ROOT / rel]
     repo_root = REPO_ROOT.resolve()
     for path in candidates:
         resolved = path.resolve()

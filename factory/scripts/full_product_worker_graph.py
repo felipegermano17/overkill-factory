@@ -11,6 +11,7 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = ROOT.parent if (ROOT.parent / ".github").exists() else ROOT
 DEFAULT_OUT = ROOT / ".tmp" / "factory-runs" / "product-specific" / "qvg-full-product-worker-graph.json"
 DEFAULT_MD_OUT = ROOT / ".tmp" / "factory-runs" / "product-specific" / "qvg-full-product-worker-graph.md"
 
@@ -111,7 +112,7 @@ def rel_exists(rel_path: str) -> bool:
 def evidence_ref_exists(ref: str) -> bool:
     if ref.startswith("external:") or ref.startswith("http://") or ref.startswith("https://"):
         return True
-    return (ROOT / ref).exists()
+    return ((ROOT / ref).exists() or (REPO_ROOT / ref).exists())
 
 
 def card_id_for(data: dict[str, Any]) -> str:

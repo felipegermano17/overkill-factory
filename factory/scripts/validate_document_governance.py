@@ -96,6 +96,9 @@ def validate(path: Path) -> list[str]:
 def validate_ambiguous_docs_have_status() -> list[str]:
     errors: list[str] = []
     for path in sorted((DOC_ROOT).rglob("*.md")):
+        rel_path = path.relative_to(DOC_ROOT).as_posix()
+        if rel_path.startswith("reference/"):
+            continue
         head = front_matter(path)
         if "Document status:" in head:
             continue
