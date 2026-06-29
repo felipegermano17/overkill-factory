@@ -40,7 +40,7 @@
       "evidence_refs": [
         "templates/capability-acquisition-contract.json",
         "templates/security-route-contract.json",
-        "templates/solana-ai-kit-usage-receipt.json",
+        "schemas/solana-ai-kit-usage-receipt.schema.json",
         "scripts/factory_security_excellence_audit.py"
       ]
     },

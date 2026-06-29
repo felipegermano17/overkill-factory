@@ -37,7 +37,7 @@ Done without evidence is only a claim. Receipt Five, review, runtime state and p
 | Operating systems | 17 | `templates/factory-operating-system-registry.json` |
 | Method engines | 8 | `templates/method-engine-registry.json` |
 | JSON schemas | 240 | `schemas/*.json` |
-| Templates | 154 | `templates/*` |
+| Templates | 153 | `templates/*` |
 | Public surfaces | 19 | `docs/public-surface.manifest.json` |
 
 ## Factory Phases
@@ -581,7 +581,6 @@ Templates are starter records paired with schemas. They are examples of valid sh
 - `templates/security-state-ledger.json`
 - `templates/skill-ref-resolution-report.json`
 - `templates/software-development-plan.json`
-- `templates/solana-ai-kit-usage-receipt.json`
 - `templates/source-resolution-packet.json`
 - `templates/spec-graph.json`
 - `templates/specialist-decision-packet.json`
