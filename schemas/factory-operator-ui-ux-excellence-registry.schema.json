@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/factory-operator-ui-ux-excellence-registry.schema.json",
+  "title": "Overkill Factory Operator UI/UX Excellence Registry",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "registry_id",
+    "created_at",
+    "audit_scope",
+    "manager_bridge",
+    "operator_channels",
+    "progress_notification_contract",
+    "human_gate_experience_contract",
+    "pillar_coverage",
+    "source_refs",
+    "acceptance"
+  ],
+  "properties": {
+    "$schema": {"type": "string", "minLength": 8},
+    "record_type": {"const": "factory_operator_ui_ux_excellence_registry"},
+    "registry_id": {"type": "string", "minLength": 3},
+    "created_at": {"type": "string", "minLength": 10},
+    "audit_scope": {
+      "type": "object",
+      "required": ["primary_user", "primary_channels", "ignored_surfaces", "thesis", "front_end_currently_out_of_scope"],
+      "properties": {
+        "primary_user": {"type": "string", "minLength": 3},
+        "primary_channels": {"type": "array", "minItems": 2, "items": {"type": "string", "minLength": 3}},
+        "ignored_surfaces": {"type": "array", "items": {"type": "string", "minLength": 3}},
+        "front_end_currently_out_of_scope": {"type": "boolean"},
+        "thesis": {"type": "string", "minLength": 20}
+      },
+      "additionalProperties": false
+    },
+    "operator_channels": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": ["channel", "status", "role", "current_quality", "upgrade_needed", "must_support"],
+        "properties": {
+          "channel": {"type": "string", "minLength": 3},
+          "status": {"enum": ["primary", "target", "excluded"]},
+          "role": {"type": "string", "minLength": 8},
+          "current_quality": {"enum": ["strong", "partial", "poor", "not_considered"]},
+          "upgrade_needed": {"type": "string", "minLength": 3},
+          "must_support": {"type": "array", "minItems": 3, "items": {"type": "string", "minLength": 3}}
+        },
+        "additionalProperties": false
+      }
+    },
+    "manager_bridge": {
+      "type": "object",
+      "required": ["manager_profile", "user_facing_role", "responsibilities", "direct_worker_chat_required", "operator_polling_required", "anti_patterns"],
+      "properties": {
+        "manager_profile": {"type": "string", "minLength": 3},
+        "user_facing_role": {"type": "string", "minLength": 8},
+        "responsibilities": {"type": "array", "minItems": 4, "items": {"type": "string", "minLength": 3}},
+        "direct_worker_chat_required": {"type": "boolean"},
+        "operator_polling_required": {"type": "boolean"},
+        "anti_patterns": {"type": "array", "minItems": 3, "items": {"type": "string", "minLength": 3}}
+      },
+      "additionalProperties": false
+    },
+    "progress_notification_contract": {
+      "type": "object",
+      "required": ["required_fields", "max_silent_minutes_when_running", "batch_internal_noise", "notify_on_every_worker_event", "recommended_cadence", "forbidden_patterns"],
+      "properties": {
+        "required_fields": {"type": "array", "minItems": 6, "items": {"type": "string", "minLength": 3}},
+        "max_silent_minutes_when_running": {"type": "integer", "minimum": 1, "maximum": 120},
+        "batch_internal_noise": {"type": "boolean"},
+        "notify_on_every_worker_event": {"type": "boolean"},
+        "recommended_cadence": {"type": "array", "minItems": 2, "items": {"type": "string", "minLength": 3}},
+        "forbidden_patterns": {"type": "array", "minItems": 3, "items": {"type": "string", "minLength": 3}}
+      },
+      "additionalProperties": false
+    },
+    "human_gate_experience_contract": {
+      "type": "object",
+      "required": ["human_gate_only_when_material_decision_required", "material_before_question_required", "primary_decision_artifact", "required_assets", "optional_assets", "recommended_video_paths", "content_quality_requirements", "forbidden_patterns", "fallback_policy"],
+      "properties": {
+        "human_gate_only_when_material_decision_required": {"type": "boolean"},
+        "material_before_question_required": {"type": "boolean"},
+        "primary_decision_artifact": {"type": "string", "minLength": 3},
+        "required_assets": {"type": "array", "minItems": 2, "items": {"type": "string", "minLength": 3}},
+        "optional_assets": {"type": "array", "items": {"type": "string", "minLength": 3}},
+        "recommended_video_paths": {"type": "array", "items": {"type": "string", "minLength": 3}},
+        "content_quality_requirements": {"type": "array", "minItems": 5, "items": {"type": "string", "minLength": 3}},
+        "forbidden_patterns": {"type": "array", "minItems": 3, "items": {"type": "string", "minLength": 3}},
+        "fallback_policy": {"type": "string", "minLength": 10}
+      },
+      "additionalProperties": false
+    },
+    "pillar_coverage": {
+      "type": "array",
+      "minItems": 14,
+      "items": {
+        "type": "object",
+        "required": ["key", "name", "goal", "status", "evidence_refs", "gap_or_upgrade", "risk_if_missing", "implementation_shape"],
+        "properties": {
+          "key": {"type": "string", "minLength": 3},
+          "name": {"type": "string", "minLength": 3},
+          "goal": {"type": "string", "minLength": 12},
+          "status": {"enum": ["strong", "partial", "missing"]},
+          "evidence_refs": {"type": "array", "items": {"type": "string", "minLength": 3}},
+          "gap_or_upgrade": {"type": "string", "minLength": 3},
+          "risk_if_missing": {"type": "string", "minLength": 8},
+          "implementation_shape": {"type": "string", "minLength": 3}
+        },
+        "additionalProperties": false
+      }
+    },
+    "source_refs": {"type": "array", "minItems": 3, "items": {"type": "string", "minLength": 3}},
+    "acceptance": {
+      "type": "object",
+      "required": ["audit_created", "frontend_excluded", "telegram_and_discord_considered", "pdf_gate_required", "video_explainer_recommended", "runtime_claim", "evidence_refs"],
+      "properties": {
+        "audit_created": {"type": "boolean"},
+        "frontend_excluded": {"type": "boolean"},
+        "telegram_and_discord_considered": {"type": "boolean"},
+        "pdf_gate_required": {"type": "boolean"},
+        "video_explainer_recommended": {"type": "boolean"},
+        "runtime_claim": {"type": "string", "minLength": 8},
+        "evidence_refs": {"type": "array", "minItems": 2, "items": {"type": "string", "minLength": 3}}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
