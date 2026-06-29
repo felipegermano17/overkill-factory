@@ -1,0 +1,77 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "overkill-factory"
+version = "3.0.2"
+description = "Gated production line for Hermes-powered agentic product work."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Overkill Factory contributors" }]
+keywords = ["agents", "hermes", "governance", "kanban", "product-engineering"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Software Development :: Quality Assurance",
+]
+
+[project.urls]
+Homepage = "https://github.com/felipegermano17/overkill-factory"
+Documentation = "https://github.com/felipegermano17/overkill-factory/tree/main/docs"
+Repository = "https://github.com/felipegermano17/overkill-factory"
+Issues = "https://github.com/felipegermano17/overkill-factory/issues"
+
+[project.scripts]
+factoryctl = "scripts.factoryctl:main"
+overkill-quickstart = "scripts.quickstart_smoke:main"
+
+[project.optional-dependencies]
+docs = ["mkdocs>=1.6,<2"]
+
+[tool.setuptools]
+py-modules = []
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = ["scripts*"]
+
+[tool.setuptools.data-files]
+"share/overkill-factory" = ["README.md", "LICENSE", "pyproject.toml"]
+"share/overkill-factory/adapters" = ["adapters/README.md"]
+"share/overkill-factory/adapters/hermes" = ["adapters/hermes/*.md", "adapters/hermes/*.py"]
+"share/overkill-factory/adapters/hermes/patches" = ["adapters/hermes/patches/*.patch"]
+"share/overkill-factory/agents" = ["agents/*.json", "agents/*.md"]
+"share/overkill-factory/legacy-docs" = ["legacy-docs/index.md", "legacy-docs/README.md", "legacy-docs/*.json"]
+"share/overkill-factory/legacy-docs/agents" = ["legacy-docs/agents/*.md"]
+"share/overkill-factory/legacy-docs/architecture" = ["legacy-docs/architecture/*.md"]
+"share/overkill-factory/legacy-docs/concepts" = ["legacy-docs/concepts/*.md"]
+"share/overkill-factory/legacy-docs/getting-started" = ["legacy-docs/getting-started/*.md"]
+"share/overkill-factory/legacy-docs/operator" = ["legacy-docs/operator/*.md"]
+"share/overkill-factory/legacy-docs/operations" = ["legacy-docs/operations/*.md"]
+"share/overkill-factory/legacy-docs/reference" = ["legacy-docs/reference/*.md"]
+"share/overkill-factory/legacy-docs/visuals" = ["legacy-docs/visuals/*"]
+"share/overkill-factory/examples" = ["examples/README.md"]
+"share/overkill-factory/examples/minimal-hermes-project" = ["examples/minimal-hermes-project/*"]
+"share/overkill-factory/fixtures" = ["fixtures/README.md"]
+"share/overkill-factory/fixtures/v2" = ["fixtures/v2/*.json"]
+"share/overkill-factory/fixtures/product-validation" = ["fixtures/product-validation/README.md"]
+"share/overkill-factory/fixtures/product-validation/devnet-receipt-pass" = ["fixtures/product-validation/devnet-receipt-pass/README.md"]
+"share/overkill-factory/fixtures/product-validation/devnet-receipt-pass/offchain" = ["fixtures/product-validation/devnet-receipt-pass/offchain/*"]
+"share/overkill-factory/fixtures/product-validation/devnet-receipt-pass/onchain/quasar" = ["fixtures/product-validation/devnet-receipt-pass/onchain/quasar/README.md"]
+"share/overkill-factory/fixtures/product-validation/devnet-receipt-pass/onchain/quasar/src" = ["fixtures/product-validation/devnet-receipt-pass/onchain/quasar/src/*.rs"]
+"share/overkill-factory/fixtures/product-validation/qvg-public-validation-product" = ["fixtures/product-validation/qvg-public-validation-product/README.md"]
+"share/overkill-factory/fixtures/product-validation/qvg-public-validation-product/onchain/quasar" = ["fixtures/product-validation/qvg-public-validation-product/onchain/quasar/README.md"]
+"share/overkill-factory/fixtures/product-validation/qvg-public-validation-product/onchain/quasar/src" = ["fixtures/product-validation/qvg-public-validation-product/onchain/quasar/src/*.rs"]
+"share/overkill-factory/schemas" = ["schemas/*.json"]
+"share/overkill-factory/scripts" = ["scripts/*.py"]
+"share/overkill-factory/tests" = ["tests/*.py"]
+"share/overkill-factory/skills" = ["skills/README.md"]
+"share/overkill-factory/skills/codex/overkill-factory" = ["skills/codex/overkill-factory/SKILL.md"]
+"share/overkill-factory/skills/codex/overkill-factory/references" = ["skills/codex/overkill-factory/references/*.md"]
+"share/overkill-factory/templates" = ["templates/*.json", "templates/*.md"]

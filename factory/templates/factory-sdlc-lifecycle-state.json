@@ -1,0 +1,93 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-sdlc-lifecycle-state.schema.json",
+  "record_type": "factory_sdlc_lifecycle_state",
+  "lifecycle_id": "lifecycle-public-template",
+  "created_at": "2026-06-16T00:00:00+00:00",
+  "factory_method_version": "OVERKILL_VFINAL",
+  "workflow_catalog_ref": "legacy-docs/factory-workflow.catalog.json",
+  "subject": {
+    "subject_type": "factory_improvement",
+    "subject_id": "issue-247",
+    "scope_type": "factory_execution",
+    "source_ref": "https://github.com/felipegermano17/overkill-factory/issues/247"
+  },
+  "active_phase_id": "F11",
+  "delivery_state": "local_only",
+  "phase_states": [
+    {
+      "phase_id": "F11",
+      "phase_name": "Executable Plans",
+      "status": "ACTIVE",
+      "owner_worker": "decomposition-planner",
+      "gate_predicate": {
+        "gate_id": "sdlc-lifecycle-contract-gate",
+        "result": "PENDING",
+        "predicate": "Lifecycle contract exists and validates before consumers project it.",
+        "evidence_refs": [
+          "schemas/factory-sdlc-lifecycle-state.schema.json"
+        ]
+      },
+      "evidence_refs": [
+        "schemas/factory-sdlc-lifecycle-state.schema.json",
+        "tests/test_factory_sdlc_lifecycle.py"
+      ],
+      "next_safe_action": "Validate lifecycle state before any operator console projection consumes it.",
+      "human_gate": {
+        "required": false,
+        "classification": "not_required",
+        "authority_ref": "not_required",
+        "factory_may_simulate": false
+      },
+      "recovery_route": {
+        "required": false,
+        "route_ref": "not_required",
+        "factory_owned_repair_allowed": false,
+        "retry_policy": {
+          "max_attempts": 1,
+          "attempt_number": 1,
+          "stop_condition": "No recovery route is active while the phase is not blocked."
+        }
+      }
+    }
+  ],
+  "current_owner_worker": "decomposition-planner",
+  "gate_predicate": {
+    "gate_id": "sdlc-lifecycle-template-gate",
+    "result": "PENDING",
+    "predicate": "Template is valid but does not claim production readiness.",
+    "evidence_refs": [
+      "templates/factory-sdlc-lifecycle-state.json"
+    ]
+  },
+  "evidence_refs": [
+    "schemas/factory-sdlc-lifecycle-state.schema.json",
+    "templates/factory-sdlc-lifecycle-state.json",
+    "tests/test_factory_sdlc_lifecycle.py"
+  ],
+  "next_safe_action": "Use factoryctl validate-sdlc-lifecycle before publishing or consuming lifecycle state.",
+  "lifecycle_acceptance": {
+    "scope_completion_state": "in_progress",
+    "proof_level": "static_or_schema_validated",
+    "implemented_by_contract": true,
+    "runtime_proven": false,
+    "production_ready_claimed": false,
+    "customer_ready_claimed": false,
+    "limits": [
+      "Template validates the contract shape only.",
+      "It does not prove product runtime, release or customer readiness."
+    ]
+  },
+  "public_private_boundary": {
+    "raw_private_evidence_embedded": false,
+    "public_safe_refs_only": true,
+    "private_runtime_evidence_stays_local": true
+  },
+  "projection_policy": {
+    "operator_console_is_source_of_truth": false,
+    "dashboard_visibility_is_evidence": false,
+    "consumer_role": "projection_only"
+  },
+  "linked_operational_evidence_bundle_refs": [
+    "templates/operational-evidence-bundle.json"
+  ]
+}

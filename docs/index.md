@@ -1,118 +1,48 @@
-# Overkill Factory Docs
+# Overkill Factory documentation
 
-> Document status: CURRENT SUPPORTING GUIDE.
-> Current authority: README.md, scripts/factoryctl.py, schemas/, tests/
-> Runtime boundary: This page is navigation. Runtime gates live in scripts,
-> schemas, adapter hooks and Hermes state.
+Overkill Factory is a production system for agentic product work. It exists so an operator can send a rough signal and get controlled product execution instead of a fragile chat thread.
 
-## Operator Path
+The factory does not try to make one model “smarter.” It makes the work harder to fake.
 
-Use this order from a fresh checkout:
+It does that by separating source from assumption, product definition from conversation, work assignment from worker result, evidence from confidence, human decisions from routine repair, and local validation from live proof.
 
-1. `factoryctl doctor`
-2. `factoryctl run minimal`
-3. `factoryctl init --out ../my-product-factory --project-name my-product`
-4. Read `getting-started/install-in-hermes.md`
-5. Connect generated worker packets to your Hermes only after local checks pass.
+## The short version
 
-For the first full public run, use
-`getting-started/first-external-operator-walkthrough.md`.
+```text
+You provide the initial signal.
+The manager turns it into a controlled run.
+The factory separates source, assumptions and open decisions.
+The product definition / PRD becomes the target.
+The method defines the gates and evidence.
+Hermes stores and executes the durable work graph.
+Workers produce bounded results.
+The factory verifies evidence and repairs recoverable gaps.
+The manager asks you only for real human decisions.
+Receipt Five closes the work honestly.
+```
 
-## Install In Your Hermes
+## Read in this order
 
-Start with `getting-started/install-in-hermes.md`. Hermes is your runtime floor;
-Overkill Factory supplies contracts, profiles, packets and gates.
+1. [Factory manual](factory-manual.md) — the complete human explanation of the system.
+2. [How it works](how-it-works.md) — what happens after the operator sends the first message.
+3. [Operator experience](operator-experience.md) — what the human should see, approve and receive.
+4. [Product definition / PRD](product-definition.md) — how the product target is created and protected.
+5. [Production process](process.md) — the stages from signal to closure.
+6. [Runtime and state](runtime-and-state.md) — what Hermes owns and what the factory owns.
+7. [Autonomy and no-idle](autonomy.md) — how the system keeps moving without asking “can I continue?” all the time.
+8. [Method, gates and workers](method-gates-workers.md) — how route, approval and specialist work are controlled.
+9. [Evidence and Receipt Five](evidence-and-receipt-five.md) — what counts as done.
+10. [Security and release](security-and-release.md) — how risk, production and authority are handled.
+11. [Installation and use](installation-and-use.md) — commands for local use and development.
+12. [Repository layout](repository-layout.md) — why the repo is split into `docs/` and `factory/`.
+13. [Examples and fixtures](examples-and-fixtures.md) — why these files exist and when they should be deleted.
+14. [Terminology](terminology.md) — human names for factory concepts.
+15. [Implementation status](implementation-status.md) — what is implemented locally and what still requires live proof.
 
-## CLI Reference
+Portuguese companion docs start at [pt-BR/index.md](pt-BR/index.md).
 
-Use `reference/cli.md` for the supported operator commands. Prefer `factoryctl`
-over calling many scripts directly.
+## What this documentation is not
 
-Use `reference/factory-kernel-reference.md` when you need a generated map of the
-actual factory kernel: phases, workers, profiles, operating systems, method
-engines, schemas, templates and public surfaces.
+This documentation is not an internal study archive. It is not a dump of generated artifacts. It is not a historical folder moved into public docs.
 
-## Factory Operating Systems
-
-Use `architecture/factory-v2-control-plane.md` first when changing phase
-ordering, board reconciliation, bridge behavior, worker authority, human gates
-or readiness claims. V2 state movement belongs to the deterministic control
-plane, not to agent memory or prompt context.
-
-Use `architecture/factory-operating-systems.md` to understand the canonical OS
-registry: Product Truth, Method, Authority, Hermes Runtime, Evidence, Domain
-Packs, Operator Experience, Security/Release, Product Quality, Velocity/Cost and
-Learning. The registry maps owners and proof obligations; it does not claim
-product-specific production readiness by itself.
-
-Use `architecture/deterministic-control-plane.md` before changing dispatch,
-no-idle, bridge start, phase binding, human gates or domain-brain routing.
-
-Use `architecture/context-spine.md` before letting memory, prior run context or
-learned facts affect factory behavior.
-
-Use these templates when checking V2 closure:
-`templates/v2-study-traceability.json`,
-`templates/product-experience-control-plane.json`,
-`templates/worker-authority-contract.json`,
-`templates/capability-acquisition-contract.json`,
-`templates/hermes-reducer-mutation-proof.json` and
-`templates/factory-v2-readiness-claim.json`.
-
-## Examples
-
-Use `examples/gallery.md` to choose a minimal, Product Face, security or onchain
-example. Example files are source material, not historical proof.
-
-## Security
-
-Use `security/oss-security.md` before changing dependencies, workflows, release
-state, public docs or adapter behavior.
-
-## Release
-
-Use `operations/release-policy.md` before tagging, packaging or publishing a
-release.
-
-Use `operations/parallel-execution-and-status.md` before scaling agents,
-splitting work across branches/worktrees or presenting a operator console/status view.
-
-Use `operations/fast-autonomy-lane.md` before allowing a card to move quickly
-without another human prompt. It separates reversible fast work from forbidden
-global YOLO authority.
-
-Use `operations/telegram-operator-experience.md` when Telegram is the primary
-operator interface and the human should receive proactive status, PDF-backed
-decision packages and only real human gates.
-
-Use `operations/promise-to-implementation.md` before changing README, release
-notes, public docs or visual surfaces. It maps public promises to implementation,
-proof and explicit boundaries.
-
-Use `operator/overkill-factory-bridge.md` when an operator start request needs
-to be sealed, handed to `overkill-factory-gerente` / `factory-orchestrator`, or
-explained without turning the bridge into a factory worker.
-
-## Maintainer Internals
-
-Use `maintenance/repo-surface.md` to decide whether a file belongs in the
-operator surface, maintainer internals or generated output.
-
-Use `maintenance/swiss-watch-reliability-program.md` when improving autonomy,
-operator experience, no-idle behavior, worker output quality, performance,
-security or Hermes-native runtime alignment without reducing factory stages.
-Use `maintenance/swiss-watch-gear-matrix.md` as the generated phase-by-phase
-baseline for gear input/output/authority/proof audits.
-
-Use `maintenance/self-improvement-loop.md` for learnback issue candidates,
-missing-capability completion plans, owner issue intake, reasoning policy,
-factory readiness scorecards, SDLC feedback loops, reference quality packets
-and governance audit artifacts.
-
-Use `maintenance/factory-learning-skill-evolution-os.md` when repeated
-execution findings should become validated skills, rules, gates, tests, workers,
-schemas, hooks, MCP/tool proposals, install profiles, issues or rejections.
-
-Use `maintenance/hermes-learn-integration.md` when Hermes `/learn` is available
-and a repeated workflow should become a staged skill candidate without
-bypassing Factory Mechanic, proposal validation or human gates.
+The public docs are the product explanation. Old technical material lives separately under `factory/legacy-docs/` only when it still has compatibility, validation or migration value.

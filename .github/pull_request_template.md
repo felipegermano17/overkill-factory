@@ -4,6 +4,7 @@
 ## Validation
 
 ```bash
+cd factory
 python scripts/quickstart_smoke.py
 python -m unittest discover -s tests -p "test_*.py" -q
 python scripts/validate_document_governance.py
@@ -12,8 +13,14 @@ python scripts/secret_safety_scan.py
 python scripts/public_safety_scan.py
 ```
 
-## Public Boundary
+For public documentation changes, also run:
 
+```bash
+python -m pip install "./factory[docs]"
+python -m mkdocs build -f docs/mkdocs.yml --strict --site-dir /tmp/overkill-docs-site
+```
+
+## Public Boundary
 - [ ] No secrets, private paths, private board links or raw private logs.
 - [ ] No old pilot evidence, screenshots or narrative validation history added to the repo.
 - [ ] New docs are about understanding or using the product.

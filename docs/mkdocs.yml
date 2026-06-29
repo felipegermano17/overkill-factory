@@ -1,0 +1,40 @@
+site_name: Overkill Factory
+site_description: Human documentation for the Overkill Factory production system.
+repo_url: https://github.com/felipegermano17/overkill-factory
+docs_dir: .
+exclude_docs: |
+  mkdocs.yml
+nav:
+  - Start: index.md
+  - Factory Manual: factory-manual.md
+  - How It Works: how-it-works.md
+  - Operator Experience: operator-experience.md
+  - Product Definition / PRD: product-definition.md
+  - Production Process: process.md
+  - Runtime and State: runtime-and-state.md
+  - Autonomy and No-Idle: autonomy.md
+  - Method, Gates and Workers: method-gates-workers.md
+  - Evidence and Receipt Five: evidence-and-receipt-five.md
+  - Security and Release: security-and-release.md
+  - Installation and Usage: installation-and-use.md
+  - Repository Layout: repository-layout.md
+  - Examples and Fixtures: examples-and-fixtures.md
+  - Terminology: terminology.md
+  - Implementation Status: implementation-status.md
+  - Portuguese:
+      - Início: pt-BR/index.md
+      - Manual da fábrica: pt-BR/manual-da-fabrica.md
+      - Como funciona: pt-BR/como-funciona.md
+      - Experiência do operador: pt-BR/experiencia-do-operador.md
+      - Definição de produto / PRD: pt-BR/definicao-de-produto.md
+      - Processo: pt-BR/processo.md
+      - Runtime e estado: pt-BR/runtime-e-estado.md
+      - Autonomia: pt-BR/autonomia.md
+      - Método, gates e workers: pt-BR/metodo-gates-workers.md
+      - Evidência e Receipt Five: pt-BR/evidencia-e-receipt-five.md
+      - Segurança e release: pt-BR/seguranca-e-release.md
+      - Instalação e uso: pt-BR/instalacao-e-uso.md
+      - Estrutura do repositório: pt-BR/estrutura-do-repositorio.md
+      - Examples e fixtures: pt-BR/examples-e-fixtures.md
+      - Terminologia: pt-BR/terminologia.md
+      - Status de implementação: pt-BR/status-de-implementacao.md

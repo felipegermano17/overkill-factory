@@ -1,0 +1,394 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-operator-ui-ux-excellence-registry.schema.json",
+  "record_type": "factory_operator_ui_ux_excellence_registry",
+  "registry_id": "factory-operator-ui-ux-excellence-v1",
+  "created_at": "2026-06-29T00:00:00+00:00",
+  "audit_scope": {
+    "primary_user": "product owner/operator creating a product through the factory",
+    "primary_channels": [
+      "telegram",
+      "discord"
+    ],
+    "ignored_surfaces": [
+      "unfinished legacy frontend"
+    ],
+    "front_end_currently_out_of_scope": true,
+    "thesis": "The best factory UX is autonomous, conversational and evidence-rich: it hides internal bureaucracy, reports meaningful progress, and asks humans only for real decisions with readable packages."
+  },
+  "operator_channels": [
+    {
+      "channel": "telegram",
+      "status": "primary",
+      "role": "current primary operator path for intake, progress, human gates and delivery",
+      "current_quality": "partial",
+      "upgrade_needed": "Make Telegram feel like a polished product concierge with progress cards, PDF gate packages, acknowledgement and fallback.",
+      "must_support": [
+        "conversational_intake",
+        "progress_notifications",
+        "human_gate_packages",
+        "file_attachments",
+        "buttons_or_decision_options",
+        "delivery_receipts"
+      ]
+    },
+    {
+      "channel": "discord",
+      "status": "target",
+      "role": "secondary/control-tower-capable operator path that needs a fluent journey definition",
+      "current_quality": "partial",
+      "upgrade_needed": "Define simple channel/thread semantics and remove noisy control-tower bureaucracy from normal product-owner use.",
+      "must_support": [
+        "conversational_intake",
+        "progress_notifications",
+        "human_gate_packages",
+        "threads_or_channels",
+        "delivery_receipts",
+        "manager_bridge"
+      ]
+    }
+  ],
+  "manager_bridge": {
+    "manager_profile": "overkill-factory-gerente",
+    "user_facing_role": "single conversational bridge",
+    "responsibilities": [
+      "external_signal_intake",
+      "factory_start_and_kanban_projection",
+      "progress_reporting",
+      "human_gate_delivery",
+      "decision_option_collection",
+      "delivery_receipt_tracking",
+      "blocker_explanation"
+    ],
+    "direct_worker_chat_required": false,
+    "operator_polling_required": false,
+    "anti_patterns": [
+      "worker_dm_sprawl",
+      "operator_polling_kanban",
+      "raw_json_or_markdown_dump",
+      "asking_for_approval_before_material",
+      "notifying_every_internal_worker_event"
+    ]
+  },
+  "progress_notification_contract": {
+    "required_fields": [
+      "percent_complete",
+      "done_since_last_update",
+      "currently_executing",
+      "remaining_work",
+      "blockers_or_waiting_on",
+      "next_human_gate_if_any",
+      "confidence_or_risk_note",
+      "estimated_next_update_window"
+    ],
+    "max_silent_minutes_when_running": 30,
+    "batch_internal_noise": true,
+    "notify_on_every_worker_event": false,
+    "recommended_cadence": [
+      "factory_started",
+      "material_phase_change",
+      "meaningful_progress_delta",
+      "gate_required",
+      "blocked_or_recovered",
+      "release_ready_or_done"
+    ],
+    "forbidden_patterns": [
+      "kanban_json_dump",
+      "every_card_done_spam",
+      "silent_running_over_policy",
+      "percent_without_basis",
+      "asking_human_to_poll"
+    ]
+  },
+  "human_gate_experience_contract": {
+    "human_gate_only_when_material_decision_required": true,
+    "material_before_question_required": true,
+    "primary_decision_artifact": "beautiful_pdf",
+    "required_assets": [
+      "short_plain_language_message",
+      "pdf_document",
+      "decision_options",
+      "scope_and_forbidden_scope",
+      "delivery_receipt"
+    ],
+    "optional_assets": [
+      "diagram_png",
+      "video_explainer_mp4",
+      "audio_explainer_mp3",
+      "html_preview"
+    ],
+    "recommended_video_paths": [
+      "manim_animation",
+      "hyperframes_html_video"
+    ],
+    "content_quality_requirements": [
+      "executive_summary",
+      "what_changed",
+      "decision_needed",
+      "options_and_consequences",
+      "risks_and_tradeoffs",
+      "approved_scope",
+      "forbidden_scope",
+      "next_steps_after_each_option",
+      "plain_pt_br"
+    ],
+    "forbidden_patterns": [
+      "json_dump_as_primary_decision_surface",
+      "raw_markdown_as_primary_decision_surface",
+      "approval_question_without_package",
+      "unclear_scope",
+      "fake_human_gate"
+    ],
+    "fallback_policy": "If PDF/video delivery fails, send a concise message plus public-safe artifact refs, retry rendering asynchronously, and do not treat the gate as delivered until a receipt exists."
+  },
+  "pillar_coverage": [
+    {
+      "key": "conversational_signal_intake",
+      "name": "Conversational Signal Intake",
+      "goal": "Let a human describe product intent naturally without filling bureaucratic forms before the factory can start.",
+      "status": "partial",
+      "evidence_refs": [
+        "templates/universal-signal-intake.json",
+        "templates/operator-interface-profile.json"
+      ],
+      "gap_or_upgrade": "Needs manager prompt choreography, ambiguity handling and summary confirmation tuned for Telegram/Discord.",
+      "risk_if_missing": "Users abandon intake or give low-quality signal because the first interaction feels like a form.",
+      "implementation_shape": "manager_conversation_script_and_intake_packet"
+    },
+    {
+      "key": "manager_single_bridge",
+      "name": "Manager as Single Conversational Bridge",
+      "goal": "Keep the gerente as the human-facing concierge that starts the factory, projects Kanban state and routes only necessary questions.",
+      "status": "partial",
+      "evidence_refs": [
+        "templates/operator-interface-profile.json",
+        "agents/hermes-profile-bindings.public.json",
+        "legacy-docs/operations/telegram-operator-experience.md"
+      ],
+      "gap_or_upgrade": "Manager contract exists but needs stronger runtime UX duties and progress/gate packaging behavior.",
+      "risk_if_missing": "Human is forced to talk to workers, poll boards or interpret internal factory noise.",
+      "implementation_shape": "manager_bridge_contract_and_runtime_adapter"
+    },
+    {
+      "key": "telegram_primary_experience",
+      "name": "Telegram Primary Operator Experience",
+      "goal": "Make Telegram the first excellent operator path for product creation, status and human gates.",
+      "status": "partial",
+      "evidence_refs": [
+        "templates/operator-interface-profile.json",
+        "templates/operator-channel-pack.json",
+        "legacy-docs/operations/telegram-operator-experience.md"
+      ],
+      "gap_or_upgrade": "Telegram exists but needs richer progress cards, attachment delivery, fallback and acknowledgement loops.",
+      "risk_if_missing": "The current primary path remains useful but not delightful or confidently stateful.",
+      "implementation_shape": "telegram_channel_pack_v2"
+    },
+    {
+      "key": "discord_target_experience",
+      "name": "Discord Target Operator Experience",
+      "goal": "Define a fluent Discord operator path instead of blaming Discord for an undefined product experience.",
+      "status": "partial",
+      "evidence_refs": [
+        "templates/discord-control-tower-mapping.json",
+        "legacy-docs/control-tower/discord-control-tower-os.md",
+        "tests/test_factory_concierge_discord_bridge.py"
+      ],
+      "gap_or_upgrade": "Discord has control-tower structures but needs a simplified user journey and channel/thread mapping for non-bureaucratic use.",
+      "risk_if_missing": "Discord remains noisy, confusing and underused despite platform capability.",
+      "implementation_shape": "discord_operator_journey_pack"
+    },
+    {
+      "key": "progress_visibility",
+      "name": "Progress Visibility and Percent Complete",
+      "goal": "Send meaningful progress updates with percent complete, done, doing, remaining, blockers and next gate context.",
+      "status": "partial",
+      "evidence_refs": [
+        "templates/factory-status-snapshot.json",
+        "templates/operator-notification-policy.json",
+        "legacy-docs/operations/parallel-execution-and-status.md"
+      ],
+      "gap_or_upgrade": "Status exists but the operator-facing progress projection must be elevated to product-grade UX.",
+      "risk_if_missing": "User loses trust because execution feels silent or opaque.",
+      "implementation_shape": "progress_projection_contract"
+    },
+    {
+      "key": "autonomy_without_bureaucracy",
+      "name": "Autonomy Without Bureaucracy",
+      "goal": "Keep the factory autonomous and independent; ask the human only for material decisions.",
+      "status": "partial",
+      "evidence_refs": [
+        "templates/user-facing-autonomy-contract.json",
+        "templates/operator-notification-policy.json",
+        "templates/approval-request.json"
+      ],
+      "gap_or_upgrade": "Needs strict gate trigger taxonomy and suppressed internal noise.",
+      "risk_if_missing": "The factory becomes a bureaucratic assistant that asks too much and reduces autonomy.",
+      "implementation_shape": "gate_trigger_policy_and_noise_filter"
+    },
+    {
+      "key": "human_gate_decision_package",
+      "name": "Human Gate Decision Package",
+      "goal": "Deliver every real human gate as a readable decision package before asking for approval.",
+      "status": "partial",
+      "evidence_refs": [
+        "templates/operator-briefing-package.json",
+        "templates/human-gate-record.json",
+        "templates/approval-request.json"
+      ],
+      "gap_or_upgrade": "The shape exists but needs PDF-first renderer, better layout standards and decision-option language.",
+      "risk_if_missing": "Humans approve without understanding or reject because material is hard to read.",
+      "implementation_shape": "gate_decision_package_renderer"
+    },
+    {
+      "key": "beautiful_pdf_delivery",
+      "name": "Beautiful PDF Delivery",
+      "goal": "Make PDF the primary deep reading artifact for human gate decisions, with polished formatting and clear structure.",
+      "status": "missing",
+      "evidence_refs": [
+        "templates/operator-briefing-package.json"
+      ],
+      "gap_or_upgrade": "PDF is required in contract but no dedicated quality bar/renderer proof exists yet.",
+      "risk_if_missing": "Markdown/JSON dumps become the actual UX and degrade decision quality.",
+      "implementation_shape": "pdf_renderer_and_quality_gate"
+    },
+    {
+      "key": "video_animation_explainers",
+      "name": "Video and Animation Explainers",
+      "goal": "Use short video/animation when it helps explain architecture, flow, risk or decision tradeoffs.",
+      "status": "missing",
+      "evidence_refs": [
+        "templates/operator-briefing-package.json",
+        "skills:manim-video"
+      ],
+      "gap_or_upgrade": "Video explainer is optional but not operationalized as a factory capability.",
+      "risk_if_missing": "Complex gates remain hard to understand for humans reviewing on mobile.",
+      "implementation_shape": "video_explainer_lane"
+    },
+    {
+      "key": "plain_language_pt_br",
+      "name": "Plain-language PT-BR UX",
+      "goal": "Keep user-facing messages and decision packages in simple PT-BR with concise wording and no internal jargon.",
+      "status": "partial",
+      "evidence_refs": [
+        "templates/operator-interface-profile.json"
+      ],
+      "gap_or_upgrade": "Language policy exists but needs copy-quality gate and examples.",
+      "risk_if_missing": "Messages feel like internal machinery instead of a helpful product concierge.",
+      "implementation_shape": "operator_copy_quality_gate"
+    },
+    {
+      "key": "mobile_first_attachment_ux",
+      "name": "Mobile-first Attachment UX",
+      "goal": "Optimize gate packages and progress updates for mobile reading in Telegram/Discord.",
+      "status": "missing",
+      "evidence_refs": [
+        "templates/operator-channel-pack.json"
+      ],
+      "gap_or_upgrade": "Current contracts mention attachments but not mobile readability, hierarchy, file naming, size or preview behavior.",
+      "risk_if_missing": "PDF/video exists but is painful to consume on a phone.",
+      "implementation_shape": "mobile_attachment_design_standard"
+    },
+    {
+      "key": "delivery_receipts_and_ack",
+      "name": "Delivery Receipts and Acknowledgement",
+      "goal": "Prove important notifications and gate packages were delivered, readable and acknowledged/decided.",
+      "status": "partial",
+      "evidence_refs": [
+        "templates/operator-delivery-receipt.json",
+        "templates/operator-channel-pack.json"
+      ],
+      "gap_or_upgrade": "Receipts exist but need UX-specific ack states and retry/fallback behavior.",
+      "risk_if_missing": "Factory waits on a human who never saw or understood the gate package.",
+      "implementation_shape": "operator_delivery_receipt_v2"
+    },
+    {
+      "key": "decision_options_and_scope",
+      "name": "Decision Options and Scope Clarity",
+      "goal": "Every human gate must present explicit options, consequences, approved scope and forbidden scope.",
+      "status": "partial",
+      "evidence_refs": [
+        "templates/approval-request.json",
+        "templates/human-gate-record.json"
+      ],
+      "gap_or_upgrade": "Decision records exist but need polished operator-facing option cards.",
+      "risk_if_missing": "Human approval is ambiguous or authorizes more than intended.",
+      "implementation_shape": "decision_option_card"
+    },
+    {
+      "key": "kanban_projection_not_board_dump",
+      "name": "Kanban Projection, Not Board Dump",
+      "goal": "Translate Kanban execution into useful human status instead of dumping cards, JSON or raw board state.",
+      "status": "partial",
+      "evidence_refs": [
+        "templates/factory-status-snapshot.json",
+        "templates/operator-interface-profile.json"
+      ],
+      "gap_or_upgrade": "Need projection rules that compress internal graph state into user context.",
+      "risk_if_missing": "The operator becomes a project manager for the factory instead of a product owner.",
+      "implementation_shape": "status_projection_adapter"
+    },
+    {
+      "key": "failure_and_blocker_experience",
+      "name": "Failure and Blocker Experience",
+      "goal": "When blocked, explain what happened, why it matters, what is safe next and whether human action is really required.",
+      "status": "partial",
+      "evidence_refs": [
+        "templates/incident-support-plan.json",
+        "templates/operator-notification-policy.json"
+      ],
+      "gap_or_upgrade": "Needs blocker message templates and safe next-action cards.",
+      "risk_if_missing": "Failures feel scary, vague or unnecessarily interruptive.",
+      "implementation_shape": "blocker_experience_pack"
+    },
+    {
+      "key": "cross_channel_consistency",
+      "name": "Cross-channel Consistency",
+      "goal": "Telegram and Discord should expose the same product semantics even if the rendering differs by platform.",
+      "status": "missing",
+      "evidence_refs": [
+        "templates/operator-channel-pack.json",
+        "templates/discord-control-tower-mapping.json"
+      ],
+      "gap_or_upgrade": "Need shared semantic layer for status cards, gate packages and receipts across channels.",
+      "risk_if_missing": "One channel becomes canonical by accident and the other drifts or stays unusable.",
+      "implementation_shape": "operator_channel_semantic_contract"
+    },
+    {
+      "key": "manager_runtime_observability",
+      "name": "Manager Runtime Observability",
+      "goal": "The manager must know when to notify based on real run/board state, not chat memory or vibes.",
+      "status": "partial",
+      "evidence_refs": [
+        "templates/factory-run.json",
+        "templates/factory-decision-outbox.json",
+        "templates/factory-status-snapshot.json"
+      ],
+      "gap_or_upgrade": "Need runtime-driven triggers tied to FactoryRun, DecisionOutbox and StatusSnapshot.",
+      "risk_if_missing": "Notifications are late, duplicated, missing or ungrounded.",
+      "implementation_shape": "manager_runtime_observer"
+    }
+  ],
+  "source_refs": [
+    "templates/operator-interface-profile.json",
+    "templates/operator-channel-pack.json",
+    "templates/operator-notification-policy.json",
+    "templates/operator-briefing-package.json",
+    "templates/human-gate-record.json",
+    "templates/approval-request.json",
+    "legacy-docs/operations/telegram-operator-experience.md",
+    "legacy-docs/control-tower/discord-control-tower-os.md"
+  ],
+  "acceptance": {
+    "audit_created": true,
+    "frontend_excluded": true,
+    "telegram_and_discord_considered": true,
+    "pdf_gate_required": true,
+    "video_explainer_recommended": true,
+    "runtime_claim": "audit materialized only; runtime UX implementation remains partial and must be upgraded later",
+    "evidence_refs": [
+      "schemas/factory-operator-ui-ux-excellence-registry.schema.json",
+      "templates/factory-operator-ui-ux-excellence-registry.json",
+      "scripts/factory_operator_ui_ux_excellence_audit.py",
+      "tests/test_factory_operator_ui_ux_excellence_audit.py"
+    ]
+  }
+}

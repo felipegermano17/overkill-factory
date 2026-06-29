@@ -1,0 +1,117 @@
+# Quickstart: Use Overkill Factory With Your Own Hermes
+
+This guide gets an external operator from a fresh checkout to a local factory
+smoke. It does not require a private runtime, Discord server or historical test
+bundle.
+
+## Prerequisites
+
+- Git
+- Python 3.11 or newer
+- Hermes only when you are ready to route real cards
+
+Discord is optional operator console UI. It is not the source of truth.
+
+## Three Commands
+
+```bash
+git clone https://github.com/felipegermano17/overkill-factory.git
+cd overkill-factory
+python -m pip install -e .
+factoryctl doctor
+factoryctl run minimal
+```
+
+Expected first value: a `PASS` line within a few minutes on a normal Python
+checkout.
+
+The command writes:
+
+- `.tmp/quickstart-result.json`
+- `.tmp/minimal-worker-packets/*.json`
+
+The JSON result tells you whether the minimal card validates, whether the gate
+report is ready for worker execution and how many required worker packets were
+created.
+
+Those files are local outputs. Keep generated worker packets and gate reports in
+`.tmp/`; do not copy them into `examples/`.
+
+## Optional Local CLI
+
+The CLI is the recommended public path:
+
+```bash
+python -m pip install -e .
+factoryctl doctor
+factoryctl run minimal
+factoryctl init --out ../my-product-factory --project-name my-product
+factoryctl gate-report --card examples/minimal-hermes-project/card.md
+```
+
+`python scripts/quickstart_smoke.py` and `overkill-quickstart` remain available
+for compatibility.
+
+If the package is already installed, `factoryctl doctor`, `factoryctl run
+minimal` and `overkill-quickstart` can run from another working directory. Use a
+checkout for Hermes adapter patching, maintainer scripts and source changes.
+
+## What To Inspect
+
+After the smoke passes, inspect:
+
+- `examples/minimal-hermes-project/card.md`
+- `.tmp/quickstart-result.json`
+- `.tmp/minimal-worker-packets/`
+- `legacy-docs/agents/worker-profiles.md`
+- `legacy-docs/agents/factory-stage-agent-map.md`
+- `legacy-docs/agents/capability-packs.md`
+
+Worker packets are assignments, not proof. A card is complete only when current
+worker results, required reviews and Receipt Five agree.
+
+## Connect Hermes
+
+Read `adapters/hermes/README.md` before patching your Hermes checkout. The
+adapter provides:
+
+- a Kanban gate patch;
+- a transition hook for worker routing;
+- a done-time reconciliation model for Receipt Five and worker results.
+
+From a Hermes checkout:
+
+```bash
+git switch -c overkill-factory-adapter
+git apply <path-to-overkill-factory>/adapters/hermes/patches/0001-overkill-factory-v35-gates-official-main.patch
+python -m pytest -q -o addopts='' tests/hermes_cli/test_overkill_factory_v35_gate.py
+```
+
+Wire Hermes transition events to:
+
+```bash
+python <path-to-overkill-factory>/adapters/hermes/transition_hook.py --help
+```
+
+Introduce the adapter in a test runtime before any real product or release work.
+
+## Create A Real Project Entry
+
+For your own project:
+
+1. Run `factoryctl init --out ../my-product-factory --project-name my-product`.
+2. Start with a short paper or product brief.
+3. Create or edit a factory card from the relevant example in `examples/cards/`.
+4. Fill source refs, scope, risk, runtime, security, forbidden actions and done
+   definition.
+5. Run `factoryctl validate-card`.
+6. Run `factoryctl gate-report`.
+7. Generate required worker packets.
+8. Let Hermes materialize worker cards resolved by the PhaseGraph and registry.
+9. Attach worker results and Receipt Five before any `done` transition.
+
+## Before Release
+
+Run the release checks in `legacy-docs/operations/validation-and-release.md`. Keep raw
+outputs in `.tmp`, a private evidence store or a release artifact. Do not commit
+old screenshots, old pilot receipts or narrative validation history.

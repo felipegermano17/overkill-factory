@@ -1,0 +1,63 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-authority-contract.schema.json",
+  "record_type": "worker_authority_contract",
+  "contract_id": "worker-authority-contract-v2",
+  "source_refs": [
+    "agents/worker-permission-classes.public.json",
+    "agents/worker-profiles.public.json",
+    "legacy-docs/agents/permission-model.md"
+  ],
+  "deterministic_authorities": {
+    "phase_transition": "scripts/factory_v2_kernel.py and compiled workflow plan",
+    "route_selection": "factory route registry, capability pack registry and reducer",
+    "card_state": "Hermes Kanban plus adapter gate events",
+    "human_decision": "decision outbox, human gate packet and human gate record",
+    "promotion": "promotion packet, Receipt Five and release gates"
+  },
+  "worker_authority": {
+    "may": [
+      "produce scoped artifacts",
+      "run allowed tools inside the worker packet",
+      "report findings, blockers and evidence",
+      "recommend pass, fail or repair within its output contract"
+    ],
+    "must": [
+      "declare evidence refs",
+      "respect forbidden actions in the worker packet",
+      "return a schema-backed worker result",
+      "leave route, phase and gate state to the control plane"
+    ],
+    "may_not": [
+      "choose phase",
+      "choose route",
+      "choose specialist outside registry",
+      "approve human gate",
+      "mutate card state directly",
+      "promote work",
+      "waive blocking findings without the required gate"
+    ],
+    "result_boundary": "A worker result is evidence for the reducer; it is not itself a state transition."
+  },
+  "forbidden_agent_authorities": [
+    "choose_phase",
+    "choose_route",
+    "choose_specialist",
+    "approve_gate",
+    "approve_human_gate",
+    "mutate_state",
+    "promote_work",
+    "waive_blocking_findings"
+  ],
+  "enforcement_refs": [
+    "scripts/validate_worker_profiles.py::process_authority_leakage_errors",
+    "schemas/worker-profile.schema.json",
+    "schemas/worker-result.schema.json",
+    "schemas/factory-command.schema.json",
+    "schemas/factory-promotion-packet.schema.json"
+  ],
+  "failure_policy": {
+    "authority_leak_blocks_profile": true,
+    "missing_worker_result_blocks_promotion": true,
+    "ambiguous_route_goes_to_reducer": true
+  }
+}
