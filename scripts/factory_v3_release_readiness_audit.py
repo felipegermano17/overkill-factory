@@ -31,6 +31,7 @@ REQUIRED_AUTHORITY = {"R3", "R4", "mainnet", "funds", "secrets", "production", "
 REQUIRED_PERFECT_RUN_COMMANDS = {
     "command:factoryctl factory-perfect-run",
     "command:factoryctl master-plan-completion",
+    "command:factoryctl literal-dod-audit",
     "command:factoryctl v3-production-activation-check --live-hermes",
 }
 REQUIRED_HUMAN_FIELDS = {

@@ -262,7 +262,14 @@ python -m pip install -e .
 factoryctl doctor
 factoryctl run minimal
 factoryctl v3-production-activation-check
+factoryctl literal-dod-audit
 ```
+
+`literal-dod-audit` is intentionally stricter than the local activation check:
+it reports `PARTIAL_EXTERNAL` until live Telegram/operator proof is actually
+verified. A local 100% score means every implementable repo/runtime support path
+exists; it is not a claim that an external Telegram user already completed a
+live start.
 
 For a live Hermes runtime proof, run the mutating smoke on a disposable board:
 

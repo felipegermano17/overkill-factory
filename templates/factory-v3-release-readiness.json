@@ -148,6 +148,7 @@
     "required_commands": [
       "command:factoryctl factory-perfect-run",
       "command:factoryctl master-plan-completion",
+      "command:factoryctl literal-dod-audit",
       "command:factoryctl v3-production-activation-check --live-hermes"
     ]
   },

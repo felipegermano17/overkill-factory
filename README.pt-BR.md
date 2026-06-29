@@ -266,7 +266,14 @@ python -m pip install -e .
 factoryctl doctor
 factoryctl run minimal
 factoryctl v3-production-activation-check
+factoryctl literal-dod-audit
 ```
+
+`literal-dod-audit` é mais rígido que o check local de ativação: ele retorna
+`PARTIAL_EXTERNAL` enquanto a prova live de Telegram/operador não tiver sido
+verificada de verdade. Score local 100 significa que todo caminho implementável
+no repo/runtime existe; não significa que um usuário externo já iniciou um
+produto via Telegram ao vivo.
 
 Para provar um runtime Hermes vivo, rode o smoke mutável em um board
 descartável:

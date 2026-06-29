@@ -7,6 +7,17 @@ public releases.
 
 ## Unreleased
 
+- Add a literal 17-item master-plan Definition of Done audit that separates
+  local implementation support from external live proof, so Telegram/operator
+  gaps cannot be hidden behind a generic 100% score.
+- Add operator-facing artifacts for the remaining implementable DoD surface:
+  manager intake smoke, manager profile live/dry-run smoke, progress card,
+  delivery receipt, Product Face Result proof, learnback proposal, Telegram
+  start dry-run/live smoke, and a dependency-free PDF plus text fallback for
+  human gate packages.
+- Harden V3 release readiness to require the literal DoD audit command in the
+  Factory Perfect Run release policy.
+
 ## 3.0.1 - 2026-06-29
 
 - Activate the V3 master plan operationally instead of leaving it as release

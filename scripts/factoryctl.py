@@ -14,6 +14,7 @@ import copy
 import hashlib
 import importlib.util
 import json
+import os
 import re
 import subprocess
 import sys
@@ -24022,10 +24023,18 @@ def command_v3_production_activation_check(args: argparse.Namespace) -> int:
         return completion
     perfect_script = ROOT / "scripts" / "factory_perfect_run.py"
     perfect = _run_python_script(perfect_script, ["--out", str(args.perfect_run_out)])
-    if perfect != 0 or not getattr(args, "live_hermes", False):
+    if perfect != 0:
         return perfect
-    smoke_script = ROOT / "scripts" / "factory_hermes_live_smoke.py"
-    return _run_python_script(smoke_script, ["--board", str(args.live_board), "--out", str(args.live_hermes_out), "--cwd", str(ROOT)])
+    if getattr(args, "live_hermes", False):
+        smoke_script = ROOT / "scripts" / "factory_hermes_live_smoke.py"
+        smoke = _run_python_script(smoke_script, ["--board", str(args.live_board), "--out", str(args.live_hermes_out), "--cwd", str(ROOT)])
+        if smoke != 0:
+            return smoke
+    literal_script = ROOT / "scripts" / "factory_master_plan_literal_dod_audit.py"
+    literal = _run_python_script(literal_script, ["--out", str(args.literal_dod_out), "--markdown", str(args.literal_dod_markdown)])
+    if literal == 2 and not getattr(args, "strict_literal_live", False):
+        return 0
+    return literal
 
 
 def command_hermes_live_smoke(args: argparse.Namespace) -> int:
@@ -24043,7 +24052,10 @@ def command_factory_perfect_run(args: argparse.Namespace) -> int:
 
 def command_human_gate_package(args: argparse.Namespace) -> int:
     script = ROOT / "scripts" / "render_human_gate_pdf.py"
-    return _run_python_script(script, ["--package", str(args.package), "--out", str(args.out)])
+    argv = ["--package", str(args.package), "--out", str(args.out), "--pdf-out", str(args.pdf_out)]
+    if getattr(args, "no_pdf", False):
+        argv.append("--no-pdf")
+    return _run_python_script(script, argv)
 
 
 def command_validate_human_gate_package(args: argparse.Namespace) -> int:
@@ -24054,6 +24066,52 @@ def command_validate_human_gate_package(args: argparse.Namespace) -> int:
 def command_receipt_five_classify(args: argparse.Namespace) -> int:
     script = ROOT / "scripts" / "factory_receipt_five_classifier.py"
     return _run_python_script(script, ["--receipt", str(args.receipt), "--out", str(args.out)])
+
+
+def command_literal_dod_audit(args: argparse.Namespace) -> int:
+    script = ROOT / "scripts" / "factory_master_plan_literal_dod_audit.py"
+    return _run_python_script(script, ["--matrix", str(args.matrix), "--out", str(args.out), "--markdown", str(args.markdown)])
+
+
+def command_manager_intake_smoke(args: argparse.Namespace) -> int:
+    script = ROOT / "scripts" / "factory_manager_intake_smoke.py"
+    return _run_python_script(script, ["--signal", str(args.signal), "--out", str(args.out)])
+
+
+def command_manager_profile_live_smoke(args: argparse.Namespace) -> int:
+    script = ROOT / "scripts" / "factory_manager_profile_live_smoke.py"
+    argv = ["--profile", str(args.profile), "--hermes-home", str(args.hermes_home), "--command", str(args.command), "--out", str(args.out)]
+    if args.dry_run:
+        argv.append("--dry-run")
+    return _run_python_script(script, argv)
+
+
+def command_operator_progress_card(args: argparse.Namespace) -> int:
+    script = ROOT / "scripts" / "factory_operator_progress_card.py"
+    return _run_python_script(script, ["--percent", str(args.percent), "--phase", str(args.phase), "--blocker", str(args.blocker), "--out", str(args.out), "--text-out", str(args.text_out)])
+
+
+def command_operator_delivery_receipt(args: argparse.Namespace) -> int:
+    script = ROOT / "scripts" / "factory_operator_delivery_receipt.py"
+    return _run_python_script(script, ["--channel", str(args.channel), "--package-ref", str(args.package_ref), "--out", str(args.out)])
+
+
+def command_product_face_result(args: argparse.Namespace) -> int:
+    script = ROOT / "scripts" / "factory_product_face_result.py"
+    return _run_python_script(script, ["--out", str(args.out), "--screenshot", str(args.screenshot)])
+
+
+def command_learnback_proposal(args: argparse.Namespace) -> int:
+    script = ROOT / "scripts" / "factory_learnback_proposal.py"
+    return _run_python_script(script, ["--out", str(args.out)])
+
+
+def command_telegram_start_smoke(args: argparse.Namespace) -> int:
+    script = ROOT / "scripts" / "factory_telegram_start_smoke.py"
+    argv = ["--out", str(args.out)]
+    if args.dry_run:
+        argv.append("--dry-run")
+    return _run_python_script(script, argv)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -24766,9 +24824,11 @@ def build_parser() -> argparse.ArgumentParser:
     receipt_five_classify_parser.add_argument("--out", type=Path, default=ROOT / ".tmp" / "receipt-five-classification.json")
     receipt_five_classify_parser.set_defaults(func=command_receipt_five_classify)
 
-    human_gate_package_parser = sub.add_parser("human-gate-package", help="Render an artifact-first human gate package fallback.")
+    human_gate_package_parser = sub.add_parser("human-gate-package", help="Render an artifact-first human gate package fallback and PDF.")
     human_gate_package_parser.add_argument("--package", type=Path, default=ROOT / "templates" / "human-gate-decision-package.json")
     human_gate_package_parser.add_argument("--out", type=Path, default=ROOT / ".tmp" / "human-gate-decision-package.txt")
+    human_gate_package_parser.add_argument("--pdf-out", type=Path, default=ROOT / ".tmp" / "human-gate-decision-package.pdf")
+    human_gate_package_parser.add_argument("--no-pdf", action="store_true")
     human_gate_package_parser.set_defaults(func=command_human_gate_package)
 
     validate_human_gate_package_parser = sub.add_parser("validate-human-gate-package", help="Validate an artifact-first human gate package.")
@@ -24800,7 +24860,57 @@ def build_parser() -> argparse.ArgumentParser:
     v3_activation_parser.add_argument("--live-hermes", action="store_true", help="Also run the mutating live Hermes Kanban smoke.")
     v3_activation_parser.add_argument("--live-board", default="of-v3-production-activation")
     v3_activation_parser.add_argument("--live-hermes-out", type=Path, default=ROOT / ".tmp" / "factory-hermes-live-smoke.json")
+    v3_activation_parser.add_argument("--literal-dod-out", type=Path, default=ROOT / ".tmp" / "factory-master-plan-literal-dod-audit.json")
+    v3_activation_parser.add_argument("--literal-dod-markdown", type=Path, default=ROOT / ".tmp" / "factory-master-plan-literal-dod-audit.md")
+    v3_activation_parser.add_argument("--strict-literal-live", action="store_true", help="Return non-zero when literal DoD still has external live proof pending.")
     v3_activation_parser.set_defaults(func=command_v3_production_activation_check)
+
+    literal_dod_parser = sub.add_parser("literal-dod-audit", help="Audit the literal 17-item master-plan Definition of Done without hiding external-live gaps.")
+    literal_dod_parser.add_argument("--matrix", type=Path, default=ROOT / "templates" / "factory-master-plan-literal-dod.json")
+    literal_dod_parser.add_argument("--out", type=Path, default=ROOT / ".tmp" / "factory-master-plan-literal-dod-audit.json")
+    literal_dod_parser.add_argument("--markdown", type=Path, default=ROOT / ".tmp" / "factory-master-plan-literal-dod-audit.md")
+    literal_dod_parser.set_defaults(func=command_literal_dod_audit)
+
+    manager_intake_parser = sub.add_parser("manager-intake-smoke", help="Build a manager-first natural-language intake and FactoryRun smoke.")
+    manager_intake_parser.add_argument("--signal", default="Quero criar um app simples de tarefas com login, lista, edição e deploy seguro.")
+    manager_intake_parser.add_argument("--out", type=Path, default=ROOT / ".tmp" / "factory-manager-intake-smoke.json")
+    manager_intake_parser.set_defaults(func=command_manager_intake_smoke)
+
+    manager_live_parser = sub.add_parser("manager-profile-live-smoke", help="Optional live/dry-run smoke for the gerente Hermes profile without printing secrets.")
+    manager_live_parser.add_argument("--dry-run", action="store_true")
+    manager_live_parser.add_argument("--profile", default="overkill-factory-gerente")
+    manager_live_parser.add_argument("--hermes-home", type=Path, default=Path(os.environ.get("HERMES_HOME", str(Path.home() / ".hermes"))))
+    manager_live_parser.add_argument("--command", default="hermes")
+    manager_live_parser.add_argument("--out", type=Path, default=ROOT / ".tmp" / "factory-manager-profile-live-smoke.json")
+    manager_live_parser.set_defaults(func=command_manager_profile_live_smoke)
+
+    progress_parser = sub.add_parser("operator-progress-card", help="Render a gerente-facing progress card so the operator does not need Kanban.")
+    progress_parser.add_argument("--percent", type=int, default=42)
+    progress_parser.add_argument("--phase", default="F5 Product SOT")
+    progress_parser.add_argument("--blocker", default="aguardando confirmação do escopo")
+    progress_parser.add_argument("--out", type=Path, default=ROOT / ".tmp" / "operator-progress-card.json")
+    progress_parser.add_argument("--text-out", type=Path, default=ROOT / ".tmp" / "operator-progress-card.txt")
+    progress_parser.set_defaults(func=command_operator_progress_card)
+
+    delivery_parser = sub.add_parser("operator-delivery-receipt", help="Write a delivery receipt for an operator-visible package/message/gate.")
+    delivery_parser.add_argument("--channel", default="telegram")
+    delivery_parser.add_argument("--package-ref", default="external:operator-progress-card")
+    delivery_parser.add_argument("--out", type=Path, default=ROOT / ".tmp" / "operator-delivery-receipt.json")
+    delivery_parser.set_defaults(func=command_operator_delivery_receipt)
+
+    product_face_parser = sub.add_parser("product-face-result", help="Create Product Face Result proof with screenshot and UX evidence refs.")
+    product_face_parser.add_argument("--out", type=Path, default=ROOT / ".tmp" / "product-face-result.json")
+    product_face_parser.add_argument("--screenshot", type=Path, default=ROOT / ".tmp" / "product-face-proof.svg")
+    product_face_parser.set_defaults(func=command_product_face_result)
+
+    learnback_parser = sub.add_parser("learnback-proposal", help="Create a reviewable learnback proposal; never silently mutates the factory.")
+    learnback_parser.add_argument("--out", type=Path, default=ROOT / ".tmp" / "factory-learnback-proposal.json")
+    learnback_parser.set_defaults(func=command_learnback_proposal)
+
+    telegram_parser = sub.add_parser("telegram-start-smoke", help="Run/dry-run Telegram natural-language start smoke without printing secrets.")
+    telegram_parser.add_argument("--dry-run", action="store_true")
+    telegram_parser.add_argument("--out", type=Path, default=ROOT / ".tmp" / "factory-telegram-start-smoke.json")
+    telegram_parser.set_defaults(func=command_telegram_start_smoke)
 
     return parser
 
