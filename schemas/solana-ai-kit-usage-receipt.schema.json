@@ -4,6 +4,7 @@
   "title": "Overkill Factory Solana AI Kit Usage Receipt",
   "type": "object",
   "required": [
+    "$schema",
     "provider_id",
     "source",
     "pinned_ref",
@@ -12,6 +13,7 @@
     "evidence_refs"
   ],
   "properties": {
+    "$schema": { "const": "https://overkill-factory.dev/schemas/solana-ai-kit-usage-receipt.schema.json" },
     "provider_id": { "const": "solana-ai-kit" },
     "source": { "const": "https://github.com/solanabr/solana-ai-kit" },
     "pinned_ref": { "const": "v2.0.2" },

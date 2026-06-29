@@ -1,0 +1,16 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/solana-ai-kit-usage-receipt.schema.json",
+  "provider_id": "solana-ai-kit",
+  "source": "https://github.com/solanabr/solana-ai-kit",
+  "pinned_ref": "v2.0.2",
+  "loaded": true,
+  "loaded_components": [
+    "core Solana domain brain",
+    "onchain planning provider",
+    "auditor routing prerequisite"
+  ],
+  "evidence_refs": [
+    "schemas/solana-ai-kit-usage-receipt.schema.json",
+    "templates/solana-ai-kit-usage-receipt.json"
+  ]
+}

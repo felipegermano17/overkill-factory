@@ -36,8 +36,8 @@ Done without evidence is only a claim. Receipt Five, review, runtime state and p
 | Hermes profile bindings | 40 | `agents/hermes-profile-bindings.public.json` |
 | Operating systems | 17 | `templates/factory-operating-system-registry.json` |
 | Method engines | 8 | `templates/method-engine-registry.json` |
-| JSON schemas | 239 | `schemas/*.json` |
-| Templates | 152 | `templates/*` |
+| JSON schemas | 240 | `schemas/*.json` |
+| Templates | 154 | `templates/*` |
 | Public surfaces | 19 | `docs/public-surface.manifest.json` |
 
 ## Factory Phases
@@ -292,6 +292,7 @@ These are the public JSON schemas the factory exposes. They are not decoration; 
 - `schemas/factory-truth-packet.schema.json`
 - `schemas/factory-v1-completion-gate.schema.json`
 - `schemas/factory-v2-readiness-claim.schema.json`
+- `schemas/factory-v3-release-readiness.schema.json`
 - `schemas/factory-vfinal-provider-model-audit.schema.json`
 - `schemas/factory-workflow-catalog.schema.json`
 - `schemas/factory-workflow-compiled-plan.schema.json`
@@ -511,6 +512,7 @@ Templates are starter records paired with schemas. They are examples of valid sh
 - `templates/factory-status-snapshot.json`
 - `templates/factory-v1-completion-gate.json`
 - `templates/factory-v2-readiness-claim.json`
+- `templates/factory-v3-release-readiness.json`
 - `templates/factory-workflow-compiled-plan.json`
 - `templates/factory-world-class-process-registry.json`
 - `templates/full-product-run-manifest.json`
@@ -579,6 +581,7 @@ Templates are starter records paired with schemas. They are examples of valid sh
 - `templates/security-state-ledger.json`
 - `templates/skill-ref-resolution-report.json`
 - `templates/software-development-plan.json`
+- `templates/solana-ai-kit-usage-receipt.json`
 - `templates/source-resolution-packet.json`
 - `templates/spec-graph.json`
 - `templates/specialist-decision-packet.json`
