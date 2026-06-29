@@ -1,0 +1,569 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-world-class-process-registry.schema.json",
+  "record_type": "factory_world_class_process_registry",
+  "registry_id": "factory-world-class-process-registry-v1",
+  "purpose": "Identify world-class product creation processes that are missing, partial, or under-modeled in the factory; this is not just a phase reordering audit.",
+  "public_private_boundary": "Productized process registry only. Raw study notes and context-lock documents stay private.",
+  "minimum_new_or_partial_processes": 8,
+  "required_process_keys": [
+    "prd_grade_product_requirements",
+    "system_design_review",
+    "design_review_and_accessibility",
+    "product_analytics_plan",
+    "go_to_market_distribution_review",
+    "qa_strategy_and_test_matrix",
+    "release_readiness_review",
+    "post_launch_review",
+    "ai_eval_and_model_risk_review"
+  ],
+  "processes": [
+    {
+      "process_key": "opportunity_framing",
+      "name": "Opportunity Framing",
+      "domain": "product_strategy",
+      "coverage_status": "partial_covered",
+      "factory_shape": "phase_and_gate",
+      "integration_decision": "strengthen_or_add_contract",
+      "insertion_point": "before Product SOT / before PRD-grade requirements",
+      "trigger_conditions": [
+        "new product",
+        "material feature",
+        "ambiguous operator goal"
+      ],
+      "required_artifacts": [
+        "opportunity_brief",
+        "problem_statement",
+        "target_user_or_operator",
+        "job_to_be_done",
+        "success_metric",
+        "non_goals"
+      ],
+      "required_gates": [
+        "opportunity_gate"
+      ],
+      "proof_requirements": [
+        "problem evidence",
+        "target user/job clarity",
+        "success metric tied to outcome"
+      ],
+      "risk_if_absent": "Factory can build a clear thing that is not the right thing.",
+      "reference_methods": [
+        "Jobs To Be Done",
+        "Opportunity Solution Tree",
+        "Working Backwards PRFAQ"
+      ]
+    },
+    {
+      "process_key": "prd_grade_product_requirements",
+      "name": "PRD-grade Product Requirements",
+      "domain": "product_definition",
+      "coverage_status": "partial_covered",
+      "factory_shape": "contract_and_gate",
+      "integration_decision": "formalize_prd_grade_product_sot_or_prd_packet",
+      "insertion_point": "after strategic framing and before system design",
+      "trigger_conditions": [
+        "new product",
+        "material feature",
+        "cross-functional scope",
+        "operator asks for product build"
+      ],
+      "required_artifacts": [
+        "prd_packet",
+        "functional_requirements",
+        "non_functional_requirements",
+        "acceptance_criteria",
+        "non_goals",
+        "metrics",
+        "requirement_traceability"
+      ],
+      "required_gates": [
+        "prd_gate",
+        "requirements_traceability_gate"
+      ],
+      "proof_requirements": [
+        "requirements mapped to source/evidence",
+        "acceptance criteria testable",
+        "non-goals explicit",
+        "metrics and rollout stated"
+      ],
+      "risk_if_absent": "Product SOT can become a narrative summary instead of a build-quality requirements contract.",
+      "reference_methods": [
+        "PRD",
+        "Spec-first development",
+        "BDD",
+        "Specification by Example"
+      ]
+    },
+    {
+      "process_key": "research_plan_and_evidence_matrix",
+      "name": "Research Plan and Evidence Matrix",
+      "domain": "discovery_research",
+      "coverage_status": "partial_covered",
+      "factory_shape": "template_and_gate",
+      "integration_decision": "add_research_plan_when_uncertainty_is_high",
+      "insertion_point": "before discovery resolution or before Product SOT freeze",
+      "trigger_conditions": [
+        "unknown user/market",
+        "high uncertainty",
+        "conflicting source",
+        "large bet"
+      ],
+      "required_artifacts": [
+        "research_plan",
+        "evidence_matrix",
+        "assumption_register",
+        "confidence_levels",
+        "research_decision_log"
+      ],
+      "required_gates": [
+        "research_gate",
+        "assumption_resolution_gate"
+      ],
+      "proof_requirements": [
+        "research questions listed",
+        "evidence confidence marked",
+        "risky assumptions have decisions"
+      ],
+      "risk_if_absent": "Factory may treat weak signals as facts and lock wrong scope.",
+      "reference_methods": [
+        "Continuous Discovery",
+        "Customer Development",
+        "Assumption Mapping"
+      ]
+    },
+    {
+      "process_key": "user_story_mapping_and_flow_model",
+      "name": "User Story Mapping and Flow Model",
+      "domain": "requirements_ux",
+      "coverage_status": "missing_new",
+      "factory_shape": "parallel_lane",
+      "integration_decision": "add_conditional_flow_model_lane",
+      "insertion_point": "during PRD and Product Experience co-design",
+      "trigger_conditions": [
+        "user-facing product",
+        "workflow automation",
+        "multi-step journey"
+      ],
+      "required_artifacts": [
+        "story_map",
+        "user_flow_map",
+        "journey_states",
+        "edge_case_states"
+      ],
+      "required_gates": [
+        "flow_completeness_gate"
+      ],
+      "proof_requirements": [
+        "happy path and edge paths mapped",
+        "roles/personas covered",
+        "states and handoffs visible"
+      ],
+      "risk_if_absent": "Implementation can miss critical user journeys even if individual requirements look complete.",
+      "reference_methods": [
+        "User Story Mapping",
+        "Service Blueprint",
+        "Journey Mapping"
+      ]
+    },
+    {
+      "process_key": "system_design_review",
+      "name": "System Design Review",
+      "domain": "architecture_engineering",
+      "coverage_status": "partial_covered",
+      "factory_shape": "parallel_lane_and_gate",
+      "integration_decision": "add_system_design_packet_and_review_gate",
+      "insertion_point": "co-design before Product Creation Plan",
+      "trigger_conditions": [
+        "backend/system work",
+        "data model",
+        "integration",
+        "scale",
+        "security risk",
+        "cost/ops risk"
+      ],
+      "required_artifacts": [
+        "system_design_packet",
+        "context_diagram",
+        "component_design",
+        "api_contracts",
+        "data_model",
+        "tradeoff_matrix",
+        "failure_modes",
+        "adr_refs"
+      ],
+      "required_gates": [
+        "system_design_review_gate",
+        "architecture_tradeoff_gate"
+      ],
+      "proof_requirements": [
+        "alternatives compared",
+        "interfaces specified",
+        "data/failure/scale/security considered",
+        "ADRs or decision records present"
+      ],
+      "risk_if_absent": "Architecture can stay too abstract and miss concrete engineering design decisions.",
+      "reference_methods": [
+        "Technical Design Doc",
+        "RFC",
+        "C4 Model",
+        "ADR",
+        "Domain-Driven Design"
+      ]
+    },
+    {
+      "process_key": "design_review_and_accessibility",
+      "name": "Design Review and Accessibility",
+      "domain": "ux_product_experience",
+      "coverage_status": "partial_covered",
+      "factory_shape": "parallel_lane_and_gate",
+      "integration_decision": "strengthen_product_face_with_design_review_gate",
+      "insertion_point": "before implementation and before product quality gate",
+      "trigger_conditions": [
+        "human-facing UI",
+        "docs/onboarding",
+        "CLI/TUI/agentic interface"
+      ],
+      "required_artifacts": [
+        "design_review_packet",
+        "screenshots_or_wireframes",
+        "state_matrix",
+        "copy_review",
+        "accessibility_checklist",
+        "design_system_delta"
+      ],
+      "required_gates": [
+        "design_review_gate",
+        "accessibility_gate"
+      ],
+      "proof_requirements": [
+        "loading/empty/error states covered",
+        "WCAG/accessibility checked",
+        "visual consistency evidence",
+        "copy reviewed"
+      ],
+      "risk_if_absent": "Product may work technically but feel generic, confusing or inaccessible.",
+      "reference_methods": [
+        "Human-Centered Design",
+        "Nielsen Heuristics",
+        "WCAG",
+        "Design Systems"
+      ]
+    },
+    {
+      "process_key": "product_analytics_plan",
+      "name": "Product Analytics Plan",
+      "domain": "analytics_learning",
+      "coverage_status": "missing_new",
+      "factory_shape": "contract_and_gate",
+      "integration_decision": "add_analytics_plan_for_learning_products",
+      "insertion_point": "before release readiness / before launch",
+      "trigger_conditions": [
+        "public product",
+        "growth goal",
+        "usage learning needed",
+        "experiment planned"
+      ],
+      "required_artifacts": [
+        "analytics_plan",
+        "event_taxonomy",
+        "funnel_definition",
+        "success_dashboard_spec",
+        "decision_metrics"
+      ],
+      "required_gates": [
+        "analytics_readiness_gate"
+      ],
+      "proof_requirements": [
+        "events tied to decisions",
+        "success/failure thresholds defined",
+        "privacy boundary stated"
+      ],
+      "risk_if_absent": "Factory cannot learn from real usage or know whether product succeeded.",
+      "reference_methods": [
+        "Product Analytics",
+        "North Star Metric",
+        "AARRR/Funnel Analytics",
+        "Experiment Design"
+      ]
+    },
+    {
+      "process_key": "go_to_market_distribution_review",
+      "name": "Go-To-Market and Distribution Review",
+      "domain": "growth_distribution",
+      "coverage_status": "missing_new",
+      "factory_shape": "phase_or_gate",
+      "integration_decision": "add_conditional_distribution_review",
+      "insertion_point": "before release decision for public products",
+      "trigger_conditions": [
+        "public launch",
+        "landing page",
+        "community product",
+        "commercial product",
+        "open-source release"
+      ],
+      "required_artifacts": [
+        "gtm_packet",
+        "target_segment",
+        "positioning_message",
+        "channel_plan",
+        "activation_path",
+        "launch_checklist"
+      ],
+      "required_gates": [
+        "distribution_readiness_gate"
+      ],
+      "proof_requirements": [
+        "target/channel/message explicit",
+        "activation path tested",
+        "launch metric defined"
+      ],
+      "risk_if_absent": "Factory can build excellent products that nobody understands, tries or adopts.",
+      "reference_methods": [
+        "Go-To-Market Strategy",
+        "Positioning",
+        "Growth Loops",
+        "Working Backwards"
+      ]
+    },
+    {
+      "process_key": "experiment_design",
+      "name": "Experiment Design",
+      "domain": "discovery_learning",
+      "coverage_status": "missing_new",
+      "factory_shape": "template_and_gate",
+      "integration_decision": "add_experiment_packet_for_uncertain_bets",
+      "insertion_point": "before implementation when uncertainty can be tested cheaper",
+      "trigger_conditions": [
+        "uncertain demand",
+        "uncertain UX",
+        "uncertain pricing",
+        "uncertain technical approach"
+      ],
+      "required_artifacts": [
+        "experiment_packet",
+        "hypothesis",
+        "metric",
+        "decision_rule",
+        "duration_or_sample",
+        "risk_limit"
+      ],
+      "required_gates": [
+        "experiment_design_gate"
+      ],
+      "proof_requirements": [
+        "hypothesis falsifiable",
+        "decision threshold set",
+        "cheap test considered before build"
+      ],
+      "risk_if_absent": "Factory may overbuild instead of testing the riskiest assumption.",
+      "reference_methods": [
+        "Lean Startup",
+        "A/B Testing",
+        "Assumption Testing"
+      ]
+    },
+    {
+      "process_key": "qa_strategy_and_test_matrix",
+      "name": "QA Strategy and Test Matrix",
+      "domain": "quality_engineering",
+      "coverage_status": "partial_covered",
+      "factory_shape": "contract_and_gate",
+      "integration_decision": "add_risk_based_qa_strategy",
+      "insertion_point": "before execution and before verification",
+      "trigger_conditions": [
+        "code delivery",
+        "multi-surface product",
+        "high regression risk"
+      ],
+      "required_artifacts": [
+        "qa_strategy",
+        "test_matrix",
+        "risk_based_coverage",
+        "regression_plan",
+        "compatibility_matrix"
+      ],
+      "required_gates": [
+        "qa_strategy_gate",
+        "regression_gate"
+      ],
+      "proof_requirements": [
+        "coverage tied to risk",
+        "test types chosen intentionally",
+        "regression path defined"
+      ],
+      "risk_if_absent": "Testing can become ad hoc and miss product-critical failures.",
+      "reference_methods": [
+        "Risk-Based Testing",
+        "Test Pyramid",
+        "BDD",
+        "E2E Strategy"
+      ]
+    },
+    {
+      "process_key": "release_readiness_review",
+      "name": "Release Readiness Review",
+      "domain": "release_operations",
+      "coverage_status": "partial_covered",
+      "factory_shape": "gate",
+      "integration_decision": "strengthen_release_or_block_with_readiness_review",
+      "insertion_point": "before release/block",
+      "trigger_conditions": [
+        "public release",
+        "production deploy",
+        "user-facing change",
+        "migration"
+      ],
+      "required_artifacts": [
+        "release_readiness_packet",
+        "rollback_plan",
+        "monitoring_plan",
+        "support_plan",
+        "changelog",
+        "migration_plan"
+      ],
+      "required_gates": [
+        "release_readiness_gate"
+      ],
+      "proof_requirements": [
+        "rollback owner and steps",
+        "monitoring signals",
+        "support path",
+        "known risks accepted"
+      ],
+      "risk_if_absent": "A feature may ship without operational safety, rollback or support readiness.",
+      "reference_methods": [
+        "Release Readiness Review",
+        "SRE",
+        "DORA",
+        "Operational Readiness Review"
+      ]
+    },
+    {
+      "process_key": "post_launch_review",
+      "name": "Post-Launch Review",
+      "domain": "learning_operations",
+      "coverage_status": "partial_covered",
+      "factory_shape": "continuous_lane_and_receipt",
+      "integration_decision": "add_post_launch_review_to_learnback",
+      "insertion_point": "after launch and during monitoring",
+      "trigger_conditions": [
+        "released product",
+        "pilot",
+        "public artifact",
+        "production incident"
+      ],
+      "required_artifacts": [
+        "post_launch_review",
+        "metric_readout",
+        "feedback_summary",
+        "bug_trends",
+        "method_learnbacks"
+      ],
+      "required_gates": [
+        "post_launch_learning_gate"
+      ],
+      "proof_requirements": [
+        "actual metrics compared to success criteria",
+        "user feedback captured",
+        "method changes proposed"
+      ],
+      "risk_if_absent": "Learnback can stay internal and miss real-world product outcomes.",
+      "reference_methods": [
+        "Post-Implementation Review",
+        "Postmortems",
+        "Continuous Discovery"
+      ]
+    },
+    {
+      "process_key": "privacy_data_governance_review",
+      "name": "Privacy and Data Governance Review",
+      "domain": "security_privacy",
+      "coverage_status": "partial_covered",
+      "factory_shape": "parallel_lane_and_gate",
+      "integration_decision": "add_data_governance_gate_for_data_surfaces",
+      "insertion_point": "during risk/method routing and co-design",
+      "trigger_conditions": [
+        "personal data",
+        "analytics",
+        "AI/RAG",
+        "third-party integrations",
+        "payments"
+      ],
+      "required_artifacts": [
+        "data_inventory",
+        "privacy_boundary",
+        "retention_policy",
+        "consent_or_basis",
+        "data_flow_diagram"
+      ],
+      "required_gates": [
+        "privacy_gate",
+        "data_governance_gate"
+      ],
+      "proof_requirements": [
+        "data categories mapped",
+        "retention/access stated",
+        "privacy risk accepted or mitigated"
+      ],
+      "risk_if_absent": "Product can be secure-ish but still mishandle data, consent, retention or privacy expectations.",
+      "reference_methods": [
+        "Privacy by Design",
+        "DPIA concepts",
+        "NIST Privacy Framework"
+      ]
+    },
+    {
+      "process_key": "ai_eval_and_model_risk_review",
+      "name": "AI Eval and Model Risk Review",
+      "domain": "ai_data_evaluation",
+      "coverage_status": "missing_new",
+      "factory_shape": "parallel_lane_and_gate",
+      "integration_decision": "add_ai_eval_gate_for_ai_surfaces",
+      "insertion_point": "before release for AI/agent/RAG/model features",
+      "trigger_conditions": [
+        "AI output",
+        "agent autonomy",
+        "RAG",
+        "model routing",
+        "classification/generation"
+      ],
+      "required_artifacts": [
+        "eval_plan",
+        "golden_cases",
+        "failure_taxonomy",
+        "model_card_or_system_card",
+        "red_team_results"
+      ],
+      "required_gates": [
+        "ai_eval_gate",
+        "model_risk_gate"
+      ],
+      "proof_requirements": [
+        "quality evals pass",
+        "failure modes known",
+        "safety/red-team evidence",
+        "human fallback defined"
+      ],
+      "risk_if_absent": "AI features can demo well and fail silently, unsafely or inconsistently in production.",
+      "reference_methods": [
+        "Eval-driven AI development",
+        "Model Cards",
+        "System Cards",
+        "Red Teaming",
+        "RAG Evaluation"
+      ]
+    }
+  ],
+  "integration_policy": {
+    "do_not_only_reorder_existing_phases": true,
+    "process_can_be_phase_gate_lane_contract_template_worker_or_receipt": true,
+    "hermes_runtime_floor_preserved": true,
+    "overkill_method_contract_gate_layer_preserved": true
+  },
+  "non_goals": [
+    "do not publish raw study docs",
+    "do not turn Overkill into mini-Hermes",
+    "do not claim existing Product SOT equals PRD without requirements proof",
+    "do not claim Architecture equals System Design without design packet proof"
+  ]
+}

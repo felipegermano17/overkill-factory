@@ -12,6 +12,7 @@ factoryctl doctor
 factoryctl run minimal
 python scripts/swiss_watch_audit.py --out .tmp/swiss-watch-audit.json --markdown .tmp/swiss-watch-audit.md
 python scripts/factory_method_excellence_audit.py --out .tmp/factory-method-excellence-audit.json --markdown .tmp/factory-method-excellence-audit.md
+python scripts/factory_world_class_process_gap_audit.py --out .tmp/factory-world-class-process-gap-audit.json --markdown .tmp/factory-world-class-process-gap-audit.md
 python -m unittest discover -s tests
 python scripts/validate_document_governance.py
 python scripts/generate_factory_reference_docs.py --check
@@ -152,6 +153,7 @@ factoryctl doctor
 factoryctl run minimal
 python scripts/swiss_watch_audit.py --out .tmp/swiss-watch-audit.json --markdown .tmp/swiss-watch-audit.md
 python scripts/factory_method_excellence_audit.py --out .tmp/factory-method-excellence-audit.json --markdown .tmp/factory-method-excellence-audit.md
+python scripts/factory_world_class_process_gap_audit.py --out .tmp/factory-world-class-process-gap-audit.json --markdown .tmp/factory-world-class-process-gap-audit.md
 python scripts/factory_battery.py
 python scripts/validate_document_governance.py
 python scripts/generate_factory_reference_docs.py --check

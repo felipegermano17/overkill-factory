@@ -36,8 +36,8 @@ Done without evidence is only a claim. Receipt Five, review, runtime state and p
 | Hermes profile bindings | 40 | `agents/hermes-profile-bindings.public.json` |
 | Operating systems | 17 | `templates/factory-operating-system-registry.json` |
 | Method engines | 8 | `templates/method-engine-registry.json` |
-| JSON schemas | 229 | `schemas/*.json` |
-| Templates | 142 | `templates/*` |
+| JSON schemas | 230 | `schemas/*.json` |
+| Templates | 143 | `templates/*` |
 | Public surfaces | 19 | `docs/public-surface.manifest.json` |
 
 ## Factory Phases
@@ -286,6 +286,7 @@ These are the public JSON schemas the factory exposes. They are not decoration; 
 - `schemas/factory-vfinal-provider-model-audit.schema.json`
 - `schemas/factory-workflow-catalog.schema.json`
 - `schemas/factory-workflow-compiled-plan.schema.json`
+- `schemas/factory-world-class-process-registry.schema.json`
 - `schemas/full-product-run-manifest.schema.json`
 - `schemas/full-product-sot-scope-coverage.schema.json`
 - `schemas/full-product-worker-graph.schema.json`
@@ -493,6 +494,7 @@ Templates are starter records paired with schemas. They are examples of valid sh
 - `templates/factory-v1-completion-gate.json`
 - `templates/factory-v2-readiness-claim.json`
 - `templates/factory-workflow-compiled-plan.json`
+- `templates/factory-world-class-process-registry.json`
 - `templates/full-product-run-manifest.json`
 - `templates/full-product-sot-scope-coverage.json`
 - `templates/hermes-blocked-first-protocol-receipt.json`

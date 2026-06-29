@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/factory-world-class-process-registry.schema.json",
+  "title": "Overkill Factory World-Class Process Registry",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "registry_id",
+    "purpose",
+    "public_private_boundary",
+    "minimum_new_or_partial_processes",
+    "required_process_keys",
+    "processes",
+    "integration_policy",
+    "non_goals"
+  ],
+  "properties": {
+    "$schema": { "const": "https://overkill-factory.dev/schemas/factory-world-class-process-registry.schema.json" },
+    "record_type": { "const": "factory_world_class_process_registry" },
+    "registry_id": { "type": "string", "minLength": 3 },
+    "purpose": { "type": "string", "minLength": 40 },
+    "public_private_boundary": { "type": "string", "minLength": 20 },
+    "minimum_new_or_partial_processes": { "type": "integer", "minimum": 1 },
+    "required_process_keys": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 3 }, "uniqueItems": true },
+    "processes": {
+      "type": "array",
+      "minItems": 8,
+      "items": {
+        "type": "object",
+        "required": [
+          "process_key",
+          "name",
+          "domain",
+          "coverage_status",
+          "factory_shape",
+          "integration_decision",
+          "insertion_point",
+          "trigger_conditions",
+          "required_artifacts",
+          "required_gates",
+          "proof_requirements",
+          "risk_if_absent",
+          "reference_methods"
+        ],
+        "properties": {
+          "process_key": { "type": "string", "minLength": 3 },
+          "name": { "type": "string", "minLength": 3 },
+          "domain": { "type": "string", "minLength": 3 },
+          "coverage_status": { "enum": ["missing_new", "partial_covered", "existing_core"] },
+          "factory_shape": { "enum": ["phase_and_gate", "phase_or_gate", "gate", "parallel_lane", "parallel_lane_and_gate", "template_and_gate", "contract_and_gate", "continuous_lane_and_receipt", "receipt_section", "worker_packet_obligation"] },
+          "integration_decision": { "type": "string", "minLength": 10 },
+          "insertion_point": { "type": "string", "minLength": 10 },
+          "trigger_conditions": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 3 } },
+          "required_artifacts": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 3 } },
+          "required_gates": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 3 } },
+          "proof_requirements": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 3 } },
+          "risk_if_absent": { "type": "string", "minLength": 20 },
+          "reference_methods": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 2 } }
+        },
+        "additionalProperties": false
+      }
+    },
+    "integration_policy": {
+      "type": "object",
+      "required": [
+        "do_not_only_reorder_existing_phases",
+        "process_can_be_phase_gate_lane_contract_template_worker_or_receipt",
+        "hermes_runtime_floor_preserved",
+        "overkill_method_contract_gate_layer_preserved"
+      ],
+      "properties": {
+        "do_not_only_reorder_existing_phases": { "const": true },
+        "process_can_be_phase_gate_lane_contract_template_worker_or_receipt": { "const": true },
+        "hermes_runtime_floor_preserved": { "const": true },
+        "overkill_method_contract_gate_layer_preserved": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "non_goals": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 3 }, "uniqueItems": true }
+  },
+  "additionalProperties": false
+}
