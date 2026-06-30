@@ -69,6 +69,8 @@ Mandate:
 
 | FM-033 | Declared-artifact repair is for a review card, but summary says owner artifacts need `product-architect restore/rerun` | no-idle keeps generic repair blocked and does not route the real WU-01 owner rerun | detector only recognized plain `<worker> rerun` and resolved redacted target by review title/assignee instead of WU artifact prefix | fixed locally: accepts `<worker> restore/rerun` and resolves `wu01_*` artifact gaps to unique `F15/WU-01 -` owner task with matching worker | `test_no_idle_routes_wu01_owner_restore_rerun_from_review_target` |
 
+| FM-034 | Materialization repair proves F16/F17 blockers are actually WU-19 release/readiness, but no-idle keeps creating duplicate materialization repairs | board has no running work, repeated `Repair factory materialization contracts` cards, F16 still blocked on `PROMOTION_BLOCKED_NOT_RELEASE_READY` | legacy materialization classifier outranks release-readiness supersession evidence from done repairs | classify `release_readiness_blocker_after_materialization_repair` and create `Repair WU-19 release/readiness blockers` for `release-ops-worker`; do not ask operator until concrete gate package exists | `test_no_idle_does_not_duplicate_materialization_after_wu19_release_readiness_resolution`, `test_no_idle_create_remediation_routes_wu19_release_readiness_instead_of_materialization_duplicate` |
+
 ## Live-board observations during audit
 
 - 2026-06-30T12:32Z: board had `blocked=3`, `running=1`, `todo=14`; running task was `Repair factory materialization contracts` and blockers were WU-09/WU-10/WU-13 input/capability materialization issues.

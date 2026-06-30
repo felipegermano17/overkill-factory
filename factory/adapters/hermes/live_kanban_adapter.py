@@ -72,6 +72,7 @@ NO_IDLE_INTERNAL_REVIEW_REQUEST_MARKER = "factory_no_idle_internal_review_reques
 NO_IDLE_REVIEW_FAIL_REPAIR_MARKER = "factory_no_idle_review_fail_repair"
 NO_IDLE_CANONICAL_FRONTIER_RESUME_MARKER = "factory_no_idle_canonical_frontier_resume"
 NO_IDLE_MATERIALIZATION_CONTRACT_REPAIR_MARKER = "factory_no_idle_materialization_contract_repair"
+NO_IDLE_RELEASE_READINESS_REPAIR_MARKER = "factory_no_idle_release_readiness_repair"
 NO_IDLE_DECLARED_ARTIFACT_REPAIR_SUPERSEDED_MARKER = "factory_no_idle_declared_artifact_repair_superseded"
 NO_IDLE_STALE_REMEDIATION_REPLACEMENT_LIMIT = 8
 NO_IDLE_RUNNING_RESULT_CLOSEOUT_TIMEOUT_SECONDS = 5 * 60
@@ -1374,6 +1375,41 @@ def is_factory_materialization_contract_blocker(record: dict[str, Any]) -> bool:
         "requires signing",
     )
     return not any(marker in text for marker in true_external_markers)
+
+
+def release_readiness_resolved_by_materialization_repair_refs(
+    done: list[dict[str, Any]], blocked_refs: list[str]
+) -> list[str]:
+    """Return blocked refs whose materialization class was already superseded.
+
+    Live WU-19/F16 runs can first look like missing materialization, then a
+    factory repair proves the remaining blocker is release/readiness evidence.
+    No-idle must not keep creating identical materialization repairs in that
+    case; the next action is release/readiness routing.
+    """
+    wanted = {ref for ref in blocked_refs if ref}
+    resolved: set[str] = set()
+    for item in done:
+        text = task_record_text(item)
+        if NO_IDLE_MATERIALIZATION_CONTRACT_REPAIR_MARKER not in text:
+            continue
+        if not any(
+            marker in text
+            for marker in (
+                "real wu-19 release/readiness",
+                "real wu19 release/readiness",
+                "blocked by real wu-19",
+                "blocked by real wu19",
+                "promotion_blocked_not_release_ready",
+                "release/readiness evidence",
+            )
+        ):
+            continue
+        for ref in wanted:
+            if ref in text:
+                resolved.add(ref)
+    return sorted(resolved)
+
 
 
 def is_factory_owned_repair_task(record: dict[str, Any]) -> bool:
@@ -2722,6 +2758,52 @@ def classify_no_idle_state(rows: dict[str, list[dict[str, Any]]]) -> dict[str, A
     materialization_contract_refs = sorted(
         task_record_id(item) for item in materialization_contract_blockers if task_record_id(item)
     )
+    release_readiness_resolved_refs = release_readiness_resolved_by_materialization_repair_refs(
+        done,
+        materialization_contract_refs,
+    )
+    if release_readiness_resolved_refs:
+        release_readiness_task_refs = sorted(
+            ref
+            for ref in materialization_contract_refs
+            if ref in release_readiness_resolved_refs
+            and any(
+                ref == task_record_id(item)
+                and any(
+                    marker in task_record_text(item)
+                    for marker in (
+                        "promotion_blocked_not_release_ready",
+                        "wu-19",
+                        "wu19",
+                        "release/readiness",
+                    )
+                )
+                for item in blocked
+            )
+        ) or release_readiness_resolved_refs[:1]
+        return {
+            "status": "remediation_required",
+            "classification": "release_readiness_blocker_after_materialization_repair",
+            "blocked": True,
+            "remediation_required": True,
+            "human_gate_required": False,
+            "operator_input_required": False,
+            "operator_input_task_refs": [],
+            "human_gate_task_refs": human_gate_refs,
+            "release_readiness_task_refs": release_readiness_task_refs,
+            "superseded_materialization_contract_task_refs": release_readiness_resolved_refs,
+            "remediation_strategy": "route_release_readiness_repair_or_gate_packet",
+            "remediation_reason": (
+                "A prior materialization-contract repair already proved the missing-contract class is resolved; "
+                "the remaining blocker is WU-19 release/readiness evidence. Do not create another identical "
+                "materialization repair."
+            ),
+            "next_action": (
+                "create or dispatch a release/readiness remediation task that clears or packages WU-19 blockers, "
+                "then rerun F16; do not ask the operator until a concrete human gate package exists"
+            ),
+            "state": state,
+        }
     if blocked and materialization_contract_blockers:
         return {
             "status": "remediation_required",
@@ -3146,6 +3228,68 @@ def create_factory_package_dependency_remediation_task(
         current_step_key=FACTORY_KANBAN_DEFAULT_STEP_KEY,
         runner=runner,
     )
+
+
+def create_release_readiness_repair_task(
+    *,
+    hermes_bin: str,
+    board: str,
+    workspace: str,
+    classification: dict[str, Any],
+    runner: Runner,
+) -> str:
+    body = no_idle_remediation_body(board=board, classification=classification)
+    body["marker"] = NO_IDLE_RELEASE_READINESS_REPAIR_MARKER
+    body["packet_type"] = "factory_no_idle_release_readiness_repair_request"
+    body["objective"] = (
+        "Clear or package the real WU-19 release/readiness blockers that keep F16 blocked. "
+        "Do not create another materialization-contract repair and do not ask the operator until "
+        "a concrete release/human gate package exists."
+    )
+    body["targeted_remediation"] = {
+        "plan_action": "repair_or_package_release_readiness_blockers",
+        "release_readiness_task_refs": classification.get("release_readiness_task_refs") or [],
+        "superseded_materialization_contract_task_refs": (
+            classification.get("superseded_materialization_contract_task_refs") or []
+        ),
+        "required_next_after_repair": "rerun F16 evidence-reconciler, then independent-reviewer readback",
+        "human_gate_required": False,
+        "operator_input_required": False,
+        "repair_task_must_not_be_materialization_duplicate": True,
+    }
+    body["allowed_actions"] = [
+        "read WU-19 release readiness result and all named REL blockers",
+        "differentiate factory-owned release-readiness repair from true human release approval",
+        "produce an owner-readable release/human gate package only if a real decision is required",
+        "create a precise next rerun/repair path for release-ops-worker/F16 instead of replaying F16 blindly",
+        "preserve no deploy, no Mainnet, no funds, no custody, no signing and no secrets authority",
+    ]
+    body["forbidden_actions"].extend(
+        [
+            "create another materialization-contract repair for the same F16/F17 blockers",
+            "treat release readiness as approved by planning evidence",
+            "touch production, cloud spend, secrets, mainnet, funds, custody, signing, deploy or release",
+            "ask the operator a vague status question instead of preparing a concrete release gate package",
+        ]
+    )
+    body["human_gate_required"] = False
+    body["operator_input_required"] = False
+    digest = idempotency_digest_fragment(contract_digest(body))
+    return create_task(
+        hermes_bin=hermes_bin,
+        board=board,
+        title="Repair WU-19 release/readiness blockers",
+        body=compact_json_argument(body),
+        assignee="release-ops-worker",
+        idempotency_key=f"overkill:no-idle-release-readiness-repair:{public_safe_slug(board, fallback='board')}:{digest}",
+        created_by=NO_IDLE_AUTHOR,
+        workspace=workspace,
+        blocked=False,
+        workflow_template_id=FACTORY_KANBAN_WORKFLOW_TEMPLATE_ID,
+        current_step_key=FACTORY_KANBAN_DEFAULT_STEP_KEY,
+        runner=runner,
+    )
+
 
 
 def create_materialization_contract_repair_task(
@@ -11530,6 +11674,7 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
         "create_targeted_review_repair_task",
         "create_post_review_owner_gate_package_task",
         "create_materialization_contract_repair_task",
+        "route_release_readiness_repair_or_gate_packet",
     }
     runtime_contract_repair_required = (
         not targeted_legacy_repair_available
@@ -11668,6 +11813,46 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
                 "factory_repair_task_unlinked_and_promoted"
                 if released_repair_tasks
                 else "factory_repair_task_unlink_promote_failed"
+            )
+        elif classification.get("remediation_strategy") == "route_release_readiness_repair_or_gate_packet":
+            targeted_remediation_plan = {
+                "record_type": "factory_no_idle_targeted_repair_plan",
+                "plan_action": "repair_or_package_release_readiness_blockers",
+                "board": args.board,
+                "release_readiness_task_refs": classification.get("release_readiness_task_refs") or [],
+                "superseded_materialization_contract_task_refs": (
+                    classification.get("superseded_materialization_contract_task_refs") or []
+                ),
+                "assignee": "release-ops-worker",
+                "native_dispatch_required_next": True,
+                "human_gate_required": False,
+                "operator_input_required": False,
+            }
+            remediation_task_id = create_release_readiness_repair_task(
+                hermes_bin=args.hermes_bin,
+                board=args.board,
+                workspace=args.workspace,
+                classification=classification,
+                runner=runner,
+            )
+            task_runtime = remediation_task_runtime_metadata(
+                hermes_bin=args.hermes_bin,
+                board=args.board,
+                task_id=remediation_task_id,
+                runner=runner,
+            )
+            classification["targeted_remediation_plan"] = targeted_remediation_plan
+            classification["remediation_task_ref"] = remediation_task_id
+            classification.update(task_runtime)
+            classification["native_dispatch_required_next"] = bool(
+                remediation_task_id
+                and targeted_remediation_plan.get("native_dispatch_required_next") is True
+                and task_runtime.get("native_dispatch_required_next") is True
+            )
+            classification["classification"] = (
+                "release_readiness_repair_task_created"
+                if remediation_task_id and not classification.get("remediation_task_stale")
+                else "release_readiness_repair_task_not_created"
             )
         elif classification.get("remediation_strategy") == "create_materialization_contract_repair_task":
             targeted_remediation_plan = {
