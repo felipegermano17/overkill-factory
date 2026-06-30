@@ -3566,6 +3566,32 @@ def internal_review_pass_references(record: dict[str, Any], blocked_refs: set[st
     return sorted(ref for ref in refs if ref in blocked_refs)
 
 
+def routed_repair_pass_references(rows: dict[str, list[dict[str, Any]]], blocked_refs: set[str]) -> list[str]:
+    pass_review_ids: set[str] = set()
+    for record in rows.get("done", []):
+        record_id = task_record_id(record)
+        text_lower = task_record_text(record).lower()
+        pass_seen = '"result": "pass' in text_lower or '"verdict": "pass' in text_lower or "readback review pass" in text_lower
+        if record_id and pass_seen and str(record.get("assignee") or "") in {"independent-reviewer", "autoreview-gate"}:
+            pass_review_ids.add(record_id)
+    refs: set[str] = set()
+    for record in rows.get("done", []):
+        for run in record.get("runs") or []:
+            if not isinstance(run, dict):
+                continue
+            metadata = parse_json_object(run.get("metadata"))
+            if not isinstance(metadata, dict):
+                continue
+            orchestration = metadata.get("orchestration_result")
+            if not isinstance(orchestration, dict):
+                continue
+            review_ref = str(orchestration.get("created_independent_readback_review") or "").strip()
+            target_ref = str(orchestration.get("target_repair_task_ref") or "").strip()
+            if review_ref in pass_review_ids and target_ref in blocked_refs:
+                refs.add(target_ref)
+    return sorted(refs)
+
+
 def internal_review_pass_closeout_candidates(rows: dict[str, list[dict[str, Any]]]) -> list[dict[str, Any]]:
     blocked_by_id = {
         task_record_id(item): item
@@ -3575,11 +3601,23 @@ def internal_review_pass_closeout_candidates(rows: dict[str, list[dict[str, Any]
     candidates: list[dict[str, Any]] = []
     if not blocked_by_id:
         return candidates
+    blocked_refs = set(blocked_by_id)
+    for routed_ref in routed_repair_pass_references(rows, blocked_refs):
+        blocker = blocked_by_id[routed_ref]
+        if is_human_gate_decision_ready_blocker(blocker):
+            continue
+        candidates.append(
+            {
+                "task_ref": routed_ref,
+                "review_task_ref": "routed_repair_pass",
+                "review_title": "routed repair independent readback PASS",
+            }
+        )
     for review in rows.get("done", []):
         review_id = task_record_id(review)
         if not review_id:
             continue
-        for blocked_ref in internal_review_pass_references(review, set(blocked_by_id)):
+        for blocked_ref in internal_review_pass_references(review, blocked_refs):
             blocker = blocked_by_id[blocked_ref]
             if is_human_gate_decision_ready_blocker(blocker):
                 continue
@@ -3678,6 +3716,9 @@ def internal_review_fail_repair_candidates(rows: dict[str, list[dict[str, Any]]]
         return []
     blocked_refs = set(blocked_by_id)
     latest_pass_by_ref: dict[str, float] = {}
+    routed_pass_refs = set(routed_repair_pass_references(rows, blocked_refs))
+    for routed_ref in routed_pass_refs:
+        latest_pass_by_ref[routed_ref] = float("inf")
     for index, review in enumerate(rows.get("done", [])):
         for blocked_ref in internal_review_pass_references(review, blocked_refs):
             latest_pass_by_ref[blocked_ref] = max(

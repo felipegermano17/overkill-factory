@@ -5805,6 +5805,105 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertEqual(body["target_task_ref"], target_id)
         self.assertNotIn("redacted", body["target_task_ref"])
 
+    def test_no_idle_closes_routed_repair_after_independent_readback_pass(self) -> None:
+        fake = FakeHermes()
+        blocked_id = "t_" + "blockedrepair"
+        route_id = "t_" + "routerepair"
+        owner_repair_id = "t_" + "ownerfix"
+        pass_review_id = "t_" + "passreview"
+        failed_review_id = "t_" + "failreview"
+        fake.tasks[blocked_id] = {
+            "id": blocked_id,
+            "status": "blocked",
+            "assignee": "factory-orchestrator",
+            "title": "Repair missing declared artifacts for board",
+            "body": json.dumps({"plan_action": "repair_declared_artifacts"}),
+        }
+        fake.tasks[failed_review_id] = {
+            "id": failed_review_id,
+            "status": "done",
+            "assignee": "independent-reviewer",
+            "title": "Readback review failed",
+            "body": "review FAIL for " + blocked_id,
+            "runs": [
+                {
+                    "status": "done",
+                    "outcome": "completed",
+                    "metadata": json.dumps(
+                        {"independent_review_result": {"result": "FAIL", "reviewed_task_ref": blocked_id}}
+                    ),
+                }
+            ],
+        }
+        fake.tasks[route_id] = {
+            "id": route_id,
+            "status": "done",
+            "assignee": "factory-orchestrator",
+            "title": "Repair " + blocked_id + " after internal review FAIL",
+            "body": "{}",
+            "runs": [
+                {
+                    "status": "done",
+                    "outcome": "completed",
+                    "metadata": json.dumps(
+                        {
+                            "orchestration_result": {
+                                "result": "ROUTED_REPAIR_TO_OWNER_AND_REVIEW",
+                                "target_repair_task_ref": blocked_id,
+                                "created_product_architect_repair": owner_repair_id,
+                                "created_independent_readback_review": pass_review_id,
+                            }
+                        }
+                    ),
+                }
+            ],
+        }
+        fake.tasks[owner_repair_id] = {
+            "id": owner_repair_id,
+            "status": "done",
+            "assignee": "product-architect",
+            "title": "Owner repair",
+            "body": "{}",
+        }
+        fake.tasks[pass_review_id] = {
+            "id": pass_review_id,
+            "status": "done",
+            "assignee": "independent-reviewer",
+            "title": "Readback review PASS",
+            "body": "bounded readback review pass",
+            "runs": [
+                {
+                    "status": "done",
+                    "outcome": "completed",
+                    "metadata": json.dumps(
+                        {
+                            "independent_review_result": {
+                                "result": "PASS",
+                                "owner_repair_task_ref": owner_repair_id,
+                                "repair_target_task_ref": "t_" + "targetwu05",
+                            }
+                        }
+                    ),
+                }
+            ],
+        }
+        args = adapter.build_parser().parse_args(
+            ["no-idle", "--board", TEST_BOARD, "--create-remediation", "--workspace", "scratch"]
+        )
+
+        result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertEqual(state["classification"], "internal_review_pass_reduced_blockers")
+        self.assertEqual(fake.tasks[blocked_id]["status"], "done")
+        self.assertFalse(
+            any(
+                str(task.get("title") or "").startswith("Repair " + blocked_id + " after internal review FAIL")
+                and task.get("id") not in {route_id}
+                for task in fake.tasks.values()
+            )
+        )
+
     def test_declared_artifact_repair_idempotency_is_scoped_to_missing_target(self) -> None:
         def plan_for_missing(task_id: str, artifact_name: str) -> dict[str, Any]:
             fake = FakeHermes()
