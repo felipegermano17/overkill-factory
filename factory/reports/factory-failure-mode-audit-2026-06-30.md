@@ -63,6 +63,8 @@ Mandate:
 
 | FM-030 | Review FAIL is repaired through an owner task and later independent readback PASS, but reducer still sees the old FAIL | duplicate “repair after internal review FAIL” tasks get created after PASS | pass reducer did not follow orchestration route metadata (`target_repair_task_ref` + `created_independent_readback_review`) | fixed locally: routed repair PASS closes/suppresses the original blocker and duplicate repair path | `test_no_idle_closes_routed_repair_after_independent_readback_pass` |
 
+| FM-031 | Declared-artifact owner rerun target is redacted, but board snapshot has a unique matching done task by title+assignee | owner-rerun card is created with `kanban:<redacted>` target and worker receives invalid contract | reducer did not resolve sanitized refs from live board rows before creating rerun | fixed locally: redacted owner-rerun candidates are resolved by unique board snapshot title+assignee; unresolved/ambiguous candidates do not create invalid owner rerun | `test_no_idle_resolves_redacted_owner_rerun_target_by_title_and_assignee` |
+
 ## Live-board observations during audit
 
 - 2026-06-30T12:32Z: board had `blocked=3`, `running=1`, `todo=14`; running task was `Repair factory materialization contracts` and blockers were WU-09/WU-10/WU-13 input/capability materialization issues.

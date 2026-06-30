@@ -4041,6 +4041,8 @@ def declared_artifact_owner_rerun_candidate_from_repair_record(repair: dict[str,
         "declared-artifact repair blocked" in text
         or "declared-artifact-readback blocked" in text
         or "declared artifact readback" in text and "blocked" in text and "rerun" in text
+        or "readback verdict: blocked" in text and "owner rerun" in text
+        or "exact artifact repair blocked" in text
         or "exact artifact repair not possible" in text
         or "cannot be reconstructed safely" in text
         or "rerun product-face" in text
@@ -4051,11 +4053,43 @@ def declared_artifact_owner_rerun_candidate_from_repair_record(repair: dict[str,
     return None
 
 
+def resolve_redacted_owner_rerun_target(candidate: dict[str, Any], rows: dict[str, list[dict[str, Any]]]) -> dict[str, Any] | None:
+    target_ref = str(candidate.get("target_task_ref") or "").strip()
+    if target_ref and not target_ref.startswith("kanban:"):
+        return candidate
+    title = str(candidate.get("target_title") or "").strip()
+    worker = str(candidate.get("target_worker") or "").strip()
+    if not title or not worker:
+        return None
+    matches: list[dict[str, Any]] = []
+    for status in ("done", "blocked", "running", "ready", "todo"):
+        for record in rows.get(status, []):
+            if str(record.get("title") or "").strip() != title:
+                continue
+            if str(record.get("assignee") or "").strip() != worker:
+                continue
+            record_id = task_record_id(record)
+            if record_id:
+                matches.append(record)
+    unique_ids = {task_record_id(record) for record in matches if task_record_id(record)}
+    if len(unique_ids) != 1:
+        return None
+    resolved = dict(candidate)
+    resolved["target_task_ref"] = next(iter(unique_ids))
+    resolved["target_resolution"] = {
+        "method": "board_snapshot_title_assignee_unique_match",
+        "redacted_original_ref": target_ref,
+        "target_title": title,
+        "target_worker": worker,
+    }
+    return resolved
+
+
 def declared_artifact_owner_rerun_candidate(rows: dict[str, list[dict[str, Any]]]) -> dict[str, Any] | None:
     for repair in rows.get("blocked", []):
         candidate = declared_artifact_owner_rerun_candidate_from_repair_record(repair)
         if candidate is not None:
-            return candidate
+            return resolve_redacted_owner_rerun_target(candidate, rows)
     return None
 
 
