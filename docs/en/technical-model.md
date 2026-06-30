@@ -80,3 +80,35 @@ The validators are there to catch those mismatches. They are not a replacement f
 A safe change usually touches three layers at once: the human explanation, the executable contract, and the tests or validators. If you change docs only, you may improve communication but not behavior. If you change code only, the public surface may lie. If you change tests only, you may enforce an old model.
 
 For public documentation work, the safest rule is simple: write from current code and command output, not from memory. Then run the validators. If the validators complain, treat that as a product signal, not as an annoyance.
+
+## Hermes bindings and live profiles
+
+A worker is operable only when four layers match: registry role, agent profile, Hermes binding, and card-specific worker packet. A profile name alone is not enough.
+
+The binding defines skill refs, queue policy, result schema, receipt field, and evidence path policy. That prevents a nice prompt persona from being treated as a real worker without a runtime contract.
+
+Readiness also has a boundary. An old smoke, a locally materialized profile, or a degraded ledger does not prove live execution. It says a configuration path exists. Real completion still needs a current worker result and evidence consumed by the gate.
+
+## Phase engine and Kanban graph
+
+The factory uses the phase engine to compute the current frontier from materialized artifacts. The phase declared on a card does not beat reality. If Product SOT, Method Contract, decision package, or readiness is missing, the later phase blocks.
+
+In Hermes, this must become a native graph: cards, dependencies, typed blockers, and linked work units. The factory may reconcile and repair, but it should not maintain a hidden parallel list. Runtime should show operational truth.
+
+## Operator interface
+
+The operator interface is a projection. Telegram, Discord, cockpit, and CLI bridge can receive source, send status, and deliver decision packages. They do not replace Hermes, Receipt Five, or worker results.
+
+The product rule is: the manager speaks to the human; workers and raw events feed internal state. A human gate needs a readable memo and the artifact under review, not a JSON dump or local path.
+
+## Artifact readback and durable attachments
+
+The Hermes integration should not accept “a file exists” as completion. For runtime artifacts and attachments, the factory needs readback: row or blob exists, size and hash match, parsing succeeded when applicable, safety checks passed, and the reference can be consumed later.
+
+References such as `artifact_readback` and `kanban-attachment` live at that boundary. They prevent metadata, local paths, or temporary files from being treated as permanent proof.
+
+## SDLC Feedback Loop
+
+Material autonomous work needs to keep the thread between signal, triage, model/profile choice, execution, evidence, and learnback. That thread is the SDLC Feedback Loop.
+
+Without it, a failure becomes chat memory; a model choice becomes implicit; learnback becomes opinion without a target. With it, the factory knows where the signal came from, why it chose a route, what proof returned, and what rule may change later.

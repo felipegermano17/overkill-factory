@@ -92,3 +92,43 @@ This is heavier than the public smoke path, but it is the right check before a b
 A real run requires a Hermes runtime owned by the operator. The public kernel can prepare contracts and validate local proof paths, but live cards, workers, comments, workspaces, evidence, and transitions live in Hermes.
 
 Do not treat `doctor` or `run minimal` as proof that a product shipped. Treat them as proof that this checkout is coherent enough to start from.
+
+## Checking a real card
+
+After the minimal smoke, the useful next step is validating a specific card. The public example lives at `factory/examples/minimal-hermes-project/card.md`.
+
+```bash
+cd factory
+python3 scripts/factoryctl.py validate-card examples/minimal-hermes-project/card.md
+python3 scripts/factoryctl.py gate-report --card examples/minimal-hermes-project/card.md
+python3 scripts/factoryctl.py worker-packet --worker all --required-only --card examples/minimal-hermes-project/card.md --out .tmp/minimal-worker-packets
+python3 scripts/factoryctl.py status-snapshot --card examples/minimal-hermes-project/card.md --out .tmp/factory-status-snapshot.json
+```
+
+This shows required fields, risk and surface routing, required workers, and the status an operator would see. It is still not live execution; it is contract proof.
+
+## Before a public release
+
+A public change needs more than a docs build. Run the public checks, regenerate reference when needed, and do not commit `.tmp` as public proof. For a real release, the boundary is higher: preflight, production readiness, rollback, published surface, and current Hermes evidence when the claim talks about a live runtime.
+
+Use `validate_public_surface_sync.py --check-published` only when the public object has already been published or refreshed. Before that, it may correctly report the published surface as out of sync.
+
+## Telegram or Control Tower usage
+
+Telegram and Control Tower are operator interfaces. They can show status, deliver decision packages, and receive replies. They do not approve release alone, replace Hermes, or turn worker events into completion.
+
+If the operator speaks Portuguese, visible status, cards, and decision packages should use natural Portuguese too. Schema keys, logs, and internal IDs may remain English.
+
+## Release and production preflight
+
+When the question changes from “is the checkout coherent?” to “can I publish or promote?”, use a stronger layer:
+
+```bash
+cd factory
+python3 scripts/release_integration_preflight.py --out .tmp/release-check.json
+python3 scripts/factory_production_gate_receipts.py
+python3 scripts/factory_production_readiness.py --out .tmp/readiness-check.json
+python3 scripts/worktree_release_inventory.py --out .tmp/inventory-check.json
+```
+
+These commands may produce `BLOCKED` receipts. That is not necessarily an error. Often it is the correct result when live Hermes, private evidence, published surface, rollback, or readiness does not yet support a production claim.

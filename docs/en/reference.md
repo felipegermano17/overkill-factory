@@ -1,93 +1,124 @@
 # Reference
 
-This page collects the short-form facts a reader usually needs after reading the manual. It is intentionally human-sized. The full generated kernel reference is maintained under `factory/legacy-docs/generated/`.
+This page collects the short-form facts a reader normally needs after the manual. It does not replace registries or the generated reference. It translates the most important names for someone operating or evaluating the factory.
+
+## Where things live
+
+- `README.md` and `README.pt-BR.md`: short public entrypoints.
+- `docs/en/` and `docs/pt-BR/`: canonical public manual.
+- `docs/factory-workflow.catalog.json`: compiled public workflow.
+- `docs/promise-implementation-map.public.json`: public promise-to-implementation map.
+- `docs/public-surface.manifest.json`: public surface manifest.
+- `factory/scripts/factoryctl.py`: main command surface.
+- `factory/schemas/`: JSON contracts for valid records.
+- `factory/templates/`: base contracts, examples, and registries.
+- `factory/agents/`: workers, profiles, Hermes bindings, capability packs, and readiness.
+- `factory/tests/`: behavior regression coverage.
+- `factory/legacy-docs/`: old docs preserved as technical reference; not the canonical public manual.
+- `factory/legacy-docs/generated/`: generated kernel reference for maintainers.
+
+## Short mental path
+
+```text
+source
+-> understanding
+-> Product SOT
+-> method
+-> packs and gates
+-> work units
+-> Hermes
+-> worker results
+-> verification and review
+-> Receipt Five
+-> release, block, or learnback
+```
+
+If a run looks done but cannot point to that path, it is probably missing proof.
 
 ## Route classes
 
-- `product_creation`: used for `product_new` requests. Method family `None`; main gates: Source Gate, Product SOT Gate, Ready Gate.
-- `feature_delivery`: used for `feature, slice` requests. Method family `None`; main gates: Source Gate, Method Gate, Ready Gate.
-- `bug_repair`: used for `bug` requests. Method family `None`; main gates: Reproduction Gate, Regression Gate, Receipt Gate.
-- `incident_response`: used for `incident` requests. Method family `None`; main gates: Severity Gate, Mitigation Gate, Learnback Gate.
-- `brownfield_discovery`: used for `migration, refactor, integration` requests. Method family `None`; main gates: Brownfield Baseline Gate, Regression Gate, Rollback Gate.
-- `release_promotion`: used for `release` requests. Method family `None`; main gates: Production Readiness Gate, Rollback Gate, Release Gate.
-- `research_validation`: used for `feature, product_new, security, ux_ui, data_analytics, agent_skill` requests. Method family `None`; main gates: Source Quality Gate, Specialist Decision Gate, SOT Impact Gate.
-- `docs_onboarding`: used for `doc` requests. Method family `None`; main gates: Docs Utility Gate, First Run Gate.
-- `security_remediation`: used for `security` requests. Method family `None`; main gates: Security Architecture Gate, Security Review Gate.
-- `critical_integration`: used for `integration` requests. Method family `None`; main gates: Dependency Gate, Contract Test Gate, Fallback Gate.
-- `migration_execution`: used for `migration` requests. Method family `None`; main gates: Migration Plan Gate, Regression Gate, Rollback Gate.
-- `ux_product_experience`: used for `ux_ui, product_new, feature` requests. Method family `None`; main gates: Product Experience Gate, Product Face Gate, Independent Design Review Gate.
-- `analytics_data`: used for `data_analytics, product_new, feature` requests. Method family `None`; main gates: Data Contract Gate, Privacy Gate, Metrics Proof Gate.
-- `agent_quality_change`: used for `agent_skill` requests. Method family `None`; main gates: Agent Eval Gate, Worker Profile Readiness Gate, Learnback Gate.
+The fourteen route classes exist to stop the factory from treating every request the same way.
 
-## Method engines
+- `product_creation`: product creation; needs Product SOT, scope coverage, and ready gate.
+- `feature_delivery`: feature or slice; needs method, acceptance criteria, and proof proportional to risk.
+- `bug_repair`: bug work; needs reproduction or explicit reason, fix, and regression.
+- `incident_response`: incident work; needs severity, mitigation, communication, and learnback.
+- `brownfield_discovery` / `migration_execution`: brownfield, refactor, integration, or migration; needs baseline, contract, regression, and rollback.
+- `release_promotion`: release work; needs production readiness, rollback, owner, and authority.
+- `research_validation`: research; must become an operational decision, not just smart commentary.
+- `docs_onboarding`: docs/onboarding; must prove reader utility or first success.
+- `security_remediation`: security; needs architecture, scans, review, and residual-risk treatment.
+- `ux_product_experience`: UX/Product Experience; needs Product Face, states, journeys, design, and review.
+- `analytics_data`: analytics/data; needs metric contract, privacy, and quality proof.
+- `agent_quality_change`: agent/skill/model; needs eval, profile readiness, and learnback.
 
-- `spec_first_sdd`: None. Used when the route needs `spec_first`. Routes: .
-- `test_first_tdd`: None. Used when the route needs `test_first`. Routes: .
-- `behavior_first_bdd`: None. Used when the route needs `behavior_first`. Routes: .
-- `discovery_research`: None. Used when the route needs `discovery_first`. Routes: .
-- `security_first_threat_model`: None. Used when the route needs `security_first`. Routes: .
-- `design_first_product_experience`: None. Used when the route needs `design_first`. Routes: .
-- `legacy_diagnosis`: None. Used when the route needs `legacy_diagnosis`. Routes: .
-- `incident_first`: None. Used when the route needs `incident_first`. Routes: .
+## Main methods
 
-## Operating-system areas
+The method changes how work is proven.
 
-- `deterministic_control_plane_os`: deterministic_control_plane_os.
-- `product_truth_research_os`: product_truth_research_os.
-- `method_os`: method_os.
-- `product_architecture_os`: product_architecture_os.
-- `product_experience_design_brand_os`: product_experience_design_brand_os.
-- `work_unit_execution_dispatch_os`: work_unit_execution_dispatch_os.
-- `authority_autonomy_os`: authority_autonomy_os.
-- `hermes_worker_runtime_os`: hermes_worker_runtime_os.
-- `evidence_receipt_os`: evidence_receipt_os.
-- `capability_provider_os`: capability_provider_os.
-- `agent_profile_authority_os`: agent_profile_authority_os.
-- `security_os`: security_os.
-- `quality_verification_os`: quality_verification_os.
-- `operator_experience_os`: operator_experience_os.
-- `release_operations_os`: release_operations_os.
-- `velocity_cost_throughput_os`: velocity_cost_throughput_os.
-- `factory_learning_os`: factory_learning_os.
+- Spec-first: useful when the risk is building the wrong thing.
+- Test-first: useful when behavior must be locked by regression.
+- Behavior-first: useful when journey and acceptance matter more than internals.
+- Discovery-first: useful when the question is not mature yet.
+- Security-first: required when threat, secret, key, production, onchain, or abuse matters.
+- Design-first: required when visible experience is part of the product.
+- Legacy-diagnosis: needed when an old system, unknown behavior, or migration exists.
+- Incident-first: needed when the product is broken, at risk, or needs operational response.
 
-## Important paths
+## Capability packs
 
-- `README.md`: public English entry.
-- `README.pt-BR.md`: public Portuguese entry.
-- `docs/en/`: English product manual.
-- `docs/pt-BR/`: Portuguese product manual.
-- `docs/assets/public-map/`: public visual map assets.
-- `docs/factory-workflow.catalog.json`: public workflow catalog.
-- `docs/promise-implementation-map.public.json`: public promise-to-implementation map.
-- `docs/public-surface.manifest.json`: manifest for public surfaces.
-- `factory/scripts/factoryctl.py`: main command surface.
-- `factory/schemas/`: JSON schemas for records and contracts.
-- `factory/templates/`: examples, registries, and template contracts.
-- `factory/agents/`: public worker registry, profiles, bindings, and readiness records.
-- `factory/tests/`: regression tests.
-- `factory/legacy-docs/`: preserved old docs and generated reference material, not canonical public docs.
+A capability pack answers: “do we have specialist coverage for this product type?”.
+
+Core packs currently include web/SaaS, CLI/TUI, cloud-native, agent-runtime, Solana AI Kit, onboarding, and public docs. They still need normal gates, but the factory recognizes basic coverage.
+
+Template packs include native mobile, desktop, games, AI/ML, fintech, regulated domain, data analytics, browser extensions, and hardware/IoT. They should not execute materially just because a card asked for them. They need activation, specialists, bindings, smoke, eval, and evidence.
+
+## Product Face
+
+Product Face proves the face of the product. It changes by surface:
+
+- web visual: screenshots, viewports, states, console, accessibility basics, and overflow;
+- CLI/TUI: transcript, help, install, errors, and terminal behavior;
+- docs/onboarding: first-success replay, links, and reader criteria;
+- agentic interface: user control, permissions, memory/data, recovery, and boundaries;
+- wallet/onchain UI: visual proof plus signing, transaction, and key boundary.
+
+Product Face Packet is planning. Product Face Result is proof.
+
+## Workers and authority
+
+A worker is not a prompt character. To be operable it needs four layers:
+
+1. role in the public registry;
+2. agent profile;
+3. Hermes binding;
+4. card-specific worker packet.
+
+The worker executes inside received authority. It does not approve gates, invent evidence, touch production, handle keys, or change scope outside the contract.
 
 ## Core terms
 
-Product SOT is the product source of truth. It should say what is being built, what is in scope, what is out of scope, what evidence counts, and what would make the run unacceptable.
+Product SOT is product truth.
 
-Method Contract is the chosen way to handle the work. It binds the route to gates, artifacts, workers, and evidence.
+Full Product SOT Scope Coverage shows that every important SOT promise is planned, blocked, out of scope, human-owned, or proven.
 
-Worker Packet is the bounded instruction given to a worker. It includes task, limits, authority, and expected output.
+Method Contract connects route, method, gates, workers, and evidence.
 
-Gate Report explains whether a task can move, why it is blocked, and which evidence or action would unblock it.
+Worker Packet is the bounded task sent to a worker.
 
-Receipt Five is the completion receipt. It connects request, work, evidence, review, remaining risk, and next state.
+Worker Result is the worker return with evidence.
 
-Human Gate is a real operator decision. It should come with a readable package, not a vague chat question.
+Gate Report explains whether something can move, why it is blocked, and what unlocks it.
 
-Readback means the factory reads and checks the artifact a worker claims to have produced.
+Receipt Five is the done receipt: request, change, evidence, review, and next state.
 
-No-idle is the guard that detects silent stalls and pushes the next safe action or fails visibly.
+Human Gate is a material operator decision with a readable package.
 
-## Public claim boundary
+Readback is real reading of the produced artifact.
 
-The public repository can prove local kernel coherence. It cannot prove a private product delivery. Live product delivery needs an operator-owned Hermes runtime, live worker results, product-specific evidence, review, and human approval where required.
+No-idle is the guard against silent idle, not a second dispatcher.
+
+Learnback is learning promoted with proof, not loose chat memory.
 
 ## Useful commands
 
@@ -95,10 +126,10 @@ The public repository can prove local kernel coherence. It cannot prove a privat
 cd factory
 python3 scripts/factoryctl.py doctor
 python3 scripts/factoryctl.py run minimal
-python3 scripts/factoryctl.py route-registry
-python3 scripts/factoryctl.py method-engines
-python3 scripts/factoryctl.py operating-systems
 python3 scripts/factoryctl.py compile-workflow --out .tmp/factory-workflow-compiled-plan.json
+python3 scripts/factoryctl.py validate-card examples/minimal-hermes-project/card.md
+python3 scripts/factoryctl.py gate-report --card examples/minimal-hermes-project/card.md
+python3 scripts/factoryctl.py worker-packet --worker all --required-only --card examples/minimal-hermes-project/card.md --out .tmp/minimal-worker-packets
 python3 scripts/validate_public_json_artifacts.py
 python3 scripts/validate_public_surface_sync.py
 python3 scripts/validate_promise_implementation_map.py
@@ -106,3 +137,7 @@ python3 scripts/validate_worker_profiles.py
 python3 scripts/public_safety_scan.py
 python3 scripts/secret_safety_scan.py
 ```
+
+## Public claim boundary
+
+The public repository proves local kernel coherence. It does not prove that a private product was delivered. Real delivery needs a live Hermes runtime, current worker results, product-specific evidence, consumed review, and human approval when risk requires it.

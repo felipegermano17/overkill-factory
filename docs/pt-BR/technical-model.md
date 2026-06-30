@@ -80,3 +80,35 @@ Os validadores existem para pegar essas divergências. Eles não substituem julg
 Uma mudança segura normalmente mexe em três camadas ao mesmo tempo: a explicação humana, o contrato executável e os testes ou validadores. Se você muda só a doc, talvez melhore a comunicação sem mudar comportamento. Se muda só o código, a superfície pública pode mentir. Se muda só o teste, talvez esteja protegendo um modelo antigo.
 
 Para documentação pública, a regra mais segura é simples: escreva a partir do código atual e da saída real dos comandos, não de memória. Depois rode os validadores. Se eles reclamarem, trate isso como sinal de produto, não como incômodo.
+
+## Bindings Hermes e perfis vivos
+
+Um worker só é operável quando quatro camadas batem: papel no registry, perfil de agente, binding Hermes e worker packet específico do card. Nome de perfil sozinho não basta.
+
+O binding define skill refs, política de fila, schema de resultado, campo de recibo e política de caminho de evidência. Isso impede que uma persona bonita no prompt seja tratada como worker real sem contrato de runtime.
+
+A prontidão também tem fronteira. Um smoke antigo, um profile materializado localmente ou um ledger degradado não provam execução viva. Eles dizem que existe caminho de configuração. Para conclusão real, o card precisa de resultado atual de worker e evidência consumida pelo gate.
+
+## Phase engine e grafo Kanban
+
+A fábrica usa o phase engine para calcular a fronteira atual a partir de artefatos materializados. O phase declarado no card não vence a realidade. Se Product SOT, Method Contract, pacote de decisão ou readiness estão faltando, a fase posterior bloqueia.
+
+No Hermes, isso precisa virar grafo nativo: cards, dependências, typed blockers e work units ligados. A fábrica pode reconciliar e reparar, mas não deve manter uma lista paralela escondida. O objetivo é que o runtime mostre a verdade operacional.
+
+## Interface do operador
+
+A interface do operador é uma projeção. Telegram, Discord, cockpit e ponte CLI podem receber fonte, enviar status e entregar pacotes de decisão. Eles não substituem Hermes, Receipt Five ou worker results.
+
+A regra de produto é: o gerente fala com o humano; workers e eventos crus alimentam o estado interno. Um gate humano precisa de memo legível e artefato sob revisão, não dump de JSON nem caminho local.
+
+## Readback de artefato e anexos duráveis
+
+A integração com Hermes não deve aceitar “existe um arquivo” como conclusão. Para anexos e artefatos de runtime, a fábrica precisa de readback: linha ou blob existe, tamanho e hash batem, parse deu certo quando aplicável, safety checks passaram e a referência pode ser consumida depois.
+
+Referências como `artifact_readback` e `kanban-attachment` aparecem nessa fronteira. Elas existem para impedir que metadata, caminho local ou arquivo temporário sejam tratados como prova permanente.
+
+## SDLC Feedback Loop
+
+Trabalho material autônomo precisa manter o fio entre sinal, triage, escolha de modelo/perfil, execução, evidência e learnback. Esse fio é o SDLC Feedback Loop.
+
+Sem esse vínculo, uma falha vira lembrança de chat; uma escolha de modelo vira implícita; um learnback vira opinião sem alvo. Com o vínculo, a fábrica sabe de onde veio o sinal, por que escolheu aquele caminho, que prova voltou e que regra pode mudar depois.

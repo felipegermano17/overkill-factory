@@ -61,3 +61,27 @@ A matriz pública de segurança agora faz parte deste modelo de confiança, em v
 Checks locais provam que o kernel público está coerente. Eles não provam que uma execução privada entregou um produto. Conclusão real de produto exige estado vivo no Hermes, evidência específica do produto, revisão e aprovação humana quando o risco pede.
 
 Essa fronteira não é fraqueza. É o jeito da fábrica continuar honesta.
+
+## Pacote de decisão antes da decisão
+
+Um gate humano sem artefato é inválido. Se a fábrica pede aprovação para Product SOT, arquitetura, segurança, release ou Product Face, ela precisa entregar o material que está sendo aprovado ou uma projeção fiel com referência completa.
+
+A primeira mensagem deve caber na cabeça do operador: decisão pedida, resumo em português claro, o que aprovar autoriza, o que não autoriza, opções de resposta, consequência e urgência. O anexo pode carregar o documento completo. O JSON é evidência interna, não experiência primária do operador.
+
+## Blocos tipados e fronteira com o humano
+
+Nem todo bloqueio é pergunta para o operador. `dependency_wait` é espera de dependência. `capability` é busca ou ativação de pack. `transient` é retry ou reparo. `needs_input` só chega ao operador quando existe pacote de decisão completo.
+
+Essa separação evita um vício comum: transformar qualquer falha de processo em “preciso que o humano decida”. Muitas vezes a decisão correta é a fábrica reparar o próprio estado.
+
+## Evidência local, evidência viva e evidência pública
+
+Um comando local passando prova coerência do checkout. Um worker result prova que um worker rodou naquele escopo. Um Receipt Five prova fechamento quando consegue apontar para pedido, mudança, evidência, review e próximo estado. Uma publicação pública precisa ainda passar segurança de superfície e segredo.
+
+Essas provas não são intercambiáveis. Não se deve usar smoke local para afirmar entrega de produto vivo, nem usar artifact existence como se fosse readback, nem usar uma aprovação humana genérica como waiver de release, segurança, fundos ou mainnet.
+
+## Prontidão de implementação
+
+Product Implementation Readiness é o ponto em que a fábrica pergunta: “já temos SOT, método, pesquisa, arquitetura, packs, acesso, workers, reviewers e prova suficiente para deixar a execução material começar?”.
+
+Se essa resposta é fraca, a fábrica deve bloquear antes de gastar worker. Isso é mais barato do que descobrir no Receipt Five que o produto inteiro foi construído em cima de uma lacuna antiga.

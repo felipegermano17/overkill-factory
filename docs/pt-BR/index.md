@@ -2,7 +2,7 @@
 
 A Overkill Factory é uma fábrica de produto para trabalho com agentes. Não é um prompt grande, não é uma lista de tarefas e não é só uma casca em volta de um agente de código. Ela pega um pedido ainda meio cru e transforma isso em produção controlada: fonte, definição do produto, método, pacotes de trabalho, execução no Hermes, revisão, evidência, entrega ou bloqueio, e depois aprendizado.
 
-O kernel público atual está na versão `3.0.2`. Ele expõe 26 fases compiladas, 14 classes de rota, 8 motores de método, 17 áreas de sistema operacional da fábrica, 40 workers públicos, 244 schemas JSON, 156 templates JSON e 97 testes. Esses números não estão aqui para enfeitar. Eles mostram que esta documentação está presa ao repositório que roda, não a uma narrativa bonita.
+O kernel público atual está na versão `3.0.2`. Ele expõe 26 fases compiladas, 14 classes de rota, 8 motores de método, 17 áreas de sistema operacional da fábrica, 40 workers públicos, 244 schemas JSON, 156 templates JSON e 97 arquivos de teste. Esses números não estão aqui para enfeitar. Eles mostram que esta documentação está presa ao repositório que roda, não a uma narrativa bonita.
 
 ## Por que isso existe
 

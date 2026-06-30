@@ -92,3 +92,43 @@ python3 -m unittest discover -s tests -p 'test_*.py' -q
 Uma execução real exige um runtime Hermes do operador. O kernel público pode preparar contratos e validar caminhos locais de prova, mas cards vivos, workers, comentários, workspaces, evidências e transições vivem no Hermes.
 
 Não trate `doctor` ou `run minimal` como prova de que um produto foi entregue. Trate como prova de que este checkout está coerente o bastante para começar.
+
+## Checagem de um card real
+
+Depois do smoke mínimo, o próximo passo útil é validar um card específico. O exemplo público fica em `factory/examples/minimal-hermes-project/card.md`.
+
+```bash
+cd factory
+python3 scripts/factoryctl.py validate-card examples/minimal-hermes-project/card.md
+python3 scripts/factoryctl.py gate-report --card examples/minimal-hermes-project/card.md
+python3 scripts/factoryctl.py worker-packet --worker all --required-only --card examples/minimal-hermes-project/card.md --out .tmp/minimal-worker-packets
+python3 scripts/factoryctl.py status-snapshot --card examples/minimal-hermes-project/card.md --out .tmp/factory-status-snapshot.json
+```
+
+Isso mostra se o card tem campos obrigatórios, como risco e superfície foram roteados, que workers seriam exigidos e qual estado o operador veria. Ainda não é execução viva; é prova de contrato.
+
+## Antes de release público
+
+Mudança pública precisa de mais do que build de docs. Use os checks públicos, gere a referência quando necessário e não commite `.tmp` como prova pública. Para release real, a fronteira é mais alta: preflight, produção, rollback, published surface e evidência Hermes atual quando a claim falar de runtime vivo.
+
+O comando `validate_public_surface_sync.py --check-published` só deve ser usado quando o objeto público já foi publicado ou atualizado. Antes disso, ele pode corretamente dizer que o publicado está fora de sync.
+
+## Uso com Telegram ou Control Tower
+
+Telegram e Control Tower são interfaces de operador. Eles podem mostrar status, entregar pacote de decisão e receber resposta. Eles não aprovam release sozinhos, não substituem Hermes e não transformam evento de worker em conclusão.
+
+Se o operador usa português, status, cards visíveis e pacotes de decisão também devem falar português natural. Chaves de schema, logs e IDs internos podem continuar em inglês.
+
+## Preflight de release e produção
+
+Quando a pergunta deixa de ser “o checkout está coerente?” e vira “posso publicar ou promover?”, use uma camada mais forte:
+
+```bash
+cd factory
+python3 scripts/release_integration_preflight.py --out .tmp/release-check.json
+python3 scripts/factory_production_gate_receipts.py
+python3 scripts/factory_production_readiness.py --out .tmp/readiness-check.json
+python3 scripts/worktree_release_inventory.py --out .tmp/inventory-check.json
+```
+
+Esses comandos podem gerar recibos `BLOCKED`. Isso não é erro por si só. Muitas vezes é o resultado correto quando Hermes vivo, evidência privada, published surface, rollback ou readiness ainda não sustentam uma claim de produção.

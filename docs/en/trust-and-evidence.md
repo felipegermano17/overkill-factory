@@ -61,3 +61,27 @@ The public security matrix is now part of this trust model instead of a separate
 Local checks can prove that the public kernel is coherent. They cannot prove that a private product run shipped. Live product completion needs live Hermes state, product-specific evidence, review, and human approvals when required.
 
 That boundary is not a weakness. It is how the factory stays honest.
+
+## Decision package before decision
+
+A human gate without the artifact is invalid. If the factory asks approval for Product SOT, architecture, security, release, or Product Face, it must deliver the material being approved or a faithful projection with full reference.
+
+The first message should fit in the operator's head: requested decision, plain summary, what approval authorizes, what it does not authorize, reply options, consequence, and urgency. Attachments may carry the complete document. JSON is internal evidence, not the operator's primary experience.
+
+## Typed blocks and the human boundary
+
+Not every block is a question for the operator. `dependency_wait` waits for dependency. `capability` searches or activates a pack. `transient` retries or repairs. `needs_input` reaches the operator only when a complete decision package exists.
+
+This prevents a common failure: turning every process failure into “the human must decide”. Often the right decision is for the factory to repair its own state.
+
+## Local evidence, live evidence, and public evidence
+
+A passing local command proves checkout coherence. A worker result proves a worker ran in that scope. Receipt Five proves closure when it points to request, change, evidence, review, and next state. Public publication also needs surface and secret safety.
+
+These proofs are not interchangeable. Do not use local smoke to claim live product delivery, artifact existence as readback, or generic human approval as waiver for release, security, funds, or mainnet.
+
+## Implementation readiness
+
+Product Implementation Readiness is where the factory asks: “do we have SOT, method, research, architecture, packs, access, workers, reviewers, and enough proof to let material execution start?”.
+
+If that answer is weak, the factory should block before spending worker time. That is cheaper than discovering at Receipt Five that the whole product was built on an old gap.

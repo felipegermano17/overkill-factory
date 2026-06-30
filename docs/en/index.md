@@ -2,7 +2,7 @@
 
 Overkill Factory is a product factory for agentic work. That sentence matters. It is not a chat prompt, not a TODO list, and not a wrapper around a coding agent. It is a way to turn an unclear product signal into controlled production: source, product definition, method, work packets, Hermes execution, review, evidence, release or block, then learning.
 
-The current public kernel is version `3.0.2`. It exposes 26 compiled phases, 14 route classes, 8 method engines, 17 operating-system areas, 40 public workers, 244 JSON schemas, 156 JSON templates, and 97 tests. Those numbers are not decoration. They are here because the manual is tied to the executable repository, not to a sales story.
+The current public kernel is version `3.0.2`. It exposes 26 compiled phases, 14 route classes, 8 method engines, 17 operating-system areas, 40 public workers, 244 JSON schemas, 156 JSON templates, and 97 test files. Those numbers are not decoration. They are here because the manual is tied to the executable repository, not to a sales story.
 
 ## Why this exists
 

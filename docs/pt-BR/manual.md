@@ -72,3 +72,28 @@ Primeiro ela precisa entender o que "cliente" quer dizer naquele produto, o que 
 Só depois implementação faz sentido. Um worker de frontend pode receber um pacote. Um worker de backend pode receber outro. Um worker de Product Face talvez precise devolver screenshots e prova por viewport. QA pode precisar de teste de jornada. Um reviewer pode precisar comparar o resultado com o Product SOT. O operador não deveria coordenar tudo isso na mão.
 
 Esse é o valor prático da fábrica. Ela transforma um pedido vago em pedaços pequenos, revisáveis e sustentados por evidência.
+
+## O que a fábrica tira das costas do operador
+
+A promessa prática é autonomia com responsabilidade. O operador traz direção, contexto, restrições e decisões reais. Ele não deveria virar coordenador manual de source ledger, Product SOT, worker packet, review, proof, release e learnback.
+
+Quando a fábrica funciona bem, ela antecipa o que normalmente viraria cobrança humana:
+
+- percebe que a fonte está incompleta antes de começar;
+- transforma o pedido em definição de produto revisável;
+- escolhe a rota certa para bug, feature, release, incidente, segurança, UX ou agente;
+- cria pacotes pequenos em vez de uma missão gigante;
+- cobra prova do worker que executou;
+- chama review independente quando o risco pede;
+- prepara gate humano com artefato legível quando a decisão é do operador;
+- bloqueia com motivo claro quando falta acesso, autoridade, evidência ou segurança.
+
+Isso muda a relação com agentes. O humano deixa de ser fiscal de preguiça do sistema e volta a ser dono do produto e das decisões importantes.
+
+## A recepção pode ser simples; o contrato por trás não pode ser fraco
+
+Telegram, Discord, cockpit ou CLI podem ser a porta de entrada. O operador pode começar com uma frase curta, um documento, um repo, um bug ou um objetivo de negócio. A conversa deve ser simples.
+
+Mas simplicidade na entrada não significa informalidade na execução. Atrás da conversa, a fábrica precisa montar fonte, escopo, método, gates, workers e evidência. Se ela pula isso, só trocou formulário por chat e continua frágil.
+
+Por isso a fábrica separa o gerente, que fala com o operador, do orquestrador, que cuida de rota e runtime. O operador recebe status e decisões em linguagem humana. O Hermes e os contratos guardam o estado real.

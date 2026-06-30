@@ -72,3 +72,28 @@ First it asks what "customer" means in this product, what onboarding must achiev
 Only after that does implementation become sensible. A frontend worker may receive one packet. A backend worker may receive another. A product-face worker may need screenshots and viewport proof. A QA worker may need a journey test. A reviewer may need to compare the result against the Product SOT. The operator should not have to coordinate all of that by hand.
 
 That is the practical value of the factory. It turns one vague request into a set of small, reviewable, evidence-backed pieces.
+
+## What the factory takes off the operator's shoulders
+
+The practical promise is autonomy with responsibility. The operator provides direction, context, constraints, and real decisions. The operator should not become the manual coordinator for source ledger, Product SOT, worker packets, review, proof, release, and learnback.
+
+When the factory works well, it handles what normally becomes human babysitting:
+
+- notices incomplete source before work starts;
+- turns a request into reviewable product definition;
+- chooses the right route for bug, feature, release, incident, security, UX, or agent work;
+- creates small packets instead of one huge mission;
+- demands proof from the worker that executed;
+- calls independent review when risk requires it;
+- prepares a readable human gate package when the decision belongs to the operator;
+- blocks with a clear reason when access, authority, evidence, or safety is missing.
+
+That changes the relationship with agents. The human stops being the system's laziness detector and returns to owning product direction and important decisions.
+
+## The front desk can be simple; the contract behind it cannot be weak
+
+Telegram, Discord, cockpit, or CLI may be the front door. The operator may start with a short sentence, a document, a repo, a bug, or a business goal. The conversation should be simple.
+
+But simple intake does not mean informal execution. Behind the conversation, the factory still needs source, scope, method, gates, workers, and evidence. If it skips that, it merely replaced a form with chat and stayed fragile.
+
+That is why the factory separates the manager, who speaks to the operator, from the orchestrator, who handles routing and runtime. The operator receives status and decisions in human language. Hermes and the contracts hold real state.
