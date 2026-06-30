@@ -4717,6 +4717,118 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertFalse(created_body["operator_input_required"])
         self.assertNotIn("parents", created_tasks[0])
 
+    def test_no_idle_does_not_duplicate_materialization_after_wu19_release_readiness_resolution(self) -> None:
+        blocker_id = "t_" + "f16blocked"
+        f17_id = "t_" + "f17blocked"
+        done_repair_id = "t_" + "matdone"
+        rows = {
+            "blocked": [
+                {
+                    "id": blocker_id,
+                    "status": "blocked",
+                    "assignee": "evidence-reconciler",
+                    "title": "F16 repair rerun: reconcile worker results from repaired F15 artifacts",
+                    "body": (
+                        "factory_f16_reconciliation_rerun_request with runtime_contract and input contract; "
+                        "latest result remains PROMOTION_BLOCKED_NOT_RELEASE_READY / promotion_ready=false."
+                    ),
+                    "latest_summary": (
+                        "Third F16 reconciliation attempt blocks done: current WU-19 task remains "
+                        "PROMOTION_BLOCKED_NOT_RELEASE_READY / promotion_ready=false. Human/factory review must "
+                        "route or clear WU-19 release/readiness before another F16 rerun."
+                    ),
+                },
+                {
+                    "id": f17_id,
+                    "status": "blocked",
+                    "assignee": "qa-verification-worker",
+                    "title": "F17 - Verificacao",
+                    "body": "factory-integration-defect: F17 remains frozen until F16 is non-blocking.",
+                    "latest_summary": "F17 verification failed because F16 evidence remains BLOCKED_NOT_READY.",
+                },
+            ],
+            "todo": [{"id": "t_later", "status": "todo", "title": "F18 - Revisao independente"}],
+            "ready": [],
+            "running": [],
+            "done": [
+                {
+                    "id": done_repair_id,
+                    "status": "done",
+                    "title": "Repair factory materialization contracts",
+                    "body": json.dumps({"marker": adapter.NO_IDLE_MATERIALIZATION_CONTRACT_REPAIR_MARKER}),
+                    "latest_summary": (
+                        "Validated that materialization-contract repair already resolved the missing-contract "
+                        f"class for blockers {blocker_id} and {f17_id}; {blocker_id} remains blocked by "
+                        "real WU-19 release/readiness evidence, not missing materialization."
+                    ),
+                }
+            ],
+        }
+
+        state = adapter.classify_no_idle_state(rows)
+
+        self.assertEqual(state["classification"], "release_readiness_blocker_after_materialization_repair")
+        self.assertEqual(state["release_readiness_task_refs"], [blocker_id])
+        self.assertEqual(state["superseded_materialization_contract_task_refs"], [blocker_id, f17_id])
+        self.assertFalse(state["operator_input_required"])
+        self.assertFalse(state["human_gate_required"])
+        self.assertTrue(state["remediation_required"])
+
+    def test_no_idle_create_remediation_routes_wu19_release_readiness_instead_of_materialization_duplicate(self) -> None:
+        fake = FakeHermes()
+        blocker_id = "t_" + "f16blocked2"
+        f17_id = "t_" + "f17blocked2"
+        repair_id = "t_" + "matdone2"
+        fake.tasks[blocker_id] = {
+            "id": blocker_id,
+            "status": "blocked",
+            "assignee": "evidence-reconciler",
+            "title": "F16 repair rerun: reconcile worker results from repaired F15 artifacts",
+            "body": "runtime_contract present; PROMOTION_BLOCKED_NOT_RELEASE_READY / WU-19 release/readiness remains.",
+            "latest_summary": "Current WU-19 remains PROMOTION_BLOCKED_NOT_RELEASE_READY; route or clear release/readiness before F16 rerun.",
+        }
+        fake.tasks[f17_id] = {
+            "id": f17_id,
+            "status": "blocked",
+            "assignee": "qa-verification-worker",
+            "title": "F17 - Verificacao",
+            "body": "factory-integration-defect: frozen until F16 is non-blocking.",
+            "latest_summary": "F17 waits on F16.",
+        }
+        fake.tasks[repair_id] = {
+            "id": repair_id,
+            "status": "done",
+            "assignee": "factory-orchestrator",
+            "title": "Repair factory materialization contracts",
+            "body": json.dumps({"marker": adapter.NO_IDLE_MATERIALIZATION_CONTRACT_REPAIR_MARKER}),
+            "latest_summary": (
+                f"Materialization repair resolved blockers {blocker_id} and {f17_id}; "
+                f"{blocker_id} remains blocked by real WU-19 release/readiness evidence."
+            ),
+        }
+        args = adapter.build_parser().parse_args(
+            ["no-idle", "--board", TEST_BOARD, "--create-remediation", "--workspace", "scratch"]
+        )
+
+        result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertEqual(state["classification"], "release_readiness_repair_task_created")
+        created_tasks = [
+            task
+            for task_id, task in fake.tasks.items()
+            if task_id not in {blocker_id, f17_id, repair_id}
+        ]
+        self.assertEqual(len(created_tasks), 1)
+        self.assertEqual(created_tasks[0]["title"], "Repair WU-19 release/readiness blockers")
+        self.assertEqual(created_tasks[0]["assignee"], "release-ops-worker")
+        created_body = json.loads(str(created_tasks[0]["body"]))
+        self.assertEqual(created_body["marker"], adapter.NO_IDLE_RELEASE_READINESS_REPAIR_MARKER)
+        self.assertEqual(
+            created_body["targeted_remediation"]["plan_action"],
+            "repair_or_package_release_readiness_blockers",
+        )
+
     def test_no_idle_reports_dispatch_available_when_ready_exists_alongside_running(self) -> None:
         running_id = "t_" + "runalive"
         ready_id = "t_" + "readywork"
