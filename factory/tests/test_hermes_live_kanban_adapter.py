@@ -4717,6 +4717,42 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertFalse(created_body["operator_input_required"])
         self.assertNotIn("parents", created_tasks[0])
 
+    def test_no_idle_replaces_stale_materialization_contract_repair_task(self) -> None:
+        fake = StaleThenFreshReconcileHermes(stale_creates=1)
+        blocker_id = "t_" + "matstale"
+        fake.tasks[blocker_id] = {
+            "id": blocker_id,
+            "status": "blocked",
+            "assignee": "solana-quasar-builder",
+            "title": "F15/WU-12 - Onchain Work Package",
+            "body": "Onchain Work Package/source packet is missing; WU-07 has no traceable ledger artifact.",
+            "events": [
+                {
+                    "type": "blocked",
+                    "payload": {
+                        "kind": "capability",
+                        "reason": "source_packet_artifact missing for onchain work package",
+                    },
+                }
+            ],
+        }
+        args = adapter.build_parser().parse_args(["no-idle", "--board", TEST_BOARD, "--create-remediation"])
+
+        result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertEqual(state["classification"], "deterministic_materialization_contract_repair_task_created")
+        self.assertEqual(state["stale_remediation_task_refs"], ["kanban:<redacted>"])
+        self.assertEqual(state["remediation_replacement_attempts"], 1)
+        self.assertFalse(state["remediation_task_stale"])
+        self.assertTrue(state["native_dispatch_required_next"])
+        ready_repairs = [
+            task for task in fake.tasks.values()
+            if adapter.task_body_json_object(task).get("marker") == adapter.NO_IDLE_MATERIALIZATION_CONTRACT_REPAIR_MARKER
+            and task.get("status") == "ready"
+        ]
+        self.assertEqual(len(ready_repairs), 1)
+
     def test_no_idle_creates_materialization_repair_for_missing_source_packet_and_traceability_artifact(self) -> None:
         fake = FakeHermes()
         blocker_id = "t_" + "wu12block"
@@ -6979,6 +7015,180 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         state = result["no_idle_state"]
         self.assertEqual(state["classification"], "internal_review_pass_reduced_blockers")
         self.assertEqual(fake.tasks[blocker_id]["status"], "done")
+
+    def test_no_idle_does_not_reduce_internal_review_fail_that_mentions_pass_evidence(self) -> None:
+        fake = FakeHermes()
+        blocker_id = "t_" + "failpassword"
+        review_id = "t_" + "failpassreview"
+        fake.tasks[blocker_id] = {
+            "id": blocker_id,
+            "status": "blocked",
+            "assignee": "evidence-reconciler",
+            "title": "F15/WU-00 - Evidence package",
+            "body": "review-required: independent-reviewer must review before this card is done",
+            "events": [{"type": "blocked", "payload": {"kind": "needs_input", "reason": "review-required"}}],
+        }
+        fake.tasks[review_id] = {
+            "id": review_id,
+            "status": "done",
+            "assignee": "independent-reviewer",
+            "title": "F15/WU-00R - Independent review of evidence package",
+            "completed_at": 200,
+            "body": json.dumps(
+                {
+                    "record_type": "factory_internal_review_result",
+                    "result": "FAIL",
+                    "reviewed_task_ref": blocker_id,
+                    "blocking_findings": ["missing PASS evidence readback"],
+                    "human_gate_required": False,
+                    "operator_input_required": False,
+                }
+            ),
+            "events": [{"type": "completed", "payload": {"summary": "FAIL: missing PASS evidence readback"}}],
+        }
+        args = adapter.build_parser().parse_args(["no-idle", "--board", TEST_BOARD, "--create-remediation"])
+
+        result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertEqual(state["classification"], "internal_review_fail_repair_task_created")
+        self.assertEqual(fake.tasks[blocker_id]["status"], "blocked")
+        self.assertNotEqual(fake.tasks[blocker_id].get("result"), "DONE")
+
+    def test_no_idle_latest_internal_review_pass_preempts_older_fail(self) -> None:
+        fake = FakeHermes()
+        blocker_id = "t_" + "latestpass"
+        old_fail_id = "t_" + "oldfail"
+        new_pass_id = "t_" + "newpass"
+        fake.tasks[blocker_id] = {
+            "id": blocker_id,
+            "status": "blocked",
+            "assignee": "product-architect",
+            "title": "F15/WU-01 - Planning packet",
+            "body": "review-required: independent-reviewer must review before this card is done",
+            "events": [{"type": "blocked", "payload": {"kind": "needs_input", "reason": "review-required"}}],
+        }
+        fake.tasks[old_fail_id] = {
+            "id": old_fail_id,
+            "status": "done",
+            "assignee": "independent-reviewer",
+            "title": "Old independent review FAIL",
+            "completed_at": 100,
+            "body": json.dumps(
+                {
+                    "record_type": "factory_internal_review_result",
+                    "result": "FAIL",
+                    "reviewed_task_ref": blocker_id,
+                    "blocking_findings": ["old missing evidence"],
+                    "human_gate_required": False,
+                    "operator_input_required": False,
+                }
+            ),
+            "events": [{"type": "completed", "payload": {"summary": "FAIL"}}],
+        }
+        fake.tasks[new_pass_id] = {
+            "id": new_pass_id,
+            "status": "done",
+            "assignee": "independent-reviewer",
+            "title": "New independent review PASS",
+            "completed_at": 200,
+            "body": json.dumps(
+                {
+                    "record_type": "factory_internal_review_result",
+                    "result": "PASS",
+                    "reviewed_task_ref": blocker_id,
+                    "blocking_findings": [],
+                    "human_gate_required": False,
+                    "operator_input_required": False,
+                }
+            ),
+            "events": [{"type": "completed", "payload": {"summary": "PASS"}}],
+        }
+        args = adapter.build_parser().parse_args(["no-idle", "--board", TEST_BOARD, "--create-remediation"])
+
+        result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertEqual(state["classification"], "internal_review_pass_reduced_blockers")
+        self.assertEqual(fake.tasks[blocker_id]["status"], "done")
+        repairs = [
+            task for task in fake.tasks.values()
+            if adapter.task_body_json_object(task).get("marker") == adapter.NO_IDLE_REVIEW_FAIL_REPAIR_MARKER
+        ]
+        self.assertEqual(repairs, [])
+
+    def test_no_idle_replaces_done_internal_review_request_without_result(self) -> None:
+        fake = FakeHermes()
+        blocker_id = "t_" + "reviewstale"
+        old_review_id = "t_" + "oldreviewrequest"
+        fake.tasks[blocker_id] = {
+            "id": blocker_id,
+            "status": "blocked",
+            "assignee": "evidence-reconciler",
+            "title": "F15/WU-00 - Evidence package",
+            "body": "review-required: independent-reviewer must review before this card is done",
+            "events": [{"type": "blocked", "payload": {"kind": "needs_input", "reason": "review-required"}}],
+        }
+        fake.tasks[old_review_id] = {
+            "id": old_review_id,
+            "status": "done",
+            "assignee": "independent-reviewer",
+            "title": "Old malformed internal review request",
+            "body": json.dumps(
+                {
+                    "packet_type": "factory_internal_review_request",
+                    "marker": adapter.NO_IDLE_INTERNAL_REVIEW_REQUEST_MARKER,
+                    "target_task_ref": blocker_id,
+                    "reviewer_role": "independent-reviewer",
+                }
+            ),
+            "events": [{"type": "completed", "payload": {"summary": "completed without PASS/FAIL result"}}],
+        }
+        args = adapter.build_parser().parse_args(["no-idle", "--board", TEST_BOARD, "--create-remediation"])
+
+        result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertEqual(state["classification"], "internal_review_task_created")
+        review_tasks = [
+            task for task in fake.tasks.values()
+            if adapter.task_body_json_object(task).get("marker") == adapter.NO_IDLE_INTERNAL_REVIEW_REQUEST_MARKER
+            and task.get("status") == "ready"
+        ]
+        self.assertEqual(len(review_tasks), 1)
+        self.assertNotEqual(review_tasks[0]["id"], old_review_id)
+
+    def test_latest_ready_work_unit_materialization_plan_accepts_iso_completed_at(self) -> None:
+        test_dir = ROOT / ".tmp" / "test-ready-work-unit-iso"
+        test_dir.mkdir(parents=True, exist_ok=True)
+        plan_path = test_dir / "READY_WORK_UNIT_HERMES_MATERIALIZATION_PLAN.json"
+        plan_path.write_text(json.dumps({"record_type": "ready_work_unit_hermes_materialization_plan"}), encoding="utf-8")
+        try:
+            rows = {
+                "done": [
+                    {
+                        "id": "t_" + "planiso",
+                        "status": "done",
+                        "completed_at": "2026-06-28T18:00:00Z",
+                        "body": json.dumps(
+                            {
+                                "required_output": "ready_work_unit_hermes_materialization_plan",
+                                "artifacts": {
+                                    "plan": {
+                                        "path_ref": str(plan_path.relative_to(ROOT)),
+                                    }
+                                }
+                            }
+                        ),
+                    }
+                ]
+            }
+
+            result = adapter.latest_ready_work_unit_materialization_plan_path(rows)
+        finally:
+            plan_path.unlink(missing_ok=True)
+
+        self.assertEqual(result, plan_path)
 
     def test_no_idle_reports_running_closeout_without_mutation_when_not_remediating(self) -> None:
         fake = FakeHermes()

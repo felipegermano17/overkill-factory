@@ -223,16 +223,19 @@ def emit_operator_event(
 
 
 def no_idle_signature(no_idle_result: dict[str, Any], dispatch_result: dict[str, Any] | None) -> dict[str, Any]:
-    state = no_idle_result.get("no_idle_state") if isinstance(no_idle_result.get("no_idle_state"), dict) else {}
-    counts = state.get("state") if isinstance(state.get("state"), dict) else {}
+    raw_state = no_idle_result.get("no_idle_state")
+    state = raw_state if isinstance(raw_state, dict) else {}
+    raw_counts = state.get("state")
+    counts = raw_counts if isinstance(raw_counts, dict) else {}
     dispatch_state = dispatch_result.get("dispatch_observed_state") if isinstance(dispatch_result, dict) else {}
     spawned = dispatch_result.get("spawned") if isinstance(dispatch_result, dict) else []
     remediation_task_ref = no_idle_result.get("remediation_task_id")
     explicit_remediation_created = state.get("remediation_task_created")
+    remediation_task_stale = state.get("remediation_task_stale") is True
     remediation_created = (
         explicit_remediation_created is True
         if explicit_remediation_created is not None
-        else bool(remediation_task_ref)
+        else bool(remediation_task_ref) and not remediation_task_stale
     )
     return {
         "status": state.get("status"),
@@ -356,6 +359,34 @@ def summarize_board(board: str, signature: dict[str, Any]) -> str:
     return f"[Overkill Factory] {board}: estado {status or 'desconhecido'}."
 
 
+def is_no_progress_signature(signature: dict[str, Any]) -> bool:
+    raw_counts = signature.get("counts")
+    counts: dict[str, Any] = raw_counts if isinstance(raw_counts, dict) else {}
+    ready_count = int(counts.get("ready") or 0)
+    running_count = int(counts.get("running") or 0)
+    todo_count = int(counts.get("todo") or 0)
+    blocked_count = int(counts.get("blocked") or 0)
+    spawned_count = int(signature.get("spawned_count") or 0)
+    if signature.get("human_gate_required") is True or signature.get("operator_input_required") is True:
+        return False
+    if signature.get("classification") == "factory_phase_invariant_violation":
+        return ready_count == 0 and spawned_count == 0 and (running_count + todo_count + blocked_count) > 0
+    if signature.get("status") not in {"remediation_required", "dependency_gated", "blocked"}:
+        return False
+    return ready_count == 0 and running_count == 0 and spawned_count == 0 and (todo_count + blocked_count) > 0
+
+
+def repeated_no_progress_summary(board: str, count: int, signature: dict[str, Any]) -> str:
+    raw_counts = signature.get("counts")
+    counts: dict[str, Any] = raw_counts if isinstance(raw_counts, dict) else {}
+    return (
+        f"[Overkill Factory] {board}: sem progresso material repetido por {count} ciclos; "
+        f"running={counts.get('running', 0)} ready={counts.get('ready', 0)} "
+        f"todo={counts.get('todo', 0)} blocked={counts.get('blocked', 0)}. "
+        "Pare de tratar watchdog vivo como progresso; audite no-idle/dispatch/reducer."
+    )
+
+
 def process_board(
     *,
     board: str,
@@ -368,6 +399,7 @@ def process_board(
     assignee: str,
     inbox_dir: Path,
     emit_events: bool,
+    max_unchanged_no_progress: int,
     state: dict[str, Any],
     runner: Runner = default_runner,
 ) -> str | None:
@@ -397,8 +429,19 @@ def process_board(
             "all-nonempty discovered boards are audit-only unless --allow-discovered-board-mutation is set"
         )
     previous = state.setdefault("boards", {}).get(board)
+    board_watch = state.setdefault("board_watch", {}).setdefault(board, {})
+    no_progress = is_no_progress_signature(signature)
+    if previous == signature and no_progress:
+        unchanged_count = int(board_watch.get("unchanged_no_progress_count") or 1) + 1
+    elif no_progress:
+        unchanged_count = 1
+    else:
+        unchanged_count = 0
+    board_watch["unchanged_no_progress_count"] = unchanged_count
     state["boards"][board] = signature
     if previous == signature:
+        if no_progress and max_unchanged_no_progress > 0 and unchanged_count >= max_unchanged_no_progress:
+            return repeated_no_progress_summary(board, unchanged_count, signature)
         return None
     summary = summarize_board(board, signature)
     requires_user = (
@@ -454,6 +497,15 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument("--max-dispatch", type=int, default=1)
+    parser.add_argument(
+        "--max-unchanged-no-progress",
+        type=int,
+        default=3,
+        help=(
+            "Emit an explicit no-progress alert after this many identical watchdog cycles with "
+            "running=0, ready=0, spawned=0 and unfinished work still present. Set 0 to disable."
+        ),
+    )
     parser.add_argument("--workspace", default="scratch")
     parser.add_argument("--assignee", default="factory-orchestrator")
     parser.add_argument("--state-file", type=Path, default=DEFAULT_STATE_FILE)
@@ -495,6 +547,7 @@ def main(argv: list[str] | None = None, *, runner: Runner = default_runner) -> i
             assignee=args.assignee,
             inbox_dir=args.inbox_dir,
             emit_events=args.emit_events,
+            max_unchanged_no_progress=args.max_unchanged_no_progress,
             state=state,
             runner=runner,
         )

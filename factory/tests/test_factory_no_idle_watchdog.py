@@ -324,6 +324,161 @@ class FactoryNoIdleWatchdogTest(unittest.TestCase):
         self.assertIn("no-idle detectado", first.getvalue())
         self.assertEqual(second.getvalue(), "")
 
+    def test_watchdog_does_not_call_stale_remediation_id_created(self) -> None:
+        fake = FakeRunner()
+        fake.no_idle_payloads["product-alpha"] = {
+            "mode": "no-idle",
+            "board": "product-alpha",
+            "remediation_task_id": "kanban:redacted-stale",
+            "no_idle_state": {
+                "status": "remediation_required",
+                "classification": "repair_board_contract",
+                "remediation_task_stale": True,
+                "remediation_task_status": "done",
+                "native_dispatch_required_next": False,
+                "state": {
+                    "todo": {"count": 3},
+                    "blocked": {"count": 1},
+                    "ready": {"count": 0},
+                    "running": {"count": 0},
+                },
+            },
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            buffer = io.StringIO()
+            with redirect_stdout(buffer):
+                result = watchdog.main(
+                    [
+                        "--board",
+                        "product-alpha",
+                        "--dispatch",
+                        "--state-file",
+                        str(Path(tmp) / "state.json"),
+                    ],
+                    runner=fake,
+                )
+
+        output = buffer.getvalue()
+        self.assertEqual(result, 0)
+        self.assertIn("já está concluída e não destravou", output)
+        self.assertNotIn("remediação segura criada", output)
+        self.assertFalse(any(len(call) > 2 and call[2] == "dispatch" for call in fake.calls))
+
+    def test_watchdog_alerts_after_repeated_unchanged_no_progress_signature(self) -> None:
+        fake = FakeRunner()
+        fake.no_idle_payloads["product-alpha"] = {
+            "mode": "no-idle",
+            "board": "product-alpha",
+            "remediation_task_id": None,
+            "no_idle_state": {
+                "status": "remediation_required",
+                "classification": "unfinished_work_without_ready_running_or_human_gate_only_block",
+                "native_dispatch_required_next": True,
+                "state": {
+                    "todo": {"count": 3},
+                    "blocked": {"count": 1},
+                    "ready": {"count": 0},
+                    "running": {"count": 0},
+                },
+            },
+        }
+        fake.dispatch_payloads["product-alpha"] = {
+            "mode": "dispatch",
+            "board": "product-alpha",
+            "spawned": [],
+            "dispatch_observed_state": {
+                "ready_before_count": 0,
+                "running_before_count": 0,
+                "running_after_count": 0,
+            },
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            state_file = Path(tmp) / "state.json"
+            first = io.StringIO()
+            second = io.StringIO()
+            with redirect_stdout(first):
+                watchdog.main(
+                    [
+                        "--board",
+                        "product-alpha",
+                        "--dispatch",
+                        "--state-file",
+                        str(state_file),
+                        "--max-unchanged-no-progress",
+                        "2",
+                    ],
+                    runner=fake,
+                )
+            with redirect_stdout(second):
+                watchdog.main(
+                    [
+                        "--board",
+                        "product-alpha",
+                        "--dispatch",
+                        "--state-file",
+                        str(state_file),
+                        "--max-unchanged-no-progress",
+                        "2",
+                    ],
+                    runner=fake,
+                )
+            self.assertIn("no-idle detectado", first.getvalue())
+            self.assertIn("sem progresso material repetido", second.getvalue())
+            state = json.loads(state_file.read_text(encoding="utf-8"))
+            self.assertEqual(state["board_watch"]["product-alpha"]["unchanged_no_progress_count"], 2)
+
+    def test_watchdog_alerts_repeated_phase_invariant_even_with_running_worker(self) -> None:
+        fake = FakeRunner()
+        fake.no_idle_payloads["product-alpha"] = {
+            "mode": "no-idle",
+            "board": "product-alpha",
+            "remediation_task_id": None,
+            "no_idle_state": {
+                "status": "blocked",
+                "classification": "factory_phase_invariant_violation",
+                "human_gate_required": False,
+                "operator_input_required": False,
+                "native_dispatch_required_next": False,
+                "state": {
+                    "todo": {"count": 2},
+                    "blocked": {"count": 1},
+                    "ready": {"count": 0},
+                    "running": {"count": 1},
+                },
+            },
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            state_file = Path(tmp) / "state.json"
+            first = io.StringIO()
+            second = io.StringIO()
+            with redirect_stdout(first):
+                watchdog.main(
+                    [
+                        "--board",
+                        "product-alpha",
+                        "--state-file",
+                        str(state_file),
+                        "--max-unchanged-no-progress",
+                        "2",
+                    ],
+                    runner=fake,
+                )
+            with redirect_stdout(second):
+                watchdog.main(
+                    [
+                        "--board",
+                        "product-alpha",
+                        "--state-file",
+                        str(state_file),
+                        "--max-unchanged-no-progress",
+                        "2",
+                    ],
+                    runner=fake,
+                )
+            self.assertIn("estado blocked", first.getvalue())
+            self.assertIn("sem progresso material repetido", second.getvalue())
+            self.assertIn("running=1", second.getvalue())
+
     def test_watchdog_summarizes_dependency_gated_without_remediation_language(self) -> None:
         fake = FakeRunner()
         fake.no_idle_payloads["product-alpha"] = {
