@@ -4717,6 +4717,126 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertFalse(created_body["operator_input_required"])
         self.assertNotIn("parents", created_tasks[0])
 
+    def test_no_idle_creates_materialization_repair_for_missing_source_packet_and_traceability_artifact(self) -> None:
+        fake = FakeHermes()
+        blocker_id = "t_" + "wu12block"
+        fake.tasks[blocker_id] = {
+            "id": blocker_id,
+            "status": "blocked",
+            "title": "F15/WU-12 - Onchain Work Package: Solana/Quasar accounts, PDAs, authority and DevNet-only validation plan",
+            "assignee": "solana-quasar-builder",
+            "current_step_key": "F15-runtime-execution",
+            "body": (
+                "work_unit_id: WU-12\n"
+                "source_packet_artifact: /workspace/f15_worker_packets.json#WU-12\n"
+                "dependencies: WU-07=" + "t_" + "6a427946\n"
+                "stop_rules:\n- Onchain Work Package missing\n- Auditor unavailable\n"
+            ),
+            "events": [
+                {
+                    "kind": "blocked",
+                    "payload": {
+                        "kind": "capability",
+                        "reason": (
+                            "WU-12 stop rule fired: required Onchain Work Package/source packet is missing "
+                            "and WU-07 has no traceable ledger/reconciliation artifact; cannot construct "
+                            "PDA/signer map without inventing authority boundaries."
+                        ),
+                    },
+                }
+            ],
+            "comments": [
+                {
+                    "author": "solana-quasar-builder",
+                    "body": (
+                        "Required unblock: materialize/attach the WU-12 Onchain Work Package/source packet "
+                        "and traceable WU-07 ledger/event artifact. No Mainnet/funds/signing action was performed."
+                    ),
+                }
+            ],
+        }
+        args = adapter.build_parser().parse_args(
+            ["no-idle", "--board", TEST_BOARD, "--create-remediation", "--workspace", "scratch"]
+        )
+
+        result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertEqual(
+            state["classification"],
+            "deterministic_materialization_contract_repair_task_created",
+        )
+        self.assertEqual(state["materialization_contract_task_refs"], ["kanban:<redacted>"])
+        self.assertTrue(state["native_dispatch_required_next"])
+        self.assertFalse(state["human_gate_required"])
+        self.assertFalse(state["operator_input_required"])
+        created_tasks = [task for task_id, task in fake.tasks.items() if task_id != blocker_id]
+        self.assertEqual(len(created_tasks), 1)
+        created_body = json.loads(str(created_tasks[0]["body"]))
+        self.assertEqual(
+            created_body["targeted_remediation"]["plan_action"],
+            "repair_materialization_contract_inputs",
+        )
+        self.assertIn(blocker_id, created_body["targeted_remediation"]["materialization_contract_task_refs"])
+
+    def test_no_idle_prioritizes_materialization_blocker_over_board_contract_with_unrelated_todo(self) -> None:
+        fake = FakeHermes()
+        blocker_id = "t_" + "wu12block2"
+        todo_id = "t_" + "unrelatedtodo"
+        fake.tasks[blocker_id] = {
+            "id": blocker_id,
+            "status": "blocked",
+            "title": "F15/WU-12 - Onchain Work Package: Solana/Quasar accounts, PDAs, authority and DevNet-only validation plan",
+            "assignee": "solana-quasar-builder",
+            "current_step_key": "F15-runtime-execution",
+            "body": (
+                "work_unit_id: WU-12\n"
+                "source_packet_artifact: /workspace/f15_worker_packets.json#WU-12\n"
+                "dependencies: WU-07=" + "t_" + "6a427946\n"
+            ),
+            "events": [
+                {
+                    "kind": "blocked",
+                    "payload": {
+                        "kind": "capability",
+                        "reason": (
+                            "WU-12 stop rule fired: required Onchain Work Package/source packet is missing "
+                            "and WU-07 has no traceable ledger/reconciliation artifact."
+                        ),
+                    },
+                }
+            ],
+            "comments": [
+                {
+                    "author": "solana-quasar-builder",
+                    "body": "Required unblock: materialize/attach the WU-12 source packet and traceable WU-07 ledger/event artifact.",
+                }
+            ],
+        }
+        fake.tasks[todo_id] = {
+            "id": todo_id,
+            "status": "todo",
+            "title": "F15/WU-99 - unrelated backlog item",
+            "assignee": "implementation-worker",
+            "body": "Not ready yet; unrelated todo backlog should not mask materialization blocker.",
+            "events": [{"kind": "created"}],
+        }
+        args = adapter.build_parser().parse_args(
+            ["no-idle", "--board", TEST_BOARD, "--create-remediation", "--workspace", "scratch"]
+        )
+
+        result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertEqual(
+            state["classification"],
+            "deterministic_materialization_contract_repair_task_created",
+        )
+        self.assertEqual(state["materialization_contract_task_refs"], ["kanban:<redacted>"])
+        self.assertTrue(state["native_dispatch_required_next"])
+        created_tasks = [task for task_id, task in fake.tasks.items() if task_id not in {blocker_id, todo_id}]
+        self.assertEqual(len(created_tasks), 1)
+
     def test_no_idle_creates_owner_gate_package_after_product_sot_candidate_done(self) -> None:
         fake = FakeHermes()
         sot_task_id = "t_" + "sotdone1"
