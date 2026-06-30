@@ -5805,6 +5805,60 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertEqual(body["target_task_ref"], target_id)
         self.assertNotIn("redacted", body["target_task_ref"])
 
+    def test_no_idle_resolves_redacted_owner_rerun_target_by_title_and_assignee(self) -> None:
+        fake = FakeHermes()
+        repair_id = "t_" + "readbackblock4"
+        target_id = "t_" + "f15runtime"
+        fake.tasks[target_id] = {
+            "id": target_id,
+            "status": "done",
+            "assignee": "implementation-worker",
+            "title": "F15 - Execucao em runtime",
+            "body": "{}",
+        }
+        fake.tasks[repair_id] = {
+            "id": repair_id,
+            "status": "blocked",
+            "assignee": "factory-orchestrator",
+            "title": "Repair missing declared artifacts for board",
+            "body": json.dumps(
+                {
+                    "packet_type": "factory_deterministic_reconcile_task",
+                    "plan_action": "repair_declared_artifacts",
+                    "required_output": "declared_artifact_readback_repair",
+                    "repair_target": {
+                        "task_ref": "kanban:<redacted>",
+                        "status": "done",
+                        "title": "F15 - Execucao em runtime",
+                        "assignee": "implementation-worker",
+                        "missing_artifact_names": [
+                            "f15_cards_materialized.json",
+                            "f15_runtime_execution_receipt.json",
+                            "f15_worker_packets.md",
+                        ],
+                    },
+                }
+            ),
+            "comments": [
+                {
+                    "body": "Readback verdict: BLOCKED. F15 artifacts are missing; reducer must materialize owner rerun."
+                }
+            ],
+        }
+        args = adapter.build_parser().parse_args(
+            ["no-idle", "--board", TEST_BOARD, "--create-remediation", "--workspace", "scratch"]
+        )
+
+        result = adapter.no_idle(args, runner=fake)
+
+        self.assertEqual(result["no_idle_state"]["classification"], "declared_artifact_owner_rerun_task_created")
+        created = [task for task in fake.tasks.values() if task.get("assignee") == "implementation-worker" and task.get("status") == "ready"]
+        self.assertEqual(len(created), 1)
+        body = adapter.parse_json_object(str(created[0].get("body") or "{}"))
+        self.assertEqual(body["target_task_ref"], target_id)
+        self.assertNotIn("redacted", body["target_task_ref"])
+        self.assertIn(target_id, str(created[0].get("title") or ""))
+
     def test_no_idle_closes_routed_repair_after_independent_readback_pass(self) -> None:
         fake = FakeHermes()
         blocked_id = "t_" + "blockedrepair"
