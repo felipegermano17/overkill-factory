@@ -3627,7 +3627,7 @@ def internal_review_fail_repair_candidates(rows: dict[str, list[dict[str, Any]]]
 
 def existing_review_fail_repair_task_refs(rows: dict[str, list[dict[str, Any]]], target_task_ref: str, review_task_ref: str) -> list[str]:
     refs: list[str] = []
-    for status in ("ready", "running", "todo", "blocked", "done"):
+    for status in ("ready", "running", "todo", "blocked"):
         for item in rows.get(status, []):
             body = task_body_json_object(item)
             if body.get("marker") != NO_IDLE_REVIEW_FAIL_REPAIR_MARKER:
