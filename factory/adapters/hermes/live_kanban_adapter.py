@@ -67,6 +67,9 @@ NO_IDLE_REMEDIATION_MARKER = "factory_no_idle_remediation"
 NO_IDLE_REVIEW_REPAIR_MARKER = "factory_no_idle_review_repair"
 NO_IDLE_POST_REVIEW_GATE_MARKER = "factory_no_idle_post_review_gate_package"
 NO_IDLE_RUNNING_RESULT_CLOSEOUT_MARKER = "factory_no_idle_running_result_closeout"
+NO_IDLE_REVIEW_PASS_REDUCER_MARKER = "factory_no_idle_review_pass_reducer"
+NO_IDLE_INTERNAL_REVIEW_REQUEST_MARKER = "factory_no_idle_internal_review_request"
+NO_IDLE_REVIEW_FAIL_REPAIR_MARKER = "factory_no_idle_review_fail_repair"
 NO_IDLE_CANONICAL_FRONTIER_RESUME_MARKER = "factory_no_idle_canonical_frontier_resume"
 NO_IDLE_RUNNING_RESULT_CLOSEOUT_TIMEOUT_SECONDS = 5 * 60
 FACTORY_KANBAN_WORKFLOW_TEMPLATE_ID = "overkill-vfinal"
@@ -328,11 +331,21 @@ def slugify_phase_node(value: Any) -> str:
     return slug or "phase"
 
 
+def resolve_factory_workflow_catalog_path(path: Path = FACTORY_WORKFLOW_CATALOG_PATH) -> Path:
+    if path.exists():
+        return path
+    repo_root_candidate = ROOT.parent / "docs" / "factory-workflow.catalog.json"
+    if repo_root_candidate.exists():
+        return repo_root_candidate
+    return path
+
+
 def load_factory_run_graph_backbone_from_catalog(
     path: Path = FACTORY_WORKFLOW_CATALOG_PATH,
     *,
     language: str = "en-US",
 ) -> tuple[dict[str, Any], ...]:
+    path = resolve_factory_workflow_catalog_path(path)
     catalog = json.loads(path.read_text(encoding="utf-8"))
     phases = catalog.get("phases")
     if not isinstance(phases, list) or not phases:
@@ -2723,7 +2736,12 @@ def classify_no_idle_state(rows: dict[str, list[dict[str, Any]]]) -> dict[str, A
             for item in todo
             if task_record_id(item) and is_factory_owned_repair_task(item)
         ]
-        if repair_todo_refs and (human_gate_dependency_refs or factory_package_dependency_refs):
+        dependency_gated_repair_refs = sorted(
+            task_ref
+            for task_ref in repair_todo_refs
+            if dependency_blockers.get(task_ref)
+        )
+        if dependency_gated_repair_refs:
             return {
                 "status": "remediation_required",
                 "classification": "factory_repair_task_dependency_gated_by_blocker_it_repairs",
@@ -2736,9 +2754,9 @@ def classify_no_idle_state(rows: dict[str, list[dict[str, Any]]]) -> dict[str, A
                 "factory_owned_package_task_refs": sorted(set(factory_package_dependency_refs + factory_package_refs)),
                 "dependency_gated_task_refs": sorted(dependency_blockers),
                 "dependency_blocker_task_refs": blocker_refs,
-                "repair_task_refs": sorted(repair_todo_refs),
+                "repair_task_refs": dependency_gated_repair_refs,
                 "remediation_reason": (
-                    "A factory-owned repair task is dependency-gated by a blocked gate/package "
+                    "A factory-owned repair task is dependency-gated by a blocked gate/package/input "
                     "that it is supposed to repair. The repair must be re-created or unlinked as "
                     "an independent ready work unit with a repairs_task_ref, not as a child of the blocker."
                 ),
@@ -3035,6 +3053,117 @@ def no_idle_review_repair_body(
     }
 
 
+def internal_review_required_blockers(rows: dict[str, list[dict[str, Any]]]) -> list[dict[str, Any]]:
+    blockers: list[dict[str, Any]] = []
+    blocked_refs = {task_record_id(item) for item in rows.get("blocked", []) if task_record_id(item)}
+    pass_reviewed_refs: set[str] = set()
+    for review in rows.get("done", []):
+        pass_reviewed_refs.update(internal_review_pass_references(review, blocked_refs))
+    for item in rows.get("blocked", []):
+        item_ref = task_record_id(item)
+        if item_ref in pass_reviewed_refs:
+            continue
+        text = task_record_text(item)
+        if "review-required" not in text and "review required" not in text and "review_required" not in text:
+            continue
+        if "operator" in text and ("approval" in text or "input" in text or "decision" in text):
+            continue
+        if is_human_gate_decision_ready_blocker(item):
+            continue
+        if "owner review" in text or "owner approval" in text or "product sot owner" in text:
+            continue
+        if "independent-reviewer" in text or "must independently review" in text or "must review" in text:
+            blockers.append(item)
+    return blockers
+
+
+def internal_review_reviewer_for_blocker(item: dict[str, Any]) -> str:
+    text = task_record_text(item)
+    for candidate in ("independent-reviewer", "qa-verification-worker", "security-orchestrator"):
+        if candidate in text:
+            return candidate
+    return "independent-reviewer"
+
+
+def existing_internal_review_task_refs(rows: dict[str, list[dict[str, Any]]], target_task_ref: str) -> list[str]:
+    refs: list[str] = []
+    for status in ("ready", "running", "todo", "blocked", "done"):
+        for item in rows.get(status, []):
+            body = task_body_json_object(item)
+            if body.get("marker") != NO_IDLE_INTERNAL_REVIEW_REQUEST_MARKER:
+                continue
+            if str(body.get("target_task_ref") or "").strip() != target_task_ref:
+                continue
+            ref = task_record_id(item)
+            if ref:
+                refs.append(ref)
+    return refs
+
+
+def create_internal_review_request_task(
+    *,
+    hermes_bin: str,
+    board: str,
+    workspace: str,
+    blocker: dict[str, Any],
+    rows: dict[str, list[dict[str, Any]]],
+    runner: Runner,
+) -> str:
+    target_ref = task_record_id(blocker)
+    if not target_ref:
+        return ""
+    existing = existing_internal_review_task_refs(rows, target_ref)
+    if existing:
+        return existing[0]
+    reviewer = internal_review_reviewer_for_blocker(blocker)
+    body = {
+        "packet_type": "factory_internal_review_request",
+        "marker": NO_IDLE_INTERNAL_REVIEW_REQUEST_MARKER,
+        "board": board,
+        "target_task_ref": target_ref,
+        "reviewer_role": reviewer,
+        "review_scope": "internal_factory_work_product_review",
+        "objective": "Independently review the blocked factory-owned work product and return PASS/FAIL evidence without asking the operator.",
+        "source_blocker": {
+            "task_ref": target_ref,
+            "title": str(blocker.get("title") or ""),
+            "assignee": str(blocker.get("assignee") or ""),
+            "block_reason": task_record_text(blocker)[:2000],
+        },
+        "required_result_contract": {
+            "result": "PASS or FAIL",
+            "reviewed_task_ref": target_ref,
+            "blocking_findings": "list; empty on PASS",
+            "human_gate_required": False,
+            "operator_input_required": False,
+        },
+        "forbidden_actions": [
+            "ask the operator for a status ping or approval for this internal review",
+            "approve product/business/legal/economic/security/release/mainnet/funds/custody/signing authority",
+            "make this review task a child of the blocked task it is meant to review",
+        ],
+        "human_gate_required": False,
+        "operator_input_required": False,
+        "runtime_authority": "hermes_kanban",
+        "local_state_authority": False,
+    }
+    digest = idempotency_digest_fragment(contract_digest(body))
+    return create_task(
+        hermes_bin=hermes_bin,
+        board=board,
+        title=f"Review {target_ref} internal factory work product",
+        body=compact_json_argument(body),
+        assignee=reviewer,
+        idempotency_key=f"overkill:no-idle-internal-review:{public_safe_slug(board, fallback='board')}:{target_ref}:{digest}",
+        created_by=NO_IDLE_AUTHOR,
+        workspace=workspace,
+        blocked=False,
+        workflow_template_id=FACTORY_KANBAN_WORKFLOW_TEMPLATE_ID,
+        current_step_key=FACTORY_KANBAN_DEFAULT_STEP_KEY,
+        runner=runner,
+    )
+
+
 def create_no_idle_review_repair_task(
     *,
     hermes_bin: str,
@@ -3168,6 +3297,274 @@ def remediation_task_runtime_metadata(
         "remediation_task_stale": stale,
         "native_dispatch_required_next": status in {"ready", "unknown", ""},
     }
+
+
+def internal_review_pass_references(record: dict[str, Any], blocked_refs: set[str]) -> list[str]:
+    body = task_body_json_object(record)
+    text = task_record_text(record)
+    result = str(body.get("result") or body.get("verdict") or "").strip().upper()
+    pass_seen = result == "PASS" or "independent review pass" in text or "review pass" in text or '"result": "pass' in text or " pass" in text
+    if not pass_seen:
+        return []
+    if str(record.get("assignee") or "").strip() not in {"independent-reviewer", "autoreview-gate"}:
+        if "independent review" not in text and "review" not in text:
+            return []
+    refs: set[str] = set()
+    for key in ("reviewed_task_ref", "blocked_task_ref", "target_task_ref", "task_ref"):
+        value = str(body.get(key) or "").strip()
+        if value:
+            refs.add(value)
+    for key in ("reviewed_task_refs", "blocked_task_refs", "target_task_refs"):
+        raw = body.get(key)
+        if isinstance(raw, list):
+            refs.update(str(item).strip() for item in raw if str(item or "").strip())
+    for blocked_ref in blocked_refs:
+        if blocked_ref and blocked_ref.lower() in text:
+            refs.add(blocked_ref)
+    return sorted(ref for ref in refs if ref in blocked_refs)
+
+
+def internal_review_pass_closeout_candidates(rows: dict[str, list[dict[str, Any]]]) -> list[dict[str, Any]]:
+    blocked_by_id = {
+        task_record_id(item): item
+        for item in rows.get("blocked", [])
+        if task_record_id(item)
+    }
+    candidates: list[dict[str, Any]] = []
+    if not blocked_by_id:
+        return candidates
+    for review in rows.get("done", []):
+        review_id = task_record_id(review)
+        if not review_id:
+            continue
+        for blocked_ref in internal_review_pass_references(review, set(blocked_by_id)):
+            blocker = blocked_by_id[blocked_ref]
+            if is_human_gate_decision_ready_blocker(blocker):
+                continue
+            candidates.append(
+                {
+                    "task_ref": blocked_ref,
+                    "review_task_ref": review_id,
+                    "review_title": str(review.get("title") or ""),
+                }
+            )
+    deduped: list[dict[str, Any]] = []
+    seen: set[tuple[str, str]] = set()
+    for item in candidates:
+        key = (str(item.get("task_ref")), str(item.get("review_task_ref")))
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(item)
+    return deduped
+
+
+def close_internal_review_pass_blockers(
+    *,
+    hermes_bin: str,
+    board: str,
+    candidates: list[dict[str, Any]],
+    runner: Runner,
+) -> list[dict[str, Any]]:
+    closed: list[dict[str, Any]] = []
+    for candidate in candidates:
+        task_id = str(candidate.get("task_ref") or "").strip()
+        review_id = str(candidate.get("review_task_ref") or "").strip()
+        if not task_id or not review_id:
+            continue
+        metadata = {
+            "marker": NO_IDLE_REVIEW_PASS_REDUCER_MARKER,
+            "record_type": "factory_no_idle_review_pass_reducer",
+            "runtime_authority": "hermes_kanban",
+            "local_state_authority": False,
+            "task_ref": task_id,
+            "review_task_ref": review_id,
+            "review_title": candidate.get("review_title"),
+            "reason": "Internal independent review PASS reduces the original blocked factory task; no operator input required.",
+            "human_gate_required": False,
+            "operator_input_required": False,
+        }
+        complete_task(
+            hermes_bin=hermes_bin,
+            board=board,
+            task_id=task_id,
+            result="DONE",
+            summary="Closed by no-idle after internal independent review PASS.",
+            metadata=metadata,
+            required_readback_markers=[NO_IDLE_REVIEW_PASS_REDUCER_MARKER],
+            runner=runner,
+        )
+        closed.append({"task_ref": task_id, "review_task_ref": review_id})
+    return closed
+
+
+def internal_review_fail_references(record: dict[str, Any], blocked_refs: set[str]) -> list[str]:
+    body = task_body_json_object(record)
+    text = task_record_text(record)
+    result = str(body.get("result") or body.get("verdict") or "").strip().upper()
+    fail_seen = result == "FAIL" or "review fail" in text or "review failed" in text or '"result": "fail' in text
+    if not fail_seen:
+        return []
+    refs: set[str] = set()
+    for key in ("reviewed_task_ref", "blocked_task_ref", "target_task_ref", "task_ref"):
+        value = str(body.get(key) or "").strip()
+        if value:
+            refs.add(value)
+    for key in ("reviewed_task_refs", "blocked_task_refs", "target_task_refs"):
+        raw = body.get(key)
+        if isinstance(raw, list):
+            refs.update(str(item).strip() for item in raw if str(item or "").strip())
+    for blocked_ref in blocked_refs:
+        if blocked_ref and blocked_ref.lower() in text:
+            refs.add(blocked_ref)
+    return sorted(ref for ref in refs if ref in blocked_refs)
+
+
+def internal_review_fail_repair_candidates(rows: dict[str, list[dict[str, Any]]]) -> list[dict[str, Any]]:
+    blocked_by_id = {task_record_id(item): item for item in rows.get("blocked", []) if task_record_id(item)}
+    if not blocked_by_id:
+        return []
+    candidates: list[dict[str, Any]] = []
+    for review in rows.get("done", []):
+        review_id = task_record_id(review)
+        if not review_id:
+            continue
+        for blocked_ref in internal_review_fail_references(review, set(blocked_by_id)):
+            candidates.append({
+                "task_ref": blocked_ref,
+                "review_task_ref": review_id,
+                "review_title": str(review.get("title") or ""),
+                "target_assignee": str(blocked_by_id[blocked_ref].get("assignee") or "factory-orchestrator"),
+            })
+    deduped: list[dict[str, Any]] = []
+    seen: set[tuple[str, str]] = set()
+    for item in candidates:
+        key = (str(item.get("task_ref")), str(item.get("review_task_ref")))
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(item)
+    return deduped
+
+
+def existing_review_fail_repair_task_refs(rows: dict[str, list[dict[str, Any]]], target_task_ref: str, review_task_ref: str) -> list[str]:
+    refs: list[str] = []
+    for status in ("ready", "running", "todo", "blocked", "done"):
+        for item in rows.get(status, []):
+            body = task_body_json_object(item)
+            if body.get("marker") != NO_IDLE_REVIEW_FAIL_REPAIR_MARKER:
+                continue
+            if str(body.get("target_task_ref") or "") != target_task_ref:
+                continue
+            if str(body.get("review_task_ref") or "") != review_task_ref:
+                continue
+            ref = task_record_id(item)
+            if ref:
+                refs.append(ref)
+    return refs
+
+
+def create_internal_review_fail_repair_task(
+    *,
+    hermes_bin: str,
+    board: str,
+    workspace: str,
+    candidate: dict[str, Any],
+    rows: dict[str, list[dict[str, Any]]],
+    fallback_assignee: str,
+    runner: Runner,
+) -> str:
+    target_ref = str(candidate.get("task_ref") or "").strip()
+    review_ref = str(candidate.get("review_task_ref") or "").strip()
+    if not target_ref or not review_ref:
+        return ""
+    existing = existing_review_fail_repair_task_refs(rows, target_ref, review_ref)
+    if existing:
+        return existing[0]
+    assignee = str(candidate.get("target_assignee") or fallback_assignee or "factory-orchestrator").strip()
+    body = {
+        "packet_type": "factory_internal_review_fail_repair_request",
+        "marker": NO_IDLE_REVIEW_FAIL_REPAIR_MARKER,
+        "board": board,
+        "target_task_ref": target_ref,
+        "review_task_ref": review_ref,
+        "objective": "Repair the exact blocking findings from an internal independent review FAIL; do not ask the operator unless the repair uncovers a true human authority decision.",
+        "required_actions": [
+            "read the review FAIL evidence and target task comments",
+            "repair only the failed work-product evidence or artifact gap",
+            "return a new result with readback evidence and route back to independent review if required",
+        ],
+        "human_gate_required": False,
+        "operator_input_required": False,
+        "runtime_authority": "hermes_kanban",
+        "local_state_authority": False,
+    }
+    digest = idempotency_digest_fragment(contract_digest(body))
+    return create_task(
+        hermes_bin=hermes_bin,
+        board=board,
+        title=f"Repair {target_ref} after internal review FAIL",
+        body=compact_json_argument(body),
+        assignee=assignee,
+        idempotency_key=f"overkill:no-idle-review-fail-repair:{public_safe_slug(board, fallback='board')}:{target_ref}:{review_ref}:{digest}",
+        created_by=NO_IDLE_AUTHOR,
+        workspace=workspace,
+        blocked=False,
+        workflow_template_id=FACTORY_KANBAN_WORKFLOW_TEMPLATE_ID,
+        current_step_key=FACTORY_KANBAN_DEFAULT_STEP_KEY,
+        runner=runner,
+    )
+
+
+
+def release_dependency_gated_repair_tasks(
+    *,
+    hermes_bin: str,
+    board: str,
+    classification: dict[str, Any],
+    runner: Runner,
+) -> list[dict[str, Any]]:
+    released: list[dict[str, Any]] = []
+    raw_gated = classification.get("dependency_gated_task_refs")
+    common_blocker_refs = [str(ref) for ref in (classification.get("dependency_blocker_task_refs") or []) if str(ref or "").strip()]
+    repair_refs = [str(ref) for ref in (classification.get("repair_task_refs") or []) if str(ref or "").strip()]
+    blockers_by_task: dict[str, list[str]] = {}
+    if isinstance(raw_gated, dict):
+        blockers_by_task = {
+            str(task_ref): [str(ref) for ref in refs if str(ref or "").strip()]
+            for task_ref, refs in raw_gated.items()
+            if isinstance(refs, list)
+        }
+    else:
+        blockers_by_task = {repair_ref: common_blocker_refs for repair_ref in repair_refs}
+    for repair_ref in repair_refs:
+        parent_refs = [str(ref) for ref in blockers_by_task.get(repair_ref, []) if str(ref or "").strip()]
+        unlinked: list[str] = []
+        for parent_ref in parent_refs:
+            if unlink_task_dependency(
+                hermes_bin=hermes_bin,
+                board=board,
+                parent_task_id=parent_ref,
+                child_task_id=repair_ref,
+                work_unit_id="no-idle-repair",
+                authority_task_ref=None,
+                runner=runner,
+            ):
+                unlinked.append(parent_ref)
+        promote_task(
+            hermes_bin=hermes_bin,
+            board=board,
+            task_id=repair_ref,
+            reason=(
+                f"{NO_IDLE_REMEDIATION_MARKER}; repair task unlinked from blocked parent it repairs; "
+                "operator_input_required=false; human_gate_required=false"
+            ),
+            required_readback_markers=[NO_IDLE_REMEDIATION_MARKER],
+            runner=runner,
+        )
+        released.append({"repair_task_ref": repair_ref, "unlinked_parent_refs": unlinked})
+    return released
+
 
 
 def close_running_tasks_with_valid_worker_results(
@@ -9494,6 +9891,283 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
             write_json(args.out, public_envelope)
         return public_envelope
     artifact_materialization: list[dict[str, Any]] = []
+    review_fail_repair_candidates = internal_review_fail_repair_candidates(rows)
+    if review_fail_repair_candidates:
+        created_repair_task_refs: list[str] = []
+        existing_repair_task_refs: list[str] = []
+        for candidate in review_fail_repair_candidates:
+            target_ref = str(candidate.get("task_ref") or "").strip()
+            review_ref = str(candidate.get("review_task_ref") or "").strip()
+            existing_repair_task_refs.extend(existing_review_fail_repair_task_refs(rows, target_ref, review_ref))
+        if args.create_remediation:
+            for candidate in review_fail_repair_candidates:
+                target_ref = str(candidate.get("task_ref") or "").strip()
+                review_ref = str(candidate.get("review_task_ref") or "").strip()
+                if existing_review_fail_repair_task_refs(rows, target_ref, review_ref):
+                    continue
+                repair_ref = create_internal_review_fail_repair_task(
+                    hermes_bin=args.hermes_bin,
+                    board=args.board,
+                    workspace=args.workspace,
+                    candidate=candidate,
+                    rows=rows,
+                    fallback_assignee=args.assignee,
+                    runner=runner,
+                )
+                if repair_ref:
+                    created_repair_task_refs.append(repair_ref)
+        classification = {
+            "status": "dispatch_available" if created_repair_task_refs else "remediation_required",
+            "classification": "internal_review_fail_repair_task_created" if created_repair_task_refs else "internal_review_fail_repair_task_already_exists" if existing_repair_task_refs else "internal_review_fail_repair_required",
+            "blocked": not bool(created_repair_task_refs or existing_repair_task_refs),
+            "remediation_required": not bool(created_repair_task_refs or existing_repair_task_refs),
+            "human_gate_required": False,
+            "operator_input_required": False,
+            "native_dispatch_required_next": bool(created_repair_task_refs),
+            "review_fail_repair_candidates": review_fail_repair_candidates,
+            "created_repair_task_refs": created_repair_task_refs,
+            "existing_repair_task_refs": existing_repair_task_refs,
+            "next_action": "run native Hermes dispatch for created repair work" if created_repair_task_refs else "run no-idle with create-remediation to create the deterministic repair task" if not existing_repair_task_refs else "observe existing repair work",
+            "state": summarize_no_idle_rows(rows),
+        }
+        envelope = {
+            "$schema": LIVE_ADAPTER_SCHEMA,
+            "mode": "no-idle",
+            "board": args.board,
+            "blocked": bool(classification["blocked"]),
+            "no_idle_state": classification,
+            "board_reconcile_plan": initial_reconcile_plan,
+            "artifact_materialization": artifact_materialization,
+            "targeted_remediation_plan": {
+                "record_type": "factory_no_idle_review_fail_repair_plan",
+                "plan_action": "create_repair_task_for_internal_review_fail",
+                "native_dispatch_required_next": bool(created_repair_task_refs),
+                "human_gate_required": False,
+                "operator_input_required": False,
+            },
+            "remediation_task_id": created_repair_task_refs[0] if created_repair_task_refs else None,
+            "hook": {
+                "runtime_authority": "hermes_kanban",
+                "local_state_authority": False,
+                "no_shadow_dispatcher": True,
+                "dispatch_called_by_this_command": False,
+                "reporting_policy": "No-idle converted an internal review FAIL into deterministic repair work without operator wake-up.",
+            },
+        }
+        public_envelope = sanitize_public_refs(envelope)
+        if args.out:
+            write_json(args.out, public_envelope)
+        return public_envelope
+    internal_review_blockers = internal_review_required_blockers(rows)
+    if internal_review_blockers:
+        existing_review_refs = {
+            task_record_id(blocker): existing_internal_review_task_refs(rows, task_record_id(blocker))
+            for blocker in internal_review_blockers
+            if task_record_id(blocker)
+        }
+        if not args.create_remediation and not any(existing_review_refs.values()):
+            classification = {
+                "status": "remediation_required",
+                "classification": "internal_review_request_required",
+                "blocked": True,
+                "remediation_required": True,
+                "human_gate_required": False,
+                "operator_input_required": False,
+                "native_dispatch_required_next": False,
+                "internal_review_blocker_refs": [task_record_id(item) for item in internal_review_blockers if task_record_id(item)],
+                "next_action": "run no-idle with create-remediation so the runtime creates internal independent-review work without operator input",
+                "state": summarize_no_idle_rows(rows),
+            }
+            envelope = {
+                "$schema": LIVE_ADAPTER_SCHEMA,
+                "mode": "no-idle",
+                "board": args.board,
+                "blocked": True,
+                "no_idle_state": classification,
+                "board_reconcile_plan": initial_reconcile_plan,
+                "artifact_materialization": artifact_materialization,
+                "targeted_remediation_plan": {
+                    "record_type": "factory_no_idle_internal_review_plan",
+                    "plan_action": "create_internal_review_request_tasks",
+                    "native_dispatch_required_next": False,
+                    "human_gate_required": False,
+                    "operator_input_required": False,
+                },
+                "remediation_task_id": None,
+                "hook": {
+                    "runtime_authority": "hermes_kanban",
+                    "local_state_authority": False,
+                    "no_shadow_dispatcher": True,
+                    "dispatch_called_by_this_command": False,
+                    "reporting_policy": "No-idle found factory-owned internal review blockers; operator status/input is not required.",
+                },
+            }
+            public_envelope = sanitize_public_refs(envelope)
+            if args.out:
+                write_json(args.out, public_envelope)
+            return public_envelope
+        created_review_task_refs: list[str] = []
+        if args.create_remediation:
+            for blocker in internal_review_blockers:
+                blocker_ref = task_record_id(blocker)
+                if blocker_ref and existing_review_refs.get(blocker_ref):
+                    continue
+                review_task_ref = create_internal_review_request_task(
+                    hermes_bin=args.hermes_bin,
+                    board=args.board,
+                    workspace=args.workspace,
+                    blocker=blocker,
+                    rows=rows,
+                    runner=runner,
+                )
+                if review_task_ref:
+                    created_review_task_refs.append(review_task_ref)
+        if created_review_task_refs or any(existing_review_refs.values()):
+            classification = {
+                "status": "dispatch_available" if created_review_task_refs else "observed",
+                "classification": "internal_review_task_created" if created_review_task_refs else "internal_review_task_already_exists",
+                "blocked": False,
+                "remediation_required": False,
+                "human_gate_required": False,
+                "operator_input_required": False,
+                "native_dispatch_required_next": bool(created_review_task_refs),
+                "created_review_task_refs": created_review_task_refs,
+                "existing_review_task_refs": existing_review_refs,
+                "internal_review_blocker_refs": [task_record_id(item) for item in internal_review_blockers if task_record_id(item)],
+                "next_action": "run native Hermes dispatch for created internal review work" if created_review_task_refs else "observe existing internal review work",
+                "state": summarize_no_idle_rows(rows),
+            }
+            envelope = {
+                "$schema": LIVE_ADAPTER_SCHEMA,
+                "mode": "no-idle",
+                "board": args.board,
+                "blocked": False,
+                "no_idle_state": classification,
+                "board_reconcile_plan": initial_reconcile_plan,
+                "artifact_materialization": artifact_materialization,
+                "targeted_remediation_plan": {
+                    "record_type": "factory_no_idle_internal_review_plan",
+                    "plan_action": "create_internal_review_request_tasks",
+                    "native_dispatch_required_next": bool(created_review_task_refs),
+                    "human_gate_required": False,
+                    "operator_input_required": False,
+                },
+                "remediation_task_id": created_review_task_refs[0] if created_review_task_refs else None,
+                "hook": {
+                    "runtime_authority": "hermes_kanban",
+                    "local_state_authority": False,
+                    "no_shadow_dispatcher": True,
+                    "dispatch_called_by_this_command": False,
+                    "reporting_policy": "No-idle created idempotent internal review work without a gerente/status interaction.",
+                },
+            }
+            public_envelope = sanitize_public_refs(envelope)
+            if args.out:
+                write_json(args.out, public_envelope)
+            return public_envelope
+    review_pass_closeout_candidates = internal_review_pass_closeout_candidates(rows)
+    if review_pass_closeout_candidates:
+        if not args.create_remediation:
+            classification = {
+                "status": "remediation_required",
+                "classification": "internal_review_pass_reducer_required",
+                "blocked": True,
+                "remediation_required": True,
+                "human_gate_required": False,
+                "operator_input_required": False,
+                "native_dispatch_required_next": False,
+                "internal_review_pass_closeout_candidates": review_pass_closeout_candidates,
+                "next_action": "run no-idle with create-remediation so internal review PASS reduces the original blocked task",
+                "state": summarize_no_idle_rows(rows),
+            }
+            envelope = {
+                "$schema": LIVE_ADAPTER_SCHEMA,
+                "mode": "no-idle",
+                "board": args.board,
+                "blocked": True,
+                "no_idle_state": classification,
+                "board_reconcile_plan": initial_reconcile_plan,
+                "artifact_materialization": artifact_materialization,
+                "targeted_remediation_plan": {
+                    "record_type": "factory_no_idle_review_pass_reducer_plan",
+                    "plan_action": "complete_blocked_tasks_with_internal_review_pass",
+                    "native_dispatch_required_next": False,
+                    "human_gate_required": False,
+                    "operator_input_required": False,
+                },
+                "remediation_task_id": None,
+                "hook": {
+                    "runtime_authority": "hermes_kanban",
+                    "local_state_authority": False,
+                    "no_shadow_dispatcher": True,
+                    "dispatch_called_by_this_command": False,
+                    "reporting_policy": "No-idle found internal review PASS closeout candidates; mutation requires create-remediation.",
+                },
+            }
+            public_envelope = sanitize_public_refs(envelope)
+            if args.out:
+                write_json(args.out, public_envelope)
+            return public_envelope
+        closed_review_pass_blockers = close_internal_review_pass_blockers(
+            hermes_bin=args.hermes_bin,
+            board=args.board,
+            candidates=review_pass_closeout_candidates,
+            runner=runner,
+        )
+        rows = {
+            status: list_tasks_by_status(
+                hermes_bin=args.hermes_bin,
+                board=args.board,
+                status=status,
+                runner=runner,
+            )
+            for status in ("ready", "running", "todo", "blocked", "triage", "done")
+        }
+        rows = enrich_no_idle_rows(hermes_bin=args.hermes_bin, board=args.board, rows=rows, runner=runner)
+        classification = {
+            "status": "remediated",
+            "classification": "internal_review_pass_reduced_blockers",
+            "blocked": False,
+            "remediation_required": False,
+            "human_gate_required": False,
+            "operator_input_required": False,
+            "native_dispatch_required_next": bool(rows.get("ready")),
+            "closed_review_pass_blockers": closed_review_pass_blockers,
+            "next_action": (
+                "run native Hermes dispatch for ready work"
+                if rows.get("ready")
+                else "continue no-idle reconciliation from refreshed Hermes state"
+            ),
+            "state": summarize_no_idle_rows(rows),
+        }
+        envelope = {
+            "$schema": LIVE_ADAPTER_SCHEMA,
+            "mode": "no-idle",
+            "board": args.board,
+            "blocked": False,
+            "no_idle_state": classification,
+            "board_reconcile_plan": initial_reconcile_plan,
+            "artifact_materialization": artifact_materialization,
+            "targeted_remediation_plan": {
+                "record_type": "factory_no_idle_review_pass_reducer_plan",
+                "plan_action": "complete_blocked_tasks_with_internal_review_pass",
+                "native_dispatch_required_next": bool(rows.get("ready")),
+                "human_gate_required": False,
+                "operator_input_required": False,
+            },
+            "remediation_task_id": None,
+            "hook": {
+                "runtime_authority": "hermes_kanban",
+                "local_state_authority": False,
+                "no_shadow_dispatcher": True,
+                "dispatch_called_by_this_command": False,
+                "reporting_policy": "No-idle completed blocked tasks only after matching an internal independent review PASS.",
+            },
+        }
+        public_envelope = sanitize_public_refs(envelope)
+        if args.out:
+            write_json(args.out, public_envelope)
+        return public_envelope
     running_closeout_candidates = running_result_closeout_candidates(rows)
     if running_closeout_candidates:
         if not args.create_remediation:
@@ -9947,6 +10621,59 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
             write_json(args.out, public_envelope)
         return public_envelope
     legacy_classification = classify_no_idle_state(rows)
+    if (
+        legacy_classification.get("classification") == "factory_repair_task_dependency_gated_by_blocker_it_repairs"
+        and args.create_remediation
+    ):
+        classification = dict(legacy_classification)
+        targeted_remediation_plan = {
+            "record_type": "factory_no_idle_targeted_repair_plan",
+            "plan_action": "unlink_and_promote_dependency_gated_repair_task",
+            "board": args.board,
+            "dependency_gated_task_refs": classification.get("dependency_gated_task_refs") or [],
+            "dependency_blocker_task_refs": classification.get("dependency_blocker_task_refs") or [],
+            "repair_task_refs": classification.get("repair_task_refs") or [],
+            "native_dispatch_required_next": True,
+            "human_gate_required": False,
+            "operator_input_required": False,
+        }
+        released_repair_tasks = release_dependency_gated_repair_tasks(
+            hermes_bin=args.hermes_bin,
+            board=args.board,
+            classification=classification,
+            runner=runner,
+        )
+        classification["targeted_remediation_plan"] = targeted_remediation_plan
+        classification["released_repair_tasks"] = released_repair_tasks
+        classification["remediation_task_ref"] = released_repair_tasks[0]["repair_task_ref"] if released_repair_tasks else None
+        classification["native_dispatch_required_next"] = bool(released_repair_tasks)
+        classification["classification"] = (
+            "factory_repair_task_unlinked_and_promoted"
+            if released_repair_tasks
+            else "factory_repair_task_unlink_promote_failed"
+        )
+        envelope = {
+            "$schema": LIVE_ADAPTER_SCHEMA,
+            "mode": "no-idle",
+            "board": args.board,
+            "blocked": not bool(released_repair_tasks),
+            "no_idle_state": classification,
+            "board_reconcile_plan": reconcile_plan,
+            "artifact_materialization": artifact_materialization,
+            "targeted_remediation_plan": targeted_remediation_plan,
+            "remediation_task_id": classification.get("remediation_task_ref"),
+            "hook": {
+                "runtime_authority": "hermes_kanban",
+                "local_state_authority": False,
+                "no_shadow_dispatcher": True,
+                "dispatch_called_by_this_command": False,
+                "reporting_policy": "No-idle repaired a remediation task that was incorrectly linked under the blocker it repairs.",
+            },
+        }
+        public_envelope = sanitize_public_refs(envelope)
+        if args.out:
+            write_json(args.out, public_envelope)
+        return public_envelope
     if legacy_classification.get("classification") in {
         "hermes_native_dependency_wait",
         "hermes_typed_block_loop_detected",
@@ -10126,10 +10853,36 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
     targeted_remediation_plan: dict[str, Any] | None = None
     if classification.get("remediation_required") and args.create_remediation:
         classification = dict(classification)
-        if classification.get("classification") in {
+        if classification.get("classification") == "factory_repair_task_dependency_gated_by_blocker_it_repairs":
+            targeted_remediation_plan = {
+                "record_type": "factory_no_idle_targeted_repair_plan",
+                "plan_action": "unlink_and_promote_dependency_gated_repair_task",
+                "board": args.board,
+                "dependency_gated_task_refs": classification.get("dependency_gated_task_refs") or [],
+                "dependency_blocker_task_refs": classification.get("dependency_blocker_task_refs") or [],
+                "repair_task_refs": classification.get("repair_task_refs") or [],
+                "native_dispatch_required_next": True,
+                "human_gate_required": False,
+                "operator_input_required": False,
+            }
+            released_repair_tasks = release_dependency_gated_repair_tasks(
+                hermes_bin=args.hermes_bin,
+                board=args.board,
+                classification=classification,
+                runner=runner,
+            )
+            classification["targeted_remediation_plan"] = targeted_remediation_plan
+            classification["released_repair_tasks"] = released_repair_tasks
+            classification["remediation_task_ref"] = released_repair_tasks[0]["repair_task_ref"] if released_repair_tasks else None
+            classification["native_dispatch_required_next"] = bool(released_repair_tasks)
+            classification["classification"] = (
+                "factory_repair_task_unlinked_and_promoted"
+                if released_repair_tasks
+                else "factory_repair_task_unlink_promote_failed"
+            )
+        elif classification.get("classification") in {
             "only_factory_owned_package_blockers_seen",
             "todo_dependency_gated_by_factory_owned_package_blocker",
-            "factory_repair_task_dependency_gated_by_blocker_it_repairs",
         }:
             targeted_remediation_plan = {
                 "record_type": "factory_no_idle_targeted_repair_plan",
