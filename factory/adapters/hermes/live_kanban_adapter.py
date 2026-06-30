@@ -3991,15 +3991,16 @@ def declared_artifact_owner_rerun_candidate_from_repair_record(repair: dict[str,
                 match = re.search(r"\btarget task\s+(t_[A-Za-z0-9_]+)\b", text)
             if match:
                 target_task_ref = match.group(1)
-        target_worker = str(
-            route.get("target_worker_declared")
-            or repair_target.get("assignee")
-            or ""
-        ).strip()
+        target_worker = ""
+        worker_match = re.search(r"\b([a-z][a-z0-9-]{2,})\s+(?:restore/)?rerun\b", text)
+        if worker_match and worker_match.group(1) != "owner":
+            target_worker = worker_match.group(1)
         if not target_worker:
-            worker_match = re.search(r"\b([a-z][a-z0-9-]{2,})\s+rerun\b", text)
-            if worker_match:
-                target_worker = worker_match.group(1)
+            target_worker = str(
+                route.get("target_worker_declared")
+                or repair_target.get("assignee")
+                or ""
+            ).strip()
         if not target_worker and "product-face" in text:
             target_worker = "product-face"
         review_worker = str(route.get("review_worker_declared") or "independent-reviewer").strip()
@@ -4046,6 +4047,7 @@ def declared_artifact_owner_rerun_candidate_from_repair_record(repair: dict[str,
         or "exact artifact repair not possible" in text
         or "cannot be reconstructed safely" in text
         or "rerun product-face" in text
+        or "product-architect restore/rerun" in text
         or "product-architect rerun" in text
         or "product-sot-planner rerun" in text
     ):
@@ -4072,6 +4074,27 @@ def resolve_redacted_owner_rerun_target(candidate: dict[str, Any], rows: dict[st
             if record_id:
                 matches.append(record)
     unique_ids = {task_record_id(record) for record in matches if task_record_id(record)}
+    if len(unique_ids) != 1:
+        missing_names = [str(item).lower() for item in candidate.get("missing_artifact_names") or []]
+        inferred_prefix = ""
+        if any(name.startswith("wu01_") for name in missing_names):
+            inferred_prefix = "F15/WU-01 -"
+        elif any(name.startswith("wu03_") for name in missing_names):
+            inferred_prefix = "F15/WU-03 -"
+        elif any(name.startswith("wu05_") for name in missing_names):
+            inferred_prefix = "F15/WU-05 -"
+        if inferred_prefix:
+            matches = []
+            for status in ("done", "blocked", "running", "ready", "todo"):
+                for record in rows.get(status, []):
+                    if not str(record.get("title") or "").strip().startswith(inferred_prefix):
+                        continue
+                    if str(record.get("assignee") or "").strip() != worker:
+                        continue
+                    record_id = task_record_id(record)
+                    if record_id:
+                        matches.append(record)
+            unique_ids = {task_record_id(record) for record in matches if task_record_id(record)}
     if len(unique_ids) != 1:
         return None
     resolved = dict(candidate)

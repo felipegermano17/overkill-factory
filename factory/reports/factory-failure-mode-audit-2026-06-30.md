@@ -67,6 +67,8 @@ Mandate:
 
 | FM-032 | Independent readback PASS is stored under `independent_readback_review_result` and original repair target was redacted | no-idle sees existing rerun but does not close the blocked declared-artifact repair, leaving F17 frozen | reducer only parsed `independent_review_result` and compared unresolved redacted repair targets | fixed locally: readback PASS parser accepts `independent_readback_review_result`/owner signoff refs and superseded repair reducer resolves redacted targets before comparison | `test_no_idle_closes_redacted_repair_after_independent_readback_result_pass` |
 
+| FM-033 | Declared-artifact repair is for a review card, but summary says owner artifacts need `product-architect restore/rerun` | no-idle keeps generic repair blocked and does not route the real WU-01 owner rerun | detector only recognized plain `<worker> rerun` and resolved redacted target by review title/assignee instead of WU artifact prefix | fixed locally: accepts `<worker> restore/rerun` and resolves `wu01_*` artifact gaps to unique `F15/WU-01 -` owner task with matching worker | `test_no_idle_routes_wu01_owner_restore_rerun_from_review_target` |
+
 ## Live-board observations during audit
 
 - 2026-06-30T12:32Z: board had `blocked=3`, `running=1`, `todo=14`; running task was `Repair factory materialization contracts` and blockers were WU-09/WU-10/WU-13 input/capability materialization issues.
