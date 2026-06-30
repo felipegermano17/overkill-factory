@@ -4717,6 +4717,85 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertFalse(created_body["operator_input_required"])
         self.assertNotIn("parents", created_tasks[0])
 
+    def test_no_idle_external_api_key_not_materialization_contract_repair(self) -> None:
+        blocker_id = "t_" + "externalkey"
+        rows = {
+            "blocked": [
+                {
+                    "id": blocker_id,
+                    "status": "blocked",
+                    "assignee": "cloud-infra-security-specialist",
+                    "title": "F15/WU-15 - Cloud source packet blocked on external API key",
+                    "body": (
+                        "source_packet_artifact and worker packet are present, but this route requires "
+                        "external API key / private key material from the operator before execution."
+                    ),
+                    "events": [
+                        {
+                            "type": "blocked",
+                            "payload": {
+                                "kind": "needs_input",
+                                "reason": "requires external API key before runtime_contract can be used",
+                            },
+                        }
+                    ],
+                }
+            ],
+            "todo": [],
+            "ready": [],
+            "running": [],
+            "done": [],
+        }
+
+        state = adapter.classify_no_idle_state(rows)
+
+        self.assertEqual(state["classification"], "only_operator_input_blockers_seen")
+        self.assertTrue(state["operator_input_required"])
+        self.assertFalse(state["remediation_required"])
+        self.assertEqual(state["operator_input_task_refs"], [blocker_id])
+        self.assertNotIn(blocker_id, state.get("materialization_contract_task_refs") or [])
+
+    def test_no_idle_human_gate_packet_complete_wins_over_contextual_target_repo_paths(self) -> None:
+        blocker_id = "t_" + "humangatepaths"
+        rows = {
+            "blocked": [
+                {
+                    "id": blocker_id,
+                    "status": "blocked",
+                    "assignee": "human-gate-clerk",
+                    "title": "Owner decision package ready",
+                    "body": json.dumps(
+                        {
+                            "human_gate_packet": human_gate_packet_fixture(),
+                            "status": "ready for operator decision",
+                            "context_note": "target_repo_paths and scan scope are listed only as evidence context, not as requested operator material.",
+                        }
+                    ),
+                    "latest_summary": "Decision package prepared and delivered; ready for operator decision.",
+                    "events": [
+                        {
+                            "type": "blocked",
+                            "payload": {
+                                "kind": "human_gate",
+                                "reason": "awaiting human decision after delivered package",
+                            },
+                        }
+                    ],
+                }
+            ],
+            "todo": [],
+            "ready": [],
+            "running": [],
+            "done": [],
+        }
+
+        state = adapter.classify_no_idle_state(rows)
+
+        self.assertEqual(state["classification"], "only_human_gate_blockers_seen")
+        self.assertTrue(state["human_gate_required"])
+        self.assertFalse(state["operator_input_required"])
+        self.assertEqual(state["human_gate_task_refs"], [blocker_id])
+
     def test_no_idle_replaces_stale_materialization_contract_repair_task(self) -> None:
         fake = StaleThenFreshReconcileHermes(stale_creates=1)
         blocker_id = "t_" + "matstale"
