@@ -53,6 +53,8 @@ Mandate:
 
 | FM-025 | Declared-artifact readback repair proves exact bytes cannot be restored | no-idle repeats the same factory-orchestrator repair forever; downstream remains frozen without owner rerun | blocked repair result existed only in comments/summary, not run metadata | fixed locally: detector reads blocked readback repair comments/summary and creates owner-worker rerun (`factory_declared_artifact_owner_rerun_request`) for original assignee, requiring fresh hashes + independent readback | `test_no_idle_creates_owner_rerun_after_declared_artifact_readback_repair_blocks` |
 
+| FM-026 | Owner-rerun + independent readback PASS exists, but old declared-artifact repair remains blocked | no-idle repeats owner rerun or reports stale remediation instead of reducing the superseded blocker | blocked repair remained active after fresh artifact set and PASS readback | fixed locally: no-idle detects owner-rerun + independent readback PASS and completes the old blocked repair with `factory_no_idle_declared_artifact_repair_superseded` marker | `test_no_idle_closes_superseded_declared_artifact_repair_after_owner_rerun_review_pass` |
+
 ## Live-board observations during audit
 
 - 2026-06-30T12:32Z: board had `blocked=3`, `running=1`, `todo=14`; running task was `Repair factory materialization contracts` and blockers were WU-09/WU-10/WU-13 input/capability materialization issues.
