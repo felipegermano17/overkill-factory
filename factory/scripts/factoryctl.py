@@ -2838,8 +2838,8 @@ def build_doctor_report(hermes_home: Path | None = None) -> dict[str, Any]:
     required_entrypoints = [
         "README.md",
         "docs/index.md",
-        "docs/getting-started/install-in-hermes.md",
-        "docs/reference/cli.md",
+        "docs/en/usage.md",
+        "docs/en/reference.md",
         "examples/minimal-hermes-project/card.md",
         "agents/hermes-profile-bindings.public.json",
         "adapters/hermes/transition_hook.py",

@@ -22,7 +22,9 @@
       "owner": "platform-devex-worker",
       "severity": "none",
       "blocks_autonomous_execution": false,
-      "evidence_refs": ["templates/platform-devex-plan.json"],
+      "evidence_refs": [
+        "templates/platform-devex-plan.json"
+      ],
       "smallest_safe_remediation": "Keep install and build commands explicit.",
       "remediation_target_ref": "not_required"
     },
@@ -32,7 +34,9 @@
       "owner": "qa-verification-worker",
       "severity": "none",
       "blocks_autonomous_execution": false,
-      "evidence_refs": ["tests/README.md"],
+      "evidence_refs": [
+        "tests/README.md"
+      ],
       "smallest_safe_remediation": "Keep deterministic local test command documented.",
       "remediation_target_ref": "not_required"
     },
@@ -42,7 +46,9 @@
       "owner": "test-automation-builder",
       "severity": "none",
       "blocks_autonomous_execution": false,
-      "evidence_refs": ["scripts/validate_public_json_artifacts.py"],
+      "evidence_refs": [
+        "scripts/validate_public_json_artifacts.py"
+      ],
       "smallest_safe_remediation": "Keep schema and static checks in the preflight set.",
       "remediation_target_ref": "not_required"
     },
@@ -52,7 +58,9 @@
       "owner": "docs-os-worker",
       "severity": "none",
       "blocks_autonomous_execution": false,
-      "evidence_refs": ["docs/getting-started/quickstart-hermes.md"],
+      "evidence_refs": [
+        "docs/en/usage.md"
+      ],
       "smallest_safe_remediation": "Keep first-run instructions public-safe and current.",
       "remediation_target_ref": "not_required"
     },
@@ -62,7 +70,9 @@
       "owner": "factory-orchestrator",
       "severity": "low",
       "blocks_autonomous_execution": false,
-      "evidence_refs": ["templates/owner-issue-intake-config.json"],
+      "evidence_refs": [
+        "templates/owner-issue-intake-config.json"
+      ],
       "smallest_safe_remediation": "Use issue intake before starting long autonomous work.",
       "remediation_target_ref": "templates/owner-issue-intake-config.json"
     },
@@ -72,7 +82,9 @@
       "owner": "agent-runtime-builder",
       "severity": "medium",
       "blocks_autonomous_execution": false,
-      "evidence_refs": ["agents/worker-profile-readiness.public.json"],
+      "evidence_refs": [
+        "agents/worker-profile-readiness.public.json"
+      ],
       "smallest_safe_remediation": "Refresh profile smoke and eval evidence before treating profiles as current runtime readiness.",
       "remediation_target_ref": "agents/worker-profile-readiness.public.json"
     },
@@ -82,7 +94,9 @@
       "owner": "public-safety-gate",
       "severity": "none",
       "blocks_autonomous_execution": false,
-      "evidence_refs": ["scripts/public_safety_scan.py"],
+      "evidence_refs": [
+        "scripts/public_safety_scan.py"
+      ],
       "smallest_safe_remediation": "Run public and secret safety scans before publishing artifacts.",
       "remediation_target_ref": "not_required"
     },
@@ -92,7 +106,9 @@
       "owner": "detection-monitoring-worker",
       "severity": "medium",
       "blocks_autonomous_execution": false,
-      "evidence_refs": ["templates/incident-support-plan.json"],
+      "evidence_refs": [
+        "templates/incident-support-plan.json"
+      ],
       "smallest_safe_remediation": "Attach concrete monitoring, incident and rollback evidence before production-like autonomy.",
       "remediation_target_ref": "templates/incident-support-plan.json"
     },
@@ -102,7 +118,9 @@
       "owner": "supply-chain-gate",
       "severity": "none",
       "blocks_autonomous_execution": false,
-      "evidence_refs": ["docs/security/oss-security.md"],
+      "evidence_refs": [
+        "docs/en/trust-and-evidence.md"
+      ],
       "smallest_safe_remediation": "Keep secret and supply-chain checks in the gate set.",
       "remediation_target_ref": "not_required"
     },
@@ -112,7 +130,9 @@
       "owner": "data-metrics-worker",
       "severity": "low",
       "blocks_autonomous_execution": false,
-      "evidence_refs": ["templates/data-metrics-plan.json"],
+      "evidence_refs": [
+        "templates/data-metrics-plan.json"
+      ],
       "smallest_safe_remediation": "Require success and risk signals when user/customer outcomes are claimed.",
       "remediation_target_ref": "templates/data-metrics-plan.json"
     },
@@ -122,7 +142,9 @@
       "owner": "human-gate-clerk",
       "severity": "medium",
       "blocks_autonomous_execution": false,
-      "evidence_refs": ["templates/autonomy-readiness-packet.json"],
+      "evidence_refs": [
+        "templates/autonomy-readiness-packet.json"
+      ],
       "smallest_safe_remediation": "Keep human, security and release gates explicit before material execution.",
       "remediation_target_ref": "templates/autonomy-readiness-packet.json"
     }

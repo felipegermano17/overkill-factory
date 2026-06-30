@@ -29,8 +29,8 @@ KNOWN_STATUSES = (
 )
 CURRENT_AUTHORITY_REFS = (
     "README.md",
-    "docs/concepts/factory-flow.md",
-    "docs/operations/validation-and-release.md",
+    "docs/en/operating-model.md",
+    "docs/en/usage.md",
     "factory/scripts/factoryctl.py",
     "factory/schemas/",
     "factory/tests/",

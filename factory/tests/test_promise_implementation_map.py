@@ -9,6 +9,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = ROOT.parent
 MODULE_PATH = ROOT / "scripts" / "validate_promise_implementation_map.py"
 SPEC = importlib.util.spec_from_file_location("validate_promise_implementation_map", MODULE_PATH)
 assert SPEC is not None
@@ -22,13 +23,13 @@ class PromiseImplementationMapTests(unittest.TestCase):
         self.assertEqual(validator.validate_map(), [])
 
     def test_promise_map_covers_required_public_claims(self) -> None:
-        data = json.loads((ROOT / "docs" / "promise-implementation-map.public.json").read_text(encoding="utf-8"))
+        data = json.loads((REPO_ROOT / "docs" / "promise-implementation-map.public.json").read_text(encoding="utf-8"))
         claim_ids = {claim["claim_id"] for claim in data["claims"]}
 
         self.assertEqual(validator.REQUIRED_CLAIM_IDS - claim_ids, set())
 
     def test_all_claims_have_boundary_and_proof_refs(self) -> None:
-        data = json.loads((ROOT / "docs" / "promise-implementation-map.public.json").read_text(encoding="utf-8"))
+        data = json.loads((REPO_ROOT / "docs" / "promise-implementation-map.public.json").read_text(encoding="utf-8"))
 
         for claim in data["claims"]:
             with self.subTest(claim_id=claim["claim_id"]):
@@ -38,18 +39,18 @@ class PromiseImplementationMapTests(unittest.TestCase):
                 self.assertTrue(claim["boundary_refs"])
                 self.assertGreaterEqual(len(claim["boundary"]), 30)
                 self.assertTrue(
-                    any(ref.startswith(("tests/", "scripts/")) for ref in claim["proof_refs"]),
+                    any(ref.startswith(("tests/", "scripts/", "factory/tests/", "factory/scripts/")) for ref in claim["proof_refs"]),
                     claim["proof_refs"],
                 )
 
     def test_cli_and_ci_include_promise_map_validator(self) -> None:
-        workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
-        validation = (ROOT / "docs" / "operations" / "validation-and-release.md").read_text(encoding="utf-8")
-        readme = (ROOT / "README.md").read_text(encoding="utf-8")
-        readme_pt = (ROOT / "README.pt-BR.md").read_text(encoding="utf-8")
+        workflow = (REPO_ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+        usage = (REPO_ROOT / "docs" / "en" / "usage.md").read_text(encoding="utf-8")
+        usage_pt = (REPO_ROOT / "docs" / "pt-BR" / "usage.md").read_text(encoding="utf-8")
 
-        command = "python scripts/validate_promise_implementation_map.py"
-        for text in [workflow, validation, readme, readme_pt]:
+        command = "python3 scripts/validate_promise_implementation_map.py"
+        self.assertIn("python scripts/validate_promise_implementation_map.py", workflow)
+        for text in [usage, usage_pt]:
             with self.subTest(text=text[:40]):
                 self.assertIn(command, text)
 

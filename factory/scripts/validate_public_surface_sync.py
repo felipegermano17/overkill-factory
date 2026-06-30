@@ -88,8 +88,24 @@ def canonical_worker_count(root: Path) -> int:
 
 
 def stage_map_count(root: Path) -> int:
-    text = (REPO_ROOT / "docs" / "agents" / "factory-stage-agent-map.md").read_text(encoding="utf-8")
-    return len(re.findall(r"^\| \d+\.", text, flags=re.MULTILINE))
+    """Return the canonical public-map stage count.
+
+    The product-manual rewrite moved the old scattered Markdown docs out of
+    `docs/` and into `factory/legacy-docs/`. The current visual map still
+    represents the pre-rewrite stage-map artifact, so this validator reads the
+    preserved legacy source when the old public path no longer exists. The
+    canonical product lifecycle for new docs lives in `docs/en/lifecycle.md` and
+    is validated separately through the workflow compiler.
+    """
+    candidates = [
+        REPO_ROOT / "docs" / "agents" / "factory-stage-agent-map.md",
+        ROOT / "legacy-docs" / "public-docs-before-product-manual" / "agents" / "factory-stage-agent-map.md",
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            text = candidate.read_text(encoding="utf-8")
+            return len(re.findall(r"^\| \d+\.", text, flags=re.MULTILINE))
+    raise FileNotFoundError("factory stage map source is missing from docs/ and legacy-docs/")
 
 
 def html_worker_count(text: str) -> int | None:

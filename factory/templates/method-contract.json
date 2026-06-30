@@ -142,7 +142,6 @@
     "product_implementation_readiness",
     "method_contract",
     "spec_graph",
-    "product_creation_plan",
     "work_unit_contract",
     "test_plan",
     "regression_tests",

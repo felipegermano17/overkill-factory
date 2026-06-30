@@ -12,7 +12,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 REPO_ROOT = ROOT.parent if (ROOT.parent / ".github").exists() else ROOT
-DEFAULT_OUT = REPO_ROOT / "docs" / "reference" / "factory-kernel-reference.md"
+DEFAULT_OUT = ROOT / "legacy-docs" / "generated" / "factory-kernel-reference.md"
 
 SOURCE_FILES = [
     "../docs/factory-workflow.catalog.json",
@@ -282,13 +282,13 @@ def generated_text() -> str:
             "",
             "## CLI Surface",
             "",
-            "The generated reference checks the command surface by scanning `scripts/factoryctl.py`. Use `docs/reference/cli.md` for operator examples.",
+            "The generated reference checks the command surface by scanning `scripts/factoryctl.py`. Use `docs/en/reference.md` for operator examples.",
             "",
         ]
     )
     lines.extend(f"- `factoryctl {command}`" for command in commands[:80])
     if len(commands) > 80:
-        lines.append(f"- `+{len(commands) - 80} more factoryctl commands in docs/reference/cli.md`")
+        lines.append(f"- `+{len(commands) - 80} more factoryctl commands in docs/en/reference.md`")
 
     lines.extend(
         [

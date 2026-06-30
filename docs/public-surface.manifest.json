@@ -1,41 +1,34 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/public-surface-manifest.schema.json",
   "record_type": "public_surface_manifest",
-  "manifest_version": "v2",
-  "created_at": "2026-06-14T00:00:00Z",
+  "manifest_version": "v3-product-manual",
+  "created_at": "2026-06-30T00:00:00Z",
   "canonical_sources": [
-    "factory/agents/worker-registry.public.json",
-    "factory/agents/worker-profiles.public.json",
-    "factory/agents/hermes-profile-bindings.public.json",
-    "docs/agents/factory-stage-agent-map.md",
-    "docs/architecture/factory-v2-control-plane.md",
-    "docs/architecture/factory-operating-systems.md",
-    "docs/concepts/factory-flow.md",
-    "docs/concepts/operator-journey.md",
-    "docs/concepts/overkill-factory-method.md",
-    "docs/getting-started/quickstart-hermes.md",
-    "docs/operations/promise-to-implementation.md",
-    "docs/operations/validation-and-release.md",
-    "docs/promise-implementation-map.public.json",
-    "docs/operator/overkill-factory-bridge.md",
-    "docs/reference/cli.md",
-    "factory/schemas/",
-    "factory/templates/hermes-production-proof.json",
-    "factory/templates/factory-run.json",
-    "factory/templates/factory-workflow-compiled-plan.json",
-    "factory/templates/method-engine-registry.json",
-    "factory/templates/factory-operating-system-registry.json",
-    "factory/scripts/factoryctl.py",
-    "factory/scripts/factory_v2_kernel.py",
-    "factory/scripts/validate_promise_implementation_map.py",
-    "factory/scripts/hermes_runtime_proof.py",
-    "docs/reference/factory-kernel-reference.md",
-    "factory/scripts/generate_factory_reference_docs.py",
-    "docs/operations/telegram-operator-experience.md",
-    "docs/architecture/context-spine.md",
     "README.md",
-    "factory/templates/factory-v3-release-readiness.json",
-    "factory/scripts/factory_v3_release_readiness_audit.py"
+    "README.pt-BR.md",
+    "docs/en/index.md",
+    "docs/en/manual.md",
+    "docs/en/operating-model.md",
+    "docs/en/lifecycle.md",
+    "docs/en/trust-and-evidence.md",
+    "docs/en/technical-model.md",
+    "docs/en/usage.md",
+    "docs/en/reference.md",
+    "docs/pt-BR/index.md",
+    "docs/pt-BR/manual.md",
+    "docs/pt-BR/operating-model.md",
+    "docs/pt-BR/lifecycle.md",
+    "docs/pt-BR/trust-and-evidence.md",
+    "docs/pt-BR/technical-model.md",
+    "docs/pt-BR/usage.md",
+    "docs/pt-BR/reference.md",
+    "docs/factory-workflow.catalog.json",
+    "docs/promise-implementation-map.public.json",
+    "factory/scripts/factoryctl.py",
+    "factory/schemas/",
+    "factory/templates/",
+    "factory/agents/",
+    "factory/tests/"
   ],
   "published_check_policy": {
     "default_status_without_network": "not_checked",
@@ -44,7 +37,7 @@
   "surfaces": [
     {
       "surface_id": "visual-map-v1.0.3-html",
-      "path": "docs/visuals/overkill-factory-map-v1.0.3.html",
+      "path": "docs/assets/public-map/overkill-factory-map-v1.0.3.html",
       "published_url": "https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.3.html",
       "surface_type": "conceptual_visual_map",
       "authority_level": "conceptual_supporting_surface",
@@ -52,16 +45,9 @@
         "factory/agents/worker-registry.public.json",
         "factory/agents/worker-profiles.public.json",
         "factory/agents/hermes-profile-bindings.public.json",
-        "docs/agents/factory-stage-agent-map.md",
         "docs/factory-workflow.catalog.json",
-        "docs/concepts/factory-flow.md",
-        "docs/operations/validation-and-release.md",
         "factory/templates/universal-signal-intake.json",
         "factory/templates/product-creation-plan.json",
-        "factory/templates/decomposition-coverage-review.json",
-        "factory/templates/product-implementation-readiness.json",
-        "factory/templates/professional-design-process.json",
-        "factory/templates/product-delivery-quality-profile.json",
         "factory/scripts/factoryctl.py"
       ],
       "claim_checks": [
@@ -78,7 +64,7 @@
       "expected_stage_count": 33,
       "canonical_stage_count": 32,
       "conceptual_exceptions": [
-        "The visual map includes two conceptual summary nodes for readiness and R4 rigor in addition to the canonical 32-stage agent map."
+        "The visual map remains a conceptual supporting artifact from the previous public map source while the canonical manual now lives in docs/en and docs/pt-BR."
       ],
       "required_phrases": [
         "Universal Signal Intake",
@@ -86,232 +72,17 @@
         "Specialist Research Decision",
         "Product Creation Plan",
         "Product Implementation Readiness",
-        "professional_design_process",
-        "surface_evidence_profile",
-        "product_delivery_quality_profile",
         "Factory v1 Completion Gate",
-        "v1 blocker",
         "Mapa != Prova",
         "Hermes segue como fonte da verdade",
-        "não provam entrega",
-        "uma ideia entra por um lado",
-        "a fábrica entende, escolhe o trilho seguro",
-        "Hermes, contratos e evidências concordam"
+        "não provam entrega"
       ],
       "fidelity_contract": {
         "workflow_catalog_ref": "docs/factory-workflow.catalog.json",
-        "stage_agent_map_ref": "docs/agents/factory-stage-agent-map.md",
+        "stage_agent_map_ref": "factory/legacy-docs/public-docs-before-product-manual/agents/factory-stage-agent-map.md",
         "required_workflow_phase_ids": [
           "__all__"
         ],
-        "required_template_refs": [
-          "factory/templates/universal-signal-intake.json",
-          "factory/templates/product-creation-plan.json",
-          "factory/templates/product-implementation-readiness.json",
-          "factory/templates/professional-design-process.json",
-          "factory/templates/product-delivery-quality-profile.json"
-        ],
-        "required_terms": [
-          "Universal Signal Intake",
-          "full Product SOT scope coverage",
-          "Specialist Research Decision",
-          "Product Creation Plan",
-          "Product Experience Gate",
-          "Product Implementation Readiness",
-          "Factory v1 Completion Gate",
-          "Mapa != Prova"
-        ],
-        "required_stage_nodes": [
-          {
-            "node_id": "intake",
-            "title": "Universal Signal Intake",
-            "required_output_terms": [
-              "Tipo de sinal"
-            ]
-          },
-          {
-            "node_id": "ledger",
-            "title": "Source Ledger"
-          },
-          {
-            "node_id": "resolution",
-            "title": "Source Resolution",
-            "required_output_terms": [
-              "Specialist Research Decision"
-            ]
-          },
-          {
-            "node_id": "outcome",
-            "title": "Resultado e Descoberta"
-          },
-          {
-            "node_id": "sot",
-            "title": "Product SOT",
-            "required_output_terms": [
-              "full Product SOT scope coverage"
-            ]
-          },
-          {
-            "node_id": "router",
-            "title": "Roteador de Método"
-          },
-          {
-            "node_id": "contract",
-            "title": "Contrato de Método"
-          },
-          {
-            "node_id": "packs",
-            "title": "Product e Surface Packs"
-          },
-          {
-            "node_id": "securityplan",
-            "title": "Arquitetura de Segurança"
-          },
-          {
-            "node_id": "devplan",
-            "title": "Product Creation Plan",
-            "required_output_terms": [
-              "Product Creation Plan",
-              "Work units"
-            ]
-          },
-          {
-            "node_id": "experience",
-            "title": "Product Experience Gate",
-            "required_output_terms": [
-              "professional_design_process",
-              "surface_evidence_profile",
-              "product_delivery_quality_profile"
-            ]
-          },
-          {
-            "node_id": "dataeval",
-            "title": "Dados e Evals"
-          },
-          {
-            "node_id": "specgraph",
-            "title": "Grafo de Especificação"
-          },
-          {
-            "node_id": "riskgates",
-            "title": "Gates de Risco"
-          },
-          {
-            "node_id": "loop",
-            "title": "Plano de Loops"
-          },
-          {
-            "node_id": "autonomy",
-            "title": "Prontidão de Autonomia"
-          },
-          {
-            "node_id": "ready",
-            "title": "Product Implementation Readiness"
-          },
-          {
-            "node_id": "controltower",
-            "title": "Projeção da Control Tower"
-          },
-          {
-            "node_id": "humangate",
-            "title": "Gate Humano"
-          },
-          {
-            "node_id": "runtime",
-            "title": "Runtime Hermes"
-          },
-          {
-            "node_id": "workerresult",
-            "title": "Resultado do Agente"
-          },
-          {
-            "node_id": "verification",
-            "title": "Verificação"
-          },
-          {
-            "node_id": "review",
-            "title": "Revisão Independente"
-          },
-          {
-            "node_id": "closure",
-            "title": "Resumo de Fechamento"
-          },
-          {
-            "node_id": "receipt",
-            "title": "Receipt Five"
-          },
-          {
-            "node_id": "completion",
-            "title": "Factory v1 Completion Gate",
-            "required_output_terms": [
-              "v1 blocker",
-              "vNext ou not planned"
-            ]
-          },
-          {
-            "node_id": "prodops",
-            "title": "Operação de Produção"
-          },
-          {
-            "node_id": "release",
-            "title": "Release ou Bloqueio"
-          },
-          {
-            "node_id": "monitoring",
-            "title": "Monitoramento e Suporte"
-          },
-          {
-            "node_id": "learnback",
-            "title": "Learnback"
-          },
-          {
-            "node_id": "maturity",
-            "title": "Auditoria de Maturidade"
-          },
-          {
-            "node_id": "readiness",
-            "title": "Mapa != Prova"
-          },
-          {
-            "node_id": "r4",
-            "title": "Rigor R4"
-          }
-        ]
-      }
-    },
-    {
-      "surface_id": "visual-map-v1.0.3-svg",
-      "path": "docs/visuals/overkill-factory-map-v1.0.3.svg",
-      "surface_type": "static_visual_preview",
-      "authority_level": "conceptual_supporting_surface",
-      "source_refs": [
-        "docs/visuals/README.md",
-        "docs/visuals/overkill-factory-map-v1.0.3.html",
-        "docs/agents/factory-stage-agent-map.md",
-        "docs/factory-workflow.catalog.json",
-        "docs/concepts/factory-flow.md",
-        "docs/operations/validation-and-release.md"
-      ],
-      "claim_checks": [
-        "metadata",
-        "source_refs_exist",
-        "map_fidelity",
-        "risk_tiers",
-        "source_of_truth_disclaimer",
-        "no_runtime_proof_claim"
-      ],
-      "required_phrases": [
-        "Universal Signal Intake",
-        "Product Creation Plan",
-        "Product Implementation Readiness",
-        "Factory v1 Completion Gate",
-        "not runtime evidence",
-        "not a source of truth"
-      ],
-      "fidelity_contract": {
-        "workflow_catalog_ref": "docs/factory-workflow.catalog.json",
-        "stage_agent_map_ref": "docs/agents/factory-stage-agent-map.md",
-        "required_workflow_phase_ids": [],
         "required_template_refs": [
           "factory/templates/universal-signal-intake.json",
           "factory/templates/product-creation-plan.json",
@@ -319,300 +90,28 @@
         ],
         "required_terms": [
           "Universal Signal Intake",
+          "full Product SOT scope coverage",
           "Product Creation Plan",
           "Product Implementation Readiness",
-          "Factory v1 Completion Gate",
-          "not runtime evidence",
-          "not a source of truth"
+          "Mapa != Prova"
         ]
       }
     },
     {
-      "surface_id": "visuals-index",
-      "path": "docs/visuals/README.md",
-      "surface_type": "public_visual_index",
-      "authority_level": "supporting_explanation_not_source_of_truth",
+      "surface_id": "visual-map-v1.0.3-svg",
+      "path": "docs/assets/public-map/overkill-factory-map-v1.0.3.svg",
+      "surface_type": "static_visual_preview",
+      "authority_level": "conceptual_supporting_surface",
       "source_refs": [
+        "docs/assets/public-map/overkill-factory-map-v1.0.3.html",
         "docs/public-surface.manifest.json",
-        "docs/visuals/overkill-factory-map-v1.0.3.html",
-        "docs/visuals/overkill-factory-map-v1.0.3.svg"
+        "docs/en/reference.md"
       ],
       "claim_checks": [
-        "source_refs_exist",
-        "source_of_truth_disclaimer",
-        "no_runtime_proof_claim"
-      ],
-      "required_phrases": [
-        "Executable contracts remain authoritative",
-        "they do not replace them"
-      ]
-    },
-    {
-      "surface_id": "factory-flow-concepts",
-      "path": "docs/concepts/factory-flow.md",
-      "surface_type": "concept_doc",
-      "authority_level": "supporting_explanation_not_source_of_truth",
-      "source_refs": [
-        "docs/agents/factory-stage-agent-map.md",
-        "factory/schemas/factory-card.schema.json",
-        "factory/scripts/factoryctl.py"
-      ],
-      "claim_checks": [
-        "source_refs_exist",
-        "source_of_truth_disclaimer",
-        "no_runtime_proof_claim"
-      ],
-      "required_phrases": [
-        "Hermes Kanban state plus repo-relative evidence and receipts are the source of truth",
-        "they do not close work by themselves"
-      ]
-    },
-    {
-      "surface_id": "factory-v2-control-plane",
-      "path": "docs/architecture/factory-v2-control-plane.md",
-      "surface_type": "concept_doc",
-      "authority_level": "supporting_explanation_not_source_of_truth",
-      "source_refs": [
-        "docs/factory-workflow.catalog.json",
-        "factory/scripts/factory_v2_kernel.py",
-        "factory/scripts/factoryctl.py",
-        "factory/schemas/factory-run.schema.json",
-        "factory/schemas/factory-command.schema.json",
-        "factory/schemas/factory-run-event.schema.json",
-        "factory/schemas/factory-decision-outbox.schema.json",
-        "factory/schemas/factory-promotion-packet.schema.json",
-        "factory/templates/factory-run.json",
-        "factory/schemas/hermes-typed-block-policy.schema.json",
-        "factory/templates/hermes-typed-block-policy.json",
-        "factory/tests/test_factory_v2_kernel.py"
-      ],
-      "claim_checks": [
-        "source_refs_exist",
-        "source_of_truth_disclaimer",
-        "no_runtime_proof_claim"
-      ],
-      "required_phrases": [
-        "Hermes Kanban remains the runtime source of truth",
-        "agents can produce work, but agents cannot choose the factory route",
-        "factoryctl compile-workflow"
-      ]
-    },
-    {
-      "surface_id": "factory-kernel-reference",
-      "path": "docs/reference/factory-kernel-reference.md",
-      "surface_type": "concept_doc",
-      "authority_level": "supporting_explanation_not_source_of_truth",
-      "source_refs": [
-        "factory/scripts/generate_factory_reference_docs.py",
-        "docs/factory-workflow.catalog.json",
-        "factory/agents/worker-registry.public.json",
-        "factory/agents/worker-profiles.public.json",
-        "factory/agents/hermes-profile-bindings.public.json",
-        "factory/templates/factory-operating-system-registry.json",
-        "factory/templates/method-engine-registry.json",
-        "docs/public-surface.manifest.json"
-      ],
-      "claim_checks": [
-        "source_refs_exist",
-        "source_of_truth_disclaimer",
-        "no_runtime_proof_claim"
-      ],
-      "required_phrases": [
-        "This file is generated by `factory/scripts/generate_factory_reference_docs.py`",
-        "Hermes Kanban remains the runtime source of truth",
-        "Agents do the work; contracts choose the path",
-        "Done without evidence is only a claim",
-        "## Generated From"
-      ]
-    },
-    {
-      "surface_id": "operator-journey",
-      "path": "docs/concepts/operator-journey.md",
-      "surface_type": "concept_doc",
-      "authority_level": "supporting_explanation_not_source_of_truth",
-      "source_refs": [
-        "docs/agents/factory-stage-agent-map.md",
-        "docs/factory-workflow.catalog.json",
-        "factory/scripts/factoryctl.py"
-      ],
-      "claim_checks": [
-        "source_refs_exist",
-        "source_of_truth_disclaimer",
-        "no_runtime_proof_claim"
-      ],
-      "required_phrases": [
-        "runtime state and receipts decide completion",
-        "Done without evidence is only a claim"
-      ]
-    },
-    {
-      "surface_id": "overkill-factory-bridge",
-      "path": "docs/operator/overkill-factory-bridge.md",
-      "surface_type": "concept_doc",
-      "authority_level": "supporting_explanation_not_source_of_truth",
-      "source_refs": [
-        "factory/scripts/factory_bridge.py",
-        "factory/adapters/hermes/transition_hook.py",
-        "docs/architecture/hermes-integration.md",
-        "factory/schemas/factory-bridge-event.schema.json",
-        "factory/schemas/factory-bridge-decision.schema.json",
-        "factory/schemas/factory-bridge-handoff.schema.json",
-        "factory/schemas/factory-bridge-run.schema.json",
-        "factory/schemas/factory-bridge-source-envelope.schema.json",
-        "factory/schemas/factory-bridge-start-request.schema.json",
-        "factory/schemas/hermes-typed-block-policy.schema.json"
-      ],
-      "claim_checks": [
-        "source_refs_exist",
-        "source_of_truth_disclaimer",
-        "no_runtime_proof_claim"
-      ],
-      "required_phrases": [
-        "Durable Operator Inbox",
-        "Factory Mechanic remains the self-improvement owner",
-        "factory_bridge_start_request",
-        "overkill-factory-gerente",
-        "factory-orchestrator",
-        "not execute factory work",
-        "dependency_wait"
-      ]
-    },
-    {
-      "surface_id": "overkill-factory-method",
-      "path": "docs/concepts/overkill-factory-method.md",
-      "surface_type": "concept_doc",
-      "authority_level": "supporting_explanation_not_source_of_truth",
-      "source_refs": [
-        "docs/factory-workflow.catalog.json",
-        "factory/schemas/factory-card.schema.json",
-        "factory/scripts/factoryctl.py"
-      ],
-      "claim_checks": [
+        "metadata",
         "source_refs_exist",
         "risk_tiers",
-        "source_of_truth_disclaimer",
         "no_runtime_proof_claim"
-      ],
-      "required_phrases": [
-        "executable gates and runtime receipts decide whether work can move",
-        "An agent saying \"finished\" is not enough"
-      ]
-    },
-    {
-      "surface_id": "stage-agent-map",
-      "path": "docs/agents/factory-stage-agent-map.md",
-      "surface_type": "concept_doc",
-      "authority_level": "supporting_explanation_not_source_of_truth",
-      "source_refs": [
-        "factory/agents/worker-registry.public.json",
-        "factory/agents/worker-profiles.public.json",
-        "factory/agents/hermes-profile-bindings.public.json"
-      ],
-      "claim_checks": [
-        "source_refs_exist",
-        "stage_count",
-        "source_of_truth_disclaimer",
-        "no_runtime_proof_claim"
-      ],
-      "canonical_stage_count": 32,
-      "required_phrases": [
-        "Hermes remains the runtime source of truth",
-        "only the operator"
-      ]
-    },
-    {
-      "surface_id": "quickstart-hermes",
-      "path": "docs/getting-started/quickstart-hermes.md",
-      "surface_type": "concept_doc",
-      "authority_level": "supporting_explanation_not_source_of_truth",
-      "source_refs": [
-        "README.md",
-        "factory/adapters/hermes/README.md",
-        "factory/examples/minimal-hermes-project/card.md",
-        "factory/scripts/factoryctl.py"
-      ],
-      "claim_checks": [
-        "source_refs_exist",
-        "source_of_truth_disclaimer",
-        "expected_links",
-        "no_runtime_proof_claim"
-      ],
-      "required_phrases": [
-        "Discord is optional operator console UI. It is not the source of truth.",
-        "Attach worker results and Receipt Five before any `done` transition."
-      ],
-      "expected_links": [
-        "factory/adapters/hermes/README.md",
-        "factory/examples/minimal-hermes-project/card.md"
-      ]
-    },
-    {
-      "surface_id": "cli-reference",
-      "path": "docs/reference/cli.md",
-      "surface_type": "concept_doc",
-      "authority_level": "supporting_explanation_not_source_of_truth",
-      "source_refs": [
-        "README.md",
-        "factory/scripts/factoryctl.py",
-        "factory/tests/test_factoryctl.py"
-      ],
-      "claim_checks": [
-        "source_refs_exist",
-        "source_of_truth_disclaimer",
-        "no_runtime_proof_claim"
-      ],
-      "required_phrases": [
-        "the runtime source of truth for real cards and transitions.",
-        "does not replace Hermes, card contracts, gate reports or Receipt Five as the source of truth."
-      ]
-    },
-    {
-      "surface_id": "validation-and-release",
-      "path": "docs/operations/validation-and-release.md",
-      "surface_type": "concept_doc",
-      "authority_level": "supporting_explanation_not_source_of_truth",
-      "source_refs": [
-        "factory/scripts/release_integration_preflight.py",
-        "factory/scripts/worktree_release_inventory.py",
-        "factory/scripts/validate_promise_implementation_map.py",
-        "factory/scripts/validate_public_surface_sync.py",
-        "factory/scripts/public_safety_scan.py",
-        "factory/scripts/secret_safety_scan.py",
-        "factory/scripts/supply_chain_proof.py"
-      ],
-      "claim_checks": [
-        "source_refs_exist",
-        "source_of_truth_disclaimer",
-        "no_runtime_proof_claim"
-      ],
-      "required_phrases": [
-        "operator status can be projected without becoming the source of truth.",
-        "Generated summaries must not be committed as release proof.",
-        "No single chat answer, dashboard status or worker packet is a release proof."
-      ]
-    },
-    {
-      "surface_id": "promise-to-implementation",
-      "path": "docs/operations/promise-to-implementation.md",
-      "surface_type": "concept_doc",
-      "authority_level": "supporting_explanation_not_source_of_truth",
-      "source_refs": [
-        "docs/promise-implementation-map.public.json",
-        "factory/schemas/promise-implementation-map.schema.json",
-        "factory/scripts/validate_promise_implementation_map.py",
-        "factory/tests/test_promise_implementation_map.py",
-        "README.md",
-        "README.pt-BR.md"
-      ],
-      "claim_checks": [
-        "source_refs_exist",
-        "source_of_truth_disclaimer",
-        "no_runtime_proof_claim"
-      ],
-      "required_phrases": [
-        "Every public promise must map to implementation, proof and boundary.",
-        "This audit does not replace Hermes runtime evidence",
-        "Solana AI Kit is the Solana domain brain; Quasar and Auditor are implementation or proof lanes"
       ]
     },
     {
@@ -621,12 +120,9 @@
       "surface_type": "root_readme",
       "authority_level": "supporting_explanation_not_source_of_truth",
       "source_refs": [
-        "docs/operator/overkill-factory-bridge.md",
-        "docs/visuals/README.md",
-        "docs/public-surface.manifest.json",
-        "docs/operations/promise-to-implementation.md",
-        "docs/promise-implementation-map.public.json",
-        "docs/visuals/overkill-factory-map-v1.0.3.html"
+        "docs/en/index.md",
+        "docs/en/manual.md",
+        "docs/public-surface.manifest.json"
       ],
       "claim_checks": [
         "source_refs_exist",
@@ -635,7 +131,7 @@
         "no_runtime_proof_claim"
       ],
       "required_phrases": [
-        "Hermes and Receipt Five remain the source of truth"
+        "A passing local proof means the public kernel is coherent"
       ],
       "expected_links": [
         "https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.3.html"
@@ -648,12 +144,8 @@
       "authority_level": "supporting_explanation_not_source_of_truth",
       "source_refs": [
         "README.md",
-        "docs/operator/overkill-factory-bridge.md",
-        "docs/visuals/README.md",
-        "docs/public-surface.manifest.json",
-        "docs/operations/promise-to-implementation.md",
-        "docs/promise-implementation-map.public.json",
-        "docs/visuals/overkill-factory-map-v1.0.3.html"
+        "docs/pt-BR/index.md",
+        "docs/public-surface.manifest.json"
       ],
       "claim_checks": [
         "source_refs_exist",
@@ -662,22 +154,21 @@
         "no_runtime_proof_claim"
       ],
       "required_phrases": [
-        "Hermes e Receipt Five continuam sendo a fonte de verdade"
+        "Um teste local passando significa que o kernel público está coerente"
       ],
       "expected_links": [
         "https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.3.html"
       ]
     },
     {
-      "surface_id": "telegram-operator-experience",
-      "path": "docs/operations/telegram-operator-experience.md",
+      "surface_id": "en-index",
+      "path": "docs/en/index.md",
       "surface_type": "concept_doc",
       "authority_level": "supporting_explanation_not_source_of_truth",
       "source_refs": [
-        "factory/schemas/operator-interface-profile.schema.json",
-        "factory/schemas/operator-briefing-package.schema.json",
         "factory/scripts/factoryctl.py",
-        "factory/tests/test_operator_experience.py"
+        "docs/factory-workflow.catalog.json",
+        "factory/templates/factory-route-registry.json"
       ],
       "claim_checks": [
         "source_refs_exist",
@@ -685,20 +176,18 @@
         "no_runtime_proof_claim"
       ],
       "required_phrases": [
-        "Telegram is an operator interface",
-        "A human gate needs a package before it needs an answer",
-        "`needs_input`"
+        "The point is not to slow agents down"
       ]
     },
     {
-      "surface_id": "context-spine",
-      "path": "docs/architecture/context-spine.md",
+      "surface_id": "en-manual",
+      "path": "docs/en/manual.md",
       "surface_type": "concept_doc",
       "authority_level": "supporting_explanation_not_source_of_truth",
       "source_refs": [
         "factory/scripts/factoryctl.py",
-        "docs/concepts/operator-journey.md",
-        "docs/maintenance/self-improvement-loop.md"
+        "docs/factory-workflow.catalog.json",
+        "factory/templates/factory-route-registry.json"
       ],
       "claim_checks": [
         "source_refs_exist",
@@ -706,8 +195,273 @@
         "no_runtime_proof_claim"
       ],
       "required_phrases": [
-        "Memory is not truth by itself",
-        "Old memory can help. Old memory cannot approve"
+        "controlled production"
+      ]
+    },
+    {
+      "surface_id": "en-operating-model",
+      "path": "docs/en/operating-model.md",
+      "surface_type": "concept_doc",
+      "authority_level": "supporting_explanation_not_source_of_truth",
+      "source_refs": [
+        "factory/scripts/factoryctl.py",
+        "docs/factory-workflow.catalog.json",
+        "factory/templates/factory-route-registry.json"
+      ],
+      "claim_checks": [
+        "source_refs_exist",
+        "source_of_truth_disclaimer",
+        "no_runtime_proof_claim"
+      ],
+      "required_phrases": [
+        "Hermes Kanban remains the runtime source of truth"
+      ]
+    },
+    {
+      "surface_id": "en-lifecycle",
+      "path": "docs/en/lifecycle.md",
+      "surface_type": "concept_doc",
+      "authority_level": "supporting_explanation_not_source_of_truth",
+      "source_refs": [
+        "factory/scripts/factoryctl.py",
+        "docs/factory-workflow.catalog.json",
+        "factory/templates/factory-route-registry.json"
+      ],
+      "claim_checks": [
+        "source_refs_exist",
+        "source_of_truth_disclaimer",
+        "no_runtime_proof_claim"
+      ],
+      "required_phrases": [
+        "The compiled workflow is the factual source"
+      ]
+    },
+    {
+      "surface_id": "en-trust",
+      "path": "docs/en/trust-and-evidence.md",
+      "surface_type": "concept_doc",
+      "authority_level": "supporting_explanation_not_source_of_truth",
+      "source_refs": [
+        "factory/scripts/factoryctl.py",
+        "docs/factory-workflow.catalog.json",
+        "factory/templates/factory-route-registry.json"
+      ],
+      "claim_checks": [
+        "source_refs_exist",
+        "source_of_truth_disclaimer",
+        "no_runtime_proof_claim"
+      ],
+      "required_phrases": [
+        "a process that looks alive is not the same as progress"
+      ]
+    },
+    {
+      "surface_id": "en-technical",
+      "path": "docs/en/technical-model.md",
+      "surface_type": "concept_doc",
+      "authority_level": "supporting_explanation_not_source_of_truth",
+      "source_refs": [
+        "factory/scripts/factoryctl.py",
+        "docs/factory-workflow.catalog.json",
+        "factory/templates/factory-route-registry.json"
+      ],
+      "claim_checks": [
+        "source_refs_exist",
+        "source_of_truth_disclaimer",
+        "no_runtime_proof_claim"
+      ],
+      "required_phrases": [
+        "Hermes owns runtime state"
+      ]
+    },
+    {
+      "surface_id": "en-usage",
+      "path": "docs/en/usage.md",
+      "surface_type": "concept_doc",
+      "authority_level": "supporting_explanation_not_source_of_truth",
+      "source_refs": [
+        "factory/scripts/factoryctl.py",
+        "docs/factory-workflow.catalog.json",
+        "factory/templates/factory-route-registry.json"
+      ],
+      "claim_checks": [
+        "source_refs_exist",
+        "source_of_truth_disclaimer",
+        "no_runtime_proof_claim"
+      ],
+      "required_phrases": [
+        "local validation is not live Hermes E2E proof"
+      ]
+    },
+    {
+      "surface_id": "en-reference",
+      "path": "docs/en/reference.md",
+      "surface_type": "concept_doc",
+      "authority_level": "supporting_explanation_not_source_of_truth",
+      "source_refs": [
+        "factory/scripts/factoryctl.py",
+        "docs/factory-workflow.catalog.json",
+        "factory/templates/factory-route-registry.json"
+      ],
+      "claim_checks": [
+        "source_refs_exist",
+        "source_of_truth_disclaimer",
+        "no_runtime_proof_claim"
+      ],
+      "required_phrases": [
+        "This page collects the short-form facts"
+      ]
+    },
+    {
+      "surface_id": "pt-index",
+      "path": "docs/pt-BR/index.md",
+      "surface_type": "concept_doc",
+      "authority_level": "supporting_explanation_not_source_of_truth",
+      "source_refs": [
+        "factory/scripts/factoryctl.py",
+        "docs/factory-workflow.catalog.json",
+        "factory/templates/factory-route-registry.json"
+      ],
+      "claim_checks": [
+        "source_refs_exist",
+        "source_of_truth_disclaimer",
+        "no_runtime_proof_claim"
+      ],
+      "required_phrases": [
+        "O objetivo é tornar a velocidade confiável"
+      ]
+    },
+    {
+      "surface_id": "pt-manual",
+      "path": "docs/pt-BR/manual.md",
+      "surface_type": "concept_doc",
+      "authority_level": "supporting_explanation_not_source_of_truth",
+      "source_refs": [
+        "factory/scripts/factoryctl.py",
+        "docs/factory-workflow.catalog.json",
+        "factory/templates/factory-route-registry.json"
+      ],
+      "claim_checks": [
+        "source_refs_exist",
+        "source_of_truth_disclaimer",
+        "no_runtime_proof_claim"
+      ],
+      "required_phrases": [
+        "produção controlada"
+      ]
+    },
+    {
+      "surface_id": "pt-operating-model",
+      "path": "docs/pt-BR/operating-model.md",
+      "surface_type": "concept_doc",
+      "authority_level": "supporting_explanation_not_source_of_truth",
+      "source_refs": [
+        "factory/scripts/factoryctl.py",
+        "docs/factory-workflow.catalog.json",
+        "factory/templates/factory-route-registry.json"
+      ],
+      "claim_checks": [
+        "source_refs_exist",
+        "source_of_truth_disclaimer",
+        "no_runtime_proof_claim"
+      ],
+      "required_phrases": [
+        "Hermes Kanban continua sendo a fonte de verdade"
+      ]
+    },
+    {
+      "surface_id": "pt-lifecycle",
+      "path": "docs/pt-BR/lifecycle.md",
+      "surface_type": "concept_doc",
+      "authority_level": "supporting_explanation_not_source_of_truth",
+      "source_refs": [
+        "factory/scripts/factoryctl.py",
+        "docs/factory-workflow.catalog.json",
+        "factory/templates/factory-route-registry.json"
+      ],
+      "claim_checks": [
+        "source_refs_exist",
+        "source_of_truth_disclaimer",
+        "no_runtime_proof_claim"
+      ],
+      "required_phrases": [
+        "O workflow compilado é a fonte factual"
+      ]
+    },
+    {
+      "surface_id": "pt-trust",
+      "path": "docs/pt-BR/trust-and-evidence.md",
+      "surface_type": "concept_doc",
+      "authority_level": "supporting_explanation_not_source_of_truth",
+      "source_refs": [
+        "factory/scripts/factoryctl.py",
+        "docs/factory-workflow.catalog.json",
+        "factory/templates/factory-route-registry.json"
+      ],
+      "claim_checks": [
+        "source_refs_exist",
+        "source_of_truth_disclaimer",
+        "no_runtime_proof_claim"
+      ],
+      "required_phrases": [
+        "processo parecendo vivo não é a mesma coisa que progresso"
+      ]
+    },
+    {
+      "surface_id": "pt-technical",
+      "path": "docs/pt-BR/technical-model.md",
+      "surface_type": "concept_doc",
+      "authority_level": "supporting_explanation_not_source_of_truth",
+      "source_refs": [
+        "factory/scripts/factoryctl.py",
+        "docs/factory-workflow.catalog.json",
+        "factory/templates/factory-route-registry.json"
+      ],
+      "claim_checks": [
+        "source_refs_exist",
+        "source_of_truth_disclaimer",
+        "no_runtime_proof_claim"
+      ],
+      "required_phrases": [
+        "Hermes controla estado de runtime"
+      ]
+    },
+    {
+      "surface_id": "pt-usage",
+      "path": "docs/pt-BR/usage.md",
+      "surface_type": "concept_doc",
+      "authority_level": "supporting_explanation_not_source_of_truth",
+      "source_refs": [
+        "factory/scripts/factoryctl.py",
+        "docs/factory-workflow.catalog.json",
+        "factory/templates/factory-route-registry.json"
+      ],
+      "claim_checks": [
+        "source_refs_exist",
+        "source_of_truth_disclaimer",
+        "no_runtime_proof_claim"
+      ],
+      "required_phrases": [
+        "validação local não é prova E2E Hermes viva"
+      ]
+    },
+    {
+      "surface_id": "pt-reference",
+      "path": "docs/pt-BR/reference.md",
+      "surface_type": "concept_doc",
+      "authority_level": "supporting_explanation_not_source_of_truth",
+      "source_refs": [
+        "factory/scripts/factoryctl.py",
+        "docs/factory-workflow.catalog.json",
+        "factory/templates/factory-route-registry.json"
+      ],
+      "claim_checks": [
+        "source_refs_exist",
+        "source_of_truth_disclaimer",
+        "no_runtime_proof_claim"
+      ],
+      "required_phrases": [
+        "Esta página reúne os fatos curtos"
       ]
     }
   ]

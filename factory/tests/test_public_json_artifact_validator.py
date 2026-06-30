@@ -9,6 +9,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = ROOT.parent
 VALIDATOR_PATH = ROOT / "scripts" / "validate_public_json_artifacts.py"
 
 
@@ -171,7 +172,7 @@ class PublicJsonArtifactValidatorTest(unittest.TestCase):
         ack.write_text(json.dumps({"record_type": "factory_bridge_ack"}), encoding="utf-8")
 
         try:
-            public_json_paths = {path.relative_to(ROOT).as_posix() for path in validator.iter_public_json()}
+            public_json_paths = {path.relative_to(REPO_ROOT).as_posix() for path in validator.iter_public_json()}
         finally:
             ack.unlink(missing_ok=True)
 
@@ -185,7 +186,7 @@ class PublicJsonArtifactValidatorTest(unittest.TestCase):
         state_path.write_text(json.dumps({"last_seen": "runtime-local"}), encoding="utf-8")
 
         try:
-            public_json_paths = {path.relative_to(ROOT).as_posix() for path in validator.iter_public_json()}
+            public_json_paths = {path.relative_to(REPO_ROOT).as_posix() for path in validator.iter_public_json()}
         finally:
             if original is None:
                 state_path.unlink(missing_ok=True)

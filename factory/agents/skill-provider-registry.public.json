@@ -14,7 +14,11 @@
       "provider_id": "overkill-factory",
       "provider_type": "codex_skill",
       "status": "active",
-      "capability_surfaces": ["factory", "product-method", "gates"],
+      "capability_surfaces": [
+        "factory",
+        "product-method",
+        "gates"
+      ],
       "source_ref": "skills/codex/overkill-factory/SKILL.md",
       "authority_boundary": "Skill explains operation; route authority remains in compiled workflow, reducer and Hermes state.",
       "smoke_or_eval_ref": "tests/test_open_source_docs.py"
@@ -23,7 +27,11 @@
       "provider_id": "hermes-kanban",
       "provider_type": "hermes_skill",
       "status": "active",
-      "capability_surfaces": ["kanban", "runtime", "dispatcher"],
+      "capability_surfaces": [
+        "kanban",
+        "runtime",
+        "dispatcher"
+      ],
       "source_ref": "external:public:hermes-agent-kanban-docs",
       "authority_boundary": "Hermes is runtime source of truth; factory contracts decide allowed commands.",
       "smoke_or_eval_ref": "tests/test_hermes_live_kanban_adapter.py"
@@ -32,7 +40,11 @@
       "provider_id": "browser",
       "provider_type": "external_tool",
       "status": "available",
-      "capability_surfaces": ["frontend", "research", "screenshots"],
+      "capability_surfaces": [
+        "frontend",
+        "research",
+        "screenshots"
+      ],
       "source_ref": "external:public:codex-browser-skill",
       "authority_boundary": "Browser can gather evidence; it cannot approve product or gate state.",
       "smoke_or_eval_ref": "tests/test_product_face_proof.py"
@@ -41,7 +53,11 @@
       "provider_id": "solana-ai-kit",
       "provider_type": "reference_pack",
       "status": "active",
-      "capability_surfaces": ["solana", "onchain", "wallet"],
+      "capability_surfaces": [
+        "solana",
+        "onchain",
+        "wallet"
+      ],
       "source_ref": "https://github.com/solanabr/solana-ai-kit",
       "authority_boundary": "Solana AI Kit is mandatory domain brain for Solana routes; signer, funds and Mainnet gates still override it.",
       "smoke_or_eval_ref": "schemas/solana-ai-kit-usage-receipt.schema.json"
@@ -50,7 +66,11 @@
       "provider_id": "solanabr-auditor",
       "provider_type": "reference_pack",
       "status": "available",
-      "capability_surfaces": ["solana", "audit", "quasar"],
+      "capability_surfaces": [
+        "solana",
+        "audit",
+        "quasar"
+      ],
       "source_ref": "external:public:solanabr-auditor",
       "authority_boundary": "Auditor supplies audit evidence; it does not grant deploy, signing or funds authority.",
       "smoke_or_eval_ref": "tests/test_qvg_quasar_cu_fuzz_property_proof.py"
@@ -59,7 +79,11 @@
       "provider_id": "codex-security",
       "provider_type": "plugin_skill",
       "status": "available",
-      "capability_surfaces": ["security", "code-review", "threat-model"],
+      "capability_surfaces": [
+        "security",
+        "code-review",
+        "threat-model"
+      ],
       "source_ref": "external:public:codex-security",
       "authority_boundary": "Security findings require owner/security route handling; scans do not waive risk.",
       "smoke_or_eval_ref": "tests/test_runtime_hardening.py"
@@ -68,8 +92,12 @@
       "provider_id": "appsec-owasp",
       "provider_type": "process_contract",
       "status": "available",
-      "capability_surfaces": ["appsec", "api", "web"],
-      "source_ref": "docs/agents/security-specialist-matrix.md",
+      "capability_surfaces": [
+        "appsec",
+        "api",
+        "web"
+      ],
+      "source_ref": "docs/en/trust-and-evidence.md",
       "authority_boundary": "AppSec checklist routes controls; residual risk acceptance stays outside the specialist.",
       "smoke_or_eval_ref": "schemas/security-route-contract.schema.json"
     },
@@ -77,8 +105,12 @@
       "provider_id": "agentic-ai-security",
       "provider_type": "process_contract",
       "status": "available",
-      "capability_surfaces": ["agentic-ai", "tool-boundary", "memory"],
-      "source_ref": "docs/agents/security-specialist-matrix.md",
+      "capability_surfaces": [
+        "agentic-ai",
+        "tool-boundary",
+        "memory"
+      ],
+      "source_ref": "docs/en/trust-and-evidence.md",
       "authority_boundary": "Agentic security reviews prompts/tools/memory; it cannot expand tool authority.",
       "smoke_or_eval_ref": "schemas/security-profile.schema.json"
     },
@@ -86,7 +118,11 @@
       "provider_id": "autoreview",
       "provider_type": "process_contract",
       "status": "available",
-      "capability_surfaces": ["review", "diff", "quality"],
+      "capability_surfaces": [
+        "review",
+        "diff",
+        "quality"
+      ],
       "source_ref": "agents/worker-registry.public.json#autoreview-gate",
       "authority_boundary": "AutoReview is pre-landing evidence, not approval.",
       "smoke_or_eval_ref": "tests/test_factoryctl.py"
@@ -95,7 +131,11 @@
       "provider_id": "remote-proof",
       "provider_type": "process_contract",
       "status": "available",
-      "capability_surfaces": ["remote-proof", "container", "ci-parity"],
+      "capability_surfaces": [
+        "remote-proof",
+        "container",
+        "ci-parity"
+      ],
       "source_ref": "agents/worker-registry.public.json#remote-proof-runner",
       "authority_boundary": "Remote proof runs scoped validation only; secrets and production mutation require gates.",
       "smoke_or_eval_ref": "tests/test_managed_remote_proof_probe.py"
@@ -104,7 +144,11 @@
       "provider_id": "handoff",
       "provider_type": "process_contract",
       "status": "available",
-      "capability_surfaces": ["handoff", "context", "state-packet"],
+      "capability_surfaces": [
+        "handoff",
+        "context",
+        "state-packet"
+      ],
       "source_ref": "agents/worker-registry.public.json#handoff-packer",
       "authority_boundary": "Handoff packages replayable state; it cannot invent approval or evidence.",
       "smoke_or_eval_ref": "tests/test_factoryctl.py"
@@ -113,7 +157,11 @@
       "provider_id": "receipt-five-reconciliation",
       "provider_type": "process_contract",
       "status": "available",
-      "capability_surfaces": ["evidence", "receipt-five", "closure"],
+      "capability_surfaces": [
+        "evidence",
+        "receipt-five",
+        "closure"
+      ],
       "source_ref": "agents/worker-registry.public.json#evidence-reconciler",
       "authority_boundary": "Reconciliation can block closure; it cannot approve human gates.",
       "smoke_or_eval_ref": "tests/test_evidence_reconciler.py"
@@ -122,7 +170,11 @@
       "provider_id": "human-gate",
       "provider_type": "process_contract",
       "status": "available",
-      "capability_surfaces": ["human-gate", "operator-delivery", "decision-record"],
+      "capability_surfaces": [
+        "human-gate",
+        "operator-delivery",
+        "decision-record"
+      ],
       "source_ref": "agents/worker-registry.public.json#human-gate-clerk",
       "authority_boundary": "Human gate worker packages and records decisions; the human makes the decision.",
       "smoke_or_eval_ref": "schemas/operator-delivery-receipt.schema.json"
@@ -131,7 +183,11 @@
       "provider_id": "public-safety",
       "provider_type": "process_contract",
       "status": "available",
-      "capability_surfaces": ["public-repo", "redaction", "release"],
+      "capability_surfaces": [
+        "public-repo",
+        "redaction",
+        "release"
+      ],
       "source_ref": "scripts/public_safety_scan.py",
       "authority_boundary": "Public safety can block leaks; it does not approve product risk.",
       "smoke_or_eval_ref": "tests/test_public_safety_scan.py"
@@ -140,7 +196,11 @@
       "provider_id": "frontend-builder",
       "provider_type": "process_contract",
       "status": "available",
-      "capability_surfaces": ["frontend", "ui", "product-experience"],
+      "capability_surfaces": [
+        "frontend",
+        "ui",
+        "product-experience"
+      ],
       "source_ref": "agents/worker-registry.public.json#frontend-builder",
       "authority_boundary": "Frontend builder implements bounded work after Product Experience contracts exist.",
       "smoke_or_eval_ref": "schemas/component-registry.schema.json"
@@ -149,7 +209,11 @@
       "provider_id": "backend-api",
       "provider_type": "process_contract",
       "status": "available",
-      "capability_surfaces": ["backend", "api", "integration"],
+      "capability_surfaces": [
+        "backend",
+        "api",
+        "integration"
+      ],
       "source_ref": "agents/worker-registry.public.json#backend-api-builder",
       "authority_boundary": "Backend API builder executes scoped units; architecture/security gates control route.",
       "smoke_or_eval_ref": "schemas/work-unit-dispatch-readiness.schema.json"
@@ -158,7 +222,11 @@
       "provider_id": "data-persistence",
       "provider_type": "process_contract",
       "status": "available",
-      "capability_surfaces": ["database", "state", "ledger"],
+      "capability_surfaces": [
+        "database",
+        "state",
+        "ledger"
+      ],
       "source_ref": "agents/worker-registry.public.json#data-persistence-builder",
       "authority_boundary": "Data worker handles scoped persistence; privacy/security contracts own risk.",
       "smoke_or_eval_ref": "schemas/security-route-contract.schema.json"
@@ -167,7 +235,11 @@
       "provider_id": "solana-quasar",
       "provider_type": "reference_pack",
       "status": "available",
-      "capability_surfaces": ["quasar", "solana", "onchain"],
+      "capability_surfaces": [
+        "quasar",
+        "solana",
+        "onchain"
+      ],
       "source_ref": "agents/capability-packs.public.json#solana-quasar-core",
       "authority_boundary": "Quasar capability does not replace Solana AI Kit usage receipt or Auditor path.",
       "smoke_or_eval_ref": "tests/test_qvg_public_defaults.py"
@@ -176,7 +248,11 @@
       "provider_id": "solana-quasar-qa",
       "provider_type": "reference_pack",
       "status": "available",
-      "capability_surfaces": ["quasar", "qa", "onchain"],
+      "capability_surfaces": [
+        "quasar",
+        "qa",
+        "onchain"
+      ],
       "source_ref": "agents/capability-packs.public.json#solana-quasar-core",
       "authority_boundary": "QA checks onchain proof; it cannot approve signer/funds/Mainnet.",
       "smoke_or_eval_ref": "tests/test_qvg_quasar_cu_svm_economic_proof.py"
@@ -185,7 +261,11 @@
       "provider_id": "wallet-transaction",
       "provider_type": "process_contract",
       "status": "available",
-      "capability_surfaces": ["wallet", "transaction", "signing-boundary"],
+      "capability_surfaces": [
+        "wallet",
+        "transaction",
+        "signing-boundary"
+      ],
       "source_ref": "agents/worker-registry.public.json#wallet-transaction-builder",
       "authority_boundary": "Wallet work must preserve signer boundary and never move funds by default.",
       "smoke_or_eval_ref": "schemas/security-profile.schema.json"
@@ -194,7 +274,11 @@
       "provider_id": "integration-builder",
       "provider_type": "process_contract",
       "status": "available",
-      "capability_surfaces": ["integration", "api", "workflow"],
+      "capability_surfaces": [
+        "integration",
+        "api",
+        "workflow"
+      ],
       "source_ref": "agents/worker-registry.public.json#integration-builder",
       "authority_boundary": "Integration builder executes scoped work units only after readiness.",
       "smoke_or_eval_ref": "schemas/work-unit-dispatch-readiness.schema.json"
@@ -203,7 +287,11 @@
       "provider_id": "test-automation",
       "provider_type": "process_contract",
       "status": "available",
-      "capability_surfaces": ["tests", "e2e", "regression"],
+      "capability_surfaces": [
+        "tests",
+        "e2e",
+        "regression"
+      ],
       "source_ref": "agents/worker-registry.public.json#test-automation-builder",
       "authority_boundary": "Tests prove behavior; they do not redefine acceptance criteria.",
       "smoke_or_eval_ref": "schemas/qa-repair-loop-state.schema.json"
@@ -212,7 +300,11 @@
       "provider_id": "infra-devops",
       "provider_type": "process_contract",
       "status": "available",
-      "capability_surfaces": ["infra", "devops", "deploy"],
+      "capability_surfaces": [
+        "infra",
+        "devops",
+        "deploy"
+      ],
       "source_ref": "agents/worker-registry.public.json#infra-devops-builder",
       "authority_boundary": "Infra work remains dry-run/scoped until release and access gates pass.",
       "smoke_or_eval_ref": "schemas/capability-lease.schema.json"
@@ -221,7 +313,11 @@
       "provider_id": "agent-runtime",
       "provider_type": "process_contract",
       "status": "available",
-      "capability_surfaces": ["agent", "profile", "adapter"],
+      "capability_surfaces": [
+        "agent",
+        "profile",
+        "adapter"
+      ],
       "source_ref": "agents/worker-registry.public.json#agent-runtime-builder",
       "authority_boundary": "Agent runtime changes require profile/binding proof and security review.",
       "smoke_or_eval_ref": "scripts/validate_agent_vs_skill_boundaries.py"
@@ -230,7 +326,11 @@
       "provider_id": "supply-chain",
       "provider_type": "process_contract",
       "status": "available",
-      "capability_surfaces": ["dependencies", "sbom", "ci"],
+      "capability_surfaces": [
+        "dependencies",
+        "sbom",
+        "ci"
+      ],
       "source_ref": "agents/worker-registry.public.json#supply-chain-gate",
       "authority_boundary": "Supply chain worker can block release; it cannot waive release risk.",
       "smoke_or_eval_ref": "tests/test_supply_chain_proof.py"
@@ -239,7 +339,11 @@
       "provider_id": "detection-monitoring",
       "provider_type": "process_contract",
       "status": "available",
-      "capability_surfaces": ["monitoring", "alerts", "metrics"],
+      "capability_surfaces": [
+        "monitoring",
+        "alerts",
+        "metrics"
+      ],
       "source_ref": "agents/worker-registry.public.json#detection-monitoring-worker",
       "authority_boundary": "Monitoring plan supports promotion; release gate still controls release.",
       "smoke_or_eval_ref": "schemas/product-e2e-release-proof.schema.json"
@@ -248,7 +352,11 @@
       "provider_id": "cloud-infra-security",
       "provider_type": "process_contract",
       "status": "available",
-      "capability_surfaces": ["cloud", "iam", "iac"],
+      "capability_surfaces": [
+        "cloud",
+        "iam",
+        "iac"
+      ],
       "source_ref": "agents/worker-registry.public.json#cloud-infra-security-specialist",
       "authority_boundary": "Cloud security reviews controls; it cannot mutate production accounts.",
       "smoke_or_eval_ref": "schemas/security-route-contract.schema.json"
@@ -257,7 +365,11 @@
       "provider_id": "decomposition",
       "provider_type": "process_contract",
       "status": "available",
-      "capability_surfaces": ["decomposition", "work-units", "planning"],
+      "capability_surfaces": [
+        "decomposition",
+        "work-units",
+        "planning"
+      ],
       "source_ref": "agents/worker-registry.public.json#decomposition-planner",
       "authority_boundary": "Decomposition follows Product Creation Plan and cannot skip readiness gates.",
       "smoke_or_eval_ref": "schemas/vertical-slice-graph.schema.json"
@@ -266,7 +378,11 @@
       "provider_id": "docs-os",
       "provider_type": "process_contract",
       "status": "available",
-      "capability_surfaces": ["documentation", "onboarding", "manuals"],
+      "capability_surfaces": [
+        "documentation",
+        "onboarding",
+        "manuals"
+      ],
       "source_ref": "agents/worker-registry.public.json#docs-os-writer",
       "authority_boundary": "Documentation worker explains state; it cannot become source of truth.",
       "smoke_or_eval_ref": "tests/test_open_source_docs.py"
@@ -275,7 +391,11 @@
       "provider_id": "implementation",
       "provider_type": "process_contract",
       "status": "available",
-      "capability_surfaces": ["implementation", "code", "patch"],
+      "capability_surfaces": [
+        "implementation",
+        "code",
+        "patch"
+      ],
       "source_ref": "agents/worker-registry.public.json#implementation-worker",
       "authority_boundary": "Implementation worker executes ready work units only; it cannot choose route or release.",
       "smoke_or_eval_ref": "schemas/work-unit-dispatch-readiness.schema.json"
@@ -284,7 +404,11 @@
       "provider_id": "independent-review",
       "provider_type": "process_contract",
       "status": "available",
-      "capability_surfaces": ["review", "qa", "evidence"],
+      "capability_surfaces": [
+        "review",
+        "qa",
+        "evidence"
+      ],
       "source_ref": "agents/worker-registry.public.json#independent-reviewer",
       "authority_boundary": "Independent review validates evidence; it cannot replace human gates.",
       "smoke_or_eval_ref": "tests/test_factoryctl.py"
@@ -293,7 +417,11 @@
       "provider_id": "key-management",
       "provider_type": "process_contract",
       "status": "available",
-      "capability_surfaces": ["keys", "custody", "signing"],
+      "capability_surfaces": [
+        "keys",
+        "custody",
+        "signing"
+      ],
       "source_ref": "agents/worker-registry.public.json#crypto-key-management-specialist",
       "authority_boundary": "Key management reviews design; it never touches real keys or funds by default.",
       "smoke_or_eval_ref": "schemas/security-profile.schema.json"
@@ -302,7 +430,11 @@
       "provider_id": "memory-steward",
       "provider_type": "process_contract",
       "status": "available",
-      "capability_surfaces": ["memory", "context", "source-trust"],
+      "capability_surfaces": [
+        "memory",
+        "context",
+        "source-trust"
+      ],
       "source_ref": "agents/worker-registry.public.json#memory-steward",
       "authority_boundary": "Memory steward classifies trust; memory never becomes product truth by itself.",
       "smoke_or_eval_ref": "schemas/product-source-ledger.schema.json"
@@ -311,7 +443,11 @@
       "provider_id": "qa-verification",
       "provider_type": "process_contract",
       "status": "available",
-      "capability_surfaces": ["qa", "verification", "evidence"],
+      "capability_surfaces": [
+        "qa",
+        "verification",
+        "evidence"
+      ],
       "source_ref": "agents/worker-registry.public.json#qa-verification-worker",
       "authority_boundary": "QA verifies declared acceptance criteria; it cannot waive risk.",
       "smoke_or_eval_ref": "schemas/product-e2e-release-proof.schema.json"
@@ -320,7 +456,11 @@
       "provider_id": "release-ops",
       "provider_type": "process_contract",
       "status": "available",
-      "capability_surfaces": ["release", "rollback", "promotion"],
+      "capability_surfaces": [
+        "release",
+        "rollback",
+        "promotion"
+      ],
       "source_ref": "agents/worker-registry.public.json#release-ops-worker",
       "authority_boundary": "Release ops prepares evidence; release authority remains gated.",
       "smoke_or_eval_ref": "schemas/product-e2e-release-proof.schema.json"
@@ -329,7 +469,11 @@
       "provider_id": "security-orchestration",
       "provider_type": "process_contract",
       "status": "available",
-      "capability_surfaces": ["security", "routing", "specialist-matrix"],
+      "capability_surfaces": [
+        "security",
+        "routing",
+        "specialist-matrix"
+      ],
       "source_ref": "agents/worker-registry.public.json#security-orchestrator",
       "authority_boundary": "Security orchestration selects matrix routes through contracts; it cannot waive findings.",
       "smoke_or_eval_ref": "schemas/security-state-ledger.schema.json"
@@ -338,7 +482,11 @@
       "provider_id": "skill-eval",
       "provider_type": "process_contract",
       "status": "available",
-      "capability_surfaces": ["skill", "eval", "learnback"],
+      "capability_surfaces": [
+        "skill",
+        "eval",
+        "learnback"
+      ],
       "source_ref": "agents/worker-registry.public.json#skill-eval-distiller",
       "authority_boundary": "Skill eval proposes capability changes; activation requires review and registry update.",
       "smoke_or_eval_ref": "schemas/capability-acquisition-run.schema.json"

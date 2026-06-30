@@ -49,10 +49,10 @@
       "name": "Public GitHub V3 open-source surface",
       "evidence_refs": [
         "README.md",
-        "docs/visuals/overkill-factory-map-v1.0.3.html",
+        "docs/assets/public-map/overkill-factory-map-v1.0.3.html",
         "docs/public-surface.manifest.json",
-        "docs/concepts/factory-flow.md",
-        "docs/concepts/operator-journey.md"
+        "docs/en/operating-model.md",
+        "docs/en/manual.md"
       ]
     },
     {
@@ -136,7 +136,7 @@
       "public-safe examples"
     ]
   },
-    "factory_perfect_run_policy": {
+  "factory_perfect_run_policy": {
     "requires_manager_agent_freshness": true,
     "requires_runtime_truth_spine": true,
     "requires_canonical_frontier": true,
