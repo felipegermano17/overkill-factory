@@ -1243,9 +1243,9 @@ def human_gate_decision_package_complete(record: dict[str, Any]) -> bool:
 def is_human_gate_decision_ready_blocker(record: dict[str, Any]) -> bool:
     if not is_human_gate_blocker(record):
         return False
-    if is_operator_input_blocker(record):
-        return False
     if not human_gate_decision_package_complete(record):
+        return False
+    if has_explicit_operator_input_request(record):
         return False
     text = task_record_text(record)
     return any(
@@ -1358,6 +1358,14 @@ def is_factory_materialization_contract_blocker(record: dict[str, Any]) -> bool:
         "human must provide",
         "requires external credential",
         "requires production credential",
+        "requires external api key",
+        "external api key",
+        "requires private key",
+        "private key material from the operator",
+        "operator private key",
+        "requires wallet key",
+        "wallet key",
+        "secret value from operator",
         "requires paid cloud",
         "requires mainnet",
         "requires funds",
@@ -1648,6 +1656,34 @@ def is_operator_understanding_confirmation_blocker(record: dict[str, Any]) -> bo
     return any(marker in text for marker in markers)
 
 
+def has_explicit_operator_input_request(record: dict[str, Any]) -> bool:
+    text = task_record_text(record)
+    explicit_markers = (
+        "missing input",
+        "missing inputs",
+        "required input",
+        "required inputs",
+        "needed input",
+        "needed inputs",
+        "provide exact",
+        "provide requested",
+        "operator must provide",
+        "waiting for operator to provide",
+        "human must provide",
+        "requires external credential",
+        "requires production credential",
+        "requires external api key",
+        "external api key",
+        "requires private key",
+        "private key material from the operator",
+        "operator private key",
+        "requires wallet key",
+        "wallet key",
+        "secret value from operator",
+    )
+    return is_operator_understanding_confirmation_blocker(record) or any(marker in text for marker in explicit_markers)
+
+
 def is_operator_input_blocker(record: dict[str, Any]) -> bool:
     text = task_record_text(record)
     external_input_markers = (
@@ -1662,6 +1698,14 @@ def is_operator_input_blocker(record: dict[str, Any]) -> bool:
         "needed inputs",
         "provide exact",
         "provide requested",
+        "requires external api key",
+        "external api key",
+        "requires private key",
+        "private key material from the operator",
+        "operator private key",
+        "requires wallet key",
+        "wallet key",
+        "secret value from operator",
         "target_repo_paths",
         "target url",
         "target_url",
@@ -2653,6 +2697,7 @@ def classify_no_idle_state(rows: dict[str, list[dict[str, Any]]]) -> dict[str, A
         item
         for item in blocked
         if is_operator_input_blocker(item)
+        and not is_human_gate_decision_ready_blocker(item)
         and not is_factory_materialization_contract_blocker(item)
     ]
     operator_input_refs = sorted(task_record_id(item) for item in operator_input_blockers if task_record_id(item))
