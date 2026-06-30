@@ -71,6 +71,8 @@ Mandate:
 
 | FM-034 | Materialization repair proves F16/F17 blockers are actually WU-19 release/readiness, but no-idle keeps creating duplicate materialization repairs | board has no running work, repeated `Repair factory materialization contracts` cards, F16 still blocked on `PROMOTION_BLOCKED_NOT_RELEASE_READY` | legacy materialization classifier outranks release-readiness supersession evidence from done repairs | classify `release_readiness_blocker_after_materialization_repair` and create `Repair WU-19 release/readiness blockers` for `release-ops-worker`; do not ask operator until concrete gate package exists | `test_no_idle_does_not_duplicate_materialization_after_wu19_release_readiness_resolution`, `test_no_idle_create_remediation_routes_wu19_release_readiness_instead_of_materialization_duplicate` |
 
+| FM-035 | Declared-artifact readback repair completes as `done` while reporting target files absent | no-idle ignores it because owner-rerun candidate scan only looked at `blocked`; then it creates another generic readback repair or a stale `owner-worker` rerun | repair metadata used `declared_artifact_files_exist_now=false` / `target_workspace_exists_now=false` without `BLOCK`, and done repairs were scanned oldest-first | scan newest done readback repairs, treat missing-file booleans as owner-rerun candidates, accept `target_task_ref`, and reject placeholder `owner-worker` | `test_declared_artifact_owner_rerun_candidate_from_done_readback_repair_missing_files` |
+
 ## Live-board observations during audit
 
 - 2026-06-30T12:32Z: board had `blocked=3`, `running=1`, `todo=14`; running task was `Repair factory materialization contracts` and blockers were WU-09/WU-10/WU-13 input/capability materialization issues.
