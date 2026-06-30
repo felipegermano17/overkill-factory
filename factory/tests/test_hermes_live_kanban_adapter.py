@@ -6800,6 +6800,35 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertNotEqual(state["classification"], "internal_review_fail_repair_task_already_exists")
         self.assertNotIn(repair_id, state.get("existing_repair_task_refs") or [])
 
+    def test_no_idle_ignores_review_fail_repair_title_even_when_body_marker_missing(self) -> None:
+        fake = FakeHermes()
+        blocker_id = "t_" + "blockfail"
+        repair_id = "t_" + "repairtitle"
+        fake.tasks[blocker_id] = {
+            "id": blocker_id,
+            "status": "blocked",
+            "assignee": "cloud-infra-security-specialist",
+            "title": "F15/WU-15 - Cloud/IAM/KMS/Secret Manager/budget non-material readiness packet",
+            "body": "review-required: independent-reviewer must review before this card is done",
+            "events": [{"type": "blocked", "payload": {"kind": "needs_input", "reason": "review-required"}}],
+        }
+        fake.tasks[repair_id] = {
+            "id": repair_id,
+            "status": "done",
+            "assignee": "cloud-infra-security-specialist",
+            "title": "Repair t_blockfail after internal review FAIL",
+            "body": "{}",
+            "latest_summary": "NO_REPAIR_REQUIRED not a current independent REVIEW FAIL; stale duplicate readback.",
+            "events": [{"type": "completed", "payload": {"summary": "NO_REPAIR_REQUIRED not a current independent REVIEW FAIL"}}],
+        }
+        args = adapter.build_parser().parse_args(["no-idle", "--board", TEST_BOARD, "--create-remediation"])
+
+        result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertNotEqual(state["classification"], "internal_review_fail_repair_task_created")
+        self.assertNotEqual(state["classification"], "internal_review_fail_repair_task_already_exists")
+
     def test_no_idle_reports_running_closeout_without_mutation_when_not_remediating(self) -> None:
         fake = FakeHermes()
         running_id = "t_" + "runclose2"
