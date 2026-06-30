@@ -61,6 +61,8 @@ Mandate:
 
 | FM-029 | Repair target is public-sanitized as `kanban:<redacted>` but real task id appears in comment text without backticks | owner-rerun task is created with redacted target and worker cannot reliably repair correct artifacts | extractor only read backticked task ids | fixed locally: extractor accepts plain `target t_...`/`target task t_...`; live bad task was blocked and fresh real-target rerun was created | covered by strengthened `test_no_idle_creates_owner_rerun_from_hyphenated_readback_block_summary` |
 
+| FM-030 | Review FAIL is repaired through an owner task and later independent readback PASS, but reducer still sees the old FAIL | duplicate “repair after internal review FAIL” tasks get created after PASS | pass reducer did not follow orchestration route metadata (`target_repair_task_ref` + `created_independent_readback_review`) | fixed locally: routed repair PASS closes/suppresses the original blocker and duplicate repair path | `test_no_idle_closes_routed_repair_after_independent_readback_pass` |
+
 ## Live-board observations during audit
 
 - 2026-06-30T12:32Z: board had `blocked=3`, `running=1`, `todo=14`; running task was `Repair factory materialization contracts` and blockers were WU-09/WU-10/WU-13 input/capability materialization issues.
