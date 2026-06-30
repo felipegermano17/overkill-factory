@@ -1,302 +1,272 @@
-# Factory Lifecycle
+# Factory lifecycle
 
-The compiled workflow is the factual source for this page.
+The compiled workflow is the factual source for this page. It currently contains `26` compiled phases from `docs/factory-workflow.catalog.json`.
 
-Current compiled plan: `26` phases from `docs/factory-workflow.catalog.json`, generated with:
+You can regenerate or inspect the plan from the implementation side:
 
 ```bash
 cd factory
-python3 scripts/factoryctl.py compile-workflow --out .tmp/docs-rewrite-workflow-plan.json
+python3 scripts/factoryctl.py compile-workflow --out .tmp/factory-workflow-compiled-plan.json
 ```
 
-The phase list is a teaching model and a contract surface. Runtime execution is still graph-shaped: dependencies, gates, evidence, risk, and Hermes state decide what can move.
-
-## Phase reference
+Read the lifecycle as a production path, not as a rigid waterfall. Hermes runtime state, dependencies, blockers, risk, and evidence decide what can move. The phase list tells you what the factory is protecting at each step.
 
 ### F0 — Pre-Start / Sealed Source Envelope
 
-Purpose: move the run through **Pre-Start / Sealed Source Envelope** without letting a worker skip the factory state.
+This phase answers a plain question: "do we have enough ground to move forward without inventing the missing pieces?" The internal name is `Pre-Start / Sealed Source Envelope`, but its practical job is to protect the next step. If the phase skips evidence, the rest of the run can look orderly while being weak in reality.
 
-Required artifacts: `factory_bridge_source_envelope`, `factory_bridge_start_request`.
+What must exist before the run moves on: `factory_bridge_source_envelope`, `factory_bridge_start_request`. The gate holding the line is: Start Boundary. The workers normally involved are: `overkill-factory-gerente`, `factory-orchestrator`.
 
-Required gates: Start Boundary.
+The common failure is rushing. The factory blocks shortcuts such as: none listed. That is not ceremony. It is the difference between autonomous work and autonomous theater.
 
-Workers: `overkill-factory-gerente`, `factory-orchestrator`.
+The operator should not need to read every JSON field in this phase. They should see the state in plain language: what is understood, what is missing, who owns the next step, and what evidence will unlock the phase. If the answer is "we do not know yet", the factory should say that early, open the right blocker, and propose the smallest safe next step.
 
-Blocked shortcuts: summarize or reinterpret source material in the bridge, create Hermes board/card directly from bridge, start without explicit runtime target policy.
 ### F1 — Intake
 
-Purpose: move the run through **Intake** without letting a worker skip the factory state.
+This phase answers a plain question: "do we have enough ground to move forward without inventing the missing pieces?" The internal name is `Intake`, but its practical job is to protect the next step. If the phase skips evidence, the rest of the run can look orderly while being weak in reality.
 
-Required artifacts: `operator_interface_profile`, `factory_start_conversation`, `universal_signal_intake`, `source_refs`, `source_resolution_packet`.
+What must exist before the run moves on: `operator_interface_profile`, `factory_start_conversation`, `universal_signal_intake`, `source_refs`, `source_resolution_packet`. The gate holding the line is: Source Gate. The workers normally involved are: `factory-orchestrator`.
 
-Required gates: Source Gate.
+The common failure is rushing. The factory blocks shortcuts such as: none listed. That is not ceremony. It is the difference between autonomous work and autonomous theater.
 
-Workers: `factory-orchestrator`.
+The operator should not need to read every JSON field in this phase. They should see the state in plain language: what is understood, what is missing, who owns the next step, and what evidence will unlock the phase. If the answer is "we do not know yet", the factory should say that early, open the right blocker, and propose the smallest safe next step.
 
-Blocked shortcuts: route implementation before source resolution, create Product SOT from raw input, require the operator to poll for status.
 ### F2 — Source Ledger
 
-Purpose: move the run through **Source Ledger** without letting a worker skip the factory state.
+This phase answers a plain question: "do we have enough ground to move forward without inventing the missing pieces?" The internal name is `Source Ledger`, but its practical job is to protect the next step. If the phase skips evidence, the rest of the run can look orderly while being weak in reality.
 
-Required artifacts: `source_refs`, `product_source_ledger`, `operator_understanding_confirmation`.
+What must exist before the run moves on: `source_refs`, `product_source_ledger`, `operator_understanding_confirmation`. The gate holding the line is: Source Gate. The workers normally involved are: `source-ledger-worker`.
 
-Required gates: Source Gate.
+The common failure is rushing. The factory blocks shortcuts such as: none listed. That is not ceremony. It is the difference between autonomous work and autonomous theater.
 
-Workers: `source-ledger-worker`.
+The operator should not need to read every JSON field in this phase. They should see the state in plain language: what is understood, what is missing, who owns the next step, and what evidence will unlock the phase. If the answer is "we do not know yet", the factory should say that early, open the right blocker, and propose the smallest safe next step.
 
-Blocked shortcuts: ask user to reconcile internal source bookkeeping, create outcome contract or Product SOT before understanding is confirmed.
 ### F3 — Source Resolution
 
-Purpose: move the run through **Source Resolution** without letting a worker skip the factory state.
+This phase answers a plain question: "do we have enough ground to move forward without inventing the missing pieces?" The internal name is `Source Resolution`, but its practical job is to protect the next step. If the phase skips evidence, the rest of the run can look orderly while being weak in reality.
 
-Required artifacts: `discovery_brief`.
+What must exist before the run moves on: `discovery_brief`. The gate holding the line is: Discovery Gate. The workers normally involved are: `source-ledger-worker`, `product-sot-planner`.
 
-Required gates: Discovery Gate.
+The common failure is rushing. The factory blocks shortcuts such as: none listed. That is not ceremony. It is the difference between autonomous work and autonomous theater.
 
-Workers: `source-ledger-worker`, `product-sot-planner`.
+The operator should not need to read every JSON field in this phase. They should see the state in plain language: what is understood, what is missing, who owns the next step, and what evidence will unlock the phase. If the answer is "we do not know yet", the factory should say that early, open the right blocker, and propose the smallest safe next step.
 
-Blocked shortcuts: turn unresolved gaps into execution scope.
 ### F4 — Product Outcome And Discovery
 
-Purpose: move the run through **Product Outcome And Discovery** without letting a worker skip the factory state.
+This phase answers a plain question: "do we have enough ground to move forward without inventing the missing pieces?" The internal name is `Product Outcome And Discovery`, but its practical job is to protect the next step. If the phase skips evidence, the rest of the run can look orderly while being weak in reality.
 
-Required artifacts: `operator_understanding_confirmation`, `operator_briefing_package`, `outcome_contract`, `discovery_brief`.
+What must exist before the run moves on: `operator_understanding_confirmation`, `operator_briefing_package`, `outcome_contract`, `discovery_brief`. The gate holding the line is: Outcome Gate, Discovery Gate. The workers normally involved are: `product-sot-planner`.
 
-Required gates: Outcome Gate, Discovery Gate.
+The common failure is rushing. The factory blocks shortcuts such as: none listed. That is not ceremony. It is the difference between autonomous work and autonomous theater.
 
-Workers: `product-sot-planner`.
+The operator should not need to read every JSON field in this phase. They should see the state in plain language: what is understood, what is missing, who owns the next step, and what evidence will unlock the phase. If the answer is "we do not know yet", the factory should say that early, open the right blocker, and propose the smallest safe next step.
 
-Blocked shortcuts: treat outcome candidate as approved Product SOT, draft Product SOT before operator understanding confirmation.
 ### F5 — Product SOT
 
-Purpose: move the run through **Product SOT** without letting a worker skip the factory state.
+This phase answers a plain question: "do we have enough ground to move forward without inventing the missing pieces?" The internal name is `Product SOT`, but its practical job is to protect the next step. If the phase skips evidence, the rest of the run can look orderly while being weak in reality.
 
-Required artifacts: `product_sot`, `operator_briefing_package`, `full_product_sot_scope_coverage`, `factory_phase_lock`.
+What must exist before the run moves on: `product_sot`, `operator_briefing_package`, `full_product_sot_scope_coverage`, `factory_phase_lock`. The gate holding the line is: Product SOT Gate. The workers normally involved are: `product-sot-planner`.
 
-Required gates: Product SOT Gate.
+The common failure is rushing. The factory blocks shortcuts such as: none listed. That is not ceremony. It is the difference between autonomous work and autonomous theater.
 
-Workers: `product-sot-planner`.
+The operator should not need to read every JSON field in this phase. They should see the state in plain language: what is understood, what is missing, who owns the next step, and what evidence will unlock the phase. If the answer is "we do not know yet", the factory should say that early, open the right blocker, and propose the smallest safe next step.
 
-Blocked shortcuts: execute from paper instead of Product SOT, ask operator to approve Product SOT from a short chat summary only, start architecture, repo cleanup, human gate or worker packet while Product SOT owner package is missing.
 ### F6 — Agentic Method Router
 
-Purpose: move the run through **Agentic Method Router** without letting a worker skip the factory state.
+This phase answers a plain question: "do we have enough ground to move forward without inventing the missing pieces?" The internal name is `Agentic Method Router`, but its practical job is to protect the next step. If the phase skips evidence, the rest of the run can look orderly while being weak in reality.
 
-Required artifacts: `factory_phase_lock`, `method_contract`.
+What must exist before the run moves on: `factory_phase_lock`, `method_contract`. The gate holding the line is: Method Gate. The workers normally involved are: `factory-orchestrator`.
 
-Required gates: Method Gate.
+The common failure is rushing. The factory blocks shortcuts such as: none listed. That is not ceremony. It is the difference between autonomous work and autonomous theater.
 
-Workers: `factory-orchestrator`.
+The operator should not need to read every JSON field in this phase. They should see the state in plain language: what is understood, what is missing, who owns the next step, and what evidence will unlock the phase. If the answer is "we do not know yet", the factory should say that early, open the right blocker, and propose the smallest safe next step.
 
-Blocked shortcuts: ask user to choose internal method machinery, start architecture or repo cleanup before Method Contract.
 ### F7 — Method Contract
 
-Purpose: move the run through **Method Contract** without letting a worker skip the factory state.
+This phase answers a plain question: "do we have enough ground to move forward without inventing the missing pieces?" The internal name is `Method Contract`, but its practical job is to protect the next step. If the phase skips evidence, the rest of the run can look orderly while being weak in reality.
 
-Required artifacts: `factory_phase_lock`, `method_contract`.
+What must exist before the run moves on: `factory_phase_lock`, `method_contract`. The gate holding the line is: Method Gate. The workers normally involved are: `factory-orchestrator`.
 
-Required gates: Method Gate.
+The common failure is rushing. The factory blocks shortcuts such as: none listed. That is not ceremony. It is the difference between autonomous work and autonomous theater.
 
-Workers: `factory-orchestrator`.
+The operator should not need to read every JSON field in this phase. They should see the state in plain language: what is understood, what is missing, who owns the next step, and what evidence will unlock the phase. If the answer is "we do not know yet", the factory should say that early, open the right blocker, and propose the smallest safe next step.
 
-Blocked shortcuts: start implementation with undocumented process choices, materialize future-phase cards while active frontier is still product_sot or method_contract.
 ### F8 — Pack And Product Experience Selection
 
-Purpose: move the run through **Pack And Product Experience Selection** without letting a worker skip the factory state.
+This phase answers a plain question: "do we have enough ground to move forward without inventing the missing pieces?" The internal name is `Pack And Product Experience Selection`, but its practical job is to protect the next step. If the phase skips evidence, the rest of the run can look orderly while being weak in reality.
 
-Required artifacts: `capability_pack_contract`, `product_experience_plan`, `product_face_packet`, `project_design_system`, `professional_design_process`, `surface_evidence_profile`, `product_delivery_quality_profile`.
+What must exist before the run moves on: `capability_pack_contract`, `product_experience_plan`, `product_face_packet`, `project_design_system`, `professional_design_process`, `surface_evidence_profile`, `product_delivery_quality_profile`. The gate holding the line is: Pack Gate, Product Experience Gate, Surface Pack Gate. The workers normally involved are: `product-face`, `factory-orchestrator`.
 
-Required gates: Pack Gate, Product Experience Gate, Surface Pack Gate.
+The common failure is rushing. The factory blocks shortcuts such as: none listed. That is not ceremony. It is the difference between autonomous work and autonomous theater.
 
-Workers: `product-face`, `factory-orchestrator`.
+The operator should not need to read every JSON field in this phase. They should see the state in plain language: what is understood, what is missing, who owns the next step, and what evidence will unlock the phase. If the answer is "we do not know yet", the factory should say that early, open the right blocker, and propose the smallest safe next step.
 
-Blocked shortcuts: activate a pack without proof or coverage, start product-facing implementation before surface state coverage, treat generic UI proof as Product Experience proof, move to implementation with unnamed surface pack or proof profile.
 ### F9 — Risk And Authority Gates
 
-Purpose: move the run through **Risk And Authority Gates** without letting a worker skip the factory state.
+This phase answers a plain question: "do we have enough ground to move forward without inventing the missing pieces?" The internal name is `Risk And Authority Gates`, but its practical job is to protect the next step. If the phase skips evidence, the rest of the run can look orderly while being weak in reality.
 
-Required artifacts: `access_capability`, `budget_contract`.
+What must exist before the run moves on: `access_capability`, `budget_contract`. The gate holding the line is: Access Gate, Budget Gate, Human Gate when required. The workers normally involved are: `human-gate-clerk`.
 
-Required gates: Access Gate, Budget Gate, Human Gate when required.
+The common failure is rushing. The factory blocks shortcuts such as: none listed. That is not ceremony. It is the difference between autonomous work and autonomous theater.
 
-Workers: `human-gate-clerk`.
+The operator should not need to read every JSON field in this phase. They should see the state in plain language: what is understood, what is missing, who owns the next step, and what evidence will unlock the phase. If the answer is "we do not know yet", the factory should say that early, open the right blocker, and propose the smallest safe next step.
 
-Blocked shortcuts: infer approval from silence, ask for planning-only continuation approval, ask for architecture or repo cleanup approval while downstream is frozen.
 ### F10 — Security Architecture
 
-Purpose: move the run through **Security Architecture** without letting a worker skip the factory state.
+This phase answers a plain question: "do we have enough ground to move forward without inventing the missing pieces?" The internal name is `Security Architecture`, but its practical job is to protect the next step. If the phase skips evidence, the rest of the run can look orderly while being weak in reality.
 
-Required artifacts: `factory_phase_lock`, `security_architecture_plan`.
+What must exist before the run moves on: `factory_phase_lock`, `security_architecture_plan`. The gate holding the line is: Security Architecture Gate. The workers normally involved are: `security-orchestrator`.
 
-Required gates: Security Architecture Gate.
+The common failure is rushing. The factory blocks shortcuts such as: none listed. That is not ceremony. It is the difference between autonomous work and autonomous theater.
 
-Workers: `security-orchestrator`.
+The operator should not need to read every JSON field in this phase. They should see the state in plain language: what is understood, what is missing, who owns the next step, and what evidence will unlock the phase. If the answer is "we do not know yet", the factory should say that early, open the right blocker, and propose the smallest safe next step.
 
-Blocked shortcuts: build material risk before architecture, start security architecture while Product SOT or Method Contract is still missing.
 ### F11 — Executable Plans
 
-Purpose: move the run through **Executable Plans** without letting a worker skip the factory state.
+This phase answers a plain question: "do we have enough ground to move forward without inventing the missing pieces?" The internal name is `Executable Plans`, but its practical job is to protect the next step. If the phase skips evidence, the rest of the run can look orderly while being weak in reality.
 
-Required artifacts: `software_development_plan`, `spec_graph`, `loop_plan`, `product_creation_plan`.
+What must exist before the run moves on: `software_development_plan`, `spec_graph`, `loop_plan`, `product_creation_plan`. The gate holding the line is: Ready Gate. The workers normally involved are: `decomposition-planner`.
 
-Required gates: Ready Gate.
+The common failure is rushing. The factory blocks shortcuts such as: none listed. That is not ceremony. It is the difference between autonomous work and autonomous theater.
 
-Workers: `decomposition-planner`.
+The operator should not need to read every JSON field in this phase. They should see the state in plain language: what is understood, what is missing, who owns the next step, and what evidence will unlock the phase. If the answer is "we do not know yet", the factory should say that early, open the right blocker, and propose the smallest safe next step.
 
-Blocked shortcuts: execute before plans, coverage review and stop criteria exist, mark decomposition review as passed from the planner that created the decomposition.
 ### F12 — Autonomy Readiness
 
-Purpose: move the run through **Autonomy Readiness** without letting a worker skip the factory state.
+This phase answers a plain question: "do we have enough ground to move forward without inventing the missing pieces?" The internal name is `Autonomy Readiness`, but its practical job is to protect the next step. If the phase skips evidence, the rest of the run can look orderly while being weak in reality.
 
-Required artifacts: `decomposition_coverage_review`, `product_implementation_readiness`, `autonomy_readiness_packet`.
+What must exist before the run moves on: `decomposition_coverage_review`, `product_implementation_readiness`, `autonomy_readiness_packet`. The gate holding the line is: Decomposition Coverage Gate, Access & Capability Gate. The workers normally involved are: `independent-reviewer`, `factory-orchestrator`.
 
-Required gates: Decomposition Coverage Gate, Access & Capability Gate.
+The common failure is rushing. The factory blocks shortcuts such as: none listed. That is not ceremony. It is the difference between autonomous work and autonomous theater.
 
-Workers: `independent-reviewer`, `factory-orchestrator`.
+The operator should not need to read every JSON field in this phase. They should see the state in plain language: what is understood, what is missing, who owns the next step, and what evidence will unlock the phase. If the answer is "we do not know yet", the factory should say that early, open the right blocker, and propose the smallest safe next step.
 
-Blocked shortcuts: start autonomous work with missing review, access or limits, let a single reviewer approve the complete decomposition alone, create Product Implementation Readiness from a failed or missing decomposition coverage review.
 ### F13 — Ready Gate
 
-Purpose: move the run through **Ready Gate** without letting a worker skip the factory state.
+This phase answers a plain question: "do we have enough ground to move forward without inventing the missing pieces?" The internal name is `Ready Gate`, but its practical job is to protect the next step. If the phase skips evidence, the rest of the run can look orderly while being weak in reality.
 
-Required artifacts: `gate_report`.
+What must exist before the run moves on: `gate_report`. The gate holding the line is: Ready Gate. The workers normally involved are: `factory-orchestrator`.
 
-Required gates: Ready Gate.
+The common failure is rushing. The factory blocks shortcuts such as: none listed. That is not ceremony. It is the difference between autonomous work and autonomous theater.
 
-Workers: `factory-orchestrator`.
+The operator should not need to read every JSON field in this phase. They should see the state in plain language: what is understood, what is missing, who owns the next step, and what evidence will unlock the phase. If the answer is "we do not know yet", the factory should say that early, open the right blocker, and propose the smallest safe next step.
 
-Blocked shortcuts: dispatch blocked workers.
 ### F15 — Runtime Execution
 
-Purpose: move the run through **Runtime Execution** without letting a worker skip the factory state.
+This phase answers a plain question: "do we have enough ground to move forward without inventing the missing pieces?" The internal name is `Runtime Execution`, but its practical job is to protect the next step. If the phase skips evidence, the rest of the run can look orderly while being weak in reality.
 
-Required artifacts: `worker_packets`.
+What must exist before the run moves on: `worker_packets`. The gate holding the line is: Runtime Gate. The workers normally involved are: `implementation-worker`, `qa-verification-worker`.
 
-Required gates: Runtime Gate.
+The common failure is rushing. The factory blocks shortcuts such as: none listed. That is not ceremony. It is the difference between autonomous work and autonomous theater.
 
-Workers: `implementation-worker`, `qa-verification-worker`.
+The operator should not need to read every JSON field in this phase. They should see the state in plain language: what is understood, what is missing, who owns the next step, and what evidence will unlock the phase. If the answer is "we do not know yet", the factory should say that early, open the right blocker, and propose the smallest safe next step.
 
-Blocked shortcuts: spawn without route readiness.
 ### F16 — Worker Results
 
-Purpose: move the run through **Worker Results** without letting a worker skip the factory state.
+This phase answers a plain question: "do we have enough ground to move forward without inventing the missing pieces?" The internal name is `Worker Results`, but its practical job is to protect the next step. If the phase skips evidence, the rest of the run can look orderly while being weak in reality.
 
-Required artifacts: `worker_results`.
+What must exist before the run moves on: `worker_results`. The gate holding the line is: Done Gate. The workers normally involved are: `evidence-reconciler`.
 
-Required gates: Done Gate.
+The common failure is rushing. The factory blocks shortcuts such as: none listed. That is not ceremony. It is the difference between autonomous work and autonomous theater.
 
-Workers: `evidence-reconciler`.
+The operator should not need to read every JSON field in this phase. They should see the state in plain language: what is understood, what is missing, who owns the next step, and what evidence will unlock the phase. If the answer is "we do not know yet", the factory should say that early, open the right blocker, and propose the smallest safe next step.
 
-Blocked shortcuts: treat packet existence as proof.
 ### F17 — Verification
 
-Purpose: move the run through **Verification** without letting a worker skip the factory state.
+This phase answers a plain question: "do we have enough ground to move forward without inventing the missing pieces?" The internal name is `Verification`, but its practical job is to protect the next step. If the phase skips evidence, the rest of the run can look orderly while being weak in reality.
 
-Required artifacts: `verification_plan`, `verification_result`.
+What must exist before the run moves on: `verification_plan`, `verification_result`. The gate holding the line is: Verification Gate. The workers normally involved are: `qa-verification-worker`.
 
-Required gates: Verification Gate.
+The common failure is rushing. The factory blocks shortcuts such as: none listed. That is not ceremony. It is the difference between autonomous work and autonomous theater.
 
-Workers: `qa-verification-worker`.
+The operator should not need to read every JSON field in this phase. They should see the state in plain language: what is understood, what is missing, who owns the next step, and what evidence will unlock the phase. If the answer is "we do not know yet", the factory should say that early, open the right blocker, and propose the smallest safe next step.
 
-Blocked shortcuts: claim done without command evidence.
 ### F18 — Independent Review
 
-Purpose: move the run through **Independent Review** without letting a worker skip the factory state.
+This phase answers a plain question: "do we have enough ground to move forward without inventing the missing pieces?" The internal name is `Independent Review`, but its practical job is to protect the next step. If the phase skips evidence, the rest of the run can look orderly while being weak in reality.
 
-Required artifacts: `review_result`.
+What must exist before the run moves on: `review_result`. The gate holding the line is: Review Gate. The workers normally involved are: `independent-reviewer`.
 
-Required gates: Review Gate.
+The common failure is rushing. The factory blocks shortcuts such as: none listed. That is not ceremony. It is the difference between autonomous work and autonomous theater.
 
-Workers: `independent-reviewer`.
+The operator should not need to read every JSON field in this phase. They should see the state in plain language: what is understood, what is missing, who owns the next step, and what evidence will unlock the phase. If the answer is "we do not know yet", the factory should say that early, open the right blocker, and propose the smallest safe next step.
 
-Blocked shortcuts: allow executor to self-approve.
 ### F20 — Closure Summary
 
-Purpose: move the run through **Closure Summary** without letting a worker skip the factory state.
+This phase answers a plain question: "do we have enough ground to move forward without inventing the missing pieces?" The internal name is `Closure Summary`, but its practical job is to protect the next step. If the phase skips evidence, the rest of the run can look orderly while being weak in reality.
 
-Required artifacts: `closure_summary`.
+What must exist before the run moves on: `closure_summary`. The gate holding the line is: Closure Gate. The workers normally involved are: `handoff-packer`.
 
-Required gates: Closure Gate.
+The common failure is rushing. The factory blocks shortcuts such as: none listed. That is not ceremony. It is the difference between autonomous work and autonomous theater.
 
-Workers: `handoff-packer`.
+The operator should not need to read every JSON field in this phase. They should see the state in plain language: what is understood, what is missing, who owns the next step, and what evidence will unlock the phase. If the answer is "we do not know yet", the factory should say that early, open the right blocker, and propose the smallest safe next step.
 
-Blocked shortcuts: hide unresolved blockers in prose.
 ### F21 — Receipt Five
 
-Purpose: move the run through **Receipt Five** without letting a worker skip the factory state.
+This phase answers a plain question: "do we have enough ground to move forward without inventing the missing pieces?" The internal name is `Receipt Five`, but its practical job is to protect the next step. If the phase skips evidence, the rest of the run can look orderly while being weak in reality.
 
-Required artifacts: `receipt_five`.
+What must exist before the run moves on: `receipt_five`. The gate holding the line is: Done Gate. The workers normally involved are: `evidence-reconciler`.
 
-Required gates: Done Gate.
+The common failure is rushing. The factory blocks shortcuts such as: none listed. That is not ceremony. It is the difference between autonomous work and autonomous theater.
 
-Workers: `evidence-reconciler`.
+The operator should not need to read every JSON field in this phase. They should see the state in plain language: what is understood, what is missing, who owns the next step, and what evidence will unlock the phase. If the answer is "we do not know yet", the factory should say that early, open the right blocker, and propose the smallest safe next step.
 
-Blocked shortcuts: mark done without Receipt Five.
 ### F22 — Completion Audit
 
-Purpose: move the run through **Completion Audit** without letting a worker skip the factory state.
+This phase answers a plain question: "do we have enough ground to move forward without inventing the missing pieces?" The internal name is `Completion Audit`, but its practical job is to protect the next step. If the phase skips evidence, the rest of the run can look orderly while being weak in reality.
 
-Required artifacts: `completion_audit`.
+What must exist before the run moves on: `completion_audit`. The gate holding the line is: Completion Audit. The workers normally involved are: `evidence-reconciler`.
 
-Required gates: Completion Audit.
+The common failure is rushing. The factory blocks shortcuts such as: none listed. That is not ceremony. It is the difference between autonomous work and autonomous theater.
 
-Workers: `evidence-reconciler`.
+The operator should not need to read every JSON field in this phase. They should see the state in plain language: what is understood, what is missing, who owns the next step, and what evidence will unlock the phase. If the answer is "we do not know yet", the factory should say that early, open the right blocker, and propose the smallest safe next step.
 
-Blocked shortcuts: close skipped method or evidence requirements.
 ### F23 — Production Operations
 
-Purpose: move the run through **Production Operations** without letting a worker skip the factory state.
+This phase answers a plain question: "do we have enough ground to move forward without inventing the missing pieces?" The internal name is `Production Operations`, but its practical job is to protect the next step. If the phase skips evidence, the rest of the run can look orderly while being weak in reality.
 
-Required artifacts: `production_readiness_plan`.
+What must exist before the run moves on: `production_readiness_plan`. The gate holding the line is: Release Gate. The workers normally involved are: `release-ops-worker`.
 
-Required gates: Release Gate.
+The common failure is rushing. The factory blocks shortcuts such as: none listed. That is not ceremony. It is the difference between autonomous work and autonomous theater.
 
-Workers: `release-ops-worker`.
+The operator should not need to read every JSON field in this phase. They should see the state in plain language: what is understood, what is missing, who owns the next step, and what evidence will unlock the phase. If the answer is "we do not know yet", the factory should say that early, open the right blocker, and propose the smallest safe next step.
 
-Blocked shortcuts: release without owner, rollback or approval.
 ### F24 — Release Or Block
 
-Purpose: move the run through **Release Or Block** without letting a worker skip the factory state.
+This phase answers a plain question: "do we have enough ground to move forward without inventing the missing pieces?" The internal name is `Release Or Block`, but its practical job is to protect the next step. If the phase skips evidence, the rest of the run can look orderly while being weak in reality.
 
-Required artifacts: `release_decision`.
+What must exist before the run moves on: `release_decision`. The gate holding the line is: Release Gate, Human Gate when required. The workers normally involved are: `release-ops-worker`, `human-gate-clerk`.
 
-Required gates: Release Gate, Human Gate when required.
+The common failure is rushing. The factory blocks shortcuts such as: none listed. That is not ceremony. It is the difference between autonomous work and autonomous theater.
 
-Workers: `release-ops-worker`, `human-gate-clerk`.
+The operator should not need to read every JSON field in this phase. They should see the state in plain language: what is understood, what is missing, who owns the next step, and what evidence will unlock the phase. If the answer is "we do not know yet", the factory should say that early, open the right blocker, and propose the smallest safe next step.
 
-Blocked shortcuts: promote without production-strict evidence.
 ### F25 — Monitoring Support
 
-Purpose: move the run through **Monitoring Support** without letting a worker skip the factory state.
+This phase answers a plain question: "do we have enough ground to move forward without inventing the missing pieces?" The internal name is `Monitoring Support`, but its practical job is to protect the next step. If the phase skips evidence, the rest of the run can look orderly while being weak in reality.
 
-Required artifacts: `incident_support_plan`.
+What must exist before the run moves on: `incident_support_plan`. The gate holding the line is: Support Gate. The workers normally involved are: `release-ops-worker`.
 
-Required gates: Support Gate.
+The common failure is rushing. The factory blocks shortcuts such as: none listed. That is not ceremony. It is the difference between autonomous work and autonomous theater.
 
-Workers: `release-ops-worker`.
+The operator should not need to read every JSON field in this phase. They should see the state in plain language: what is understood, what is missing, who owns the next step, and what evidence will unlock the phase. If the answer is "we do not know yet", the factory should say that early, open the right blocker, and propose the smallest safe next step.
 
-Blocked shortcuts: ship without support owner when support is material.
 ### F26 — Learnback
 
-Purpose: move the run through **Learnback** without letting a worker skip the factory state.
+This phase answers a plain question: "do we have enough ground to move forward without inventing the missing pieces?" The internal name is `Learnback`, but its practical job is to protect the next step. If the phase skips evidence, the rest of the run can look orderly while being weak in reality.
 
-Required artifacts: `factory_learning_proposal`.
+What must exist before the run moves on: `factory_learning_proposal`. The gate holding the line is: Learning Gate. The workers normally involved are: `skill-eval-distiller`.
 
-Required gates: Learning Gate.
+The common failure is rushing. The factory blocks shortcuts such as: none listed. That is not ceremony. It is the difference between autonomous work and autonomous theater.
 
-Workers: `skill-eval-distiller`.
+The operator should not need to read every JSON field in this phase. They should see the state in plain language: what is understood, what is missing, who owns the next step, and what evidence will unlock the phase. If the answer is "we do not know yet", the factory should say that early, open the right blocker, and propose the smallest safe next step.
 
-Blocked shortcuts: auto-activate critical factory changes.
 ### F27 — Factory Maturity Audit
 
-Purpose: move the run through **Factory Maturity Audit** without letting a worker skip the factory state.
+This phase answers a plain question: "do we have enough ground to move forward without inventing the missing pieces?" The internal name is `Factory Maturity Audit`, but its practical job is to protect the next step. If the phase skips evidence, the rest of the run can look orderly while being weak in reality.
 
-Required artifacts: `factory_maturity_scorecard`.
+What must exist before the run moves on: `factory_maturity_scorecard`. The gate holding the line is: Maturity Gate. The workers normally involved are: `skill-eval-distiller`.
 
-Required gates: Maturity Gate.
+The common failure is rushing. The factory blocks shortcuts such as: none listed. That is not ceremony. It is the difference between autonomous work and autonomous theater.
 
-Workers: `skill-eval-distiller`.
-
-Blocked shortcuts: commit raw study or private evidence.
-
+The operator should not need to read every JSON field in this phase. They should see the state in plain language: what is understood, what is missing, who owns the next step, and what evidence will unlock the phase. If the answer is "we do not know yet", the factory should say that early, open the right blocker, and propose the smallest safe next step.

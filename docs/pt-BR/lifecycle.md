@@ -1,302 +1,272 @@
-# Ciclo da Fábrica
+# Ciclo da fábrica
 
-O workflow compilado é a fonte factual desta página.
+O workflow compilado é a fonte factual desta página. Hoje ele contém `26` fases compiladas em `docs/factory-workflow.catalog.json`.
 
-Plano compilado atual: `26` fases a partir de `docs/factory-workflow.catalog.json`, gerado com:
+Você pode regenerar ou inspecionar o plano pelo lado da implementação:
 
 ```bash
 cd factory
-python3 scripts/factoryctl.py compile-workflow --out .tmp/docs-rewrite-workflow-plan.json
+python3 scripts/factoryctl.py compile-workflow --out .tmp/factory-workflow-compiled-plan.json
 ```
 
-A lista de fases é um modelo de ensino e uma superfície de contrato. A execução de runtime ainda é em grafo: dependências, gates, evidência, risco e estado Hermes decidem o que pode andar.
-
-## Referência de fases
+Leia o ciclo como um caminho de produção, não como uma cachoeira rígida. Estado vivo no Hermes, dependências, bloqueios, risco e evidência decidem o que pode andar. A lista de fases mostra o que a fábrica está protegendo em cada passo.
 
 ### F0 — Pre-Start / Sealed Source Envelope
 
-Objetivo: atravessar **Pre-Start / Sealed Source Envelope** sem permitir que um worker pule o estado da fábrica.
+Nesta fase, a fábrica tenta responder uma pergunta simples: "já temos base suficiente para avançar sem inventar?" O nome interno é `Pre-Start / Sealed Source Envelope`, mas o papel prático é proteger o próximo passo. Se a fase pula evidência, todo o resto fica bonito no papel e fraco na execução.
 
-Artefatos exigidos: `factory_bridge_source_envelope`, `factory_bridge_start_request`.
+O que precisa existir antes de avançar: `factory_bridge_source_envelope`, `factory_bridge_start_request`. O portão que segura a passagem é: Start Boundary. Os workers normalmente envolvidos são: `overkill-factory-gerente`, `factory-orchestrator`.
 
-Gates exigidos: Start Boundary.
+O erro comum aqui é acelerar demais. A fábrica bloqueia atalhos como: none listed. Isso não é burocracia. É a diferença entre trabalho autônomo e teatro autônomo.
 
-Workers: `overkill-factory-gerente`, `factory-orchestrator`.
+O operador não deveria precisar entender cada campo JSON desta fase. Ele deveria enxergar o estado em linguagem clara: o que já foi entendido, o que ainda falta, quem é dono do próximo passo e qual evidência vai destravar a fase. Se a resposta for "não sabemos", a fábrica deve dizer isso cedo, abrir o bloqueio certo e propor o menor próximo passo seguro.
 
-Atalhos bloqueados: summarize or reinterpret source material in the bridge, create Hermes board/card directly from bridge, start without explicit runtime target policy.
 ### F1 — Intake
 
-Objetivo: atravessar **Intake** sem permitir que um worker pule o estado da fábrica.
+Nesta fase, a fábrica tenta responder uma pergunta simples: "já temos base suficiente para avançar sem inventar?" O nome interno é `Intake`, mas o papel prático é proteger o próximo passo. Se a fase pula evidência, todo o resto fica bonito no papel e fraco na execução.
 
-Artefatos exigidos: `operator_interface_profile`, `factory_start_conversation`, `universal_signal_intake`, `source_refs`, `source_resolution_packet`.
+O que precisa existir antes de avançar: `operator_interface_profile`, `factory_start_conversation`, `universal_signal_intake`, `source_refs`, `source_resolution_packet`. O portão que segura a passagem é: Source Gate. Os workers normalmente envolvidos são: `factory-orchestrator`.
 
-Gates exigidos: Source Gate.
+O erro comum aqui é acelerar demais. A fábrica bloqueia atalhos como: none listed. Isso não é burocracia. É a diferença entre trabalho autônomo e teatro autônomo.
 
-Workers: `factory-orchestrator`.
+O operador não deveria precisar entender cada campo JSON desta fase. Ele deveria enxergar o estado em linguagem clara: o que já foi entendido, o que ainda falta, quem é dono do próximo passo e qual evidência vai destravar a fase. Se a resposta for "não sabemos", a fábrica deve dizer isso cedo, abrir o bloqueio certo e propor o menor próximo passo seguro.
 
-Atalhos bloqueados: route implementation before source resolution, create Product SOT from raw input, require the operator to poll for status.
 ### F2 — Source Ledger
 
-Objetivo: atravessar **Source Ledger** sem permitir que um worker pule o estado da fábrica.
+Nesta fase, a fábrica tenta responder uma pergunta simples: "já temos base suficiente para avançar sem inventar?" O nome interno é `Source Ledger`, mas o papel prático é proteger o próximo passo. Se a fase pula evidência, todo o resto fica bonito no papel e fraco na execução.
 
-Artefatos exigidos: `source_refs`, `product_source_ledger`, `operator_understanding_confirmation`.
+O que precisa existir antes de avançar: `source_refs`, `product_source_ledger`, `operator_understanding_confirmation`. O portão que segura a passagem é: Source Gate. Os workers normalmente envolvidos são: `source-ledger-worker`.
 
-Gates exigidos: Source Gate.
+O erro comum aqui é acelerar demais. A fábrica bloqueia atalhos como: none listed. Isso não é burocracia. É a diferença entre trabalho autônomo e teatro autônomo.
 
-Workers: `source-ledger-worker`.
+O operador não deveria precisar entender cada campo JSON desta fase. Ele deveria enxergar o estado em linguagem clara: o que já foi entendido, o que ainda falta, quem é dono do próximo passo e qual evidência vai destravar a fase. Se a resposta for "não sabemos", a fábrica deve dizer isso cedo, abrir o bloqueio certo e propor o menor próximo passo seguro.
 
-Atalhos bloqueados: ask user to reconcile internal source bookkeeping, create outcome contract or Product SOT before understanding is confirmed.
 ### F3 — Source Resolution
 
-Objetivo: atravessar **Source Resolution** sem permitir que um worker pule o estado da fábrica.
+Nesta fase, a fábrica tenta responder uma pergunta simples: "já temos base suficiente para avançar sem inventar?" O nome interno é `Source Resolution`, mas o papel prático é proteger o próximo passo. Se a fase pula evidência, todo o resto fica bonito no papel e fraco na execução.
 
-Artefatos exigidos: `discovery_brief`.
+O que precisa existir antes de avançar: `discovery_brief`. O portão que segura a passagem é: Discovery Gate. Os workers normalmente envolvidos são: `source-ledger-worker`, `product-sot-planner`.
 
-Gates exigidos: Discovery Gate.
+O erro comum aqui é acelerar demais. A fábrica bloqueia atalhos como: none listed. Isso não é burocracia. É a diferença entre trabalho autônomo e teatro autônomo.
 
-Workers: `source-ledger-worker`, `product-sot-planner`.
+O operador não deveria precisar entender cada campo JSON desta fase. Ele deveria enxergar o estado em linguagem clara: o que já foi entendido, o que ainda falta, quem é dono do próximo passo e qual evidência vai destravar a fase. Se a resposta for "não sabemos", a fábrica deve dizer isso cedo, abrir o bloqueio certo e propor o menor próximo passo seguro.
 
-Atalhos bloqueados: turn unresolved gaps into execution scope.
 ### F4 — Product Outcome And Discovery
 
-Objetivo: atravessar **Product Outcome And Discovery** sem permitir que um worker pule o estado da fábrica.
+Nesta fase, a fábrica tenta responder uma pergunta simples: "já temos base suficiente para avançar sem inventar?" O nome interno é `Product Outcome And Discovery`, mas o papel prático é proteger o próximo passo. Se a fase pula evidência, todo o resto fica bonito no papel e fraco na execução.
 
-Artefatos exigidos: `operator_understanding_confirmation`, `operator_briefing_package`, `outcome_contract`, `discovery_brief`.
+O que precisa existir antes de avançar: `operator_understanding_confirmation`, `operator_briefing_package`, `outcome_contract`, `discovery_brief`. O portão que segura a passagem é: Outcome Gate, Discovery Gate. Os workers normalmente envolvidos são: `product-sot-planner`.
 
-Gates exigidos: Outcome Gate, Discovery Gate.
+O erro comum aqui é acelerar demais. A fábrica bloqueia atalhos como: none listed. Isso não é burocracia. É a diferença entre trabalho autônomo e teatro autônomo.
 
-Workers: `product-sot-planner`.
+O operador não deveria precisar entender cada campo JSON desta fase. Ele deveria enxergar o estado em linguagem clara: o que já foi entendido, o que ainda falta, quem é dono do próximo passo e qual evidência vai destravar a fase. Se a resposta for "não sabemos", a fábrica deve dizer isso cedo, abrir o bloqueio certo e propor o menor próximo passo seguro.
 
-Atalhos bloqueados: treat outcome candidate as approved Product SOT, draft Product SOT before operator understanding confirmation.
 ### F5 — Product SOT
 
-Objetivo: atravessar **Product SOT** sem permitir que um worker pule o estado da fábrica.
+Nesta fase, a fábrica tenta responder uma pergunta simples: "já temos base suficiente para avançar sem inventar?" O nome interno é `Product SOT`, mas o papel prático é proteger o próximo passo. Se a fase pula evidência, todo o resto fica bonito no papel e fraco na execução.
 
-Artefatos exigidos: `product_sot`, `operator_briefing_package`, `full_product_sot_scope_coverage`, `factory_phase_lock`.
+O que precisa existir antes de avançar: `product_sot`, `operator_briefing_package`, `full_product_sot_scope_coverage`, `factory_phase_lock`. O portão que segura a passagem é: Product SOT Gate. Os workers normalmente envolvidos são: `product-sot-planner`.
 
-Gates exigidos: Product SOT Gate.
+O erro comum aqui é acelerar demais. A fábrica bloqueia atalhos como: none listed. Isso não é burocracia. É a diferença entre trabalho autônomo e teatro autônomo.
 
-Workers: `product-sot-planner`.
+O operador não deveria precisar entender cada campo JSON desta fase. Ele deveria enxergar o estado em linguagem clara: o que já foi entendido, o que ainda falta, quem é dono do próximo passo e qual evidência vai destravar a fase. Se a resposta for "não sabemos", a fábrica deve dizer isso cedo, abrir o bloqueio certo e propor o menor próximo passo seguro.
 
-Atalhos bloqueados: execute from paper instead of Product SOT, ask operator to approve Product SOT from a short chat summary only, start architecture, repo cleanup, human gate or worker packet while Product SOT owner package is missing.
 ### F6 — Agentic Method Router
 
-Objetivo: atravessar **Agentic Method Router** sem permitir que um worker pule o estado da fábrica.
+Nesta fase, a fábrica tenta responder uma pergunta simples: "já temos base suficiente para avançar sem inventar?" O nome interno é `Agentic Method Router`, mas o papel prático é proteger o próximo passo. Se a fase pula evidência, todo o resto fica bonito no papel e fraco na execução.
 
-Artefatos exigidos: `factory_phase_lock`, `method_contract`.
+O que precisa existir antes de avançar: `factory_phase_lock`, `method_contract`. O portão que segura a passagem é: Method Gate. Os workers normalmente envolvidos são: `factory-orchestrator`.
 
-Gates exigidos: Method Gate.
+O erro comum aqui é acelerar demais. A fábrica bloqueia atalhos como: none listed. Isso não é burocracia. É a diferença entre trabalho autônomo e teatro autônomo.
 
-Workers: `factory-orchestrator`.
+O operador não deveria precisar entender cada campo JSON desta fase. Ele deveria enxergar o estado em linguagem clara: o que já foi entendido, o que ainda falta, quem é dono do próximo passo e qual evidência vai destravar a fase. Se a resposta for "não sabemos", a fábrica deve dizer isso cedo, abrir o bloqueio certo e propor o menor próximo passo seguro.
 
-Atalhos bloqueados: ask user to choose internal method machinery, start architecture or repo cleanup before Method Contract.
 ### F7 — Method Contract
 
-Objetivo: atravessar **Method Contract** sem permitir que um worker pule o estado da fábrica.
+Nesta fase, a fábrica tenta responder uma pergunta simples: "já temos base suficiente para avançar sem inventar?" O nome interno é `Method Contract`, mas o papel prático é proteger o próximo passo. Se a fase pula evidência, todo o resto fica bonito no papel e fraco na execução.
 
-Artefatos exigidos: `factory_phase_lock`, `method_contract`.
+O que precisa existir antes de avançar: `factory_phase_lock`, `method_contract`. O portão que segura a passagem é: Method Gate. Os workers normalmente envolvidos são: `factory-orchestrator`.
 
-Gates exigidos: Method Gate.
+O erro comum aqui é acelerar demais. A fábrica bloqueia atalhos como: none listed. Isso não é burocracia. É a diferença entre trabalho autônomo e teatro autônomo.
 
-Workers: `factory-orchestrator`.
+O operador não deveria precisar entender cada campo JSON desta fase. Ele deveria enxergar o estado em linguagem clara: o que já foi entendido, o que ainda falta, quem é dono do próximo passo e qual evidência vai destravar a fase. Se a resposta for "não sabemos", a fábrica deve dizer isso cedo, abrir o bloqueio certo e propor o menor próximo passo seguro.
 
-Atalhos bloqueados: start implementation with undocumented process choices, materialize future-phase cards while active frontier is still product_sot or method_contract.
 ### F8 — Pack And Product Experience Selection
 
-Objetivo: atravessar **Pack And Product Experience Selection** sem permitir que um worker pule o estado da fábrica.
+Nesta fase, a fábrica tenta responder uma pergunta simples: "já temos base suficiente para avançar sem inventar?" O nome interno é `Pack And Product Experience Selection`, mas o papel prático é proteger o próximo passo. Se a fase pula evidência, todo o resto fica bonito no papel e fraco na execução.
 
-Artefatos exigidos: `capability_pack_contract`, `product_experience_plan`, `product_face_packet`, `project_design_system`, `professional_design_process`, `surface_evidence_profile`, `product_delivery_quality_profile`.
+O que precisa existir antes de avançar: `capability_pack_contract`, `product_experience_plan`, `product_face_packet`, `project_design_system`, `professional_design_process`, `surface_evidence_profile`, `product_delivery_quality_profile`. O portão que segura a passagem é: Pack Gate, Product Experience Gate, Surface Pack Gate. Os workers normalmente envolvidos são: `product-face`, `factory-orchestrator`.
 
-Gates exigidos: Pack Gate, Product Experience Gate, Surface Pack Gate.
+O erro comum aqui é acelerar demais. A fábrica bloqueia atalhos como: none listed. Isso não é burocracia. É a diferença entre trabalho autônomo e teatro autônomo.
 
-Workers: `product-face`, `factory-orchestrator`.
+O operador não deveria precisar entender cada campo JSON desta fase. Ele deveria enxergar o estado em linguagem clara: o que já foi entendido, o que ainda falta, quem é dono do próximo passo e qual evidência vai destravar a fase. Se a resposta for "não sabemos", a fábrica deve dizer isso cedo, abrir o bloqueio certo e propor o menor próximo passo seguro.
 
-Atalhos bloqueados: activate a pack without proof or coverage, start product-facing implementation before surface state coverage, treat generic UI proof as Product Experience proof, move to implementation with unnamed surface pack or proof profile.
 ### F9 — Risk And Authority Gates
 
-Objetivo: atravessar **Risk And Authority Gates** sem permitir que um worker pule o estado da fábrica.
+Nesta fase, a fábrica tenta responder uma pergunta simples: "já temos base suficiente para avançar sem inventar?" O nome interno é `Risk And Authority Gates`, mas o papel prático é proteger o próximo passo. Se a fase pula evidência, todo o resto fica bonito no papel e fraco na execução.
 
-Artefatos exigidos: `access_capability`, `budget_contract`.
+O que precisa existir antes de avançar: `access_capability`, `budget_contract`. O portão que segura a passagem é: Access Gate, Budget Gate, Human Gate when required. Os workers normalmente envolvidos são: `human-gate-clerk`.
 
-Gates exigidos: Access Gate, Budget Gate, Human Gate when required.
+O erro comum aqui é acelerar demais. A fábrica bloqueia atalhos como: none listed. Isso não é burocracia. É a diferença entre trabalho autônomo e teatro autônomo.
 
-Workers: `human-gate-clerk`.
+O operador não deveria precisar entender cada campo JSON desta fase. Ele deveria enxergar o estado em linguagem clara: o que já foi entendido, o que ainda falta, quem é dono do próximo passo e qual evidência vai destravar a fase. Se a resposta for "não sabemos", a fábrica deve dizer isso cedo, abrir o bloqueio certo e propor o menor próximo passo seguro.
 
-Atalhos bloqueados: infer approval from silence, ask for planning-only continuation approval, ask for architecture or repo cleanup approval while downstream is frozen.
 ### F10 — Security Architecture
 
-Objetivo: atravessar **Security Architecture** sem permitir que um worker pule o estado da fábrica.
+Nesta fase, a fábrica tenta responder uma pergunta simples: "já temos base suficiente para avançar sem inventar?" O nome interno é `Security Architecture`, mas o papel prático é proteger o próximo passo. Se a fase pula evidência, todo o resto fica bonito no papel e fraco na execução.
 
-Artefatos exigidos: `factory_phase_lock`, `security_architecture_plan`.
+O que precisa existir antes de avançar: `factory_phase_lock`, `security_architecture_plan`. O portão que segura a passagem é: Security Architecture Gate. Os workers normalmente envolvidos são: `security-orchestrator`.
 
-Gates exigidos: Security Architecture Gate.
+O erro comum aqui é acelerar demais. A fábrica bloqueia atalhos como: none listed. Isso não é burocracia. É a diferença entre trabalho autônomo e teatro autônomo.
 
-Workers: `security-orchestrator`.
+O operador não deveria precisar entender cada campo JSON desta fase. Ele deveria enxergar o estado em linguagem clara: o que já foi entendido, o que ainda falta, quem é dono do próximo passo e qual evidência vai destravar a fase. Se a resposta for "não sabemos", a fábrica deve dizer isso cedo, abrir o bloqueio certo e propor o menor próximo passo seguro.
 
-Atalhos bloqueados: build material risk before architecture, start security architecture while Product SOT or Method Contract is still missing.
 ### F11 — Executable Plans
 
-Objetivo: atravessar **Executable Plans** sem permitir que um worker pule o estado da fábrica.
+Nesta fase, a fábrica tenta responder uma pergunta simples: "já temos base suficiente para avançar sem inventar?" O nome interno é `Executable Plans`, mas o papel prático é proteger o próximo passo. Se a fase pula evidência, todo o resto fica bonito no papel e fraco na execução.
 
-Artefatos exigidos: `software_development_plan`, `spec_graph`, `loop_plan`, `product_creation_plan`.
+O que precisa existir antes de avançar: `software_development_plan`, `spec_graph`, `loop_plan`, `product_creation_plan`. O portão que segura a passagem é: Ready Gate. Os workers normalmente envolvidos são: `decomposition-planner`.
 
-Gates exigidos: Ready Gate.
+O erro comum aqui é acelerar demais. A fábrica bloqueia atalhos como: none listed. Isso não é burocracia. É a diferença entre trabalho autônomo e teatro autônomo.
 
-Workers: `decomposition-planner`.
+O operador não deveria precisar entender cada campo JSON desta fase. Ele deveria enxergar o estado em linguagem clara: o que já foi entendido, o que ainda falta, quem é dono do próximo passo e qual evidência vai destravar a fase. Se a resposta for "não sabemos", a fábrica deve dizer isso cedo, abrir o bloqueio certo e propor o menor próximo passo seguro.
 
-Atalhos bloqueados: execute before plans, coverage review and stop criteria exist, mark decomposition review as passed from the planner that created the decomposition.
 ### F12 — Autonomy Readiness
 
-Objetivo: atravessar **Autonomy Readiness** sem permitir que um worker pule o estado da fábrica.
+Nesta fase, a fábrica tenta responder uma pergunta simples: "já temos base suficiente para avançar sem inventar?" O nome interno é `Autonomy Readiness`, mas o papel prático é proteger o próximo passo. Se a fase pula evidência, todo o resto fica bonito no papel e fraco na execução.
 
-Artefatos exigidos: `decomposition_coverage_review`, `product_implementation_readiness`, `autonomy_readiness_packet`.
+O que precisa existir antes de avançar: `decomposition_coverage_review`, `product_implementation_readiness`, `autonomy_readiness_packet`. O portão que segura a passagem é: Decomposition Coverage Gate, Access & Capability Gate. Os workers normalmente envolvidos são: `independent-reviewer`, `factory-orchestrator`.
 
-Gates exigidos: Decomposition Coverage Gate, Access & Capability Gate.
+O erro comum aqui é acelerar demais. A fábrica bloqueia atalhos como: none listed. Isso não é burocracia. É a diferença entre trabalho autônomo e teatro autônomo.
 
-Workers: `independent-reviewer`, `factory-orchestrator`.
+O operador não deveria precisar entender cada campo JSON desta fase. Ele deveria enxergar o estado em linguagem clara: o que já foi entendido, o que ainda falta, quem é dono do próximo passo e qual evidência vai destravar a fase. Se a resposta for "não sabemos", a fábrica deve dizer isso cedo, abrir o bloqueio certo e propor o menor próximo passo seguro.
 
-Atalhos bloqueados: start autonomous work with missing review, access or limits, let a single reviewer approve the complete decomposition alone, create Product Implementation Readiness from a failed or missing decomposition coverage review.
 ### F13 — Ready Gate
 
-Objetivo: atravessar **Ready Gate** sem permitir que um worker pule o estado da fábrica.
+Nesta fase, a fábrica tenta responder uma pergunta simples: "já temos base suficiente para avançar sem inventar?" O nome interno é `Ready Gate`, mas o papel prático é proteger o próximo passo. Se a fase pula evidência, todo o resto fica bonito no papel e fraco na execução.
 
-Artefatos exigidos: `gate_report`.
+O que precisa existir antes de avançar: `gate_report`. O portão que segura a passagem é: Ready Gate. Os workers normalmente envolvidos são: `factory-orchestrator`.
 
-Gates exigidos: Ready Gate.
+O erro comum aqui é acelerar demais. A fábrica bloqueia atalhos como: none listed. Isso não é burocracia. É a diferença entre trabalho autônomo e teatro autônomo.
 
-Workers: `factory-orchestrator`.
+O operador não deveria precisar entender cada campo JSON desta fase. Ele deveria enxergar o estado em linguagem clara: o que já foi entendido, o que ainda falta, quem é dono do próximo passo e qual evidência vai destravar a fase. Se a resposta for "não sabemos", a fábrica deve dizer isso cedo, abrir o bloqueio certo e propor o menor próximo passo seguro.
 
-Atalhos bloqueados: dispatch blocked workers.
 ### F15 — Runtime Execution
 
-Objetivo: atravessar **Runtime Execution** sem permitir que um worker pule o estado da fábrica.
+Nesta fase, a fábrica tenta responder uma pergunta simples: "já temos base suficiente para avançar sem inventar?" O nome interno é `Runtime Execution`, mas o papel prático é proteger o próximo passo. Se a fase pula evidência, todo o resto fica bonito no papel e fraco na execução.
 
-Artefatos exigidos: `worker_packets`.
+O que precisa existir antes de avançar: `worker_packets`. O portão que segura a passagem é: Runtime Gate. Os workers normalmente envolvidos são: `implementation-worker`, `qa-verification-worker`.
 
-Gates exigidos: Runtime Gate.
+O erro comum aqui é acelerar demais. A fábrica bloqueia atalhos como: none listed. Isso não é burocracia. É a diferença entre trabalho autônomo e teatro autônomo.
 
-Workers: `implementation-worker`, `qa-verification-worker`.
+O operador não deveria precisar entender cada campo JSON desta fase. Ele deveria enxergar o estado em linguagem clara: o que já foi entendido, o que ainda falta, quem é dono do próximo passo e qual evidência vai destravar a fase. Se a resposta for "não sabemos", a fábrica deve dizer isso cedo, abrir o bloqueio certo e propor o menor próximo passo seguro.
 
-Atalhos bloqueados: spawn without route readiness.
 ### F16 — Worker Results
 
-Objetivo: atravessar **Worker Results** sem permitir que um worker pule o estado da fábrica.
+Nesta fase, a fábrica tenta responder uma pergunta simples: "já temos base suficiente para avançar sem inventar?" O nome interno é `Worker Results`, mas o papel prático é proteger o próximo passo. Se a fase pula evidência, todo o resto fica bonito no papel e fraco na execução.
 
-Artefatos exigidos: `worker_results`.
+O que precisa existir antes de avançar: `worker_results`. O portão que segura a passagem é: Done Gate. Os workers normalmente envolvidos são: `evidence-reconciler`.
 
-Gates exigidos: Done Gate.
+O erro comum aqui é acelerar demais. A fábrica bloqueia atalhos como: none listed. Isso não é burocracia. É a diferença entre trabalho autônomo e teatro autônomo.
 
-Workers: `evidence-reconciler`.
+O operador não deveria precisar entender cada campo JSON desta fase. Ele deveria enxergar o estado em linguagem clara: o que já foi entendido, o que ainda falta, quem é dono do próximo passo e qual evidência vai destravar a fase. Se a resposta for "não sabemos", a fábrica deve dizer isso cedo, abrir o bloqueio certo e propor o menor próximo passo seguro.
 
-Atalhos bloqueados: treat packet existence as proof.
 ### F17 — Verification
 
-Objetivo: atravessar **Verification** sem permitir que um worker pule o estado da fábrica.
+Nesta fase, a fábrica tenta responder uma pergunta simples: "já temos base suficiente para avançar sem inventar?" O nome interno é `Verification`, mas o papel prático é proteger o próximo passo. Se a fase pula evidência, todo o resto fica bonito no papel e fraco na execução.
 
-Artefatos exigidos: `verification_plan`, `verification_result`.
+O que precisa existir antes de avançar: `verification_plan`, `verification_result`. O portão que segura a passagem é: Verification Gate. Os workers normalmente envolvidos são: `qa-verification-worker`.
 
-Gates exigidos: Verification Gate.
+O erro comum aqui é acelerar demais. A fábrica bloqueia atalhos como: none listed. Isso não é burocracia. É a diferença entre trabalho autônomo e teatro autônomo.
 
-Workers: `qa-verification-worker`.
+O operador não deveria precisar entender cada campo JSON desta fase. Ele deveria enxergar o estado em linguagem clara: o que já foi entendido, o que ainda falta, quem é dono do próximo passo e qual evidência vai destravar a fase. Se a resposta for "não sabemos", a fábrica deve dizer isso cedo, abrir o bloqueio certo e propor o menor próximo passo seguro.
 
-Atalhos bloqueados: claim done without command evidence.
 ### F18 — Independent Review
 
-Objetivo: atravessar **Independent Review** sem permitir que um worker pule o estado da fábrica.
+Nesta fase, a fábrica tenta responder uma pergunta simples: "já temos base suficiente para avançar sem inventar?" O nome interno é `Independent Review`, mas o papel prático é proteger o próximo passo. Se a fase pula evidência, todo o resto fica bonito no papel e fraco na execução.
 
-Artefatos exigidos: `review_result`.
+O que precisa existir antes de avançar: `review_result`. O portão que segura a passagem é: Review Gate. Os workers normalmente envolvidos são: `independent-reviewer`.
 
-Gates exigidos: Review Gate.
+O erro comum aqui é acelerar demais. A fábrica bloqueia atalhos como: none listed. Isso não é burocracia. É a diferença entre trabalho autônomo e teatro autônomo.
 
-Workers: `independent-reviewer`.
+O operador não deveria precisar entender cada campo JSON desta fase. Ele deveria enxergar o estado em linguagem clara: o que já foi entendido, o que ainda falta, quem é dono do próximo passo e qual evidência vai destravar a fase. Se a resposta for "não sabemos", a fábrica deve dizer isso cedo, abrir o bloqueio certo e propor o menor próximo passo seguro.
 
-Atalhos bloqueados: allow executor to self-approve.
 ### F20 — Closure Summary
 
-Objetivo: atravessar **Closure Summary** sem permitir que um worker pule o estado da fábrica.
+Nesta fase, a fábrica tenta responder uma pergunta simples: "já temos base suficiente para avançar sem inventar?" O nome interno é `Closure Summary`, mas o papel prático é proteger o próximo passo. Se a fase pula evidência, todo o resto fica bonito no papel e fraco na execução.
 
-Artefatos exigidos: `closure_summary`.
+O que precisa existir antes de avançar: `closure_summary`. O portão que segura a passagem é: Closure Gate. Os workers normalmente envolvidos são: `handoff-packer`.
 
-Gates exigidos: Closure Gate.
+O erro comum aqui é acelerar demais. A fábrica bloqueia atalhos como: none listed. Isso não é burocracia. É a diferença entre trabalho autônomo e teatro autônomo.
 
-Workers: `handoff-packer`.
+O operador não deveria precisar entender cada campo JSON desta fase. Ele deveria enxergar o estado em linguagem clara: o que já foi entendido, o que ainda falta, quem é dono do próximo passo e qual evidência vai destravar a fase. Se a resposta for "não sabemos", a fábrica deve dizer isso cedo, abrir o bloqueio certo e propor o menor próximo passo seguro.
 
-Atalhos bloqueados: hide unresolved blockers in prose.
 ### F21 — Receipt Five
 
-Objetivo: atravessar **Receipt Five** sem permitir que um worker pule o estado da fábrica.
+Nesta fase, a fábrica tenta responder uma pergunta simples: "já temos base suficiente para avançar sem inventar?" O nome interno é `Receipt Five`, mas o papel prático é proteger o próximo passo. Se a fase pula evidência, todo o resto fica bonito no papel e fraco na execução.
 
-Artefatos exigidos: `receipt_five`.
+O que precisa existir antes de avançar: `receipt_five`. O portão que segura a passagem é: Done Gate. Os workers normalmente envolvidos são: `evidence-reconciler`.
 
-Gates exigidos: Done Gate.
+O erro comum aqui é acelerar demais. A fábrica bloqueia atalhos como: none listed. Isso não é burocracia. É a diferença entre trabalho autônomo e teatro autônomo.
 
-Workers: `evidence-reconciler`.
+O operador não deveria precisar entender cada campo JSON desta fase. Ele deveria enxergar o estado em linguagem clara: o que já foi entendido, o que ainda falta, quem é dono do próximo passo e qual evidência vai destravar a fase. Se a resposta for "não sabemos", a fábrica deve dizer isso cedo, abrir o bloqueio certo e propor o menor próximo passo seguro.
 
-Atalhos bloqueados: mark done without Receipt Five.
 ### F22 — Completion Audit
 
-Objetivo: atravessar **Completion Audit** sem permitir que um worker pule o estado da fábrica.
+Nesta fase, a fábrica tenta responder uma pergunta simples: "já temos base suficiente para avançar sem inventar?" O nome interno é `Completion Audit`, mas o papel prático é proteger o próximo passo. Se a fase pula evidência, todo o resto fica bonito no papel e fraco na execução.
 
-Artefatos exigidos: `completion_audit`.
+O que precisa existir antes de avançar: `completion_audit`. O portão que segura a passagem é: Completion Audit. Os workers normalmente envolvidos são: `evidence-reconciler`.
 
-Gates exigidos: Completion Audit.
+O erro comum aqui é acelerar demais. A fábrica bloqueia atalhos como: none listed. Isso não é burocracia. É a diferença entre trabalho autônomo e teatro autônomo.
 
-Workers: `evidence-reconciler`.
+O operador não deveria precisar entender cada campo JSON desta fase. Ele deveria enxergar o estado em linguagem clara: o que já foi entendido, o que ainda falta, quem é dono do próximo passo e qual evidência vai destravar a fase. Se a resposta for "não sabemos", a fábrica deve dizer isso cedo, abrir o bloqueio certo e propor o menor próximo passo seguro.
 
-Atalhos bloqueados: close skipped method or evidence requirements.
 ### F23 — Production Operations
 
-Objetivo: atravessar **Production Operations** sem permitir que um worker pule o estado da fábrica.
+Nesta fase, a fábrica tenta responder uma pergunta simples: "já temos base suficiente para avançar sem inventar?" O nome interno é `Production Operations`, mas o papel prático é proteger o próximo passo. Se a fase pula evidência, todo o resto fica bonito no papel e fraco na execução.
 
-Artefatos exigidos: `production_readiness_plan`.
+O que precisa existir antes de avançar: `production_readiness_plan`. O portão que segura a passagem é: Release Gate. Os workers normalmente envolvidos são: `release-ops-worker`.
 
-Gates exigidos: Release Gate.
+O erro comum aqui é acelerar demais. A fábrica bloqueia atalhos como: none listed. Isso não é burocracia. É a diferença entre trabalho autônomo e teatro autônomo.
 
-Workers: `release-ops-worker`.
+O operador não deveria precisar entender cada campo JSON desta fase. Ele deveria enxergar o estado em linguagem clara: o que já foi entendido, o que ainda falta, quem é dono do próximo passo e qual evidência vai destravar a fase. Se a resposta for "não sabemos", a fábrica deve dizer isso cedo, abrir o bloqueio certo e propor o menor próximo passo seguro.
 
-Atalhos bloqueados: release without owner, rollback or approval.
 ### F24 — Release Or Block
 
-Objetivo: atravessar **Release Or Block** sem permitir que um worker pule o estado da fábrica.
+Nesta fase, a fábrica tenta responder uma pergunta simples: "já temos base suficiente para avançar sem inventar?" O nome interno é `Release Or Block`, mas o papel prático é proteger o próximo passo. Se a fase pula evidência, todo o resto fica bonito no papel e fraco na execução.
 
-Artefatos exigidos: `release_decision`.
+O que precisa existir antes de avançar: `release_decision`. O portão que segura a passagem é: Release Gate, Human Gate when required. Os workers normalmente envolvidos são: `release-ops-worker`, `human-gate-clerk`.
 
-Gates exigidos: Release Gate, Human Gate when required.
+O erro comum aqui é acelerar demais. A fábrica bloqueia atalhos como: none listed. Isso não é burocracia. É a diferença entre trabalho autônomo e teatro autônomo.
 
-Workers: `release-ops-worker`, `human-gate-clerk`.
+O operador não deveria precisar entender cada campo JSON desta fase. Ele deveria enxergar o estado em linguagem clara: o que já foi entendido, o que ainda falta, quem é dono do próximo passo e qual evidência vai destravar a fase. Se a resposta for "não sabemos", a fábrica deve dizer isso cedo, abrir o bloqueio certo e propor o menor próximo passo seguro.
 
-Atalhos bloqueados: promote without production-strict evidence.
 ### F25 — Monitoring Support
 
-Objetivo: atravessar **Monitoring Support** sem permitir que um worker pule o estado da fábrica.
+Nesta fase, a fábrica tenta responder uma pergunta simples: "já temos base suficiente para avançar sem inventar?" O nome interno é `Monitoring Support`, mas o papel prático é proteger o próximo passo. Se a fase pula evidência, todo o resto fica bonito no papel e fraco na execução.
 
-Artefatos exigidos: `incident_support_plan`.
+O que precisa existir antes de avançar: `incident_support_plan`. O portão que segura a passagem é: Support Gate. Os workers normalmente envolvidos são: `release-ops-worker`.
 
-Gates exigidos: Support Gate.
+O erro comum aqui é acelerar demais. A fábrica bloqueia atalhos como: none listed. Isso não é burocracia. É a diferença entre trabalho autônomo e teatro autônomo.
 
-Workers: `release-ops-worker`.
+O operador não deveria precisar entender cada campo JSON desta fase. Ele deveria enxergar o estado em linguagem clara: o que já foi entendido, o que ainda falta, quem é dono do próximo passo e qual evidência vai destravar a fase. Se a resposta for "não sabemos", a fábrica deve dizer isso cedo, abrir o bloqueio certo e propor o menor próximo passo seguro.
 
-Atalhos bloqueados: ship without support owner when support is material.
 ### F26 — Learnback
 
-Objetivo: atravessar **Learnback** sem permitir que um worker pule o estado da fábrica.
+Nesta fase, a fábrica tenta responder uma pergunta simples: "já temos base suficiente para avançar sem inventar?" O nome interno é `Learnback`, mas o papel prático é proteger o próximo passo. Se a fase pula evidência, todo o resto fica bonito no papel e fraco na execução.
 
-Artefatos exigidos: `factory_learning_proposal`.
+O que precisa existir antes de avançar: `factory_learning_proposal`. O portão que segura a passagem é: Learning Gate. Os workers normalmente envolvidos são: `skill-eval-distiller`.
 
-Gates exigidos: Learning Gate.
+O erro comum aqui é acelerar demais. A fábrica bloqueia atalhos como: none listed. Isso não é burocracia. É a diferença entre trabalho autônomo e teatro autônomo.
 
-Workers: `skill-eval-distiller`.
+O operador não deveria precisar entender cada campo JSON desta fase. Ele deveria enxergar o estado em linguagem clara: o que já foi entendido, o que ainda falta, quem é dono do próximo passo e qual evidência vai destravar a fase. Se a resposta for "não sabemos", a fábrica deve dizer isso cedo, abrir o bloqueio certo e propor o menor próximo passo seguro.
 
-Atalhos bloqueados: auto-activate critical factory changes.
 ### F27 — Factory Maturity Audit
 
-Objetivo: atravessar **Factory Maturity Audit** sem permitir que um worker pule o estado da fábrica.
+Nesta fase, a fábrica tenta responder uma pergunta simples: "já temos base suficiente para avançar sem inventar?" O nome interno é `Factory Maturity Audit`, mas o papel prático é proteger o próximo passo. Se a fase pula evidência, todo o resto fica bonito no papel e fraco na execução.
 
-Artefatos exigidos: `factory_maturity_scorecard`.
+O que precisa existir antes de avançar: `factory_maturity_scorecard`. O portão que segura a passagem é: Maturity Gate. Os workers normalmente envolvidos são: `skill-eval-distiller`.
 
-Gates exigidos: Maturity Gate.
+O erro comum aqui é acelerar demais. A fábrica bloqueia atalhos como: none listed. Isso não é burocracia. É a diferença entre trabalho autônomo e teatro autônomo.
 
-Workers: `skill-eval-distiller`.
-
-Atalhos bloqueados: commit raw study or private evidence.
-
+O operador não deveria precisar entender cada campo JSON desta fase. Ele deveria enxergar o estado em linguagem clara: o que já foi entendido, o que ainda falta, quem é dono do próximo passo e qual evidência vai destravar a fase. Se a resposta for "não sabemos", a fábrica deve dizer isso cedo, abrir o bloqueio certo e propor o menor próximo passo seguro.

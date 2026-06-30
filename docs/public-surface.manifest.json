@@ -98,23 +98,6 @@
       }
     },
     {
-      "surface_id": "visual-map-v1.0.3-svg",
-      "path": "docs/assets/public-map/overkill-factory-map-v1.0.3.svg",
-      "surface_type": "static_visual_preview",
-      "authority_level": "conceptual_supporting_surface",
-      "source_refs": [
-        "docs/assets/public-map/overkill-factory-map-v1.0.3.html",
-        "docs/public-surface.manifest.json",
-        "docs/en/reference.md"
-      ],
-      "claim_checks": [
-        "metadata",
-        "source_refs_exist",
-        "risk_tiers",
-        "no_runtime_proof_claim"
-      ]
-    },
-    {
       "surface_id": "root-readme",
       "path": "README.md",
       "surface_type": "root_readme",

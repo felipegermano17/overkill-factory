@@ -1,67 +1,74 @@
-# Manual do Produto
+# Manual do produto
 
-A Overkill Factory existe porque trabalho com agentes muitas vezes parece produtivo antes de estar realmente controlado.
+A Overkill Factory fica mais fácil de entender quando começamos pelo problema que ela resolve.
 
-Um fluxo comum com agente pode responder rápido, escrever código rápido e produzir um status convincente rápido. A falha normalmente aparece depois: a fonte foi mal entendida, uma fatia parcial substituiu o produto inteiro, um worker declarou `done` sem prova, um risco virou checklist, ou o operador teve que perceber que o sistema estava parado.
+Uma pessoa pede alguma coisa: criar um produto, corrigir um bug, revisar uma mudança arriscada, preparar um release, tratar um incidente, melhorar um worker ou transformar uma ideia num sistema funcionando. Em muitos fluxos com agentes, isso vira uma instrução grande. O agente tenta ajudar, começa a trabalhar e vai mandando status. Às vezes dá certo. Muitas vezes vira movimento sem controle.
 
-A fábrica transforma esse fluxo frágil em uma linha de produção.
+A Overkill Factory trata trabalho de produto como produção controlada. A fábrica não joga um "se vira" para o agente. Ela preserva a fonte, define o produto, escolhe o método, divide o trabalho, executa pelo Hermes, verifica evidência e fecha com recibo.
 
-## O que a fábrica é
+## O que "fábrica" quer dizer aqui
 
-Overkill Factory é uma camada de método e um kernel público para rodar trabalho de produto com agentes limitados por contratos.
+Fábrica não é sinônimo de burocracia. Quer dizer que existe uma linha de produção. O trabalho entra por um lado e precisa passar por estados que protegem o operador.
 
-Ela dá forma ao trabalho:
+Um pedido de produto não deveria pular direto para implementação se ninguém resolveu a fonte. Um release não deveria sair porque o executor disse que está pronto. Uma mudança sensível de segurança não deveria pular arquitetura. Um gate humano não deveria ficar escondido num comentário de chat. Um worker não deveria aprovar o próprio trabalho.
 
-- a fonte é capturada antes de ser interpretada;
-- verdade de produto é separada de suposição;
-- método é escolhido por contrato, não por impressão;
-- workers recebem pacotes limitados;
-- cada transição importante precisa de evidência;
-- gates humanos continuam humanos;
-- bloqueios não humanos são reparados pela fábrica em vez de serem jogados no operador;
-- conclusão significa entrega com evidência, não mensagem confiante.
+Isso é produção controlada. É a diferença entre "um agente mexeu nisso" e "a fábrica consegue explicar o que aconteceu, por que aconteceu, quem tinha autoridade e qual evidência prova o resultado".
 
-## O que o Hermes controla
+## A experiência do operador
 
-Hermes é o chão da fábrica. Ele controla o estado durável de runtime: Kanban, cards, dependências, typed blocks, dispatch de workers, comentários, logs, schedules, workspaces e transições de estado.
+O operador não deveria ter que cuidar da fábrica como babá. Ele não deveria precisar perceber que um worker foi raso, que uma revisão nunca foi consumida, ou que um bloqueio era na verdade trabalho da própria fábrica. A fábrica é dona do processo. O humano é dono das decisões reais.
 
-A fábrica não deve recriar esse runtime dentro de prompt. Se algo é estado de runtime, o Hermes é a autoridade.
+Uma boa execução se parece com isto:
 
-## O que a Overkill Factory controla
+- o operador entrega um objetivo ou material de origem;
+- a fábrica diz o que entendeu e o que falta;
+- a fábrica cria uma definição de produto que pode ser revisada;
+- o trabalho é quebrado em partes pequenas o bastante para um worker terminar e provar;
+- o Hermes guarda o estado vivo;
+- revisões são independentes quando o risco pede;
+- gates humanos chegam como pacotes de decisão, não como interrupções vagas;
+- a conclusão vem com Receipt Five, não com uma mensagem animada dizendo "pronto".
 
-A Overkill Factory controla o método de produção em volta do Hermes:
+## A camada de verdade do produto
 
-- phase graph;
-- route registry;
-- method contracts;
-- templates e schemas;
-- regras de autoridade de worker;
-- Product SOT / contratos de verdade de produto;
-- expectativas de Product Experience e Product Face;
-- gates de segurança, acesso e release;
-- regras de evidência e Receipt Five;
-- comandos públicos de validação.
+O artefato mais importante é a verdade do produto. A fábrica chama isso de Product SOT, porque é a fonte de verdade do produto. O nome é técnico, mas a ideia é simples: antes de construir, todo mundo precisa saber que produto está sendo construído.
 
-A fábrica pode projetar status e preparar pacotes, mas não deve fingir que uma projeção local é o runtime real.
+Um Product SOT precisa dizer o que foi pedido, o que entra no escopo, o que fica fora, quais riscos importam, que evidência vai contar e o que tornaria o trabalho inaceitável. Sem isso, a fábrica não consegue escolher método nem distribuir workers com segurança.
 
-## O que agentes controlam
+É aqui que muitos sistemas com agentes escorregam. Eles transformam um briefing grande num resumo curto e depois constroem a partir do resumo. A Overkill Factory foi desenhada para evitar isso. Resumo não é verdade do produto. Palpite útil não é verdade do produto. A verdade do produto precisa vir da fonte e precisa ser revisada quando o risco pede.
 
-Agentes são workers limitados. Eles não controlam a rota. Eles não decidem que o produto está pronto. Eles executam um pacote, devolvem evidência e aceitam revisão.
+## Métodos são escolhidos, não improvisados
 
-Um worker pode ser forte sem ser confiado cegamente. A fábrica foi desenhada em cima dessa diferença.
+Trabalhos diferentes pedem métodos diferentes. Bug precisa de reprodução e prova de regressão. Produto novo precisa de definição e cobertura de escopo. Release precisa de prontidão, rollback e aprovação. Mudança de segurança precisa de arquitetura, ameaça e evidência.
 
-## O que humanos controlam
+O registro de rotas e os motores de método deixam isso explícito. Hoje a fábrica tem 14 classes de rota e 8 motores de método. A ideia não é impressionar com uma lista grande. A ideia é impedir que todo pedido seja tratado do mesmo jeito.
 
-Humanos controlam decisões reais de autoridade: custo, acesso de produção, assinatura, aceite de release, risco material, julgamento de negócio e waivers explícitos.
+Quando o método está certo, o worker recebe um pacote limitado. Ele sabe a tarefa, os limites, a evidência esperada e a autoridade que ele não tem. Isso torna a autonomia mais segura. O worker pode andar rápido dentro da faixa porque a faixa está clara.
 
-Um gate humano deve ser raro e claro. Ele não deve obrigar o operador a ler maquinaria interna. Deve apresentar decisão, artefato, evidência, risco e consequências.
+## Hermes é o chão da fábrica
 
-## A promessa central
+O Hermes é onde o estado vivo mora. Cards, dependências, comentários, workspaces, workers, bloqueios e transições pertencem a ele. A Overkill Factory define o método de produção e os checks. O Hermes roda o chão da fábrica.
 
-A promessa da fábrica não é "agentes nunca vão falhar". A promessa é: quando agentes falharem, o sistema deve saber onde, por quê, qual evidência falta, se o bloqueio é humano ou não humano e qual é a próxima ação segura.
+Essa separação é importante. Se a fábrica tentasse virar um segundo Hermes, ela criaria outro estado escondido. Se o Hermes guardasse o estado mas a fábrica ignorasse método e evidência, os workers moveriam cards sem disciplina de produto. O desenho é separado de propósito: Hermes controla o estado vivo; Overkill Factory controla o contrato de produção.
 
-Essa é a diferença entre teatro autônomo e produção controlada.
+## Pronto quer dizer provado
 
-## Fronteira pública/privada
+A fábrica é rígida com conclusão porque trabalho com agente pode parecer convincente mesmo quando está errado. Um arquivo pode existir e não servir. Um teste pode passar e ainda não cobrir o produto. Um revisor pode aprovar sem checar a coisa certa. Um worker pode dizer que terminou e esquecer o artefato.
 
-Este repositório é o kernel público: código, contratos, testes, exemplos, registries públicos de workers e docs públicas. Uma execução real de produto acontece em um runtime Hermes do operador. Esse runtime pode conter boards privados, fontes privadas, segredos, evidências, decisões de produto e aprovações humanas. Isso não pertence ao GitHub público.
+O Receipt Five existe para evitar isso. Ele registra o que foi pedido, o que foi feito, qual evidência prova, quem revisou, o que ainda está arriscado ou bloqueado e qual é o próximo estado. Se essa evidência não existe, a resposta honesta não é "pronto". É bloqueado, incompleto ou pronto para revisão.
+
+## O que este projeto não é
+
+A Overkill Factory não tenta fingir que produto é simples. Ela tenta colocar a complexidade no lugar certo. O operador vê estado claro e decisões reais. Os workers recebem pacotes exatos. O código carrega schemas e testes. A documentação pública explica o suficiente para uma pessoa nova confiar no sistema sem ler cada arquivo interno.
+
+Esse é o nível esperado do projeto: simples por fora, rigoroso por dentro e honesto na fronteira.
+
+## Um exemplo concreto
+
+Imagine que o operador diga: "Crie o fluxo de onboarding do cliente." Um sistema fraco com agentes talvez comece a desenhar telas imediatamente. A fábrica não deveria fazer isso.
+
+Primeiro ela precisa entender o que "cliente" quer dizer naquele produto, o que o onboarding deve resolver, que contas ou permissões existem, o que o usuário precisa ver, o que precisa ser registrado e o que conta como uma primeira execução bem-sucedida. Se o produto já tem design system, a fábrica deve consumir isso. Se o fluxo toca dinheiro, identidade, custódia ou dados de produção, os gates de risco mudam.
+
+Só depois implementação faz sentido. Um worker de frontend pode receber um pacote. Um worker de backend pode receber outro. Um worker de Product Face talvez precise devolver screenshots e prova por viewport. QA pode precisar de teste de jornada. Um reviewer pode precisar comparar o resultado com o Product SOT. O operador não deveria coordenar tudo isso na mão.
+
+Esse é o valor prático da fábrica. Ela transforma um pedido vago em pedaços pequenos, revisáveis e sustentados por evidência.

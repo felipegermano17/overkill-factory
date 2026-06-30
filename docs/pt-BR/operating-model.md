@@ -1,105 +1,97 @@
-# Modelo Operacional
+# Modelo operacional
 
-Esta página descreve a fábrica operando, não a árvore interna de pastas.
+Esta página explica o que acontece numa execução da fábrica. Em vez de fazer um passeio por pastas internas, ela acompanha a vida de um pedido.
 
-O modelo mental simples é: a fábrica recebe um sinal, protege a verdade, escolhe uma rota segura, cria trabalho limitado, executa pelo Hermes, verifica evidência e libera, bloqueia ou aprende.
+Um pedido começa como um sinal. Pode ser uma ideia de produto, um bug, um release, um incidente, uma mudança de segurança, uma tela, um pedido de dados, uma integração ou uma melhoria de worker. O primeiro trabalho da fábrica não é construir. É entender que tipo de trabalho entrou e o que tornaria o avanço seguro.
 
-## 1. Um sinal entra
+## 1. A entrada protege a fonte
 
-Um sinal pode ser paper de produto, bug, ideia de feature, incidente, repositório, pedido de release, pedido de UX, integração, migração, questão de segurança, analytics ou mudança em agente/runtime.
+A fábrica recebe o material de origem e cria um envelope de fonte. Esse envelope preserva o que o operador realmente entregou. Ele não deveria transformar tudo, em silêncio, num resumo conveniente.
 
-O route registry atual expõe estas classes de rota:
+Depois, o source ledger registra o que já se sabe, o que falta, o que está em conflito e o que ainda precisa do operador. Parece básico, mas evita uma das falhas mais caras em sistemas com agentes: construir a partir de um briefing mal entendido.
 
-- `product_creation`: tipos de pedido product_new; família de método `spec_first`; gates Source Gate, Product SOT Gate, Ready Gate.
-- `feature_delivery`: tipos de pedido feature, slice; família de método `behavior_first`; gates Source Gate, Method Gate, Ready Gate.
-- `bug_repair`: tipos de pedido bug; família de método `test_first`; gates Reproduction Gate, Regression Gate, Receipt Gate.
-- `incident_response`: tipos de pedido incident; família de método `incident_first`; gates Severity Gate, Mitigation Gate, Learnback Gate.
-- `brownfield_discovery`: tipos de pedido migration, refactor, integration; família de método `legacy_diagnosis`; gates Brownfield Baseline Gate, Regression Gate, Rollback Gate.
-- `release_promotion`: tipos de pedido release; família de método `spec_first`; gates Production Readiness Gate, Rollback Gate, Release Gate.
-- `research_validation`: tipos de pedido feature, product_new, security, ux_ui, data_analytics, agent_skill; família de método `research_first`; gates Source Quality Gate, Specialist Decision Gate, SOT Impact Gate.
-- `docs_onboarding`: tipos de pedido doc; família de método `docs_first`; gates Docs Utility Gate, First Run Gate.
-- `security_remediation`: tipos de pedido security; família de método `security_first`; gates Security Architecture Gate, Security Review Gate.
-- `critical_integration`: tipos de pedido integration; família de método `spec_first`; gates Dependency Gate, Contract Test Gate, Fallback Gate.
-- `migration_execution`: tipos de pedido migration; família de método `legacy_diagnosis`; gates Migration Plan Gate, Regression Gate, Rollback Gate.
-- `ux_product_experience`: tipos de pedido ux_ui, product_new, feature; família de método `design_first`; gates Product Experience Gate, Product Face Gate, Independent Design Review Gate.
-- `analytics_data`: tipos de pedido data_analytics, product_new, feature; família de método `analytics_first`; gates Data Contract Gate, Privacy Gate, Metrics Proof Gate.
-- `agent_quality_change`: tipos de pedido agent_skill; família de método `agent_eval_first`; gates Agent Eval Gate, Worker Profile Readiness Gate, Learnback Gate.
+O operador deveria receber uma explicação simples: "foi isso que entendemos, isso ainda falta, isso não podemos assumir". Se essa explicação não estiver clara, a execução já nasceu fraca.
 
-A rota importa porque um bug não deve ser tratado como produto greenfield, e um release não deve ser tratado como discovery. O método e os gates mudam conforme a rota.
+## 2. A rota escolhe o tipo de execução
 
-## 2. Fonte vem antes de interpretação
+A classe de rota decide o formato do trabalho. Corrigir bug não é preparar release. Preparar release não é criar produto do zero. Auditar Solana/onchain não é atualizar documentação. Hoje a fábrica expõe estas classes de rota:
 
-A fábrica primeiro captura e resolve o material de fonte. Ela não deve transformar um paper longo em resumo raso e chamar isso de verdade.
+- `product_creation`: usado quando o pedido é `product_new`. A família de método é `None` e os portões principais são Source Gate, Product SOT Gate, Ready Gate.
+- `feature_delivery`: usado quando o pedido é `feature, slice`. A família de método é `None` e os portões principais são Source Gate, Method Gate, Ready Gate.
+- `bug_repair`: usado quando o pedido é `bug`. A família de método é `None` e os portões principais são Reproduction Gate, Regression Gate, Receipt Gate.
+- `incident_response`: usado quando o pedido é `incident`. A família de método é `None` e os portões principais são Severity Gate, Mitigation Gate, Learnback Gate.
+- `brownfield_discovery`: usado quando o pedido é `migration, refactor, integration`. A família de método é `None` e os portões principais são Brownfield Baseline Gate, Regression Gate, Rollback Gate.
+- `release_promotion`: usado quando o pedido é `release`. A família de método é `None` e os portões principais são Production Readiness Gate, Rollback Gate, Release Gate.
+- `research_validation`: usado quando o pedido é `feature, product_new, security, ux_ui, data_analytics, agent_skill`. A família de método é `None` e os portões principais são Source Quality Gate, Specialist Decision Gate, SOT Impact Gate.
+- `docs_onboarding`: usado quando o pedido é `doc`. A família de método é `None` e os portões principais são Docs Utility Gate, First Run Gate.
+- `security_remediation`: usado quando o pedido é `security`. A família de método é `None` e os portões principais são Security Architecture Gate, Security Review Gate.
+- `critical_integration`: usado quando o pedido é `integration`. A família de método é `None` e os portões principais são Dependency Gate, Contract Test Gate, Fallback Gate.
+- `migration_execution`: usado quando o pedido é `migration`. A família de método é `None` e os portões principais são Migration Plan Gate, Regression Gate, Rollback Gate.
+- `ux_product_experience`: usado quando o pedido é `ux_ui, product_new, feature`. A família de método é `None` e os portões principais são Product Experience Gate, Product Face Gate, Independent Design Review Gate.
+- `analytics_data`: usado quando o pedido é `data_analytics, product_new, feature`. A família de método é `None` e os portões principais são Data Contract Gate, Privacy Gate, Metrics Proof Gate.
+- `agent_quality_change`: usado quando o pedido é `agent_skill`. A família de método é `None` e os portões principais são Agent Eval Gate, Worker Profile Readiness Gate, Learnback Gate.
 
-A sequência esperada é:
+A rota não dá permissão para um worker sair fazendo o que quiser. Ela escolhe a faixa, a família de método e os gates que precisam ser satisfeitos.
 
-- capturar o source envelope;
-- classificar o sinal;
-- resolver referências de fonte;
-- construir um source ledger;
-- identificar conflitos ou material faltante;
-- confirmar entendimento com o operador quando a verdade de produto importa.
+## 3. A verdade do produto vira contrato
 
-Só depois disso a fábrica pode criar artefatos de definição de produto usados por workers downstream.
+Em trabalho de produto, o Product SOT transforma o material de origem numa definição usável. É o momento em que a fábrica diz: "este é o produto que estamos construindo de verdade".
 
-## 3. Verdade de produto vira escopo executável
+Um Product SOT fraco enfraquece tudo que vem depois. Workers ainda podem produzir código, docs, design ou comentários de revisão, mas talvez estejam otimizando para a coisa errada. Por isso a fábrica bloqueia execução downstream quando a verdade do produto falta ou ainda não foi revisada.
 
-Product SOT é a definição de produto usada como fonte de verdade pela fábrica. Não é um resumo casual. É o artefato ao qual método, arquitetura, planejamento, decomposição, implementação e revisão precisam se conectar.
+## 4. O método liga a rota à evidência
 
-Uma execução de produto também precisa cobrir o escopo completo do Product SOT. Isso impede que uma primeira fatia vire silenciosamente o produto inteiro.
+O contrato de método diz como esta execução deve ser tratada. Os motores de método atuais incluem:
 
-## 4. Método é escolhido por contrato
+- `spec_first_sdd`: None. Entra quando a rota pede `spec_first`. Rotas: .
+- `test_first_tdd`: None. Entra quando a rota pede `test_first`. Rotas: .
+- `behavior_first_bdd`: None. Entra quando a rota pede `behavior_first`. Rotas: .
+- `discovery_research`: None. Entra quando a rota pede `discovery_first`. Rotas: .
+- `security_first_threat_model`: None. Entra quando a rota pede `security_first`. Rotas: .
+- `design_first_product_experience`: None. Entra quando a rota pede `design_first`. Rotas: .
+- `legacy_diagnosis`: None. Entra quando a rota pede `legacy_diagnosis`. Rotas: .
+- `incident_first`: None. Entra quando a rota pede `incident_first`. Rotas: .
 
-O registry de method engines contém:
+O método importa porque muda a evidência. Trabalho test-first precisa de teste e prova de regressão. Trabalho design-first precisa de prova de experiência de produto. Trabalho security-first precisa de threat modeling e evidência de segurança. Incidente precisa de mitigação, status e learnback.
 
-- `spec_first_sdd` — Spec-First SDD Engine: família `spec_first`; usado por product_creation, feature_delivery, critical_integration, migration_execution.
-- `test_first_tdd` — Test-First TDD Engine: família `test_first`; usado por feature_delivery, bug_repair, critical_integration, migration_execution.
-- `behavior_first_bdd` — Behavior-First BDD Engine: família `behavior_first`; usado por product_creation, feature_delivery, ux_product_experience.
-- `discovery_research` — Discovery and Research Engine: família `discovery_first`; usado por product_creation, research_validation, brownfield_discovery.
-- `security_first_threat_model` — Security-First Threat Model Engine: família `security_first`; usado por security_remediation, release_promotion, critical_integration, agent_quality_change.
-- `design_first_product_experience` — Design-First Product Experience Engine: família `design_first`; usado por ux_product_experience, product_creation, feature_delivery.
-- `legacy_diagnosis` — Legacy Diagnosis Engine: família `legacy_diagnosis`; usado por brownfield_discovery, migration_execution, bug_repair.
-- `incident_first` — Incident-First Engine: família `incident_first`; usado por incident_response, bug_repair, security_remediation.
+Método não é slogan. Ele precisa produzir artefatos, gates, pacotes de worker e critérios de parada.
 
-Nome de método não basta. A fábrica precisa ligar a rota escolhida a artefatos, gates, workers e provas. Por exemplo, trabalho test-first precisa de prova de teste. Trabalho design-first precisa de prova de Product Experience. Trabalho security-first precisa de threat modeling e evidência de segurança.
+## 5. O trabalho vira pacotes pequenos
 
-## 5. Planejamento cria execução limitada
+Um worker packet é um contrato pequeno. Ele diz ao worker o que fazer, o que não fazer, que evidência anexar e que autoridade ele tem. É aqui que a fábrica evita o pedido vago: "constrói isso aí".
 
-Product Creation Plan e work units transformam verdade de produto em pacotes executáveis. Um worker packet deve dizer ao especialista o que fazer, o que não fazer, qual evidência devolver e qual autoridade ele tem.
+Pacotes bons são estreitos. Dá para executar, revisar, repetir e fechar. Pacotes ruins são missões grandes sem prova clara. A fábrica deve criar os primeiros e bloquear os segundos.
 
-É aqui que a fábrica evita a falha clássica: "agente, construa tudo". O worker recebe um trabalho limitado, não uma missão vaga.
+## 6. O Hermes roda o chão da fábrica
 
-## 6. Hermes executa o trabalho de runtime
+Hermes Kanban continua sendo a fonte de verdade do runtime. Cards, dependências, comentários, status de worker, workspaces e transições vivem nele. A fábrica prepara e valida os contratos de produção; o Hermes registra o que está acontecendo de fato.
 
-Hermes Kanban continua sendo a fonte de verdade do runtime. Cards, dependências, status de workers, comentários, workspaces e transições vivem ali.
+Essa separação é importante. Arquivos locais provam que o kernel público está coerente. Eles não provam que uma execução viva, num Hermes do operador, terminou. Conclusão real precisa de estado de runtime, resultado de worker, revisão, evidência e decisões humanas quando o risco exige.
 
-A fábrica pode validar contratos e preparar pacotes, mas a autoridade de execução vem do estado do runtime. Se o runtime diz que um card está bloqueado, a fábrica precisa respeitar isso e reparar o bloqueio ou entregar o gate humano correto.
+## Modos da ponte com o operador
 
-## 7. Revisão é separada de execução
+A ponte pública com o operador é uma camada de interface. Ela traduz mensagens do operador para registros seguros da fábrica, mas não executa trabalho da fábrica sozinha. A execução continua pertencendo aos cards Hermes e aos workers atribuídos.
 
-Um evento `done` de worker não é prova automática. A fábrica espera readback, verificação e revisão independente quando necessário.
+Os modos da ponte são `status_bridge`, `start_bridge`, `question_bridge`, `decision_bridge`, `change_bridge`, `exception_bridge`, `handoff_bridge` e `learnback_forwarding`. Um pedido de início cria ou encaminha contexto de `factory_bridge_start_request`; ele não pula fonte, método nem gates de prontidão.
 
-Executor e reviewer devem ser identidades separadas em trabalho material. Revisão pode passar, falhar ou criar reparo. Uma revisão que passa mas não reduz o card original ainda é falha de orquestração.
+A ponte separa o `overkill-factory-gerente`, que conversa com o operador, do `factory-orchestrator`, que cuida de rota e controle de runtime. O Durable Operator Inbox preserva decisões, perguntas e handoffs no default Hermes store. O Factory Mechanic continua sendo o dono de self-improvement e learnback. A ponte não pode conceder autoridade, inventar aprovação, fechar gate ou declarar conclusão sem evidência.
 
-## 8. Gates humanos são explícitos
+## 7. Revisar é diferente de executar
 
-Gate humano não é desculpa para parar. É um pacote real de decisão. O operador deve receber o artefato, a decisão necessária, os riscos, as evidências e as opções recomendadas.
+O executor não deveria ser o juiz final de trabalho material. A fábrica usa readback, verificação, revisão independente e Receipt Five para separar "o worker disse que terminou" de "a fábrica consegue provar que terminou".
 
-Bloqueios internos de revisão são responsabilidade da fábrica, salvo quando exigem autoridade explícita do operador.
+Se a revisão passa, o resultado precisa voltar para a tarefa original. Se falha, a fábrica deve criar trabalho de reparo. Uma revisão aprovada que fica parada não é progresso. É mais um estado bloqueado.
 
-## 9. Receipt Five fecha o ciclo
+## 8. Gates humanos são raros, mas reais
 
-Receipt Five é o pacote de evidências de conclusão ou bloqueio. Ele deve responder:
+Um gate humano entra quando a decisão pertence ao operador: aceitar risco, aprovar orçamento, mexer em produção, mainnet, segredos, release ou outra fronteira explícita de autoridade. A fábrica não deve pedir aprovação humana só porque não sabe continuar.
 
-- o que foi pedido;
-- o que foi construído ou decidido;
-- qual evidência prova;
-- o que foi revisado;
-- o que continua bloqueado ou arriscado;
-- qual é o próximo estado operacional.
+Quando o gate humano é necessário, o operador deve receber um pacote de decisão: a escolha, a evidência, o risco, a recomendação e a consequência de cada caminho. JSON cru não é um bom gate humano. Pergunta vaga no chat é pior.
 
-Sem esse pacote, `done` não é uma afirmação de nível fábrica.
+## 9. Entregar, bloquear ou aprender
 
-## 10. Learnback melhora a fábrica
+Uma execução termina em um de três estados honestos.
 
-Uma execução finalizada pode revelar métodos melhores, skills faltantes, validadores fracos ou novos padrões de falha. Learnback transforma isso em melhoria revisável, não em mudança silenciosa da fábrica.
+Ela pode entregar quando a evidência é forte o bastante e os gates necessários passaram. Pode bloquear quando falta prova, acesso, autoridade ou segurança. Ou pode aprender quando a execução mostra um método melhor, um worker ausente, um validador fraco ou uma falha que se repete.
+
+Aprendizado também tem gate. A fábrica não deve se reescrever em silêncio porque uma execução foi estranha. Ela deve propor a mudança, testar e promover só quando for seguro.
