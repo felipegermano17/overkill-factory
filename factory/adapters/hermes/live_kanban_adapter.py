@@ -4133,8 +4133,10 @@ def declared_artifact_owner_rerun_review_passes(rows: dict[str, list[dict[str, A
                 continue
             review = metadata.get("independent_review_result")
             if not isinstance(review, dict):
+                review = metadata.get("independent_readback_review_result")
+            if not isinstance(review, dict):
                 continue
-            verdict = str(review.get("verdict") or "").strip().upper()
+            verdict = str(review.get("verdict") or review.get("result") or "").strip().upper()
             if "PASS" not in verdict:
                 continue
             review_text = task_record_text(record).lower()
@@ -4150,8 +4152,15 @@ def declared_artifact_owner_rerun_review_passes(rows: dict[str, list[dict[str, A
             )
             if not readback_context:
                 continue
-            owner_ref = str(review.get("owner_rerun_task_id") or "").strip()
-            target_ref = str(review.get("target_task_id") or review.get("target_task_ref") or "").strip()
+            owner_ref = str(review.get("owner_rerun_task_id") or review.get("owner_rerun_task_ref") or "").strip()
+            target_ref = str(review.get("target_task_id") or review.get("target_task_ref") or review.get("repair_target_task_ref") or "").strip()
+            raw_signoffs = review.get("owner_reviewer_signoffs")
+            signoffs: dict[str, Any] = raw_signoffs if isinstance(raw_signoffs, dict) else {}
+            if not owner_ref:
+                owner_ref_text = str(signoffs.get("owner_result_ref") or signoffs.get("owner_repair_task_ref") or "")
+                owner_path_match = re.search(r"/(t_[A-Za-z0-9_]+)/", owner_ref_text)
+                if owner_path_match:
+                    owner_ref = owner_path_match.group(1)
             if not owner_ref:
                 owner_match = re.search(r"owner rerun task\s+(`?)(t_[A-Za-z0-9_]+)\1", review_text)
                 if owner_match:
@@ -4181,6 +4190,9 @@ def superseded_declared_artifact_repair_candidates(rows: dict[str, list[dict[str
     candidates: list[dict[str, Any]] = []
     for repair in rows.get("blocked", []):
         candidate = declared_artifact_owner_rerun_candidate_from_repair_record(repair)
+        if candidate is None:
+            continue
+        candidate = resolve_redacted_owner_rerun_target(candidate, rows)
         if candidate is None:
             continue
         target_ref = str(candidate.get("target_task_ref") or "").strip()
