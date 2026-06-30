@@ -3475,12 +3475,13 @@ def remediation_task_runtime_metadata(
 def internal_review_pass_references(record: dict[str, Any], blocked_refs: set[str]) -> list[str]:
     body = task_body_json_object(record)
     text = task_record_text(record)
+    text_lower = text.lower()
     result = str(body.get("result") or body.get("verdict") or "").strip().upper()
-    pass_seen = result == "PASS" or "independent review pass" in text or "review pass" in text or '"result": "pass' in text or " pass" in text
+    pass_seen = result == "PASS" or "independent review pass" in text_lower or "review pass" in text_lower or '"result": "pass' in text_lower or " pass" in text_lower
     if not pass_seen:
         return []
     if str(record.get("assignee") or "").strip() not in {"independent-reviewer", "autoreview-gate"}:
-        if "independent review" not in text and "review" not in text:
+        if "independent review" not in text_lower and "review" not in text_lower:
             return []
     refs: set[str] = set()
     for key in ("reviewed_task_ref", "blocked_task_ref", "target_task_ref", "task_ref"):
@@ -3581,6 +3582,8 @@ def internal_review_fail_references(record: dict[str, Any], blocked_refs: set[st
     if title_lower.startswith("repair ") and " after internal review fail" in title_lower:
         return []
     if "no_repair_required" in text_lower and "not a current independent review fail" in text_lower:
+        return []
+    if internal_review_pass_references(record, blocked_refs):
         return []
     result = str(body.get("result") or body.get("verdict") or "").strip().upper()
     fail_seen = result == "FAIL" or "review fail" in text_lower or "review failed" in text_lower or '"result": "fail' in text_lower
