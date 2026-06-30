@@ -3574,8 +3574,13 @@ def close_internal_review_pass_blockers(
 def internal_review_fail_references(record: dict[str, Any], blocked_refs: set[str]) -> list[str]:
     body = task_body_json_object(record)
     text = task_record_text(record)
+    text_lower = text.lower()
+    if body.get("marker") == NO_IDLE_REVIEW_FAIL_REPAIR_MARKER:
+        return []
+    if "no_repair_required" in text_lower and "not a current independent review fail" in text_lower:
+        return []
     result = str(body.get("result") or body.get("verdict") or "").strip().upper()
-    fail_seen = result == "FAIL" or "review fail" in text or "review failed" in text or '"result": "fail' in text
+    fail_seen = result == "FAIL" or "review fail" in text_lower or "review failed" in text_lower or '"result": "fail' in text_lower
     if not fail_seen:
         return []
     refs: set[str] = set()

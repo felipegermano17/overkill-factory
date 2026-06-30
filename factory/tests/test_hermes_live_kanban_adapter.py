@@ -6702,6 +6702,50 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertEqual(repair_body["review_task_ref"], review_id)
         self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
 
+    def test_no_idle_ignores_no_repair_required_duplicate_repair_readback_as_review_fail(self) -> None:
+        fake = FakeHermes()
+        blocker_id = "t_" + "blockfail"
+        repair_id = "t_" + "repairdone"
+        fake.tasks[blocker_id] = {
+            "id": blocker_id,
+            "status": "blocked",
+            "assignee": "cloud-infra-security-specialist",
+            "title": "F15/WU-15 - Cloud/IAM/KMS/Secret Manager/budget non-material readiness packet",
+            "body": "review-required: independent-reviewer must review before this card is done",
+            "events": [{"type": "blocked", "payload": {"kind": "needs_input", "reason": "review-required"}}],
+        }
+        fake.tasks[repair_id] = {
+            "id": repair_id,
+            "status": "done",
+            "assignee": "cloud-infra-security-specialist",
+            "title": "Repair t_blockfail after internal review FAIL",
+            "body": json.dumps(
+                {
+                    "packet_type": "factory_internal_review_fail_repair_request",
+                    "marker": adapter.NO_IDLE_REVIEW_FAIL_REPAIR_MARKER,
+                    "target_task_ref": blocker_id,
+                    "review_task_ref": "t_stale_duplicate",
+                }
+            ),
+            "latest_summary": (
+                "NO_REPAIR_REQUIRED. The referenced review task was a completed duplicate/stale "
+                "repair readback, not a current independent REVIEW FAIL. Actual independent review already PASS."
+            ),
+            "events": [{"type": "completed", "payload": {"summary": "NO_REPAIR_REQUIRED not a current independent REVIEW FAIL"}}],
+        }
+        args = adapter.build_parser().parse_args(["no-idle", "--board", TEST_BOARD, "--create-remediation"])
+
+        result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertNotEqual(state["classification"], "internal_review_fail_repair_task_created")
+        repairs = [
+            task for task in fake.tasks.values()
+            if adapter.task_body_json_object(task).get("marker") == adapter.NO_IDLE_REVIEW_FAIL_REPAIR_MARKER
+            and task.get("status") == "ready"
+        ]
+        self.assertEqual(repairs, [])
+
     def test_no_idle_reports_running_closeout_without_mutation_when_not_remediating(self) -> None:
         fake = FakeHermes()
         running_id = "t_" + "runclose2"
