@@ -3575,7 +3575,10 @@ def internal_review_fail_references(record: dict[str, Any], blocked_refs: set[st
     body = task_body_json_object(record)
     text = task_record_text(record)
     text_lower = text.lower()
+    title_lower = str(record.get("title") or "").lower()
     if body.get("marker") == NO_IDLE_REVIEW_FAIL_REPAIR_MARKER:
+        return []
+    if title_lower.startswith("repair ") and " after internal review fail" in title_lower:
         return []
     if "no_repair_required" in text_lower and "not a current independent review fail" in text_lower:
         return []
