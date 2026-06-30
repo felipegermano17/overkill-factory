@@ -4782,6 +4782,104 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertEqual(candidate["target_worker"], "release-ops-worker")
         self.assertEqual(candidate["missing_artifact_names"], ["wu19_release_readiness_repair_package.json"])
 
+    def test_declared_artifact_owner_rerun_candidate_suppressed_after_readback_pass(self) -> None:
+        target_id = "t_" + "releasepkgpass"
+        repair_id = "t_" + "readbackdonepass"
+        owner_id = "t_" + "ownerrerunpass"
+        review_id = "t_" + "reviewpass"
+        rows = {
+            "blocked": [],
+            "done": [
+                {
+                    "id": target_id,
+                    "status": "done",
+                    "title": "Repair WU-19 release/readiness blockers",
+                    "assignee": "release-ops-worker",
+                    "body": json.dumps({"marker": adapter.NO_IDLE_RELEASE_READINESS_REPAIR_MARKER}),
+                },
+                {
+                    "id": repair_id,
+                    "status": "done",
+                    "title": "Repair missing declared artifacts for board",
+                    "assignee": "factory-orchestrator",
+                    "body": json.dumps(
+                        {
+                            "plan_action": "repair_declared_artifacts",
+                            "required_output": "declared_artifact_readback_repair",
+                            "repair_target": {
+                                "task_ref": target_id,
+                                "title": "Repair WU-19 release/readiness blockers",
+                                "assignee": "release-ops-worker",
+                                "missing_artifact_names": ["wu19_release_readiness_repair_package.json"],
+                            },
+                        }
+                    ),
+                    "runs": [
+                        {
+                            "status": "done",
+                            "metadata": {
+                                "orchestration_result": {
+                                    "packet_type": "declared_artifact_readback_repair",
+                                    "status": "READBACK_REPAIR_MATERIALIZED__NO_GATE_APPROVED",
+                                    "target_task_ref": target_id,
+                                    "missing_artifact_names": ["wu19_release_readiness_repair_package.json"],
+                                    "declared_artifact_files_exist_now": False,
+                                }
+                            },
+                        }
+                    ],
+                },
+                {
+                    "id": owner_id,
+                    "status": "done",
+                    "title": "Rerun owner worker for missing artifacts",
+                    "assignee": "release-ops-worker",
+                    "body": json.dumps(
+                        {
+                            "packet_type": "factory_declared_artifact_owner_rerun_request",
+                            "target_task_ref": target_id,
+                            "owner_worker": "release-ops-worker",
+                        }
+                    ),
+                    "runs": [
+                        {
+                            "status": "done",
+                            "metadata": {
+                                "declared_artifact_owner_rerun_result": {
+                                    "target_task_ref": target_id,
+                                    "owner_worker": "release-ops-worker",
+                                    "created_independent_readback_task": review_id,
+                                }
+                            },
+                        }
+                    ],
+                },
+                {
+                    "id": review_id,
+                    "status": "done",
+                    "title": "Independent readback PASS",
+                    "assignee": "independent-reviewer",
+                    "body": f"Independent runtime readback PASS from release-ops-worker task {owner_id} / target {target_id}.",
+                    "runs": [
+                        {
+                            "status": "done",
+                            "metadata": {
+                                "independent_readback_review_result": {
+                                    "verdict": "PASS",
+                                    "review_coverage": {"artifact_existence": "PASS", "stat_read_hash": "PASS"},
+                                }
+                            },
+                        }
+                    ],
+                },
+            ],
+            "ready": [],
+            "running": [],
+            "todo": [],
+        }
+
+        self.assertIsNone(adapter.declared_artifact_owner_rerun_candidate(rows))
+
     def test_no_idle_does_not_duplicate_materialization_after_wu19_release_readiness_resolution(self) -> None:
         blocker_id = "t_" + "f16blocked"
         f17_id = "t_" + "f17blocked"

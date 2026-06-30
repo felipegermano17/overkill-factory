@@ -73,6 +73,8 @@ Mandate:
 
 | FM-035 | Declared-artifact readback repair completes as `done` while reporting target files absent | no-idle ignores it because owner-rerun candidate scan only looked at `blocked`; then it creates another generic readback repair or a stale `owner-worker` rerun | repair metadata used `declared_artifact_files_exist_now=false` / `target_workspace_exists_now=false` without `BLOCK`, and done repairs were scanned oldest-first | scan newest done readback repairs, treat missing-file booleans as owner-rerun candidates, accept `target_task_ref`, and reject placeholder `owner-worker` | `test_declared_artifact_owner_rerun_candidate_from_done_readback_repair_missing_files` |
 
+| FM-036 | Independent readback PASS is stale/false because the owner artifacts later disappear or hashes no longer match | no-idle suppresses owner-rerun or keeps repairing old declarations even though runtime bytes are absent | PASS parser trusted review metadata without verifying current `workspace:` files; newer readback repairs stored missing evidence in `evidence_refs.readback_records`, not top-level booleans | only accept readback PASS with current runtime artifact/hash proof, parse `target X / task Y` body formats, extract targets from `readback_records`, and treat `exists=false` records as owner-rerun candidates | `test_declared_artifact_owner_rerun_candidate_suppressed_after_readback_pass` plus live readback validation |
+
 ## Live-board observations during audit
 
 - 2026-06-30T12:32Z: board had `blocked=3`, `running=1`, `todo=14`; running task was `Repair factory materialization contracts` and blockers were WU-09/WU-10/WU-13 input/capability materialization issues.
