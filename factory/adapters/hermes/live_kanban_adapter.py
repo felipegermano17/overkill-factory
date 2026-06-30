@@ -2670,10 +2670,10 @@ def classify_no_idle_state(rows: dict[str, list[dict[str, Any]]]) -> dict[str, A
     materialization_contract_refs = sorted(
         task_record_id(item) for item in materialization_contract_blockers if task_record_id(item)
     )
-    if blocked and materialization_contract_blockers and len(materialization_contract_blockers) == len(blocked) and not todo:
+    if blocked and materialization_contract_blockers:
         return {
             "status": "remediation_required",
-            "classification": "only_materialization_contract_blockers_seen",
+            "classification": "materialization_contract_blockers_seen",
             "blocked": True,
             "remediation_required": True,
             "human_gate_required": False,
@@ -2683,8 +2683,9 @@ def classify_no_idle_state(rows: dict[str, list[dict[str, Any]]]) -> dict[str, A
             "materialization_contract_task_refs": materialization_contract_refs,
             "remediation_strategy": "create_materialization_contract_repair_task",
             "remediation_reason": (
-                "All visible blocked work is stopped by missing runtime/security contracts, source packets, "
-                "target repo paths, or parent artifacts. This is a factory materialization defect, not an operator gate."
+                "Visible blocked work is stopped by missing runtime/security contracts, source packets, "
+                "traceability artifacts, target repo paths, or parent artifacts. This is a factory "
+                "materialization defect, not an operator gate, even when unrelated todo backlog exists."
             ),
             "next_action": "create internal materialization-contract repair work and dispatch it; do not ask the operator",
             "state": state,
@@ -10929,6 +10930,7 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
     targeted_legacy_repair_available = legacy_remediation_strategy in {
         "create_targeted_review_repair_task",
         "create_post_review_owner_gate_package_task",
+        "create_materialization_contract_repair_task",
     }
     runtime_contract_repair_required = (
         not targeted_legacy_repair_available
