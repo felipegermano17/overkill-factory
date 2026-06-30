@@ -4717,6 +4717,38 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertFalse(created_body["operator_input_required"])
         self.assertNotIn("parents", created_tasks[0])
 
+    def test_no_idle_reports_dispatch_available_when_ready_exists_alongside_running(self) -> None:
+        running_id = "t_" + "runalive"
+        ready_id = "t_" + "readywork"
+        rows = {
+            "running": [
+                {
+                    "id": running_id,
+                    "status": "running",
+                    "assignee": "worker-a",
+                    "title": "Long running work",
+                }
+            ],
+            "ready": [
+                {
+                    "id": ready_id,
+                    "status": "ready",
+                    "assignee": "worker-b",
+                    "title": "Ready parallel work",
+                }
+            ],
+            "blocked": [],
+            "todo": [],
+            "done": [],
+        }
+
+        state = adapter.classify_no_idle_state(rows)
+
+        self.assertEqual(state["classification"], "running_work_exists")
+        self.assertTrue(state["native_dispatch_required_next"])
+        self.assertEqual(state["ready_task_refs"], [ready_id])
+        self.assertEqual(state["running_task_refs"], [running_id])
+
     def test_no_idle_external_api_key_not_materialization_contract_repair(self) -> None:
         blocker_id = "t_" + "externalkey"
         rows = {
