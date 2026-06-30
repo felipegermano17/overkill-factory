@@ -4583,6 +4583,86 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertFalse(created_body["targeted_remediation"]["create_new_canonical_card"])
         self.assertNotIn("parents", created_task)
 
+    def test_no_idle_creates_materialization_contract_repair_for_internal_missing_inputs(self) -> None:
+        fake = FakeHermes()
+        blocker_id = "t_materialdefect"
+        downstream_id = "t_downstreamtodo"
+        fake.tasks[blocker_id] = {
+            "id": blocker_id,
+            "status": "blocked",
+            "title": "F15/WU-07 - Ledger, reconciliation and audit data model",
+            "assignee": "data-persistence-builder",
+            "current_step_key": "F15-runtime-execution",
+            "body": json.dumps(
+                {
+                    "work_unit_id": "WU-07",
+                    "source_packet_artifact": "f15_worker_packets.json#WU-07",
+                    "done_definition": "Produce traceable ledger model from parent artifacts.",
+                }
+            ),
+            "latest_summary": (
+                "Factory integration/input defect: missing runtime_contract and source_packet_artifact; "
+                "parent artifacts absent, so values cannot be traced."
+            ),
+            "events": [
+                {
+                    "kind": "blocked",
+                    "payload": {
+                        "kind": "capability",
+                        "reason": "missing runtime_contract and source_packet_artifact; repair materialization",
+                    },
+                }
+            ],
+            "comments": [
+                {
+                    "author": "data-persistence-builder",
+                    "body": (
+                        "No safe data-persistence work can proceed: runtime_contract, target_repo_paths, "
+                        "source_packet_artifact and parent artifacts are missing. This should be repaired by "
+                        "the factory adapter/materializer, not by asking the operator."
+                    ),
+                }
+            ],
+        }
+        fake.tasks[downstream_id] = {
+            "id": downstream_id,
+            "status": "todo",
+            "title": "F15/WU-17 - Test automation and remote proof harness",
+            "current_step_key": "F15-runtime-execution",
+            "body": json.dumps({"work_unit_id": "WU-17"}),
+            "parents": [blocker_id],
+            "events": [{"kind": "created"}],
+        }
+        args = adapter.build_parser().parse_args(
+            ["no-idle", "--board", TEST_BOARD, "--create-remediation", "--workspace", "scratch"]
+        )
+
+        result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertEqual(
+            state["classification"],
+            "deterministic_materialization_contract_repair_task_created",
+        )
+        self.assertTrue(state["native_dispatch_required_next"])
+        self.assertFalse(state["human_gate_required"])
+        self.assertFalse(state["operator_input_required"])
+        self.assertEqual(state["materialization_contract_task_refs"], [blocker_id])
+        created_tasks = [
+            task
+            for task_id, task in fake.tasks.items()
+            if task_id not in {blocker_id, downstream_id}
+        ]
+        self.assertEqual(len(created_tasks), 1)
+        created_body = json.loads(str(created_tasks[0]["body"]))
+        self.assertEqual(
+            created_body["targeted_remediation"]["plan_action"],
+            "repair_materialization_contract_inputs",
+        )
+        self.assertEqual(created_body["targeted_remediation"]["materialization_contract_task_refs"], [blocker_id])
+        self.assertFalse(created_body["operator_input_required"])
+        self.assertNotIn("parents", created_tasks[0])
+
     def test_no_idle_creates_owner_gate_package_after_product_sot_candidate_done(self) -> None:
         fake = FakeHermes()
         sot_task_id = "t_" + "sotdone1"
