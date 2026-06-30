@@ -5859,6 +5859,65 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertNotIn("redacted", body["target_task_ref"])
         self.assertIn(target_id, str(created[0].get("title") or ""))
 
+    def test_no_idle_routes_wu01_owner_restore_rerun_from_review_target(self) -> None:
+        fake = FakeHermes()
+        repair_id = "t_" + "wu01repair"
+        owner_target_id = "t_" + "wu01owner"
+        review_id = "t_" + "wu01review"
+        fake.tasks[owner_target_id] = {
+            "id": owner_target_id,
+            "status": "done",
+            "assignee": "product-architect",
+            "title": "F15/WU-01 - 20apy/20apy-ff predecessor deep technical study",
+            "body": "{}",
+        }
+        fake.tasks[review_id] = {
+            "id": review_id,
+            "status": "done",
+            "assignee": "independent-reviewer",
+            "title": "Review " + owner_target_id + " internal factory work product",
+            "body": "{}",
+        }
+        fake.tasks[repair_id] = {
+            "id": repair_id,
+            "status": "blocked",
+            "assignee": "factory-orchestrator",
+            "title": "Repair missing declared artifacts for board",
+            "body": json.dumps(
+                {
+                    "plan_action": "repair_declared_artifacts",
+                    "required_output": "declared_artifact_readback_repair",
+                    "repair_target": {
+                        "task_ref": "kanban:<redacted>",
+                        "title": "Review kanban:<redacted> internal factory work product",
+                        "assignee": "independent-reviewer",
+                        "missing_artifact_names": [
+                            "wu01_20apy_predecessor_deep_study_packet.md",
+                            "wu01_20apy_predecessor_deep_study_result.json",
+                            "wu01_artifact_hash_ledger.json",
+                        ],
+                    },
+                }
+            ),
+            "comments": [
+                {
+                    "body": "declared-artifact-readback BLOCKED: reviewed WU-01 owner artifacts are missing from runtime; reducer must route product-architect restore/rerun plus independent readback before downstream reliance."
+                }
+            ],
+        }
+        args = adapter.build_parser().parse_args(
+            ["no-idle", "--board", TEST_BOARD, "--create-remediation", "--workspace", "scratch"]
+        )
+
+        result = adapter.no_idle(args, runner=fake)
+
+        self.assertEqual(result["no_idle_state"]["classification"], "declared_artifact_owner_rerun_task_created")
+        created = [task for task in fake.tasks.values() if task.get("assignee") == "product-architect" and task.get("status") == "ready"]
+        self.assertEqual(len(created), 1)
+        body = adapter.parse_json_object(str(created[0].get("body") or "{}"))
+        self.assertEqual(body["target_task_ref"], owner_target_id)
+        self.assertEqual(body["owner_worker"], "product-architect")
+
     def test_no_idle_closes_redacted_repair_after_independent_readback_result_pass(self) -> None:
         fake = FakeHermes()
         repair_id = "t_" + "redactedrepair"
