@@ -374,6 +374,27 @@ class EmptyStdoutIdempotentHermes(FakeHermes):
         return super().__call__(argv)
 
 
+class StaleThenFreshReconcileHermes(FakeHermes):
+    def __init__(self, *, stale_creates: int) -> None:
+        super().__init__()
+        self.stale_creates = stale_creates
+        self.create_count = 0
+
+    def __call__(self, argv: list[str]) -> subprocess.CompletedProcess[str]:
+        if len(argv) >= 5 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "create":
+            self.create_count += 1
+            result = super().__call__(argv)
+            try:
+                task_id = json.loads(result.stdout).get("id")
+            except Exception:
+                task_id = None
+            if task_id and self.create_count <= self.stale_creates:
+                self.tasks[task_id]["status"] = "done"
+                self.tasks[task_id]["events"] = [{"kind": "completed"}]
+            return result
+        return super().__call__(argv)
+
+
 class BrokenLinkHermes(FakeHermes):
     def __call__(self, argv: list[str]) -> subprocess.CompletedProcess[str]:
         if len(argv) >= 7 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "link":
@@ -4582,6 +4603,39 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         )
         self.assertFalse(created_body["targeted_remediation"]["create_new_canonical_card"])
         self.assertNotIn("parents", created_task)
+
+    def test_no_idle_replaces_more_than_three_stale_reconcile_tasks(self) -> None:
+        fake = StaleThenFreshReconcileHermes(stale_creates=3)
+        todo_id = "t_staletodo"
+        fake.tasks[todo_id] = {
+            "id": todo_id,
+            "status": "todo",
+            "title": "F15/WU-08 - Downstream payment work without binding",
+            "assignee": "integration-builder",
+            "body": "{}",
+            "events": [{"kind": "created"}],
+        }
+        args = adapter.build_parser().parse_args(
+            ["no-idle", "--board", TEST_BOARD, "--create-remediation", "--workspace", "scratch"]
+        )
+
+        result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertEqual(fake.create_count, 4)
+        self.assertEqual(
+            state["classification"],
+            "deterministic_board_reconcile_task_created_after_stale_terminal_replacement",
+        )
+        self.assertEqual(state.get("remediation_replacement_attempts"), 3)
+        self.assertTrue(state["native_dispatch_required_next"])
+        self.assertFalse(state["remediation_task_stale"])
+        fresh_tasks = [
+            task
+            for task in fake.tasks.values()
+            if task.get("title") == "Materialize canonical factory card for board" and task.get("status") == "ready"
+        ]
+        self.assertEqual(len(fresh_tasks), 1)
 
     def test_no_idle_creates_materialization_contract_repair_for_internal_missing_inputs(self) -> None:
         fake = FakeHermes()
