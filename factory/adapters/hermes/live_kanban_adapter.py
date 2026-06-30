@@ -4124,6 +4124,8 @@ def declared_artifact_owner_rerun_candidate_from_repair_record(repair: dict[str,
         route = orch.get("route_registry_resolution") if isinstance(orch.get("route_registry_resolution"), dict) else {}
         target_task_ref = str(
             orch.get("repair_target_task")
+            or orch.get("target_task_ref")
+            or orch.get("target_task_id")
             or repair_target.get("task_ref")
             or ""
         ).strip()
@@ -4147,6 +4149,8 @@ def declared_artifact_owner_rerun_candidate_from_repair_record(repair: dict[str,
             ).strip()
         if not target_worker and "product-face" in text:
             target_worker = "product-face"
+        if target_worker == "owner-worker":
+            return None
         review_worker = str(route.get("review_worker_declared") or "independent-reviewer").strip()
         readback = orch.get("declared_artifact_readback_repair")
         if not isinstance(readback, dict):
@@ -4178,7 +4182,12 @@ def declared_artifact_owner_rerun_candidate_from_repair_record(repair: dict[str,
         if not isinstance(readback, dict):
             readback = {}
         verdict = str(readback.get("repair_verdict") or orchestration.get("status") or "").strip().upper()
-        if "BLOCK" in verdict:
+        artifact_files_missing = (
+            orchestration.get("declared_artifact_files_exist_now") is False
+            or orchestration.get("target_workspace_exists_now") is False
+            or readback.get("declared_artifact_files_exist_now") is False
+        )
+        if "BLOCK" in verdict or artifact_files_missing:
             candidate = candidate_from_parts(orchestration)
             if candidate is not None:
                 return candidate
@@ -4253,10 +4262,14 @@ def resolve_redacted_owner_rerun_target(candidate: dict[str, Any], rows: dict[st
 
 
 def declared_artifact_owner_rerun_candidate(rows: dict[str, list[dict[str, Any]]]) -> dict[str, Any] | None:
-    for repair in rows.get("blocked", []):
-        candidate = declared_artifact_owner_rerun_candidate_from_repair_record(repair)
-        if candidate is not None:
-            return resolve_redacted_owner_rerun_target(candidate, rows)
+    for status in ("blocked", "done"):
+        repairs = list(rows.get(status, []))
+        if status == "done":
+            repairs = list(reversed(repairs))
+        for repair in repairs:
+            candidate = declared_artifact_owner_rerun_candidate_from_repair_record(repair)
+            if candidate is not None:
+                return resolve_redacted_owner_rerun_target(candidate, rows)
     return None
 
 

@@ -4717,6 +4717,71 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertFalse(created_body["operator_input_required"])
         self.assertNotIn("parents", created_tasks[0])
 
+    def test_declared_artifact_owner_rerun_candidate_from_done_readback_repair_missing_files(self) -> None:
+        target_id = "t_" + "releasepkg"
+        repair_id = "t_" + "readbackdone"
+        rows = {
+            "blocked": [],
+            "done": [
+                {
+                    "id": target_id,
+                    "status": "done",
+                    "title": "Repair WU-19 release/readiness blockers",
+                    "assignee": "release-ops-worker",
+                    "body": json.dumps({"marker": adapter.NO_IDLE_RELEASE_READINESS_REPAIR_MARKER}),
+                },
+                {
+                    "id": repair_id,
+                    "status": "done",
+                    "title": "Repair missing declared artifacts for board",
+                    "assignee": "factory-orchestrator",
+                    "body": json.dumps(
+                        {
+                            "plan_action": "repair_declared_artifacts",
+                            "required_output": "declared_artifact_readback_repair",
+                            "repair_target": {
+                                "task_ref": target_id,
+                                "title": "Repair WU-19 release/readiness blockers",
+                                "assignee": "release-ops-worker",
+                                "missing_artifact_names": ["wu19_release_readiness_repair_package.json"],
+                            },
+                        }
+                    ),
+                    "latest_summary": (
+                        "Readback confirms the prior completed run declared JSON/MD files but files are absent; "
+                        "release-ops-worker remains original target/rerun candidate."
+                    ),
+                    "runs": [
+                        {
+                            "status": "done",
+                            "metadata": {
+                                "orchestration_result": {
+                                    "packet_type": "declared_artifact_readback_repair",
+                                    "status": "READBACK_REPAIR_MATERIALIZED__NO_GATE_APPROVED",
+                                    "target_task_ref": target_id,
+                                    "missing_artifact_names": ["wu19_release_readiness_repair_package.json"],
+                                    "declared_artifact_files_exist_now": False,
+                                    "target_workspace_exists_now": False,
+                                }
+                            },
+                        }
+                    ],
+                },
+            ],
+            "ready": [],
+            "running": [],
+            "todo": [],
+        }
+
+        candidate = adapter.declared_artifact_owner_rerun_candidate(rows)
+
+        self.assertIsNotNone(candidate)
+        assert candidate is not None
+        self.assertEqual(candidate["repair_task_ref"], repair_id)
+        self.assertEqual(candidate["target_task_ref"], target_id)
+        self.assertEqual(candidate["target_worker"], "release-ops-worker")
+        self.assertEqual(candidate["missing_artifact_names"], ["wu19_release_readiness_repair_package.json"])
+
     def test_no_idle_does_not_duplicate_materialization_after_wu19_release_readiness_resolution(self) -> None:
         blocker_id = "t_" + "f16blocked"
         f17_id = "t_" + "f17blocked"
