@@ -128,7 +128,7 @@
       "evidence_refs": [
         "templates/human-gate-decision-package.json",
         "scripts/render_human_gate_pdf.py",
-        "docs/operations/human-gate-delivery.md"
+        "docs/en/trust-and-evidence.md"
       ],
       "command_refs": [
         "command:factoryctl human-gate-package"
@@ -257,8 +257,8 @@
       "evidence_refs": [
         "README.md",
         "README.pt-BR.md",
-        "docs/visuals/overkill-factory-map-v1.0.3.html",
-        "docs/reference/factory-kernel-reference.md"
+        "docs/assets/public-map/overkill-factory-map-v1.0.3.html",
+        "docs/en/reference.md"
       ],
       "command_refs": [
         "command:python scripts/generate_factory_reference_docs.py --check"

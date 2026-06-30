@@ -10,6 +10,7 @@ from scripts import factory_production_readiness
 
 
 ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = ROOT.parent
 FORBIDDEN_TRACKED_PREFIXES = (
     "validation/",
     "pilots/",
@@ -41,7 +42,7 @@ class PrepilotMasterTaskReadinessTest(unittest.TestCase):
                 self.assertFalse(path.startswith(FORBIDDEN_TRACKED_PREFIXES), path)
 
     def test_generated_outputs_are_ignored_not_public_source(self) -> None:
-        gitignore = (ROOT / ".gitignore").read_text(encoding="utf-8")
+        gitignore = (REPO_ROOT / ".gitignore").read_text(encoding="utf-8")
 
         for ignored in [".tmp/", "validation/", "pilots/"]:
             with self.subTest(ignored=ignored):
@@ -95,7 +96,7 @@ class PrepilotMasterTaskReadinessTest(unittest.TestCase):
         self.assertEqual(by_id["evidence_graph"]["status"], "BLOCKED")
 
     def test_public_readme_rejects_narrative_history_as_onboarding(self) -> None:
-        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
         normalized = " ".join(readme.split())
 
         self.assertIn("Narrative validation history", readme)

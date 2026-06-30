@@ -10,6 +10,7 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = ROOT.parent
 SCRIPT_DIR = ROOT / "scripts"
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
@@ -120,7 +121,7 @@ def valid_factory_run() -> dict[str, Any]:
 
 class FactoryV2KernelTests(unittest.TestCase):
     def test_workflow_compiler_keeps_early_phases_out_of_human_decision_outbox(self) -> None:
-        catalog = json.loads((ROOT / "docs" / "factory-workflow.catalog.json").read_text(encoding="utf-8"))
+        catalog = json.loads((REPO_ROOT / "docs" / "factory-workflow.catalog.json").read_text(encoding="utf-8"))
 
         plan = kernel.compile_workflow_catalog(catalog, compiled_at="2026-06-26T00:00:00+00:00")
 
@@ -232,7 +233,7 @@ class FactoryV2KernelTests(unittest.TestCase):
 
     def test_phase_sources_stay_synchronized_with_runtime_frontiers(self) -> None:
         graph = json.loads((ROOT / "templates" / "factory-phase-graph.json").read_text(encoding="utf-8"))
-        catalog = json.loads((ROOT / "docs" / "factory-workflow.catalog.json").read_text(encoding="utf-8"))
+        catalog = json.loads((REPO_ROOT / "docs" / "factory-workflow.catalog.json").read_text(encoding="utf-8"))
         plan = json.loads((ROOT / "templates" / "factory-workflow-compiled-plan.json").read_text(encoding="utf-8"))
 
         self.assertEqual(
@@ -250,7 +251,7 @@ class FactoryV2KernelTests(unittest.TestCase):
 
     def test_phase_source_sync_rejects_missing_canonical_frontier_mapping(self) -> None:
         graph = json.loads((ROOT / "templates" / "factory-phase-graph.json").read_text(encoding="utf-8"))
-        catalog = json.loads((ROOT / "docs" / "factory-workflow.catalog.json").read_text(encoding="utf-8"))
+        catalog = json.loads((REPO_ROOT / "docs" / "factory-workflow.catalog.json").read_text(encoding="utf-8"))
         plan = json.loads((ROOT / "templates" / "factory-workflow-compiled-plan.json").read_text(encoding="utf-8"))
         frontier_order = [
             frontier for frontier in factoryctl.FACTORY_PHASE_ENGINE_FRONTIER_ORDER if frontier != "pack_selection"
@@ -269,7 +270,7 @@ class FactoryV2KernelTests(unittest.TestCase):
 
     def test_phase_source_sync_rejects_required_artifact_schema_drift(self) -> None:
         graph = json.loads((ROOT / "templates" / "factory-phase-graph.json").read_text(encoding="utf-8"))
-        catalog = json.loads((ROOT / "docs" / "factory-workflow.catalog.json").read_text(encoding="utf-8"))
+        catalog = json.loads((REPO_ROOT / "docs" / "factory-workflow.catalog.json").read_text(encoding="utf-8"))
         plan = json.loads((ROOT / "templates" / "factory-workflow-compiled-plan.json").read_text(encoding="utf-8"))
         for phase in catalog["phases"]:
             if phase["phase_id"] == "F3":

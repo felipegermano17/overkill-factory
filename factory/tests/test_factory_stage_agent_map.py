@@ -7,6 +7,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = ROOT.parent
 
 
 class FactoryStageAgentMapTest(unittest.TestCase):
@@ -14,11 +15,11 @@ class FactoryStageAgentMapTest(unittest.TestCase):
         self.registry = json.loads(
             (ROOT / "agents" / "worker-registry.public.json").read_text(encoding="utf-8")
         )
-        self.stage_map = (ROOT / "docs" / "agents" / "factory-stage-agent-map.md").read_text(
+        self.stage_map = (ROOT / "legacy-docs" / "public-docs-before-product-manual" / "agents" / "factory-stage-agent-map.md").read_text(
             encoding="utf-8"
         )
         self.workflow_catalog = json.loads(
-            (ROOT / "docs" / "factory-workflow.catalog.json").read_text(encoding="utf-8")
+            (REPO_ROOT / "docs" / "factory-workflow.catalog.json").read_text(encoding="utf-8")
         )
         self.worker_profiles = json.loads(
             (ROOT / "agents" / "worker-profiles.public.json").read_text(encoding="utf-8")
@@ -91,8 +92,8 @@ class FactoryStageAgentMapTest(unittest.TestCase):
         for artifact in ("data_metrics_plan", "user_docs_onboarding_plan"):
             with self.subTest(artifact=artifact):
                 self.assertIn(artifact, executable_plan["conditional_artifacts"])
-        self.assertIn("schemas/data-metrics-plan.schema.json", executable_plan["related_schema_refs"])
-        self.assertIn("schemas/user-docs-onboarding-plan.schema.json", executable_plan["related_schema_refs"])
+        self.assertIn("factory/schemas/data-metrics-plan.schema.json", executable_plan["related_schema_refs"])
+        self.assertIn("factory/schemas/user-docs-onboarding-plan.schema.json", executable_plan["related_schema_refs"])
         self.assertTrue(
             any("schema-backed runtime validation" in item for item in executable_plan["completion_detection"])
         )
@@ -103,9 +104,9 @@ class FactoryStageAgentMapTest(unittest.TestCase):
                 self.stage_map,
                 json.dumps(self.registry, sort_keys=True),
                 json.dumps(self.worker_profiles, sort_keys=True),
-                (ROOT / "docs" / "agents" / "worker-profiles.md").read_text(encoding="utf-8"),
+                (REPO_ROOT / "docs" / "en" / "technical-model.md").read_text(encoding="utf-8"),
                 (ROOT / "agents" / "worker-roster.md").read_text(encoding="utf-8"),
-                (ROOT / "docs" / "control-tower" / "discord-control-tower-os.md").read_text(
+                (REPO_ROOT / "docs" / "en" / "operating-model.md").read_text(
                     encoding="utf-8"
                 ),
             ]

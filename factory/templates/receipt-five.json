@@ -5,7 +5,7 @@
     "artifact_paths": [
       "templates/factory-master-plan-completion.json",
       "templates/factory-v3-release-readiness.json",
-      "docs/visuals/overkill-factory-map-v1.0.3.html"
+      "docs/assets/public-map/overkill-factory-map-v1.0.3.html"
     ],
     "verification_commands": [
       "python3 scripts/factory_master_plan_completion_audit.py",

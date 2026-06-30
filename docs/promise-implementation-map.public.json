@@ -18,8 +18,8 @@
       "documentation_refs": [
         "README.md",
         "README.pt-BR.md",
-        "docs/architecture/factory-v2-control-plane.md",
-        "docs/reference/cli.md"
+        "docs/en/technical-model.md",
+        "docs/en/reference.md"
       ],
       "implementation_refs": [
         "docs/factory-workflow.catalog.json",
@@ -46,9 +46,8 @@
       ],
       "boundary": "This proves deterministic public control-plane contracts and regressions. A live product still requires current Hermes runtime state, worker results, Receipt Five, approvals and product-specific release evidence.",
       "boundary_refs": [
-        "docs/architecture/factory-v2-control-plane.md",
-        "docs/architecture/hermes-integration.md",
-        "docs/operations/validation-and-release.md"
+        "docs/en/technical-model.md",
+        "docs/en/usage.md"
       ]
     },
     {
@@ -57,8 +56,8 @@
       "claim_level": "runtime_integration_proof",
       "documentation_refs": [
         "README.md",
-        "docs/architecture/hermes-integration.md",
-        "docs/getting-started/install-in-hermes.md"
+        "docs/en/technical-model.md",
+        "docs/en/usage.md"
       ],
       "implementation_refs": [
         "factory/adapters/hermes/live_kanban_adapter.py",
@@ -74,8 +73,8 @@
       ],
       "boundary": "The public repo proves local contracts and public-safe runtime proof ingestion. A real product run still requires an operator-owned Hermes runtime and current Hermes evidence.",
       "boundary_refs": [
-        "docs/architecture/hermes-integration.md",
-        "docs/operations/validation-and-release.md"
+        "docs/en/technical-model.md",
+        "docs/en/usage.md"
       ]
     },
     {
@@ -84,8 +83,7 @@
       "claim_level": "local_contract_proof",
       "documentation_refs": [
         "README.md",
-        "docs/getting-started/quickstart-hermes.md",
-        "docs/getting-started/first-external-operator-walkthrough.md"
+        "docs/en/usage.md"
       ],
       "implementation_refs": [
         "factory/scripts/factoryctl.py",
@@ -100,7 +98,7 @@
       ],
       "boundary": "The minimal path writes local public-safe artifacts. It does not mutate a live Hermes board and does not establish production readiness for a real product.",
       "boundary_refs": [
-        "docs/getting-started/quickstart-hermes.md",
+        "docs/en/usage.md",
         "factory/examples/minimal-hermes-project/README.md"
       ]
     },
@@ -110,8 +108,8 @@
       "claim_level": "bounded_process_proof",
       "documentation_refs": [
         "README.md",
-        "docs/concepts/factory-flow.md",
-        "docs/reference/cli.md"
+        "docs/en/operating-model.md",
+        "docs/en/reference.md"
       ],
       "implementation_refs": [
         "factory/scripts/factoryctl.py",
@@ -128,8 +126,8 @@
       ],
       "boundary": "Understanding confirmation is not execution approval. It gates Product SOT creation, while product execution still needs method, readiness, worker results and evidence.",
       "boundary_refs": [
-        "docs/concepts/factory-flow.md",
-        "docs/reference/cli.md"
+        "docs/en/operating-model.md",
+        "docs/en/reference.md"
       ]
     },
     {
@@ -138,8 +136,8 @@
       "claim_level": "bounded_process_proof",
       "documentation_refs": [
         "README.md",
-        "docs/operations/fast-autonomy-lane.md",
-        "docs/agents/permission-model.md"
+        "docs/en/operating-model.md",
+        "docs/en/trust-and-evidence.md"
       ],
       "implementation_refs": [
         "factory/scripts/factoryctl.py",
@@ -155,7 +153,7 @@
       ],
       "boundary": "Fast autonomy cannot approve human gates, release production, touch mainnet, funds, signing, secrets, billing or destructive actions.",
       "boundary_refs": [
-        "docs/operations/fast-autonomy-lane.md",
+        "docs/en/operating-model.md",
         "factory/agents/worker-permission-classes.public.json"
       ]
     },
@@ -165,8 +163,8 @@
       "claim_level": "local_contract_proof",
       "documentation_refs": [
         "README.md",
-        "docs/concepts/factory-flow.md",
-        "docs/agents/worker-profiles.md"
+        "docs/en/operating-model.md",
+        "docs/en/technical-model.md"
       ],
       "implementation_refs": [
         "factory/scripts/factoryctl.py",
@@ -183,7 +181,7 @@
       ],
       "boundary": "A human-support worker can prepare and record decisions; it must not invent approval or ask for planning-only continuation as if it were authority.",
       "boundary_refs": [
-        "docs/agents/worker-profiles.md",
+        "docs/en/technical-model.md",
         "factory/agents/worker-roster.md"
       ]
     },
@@ -193,8 +191,7 @@
       "claim_level": "capability_routing_proof",
       "documentation_refs": [
         "README.md",
-        "docs/agents/capability-packs.md",
-        "docs/agents/worker-profiles.md"
+        "docs/en/technical-model.md"
       ],
       "implementation_refs": [
         "factory/scripts/factoryctl.py",
@@ -211,7 +208,7 @@
       ],
       "boundary": "Template packs are not executable by name. They block until activation evidence, profile bindings, smoke/eval proof and required gates exist.",
       "boundary_refs": [
-        "docs/agents/capability-packs.md",
+        "docs/en/technical-model.md",
         "factory/agents/capability-pack-activation-ledger.public.json"
       ]
     },
@@ -221,8 +218,7 @@
       "claim_level": "capability_routing_proof",
       "documentation_refs": [
         "README.md",
-        "docs/agents/capability-packs.md",
-        "docs/agents/worker-profiles.md"
+        "docs/en/technical-model.md"
       ],
       "implementation_refs": [
         "factory/scripts/factoryctl.py",
@@ -239,8 +235,8 @@
       ],
       "boundary": "Solana AI Kit is the domain brain, not a substitute for Hermes gates, signer boundaries, Receipt Five, security review, remote proof or human approval.",
       "boundary_refs": [
-        "docs/agents/capability-packs.md",
-        "docs/security/security-control-matrix.md"
+        "docs/en/technical-model.md",
+        "docs/en/trust-and-evidence.md"
       ]
     },
     {
@@ -249,8 +245,8 @@
       "claim_level": "local_contract_proof",
       "documentation_refs": [
         "README.md",
-        "docs/product-face/proof-runner.md",
-        "docs/concepts/factory-flow.md"
+        "docs/en/trust-and-evidence.md",
+        "docs/en/operating-model.md"
       ],
       "implementation_refs": [
         "factory/scripts/product_face_proof.py",
@@ -267,8 +263,8 @@
       ],
       "boundary": "The public contracts require product experience proof. They do not guarantee a finished design unless a product-specific worker result and review pass.",
       "boundary_refs": [
-        "docs/product-face/proof-runner.md",
-        "docs/agents/worker-profiles.md"
+        "docs/en/trust-and-evidence.md",
+        "docs/en/technical-model.md"
       ]
     },
     {
@@ -277,7 +273,7 @@
       "claim_level": "operator_bridge_proof",
       "documentation_refs": [
         "README.md",
-        "docs/operator/overkill-factory-bridge.md"
+        "docs/en/operating-model.md"
       ],
       "implementation_refs": [
         "factory/scripts/factory_bridge.py",
@@ -291,7 +287,7 @@
       ],
       "boundary": "The bridge does not run workers, mutate Hermes, watch the machine, approve human gates or become a source of truth.",
       "boundary_refs": [
-        "docs/operator/overkill-factory-bridge.md"
+        "docs/en/operating-model.md"
       ]
     },
     {
@@ -300,9 +296,7 @@
       "claim_level": "bounded_process_proof",
       "documentation_refs": [
         "README.md",
-        "docs/maintenance/self-improvement-loop.md",
-        "docs/maintenance/factory-learning-skill-evolution-os.md",
-        "docs/maintenance/hermes-learn-integration.md"
+        "docs/en/trust-and-evidence.md"
       ],
       "implementation_refs": [
         "factory/scripts/factory_self_improvement.py",
@@ -317,8 +311,7 @@
       ],
       "boundary": "Self-improvement outputs are candidates and do not mutate the factory. Critical changes still require review, validation and human gates before mutation.",
       "boundary_refs": [
-        "docs/maintenance/self-improvement-loop.md",
-        "docs/maintenance/hermes-learn-integration.md"
+        "docs/en/trust-and-evidence.md"
       ]
     },
     {
@@ -327,9 +320,9 @@
       "claim_level": "public_release_proof",
       "documentation_refs": [
         "README.md",
-        "docs/operations/validation-and-release.md",
-        "docs/operations/release-policy.md",
-        "docs/reference/CHANGELOG.md"
+        "docs/en/usage.md",
+        "docs/en/trust-and-evidence.md",
+        "docs/en/reference.md"
       ],
       "implementation_refs": [
         "factory/scripts/release_integration_preflight.py",
@@ -351,8 +344,8 @@
       ],
       "boundary": "A public kernel release claim does not prove any product-specific production launch, mainnet launch, hosted service release or private runtime state.",
       "boundary_refs": [
-        "docs/operations/validation-and-release.md",
-        "docs/operations/release-policy.md"
+        "docs/en/usage.md",
+        "docs/en/trust-and-evidence.md"
       ]
     },
     {
@@ -361,8 +354,8 @@
       "claim_level": "runtime_integration_proof",
       "documentation_refs": [
         "README.md",
-        "docs/operator/overkill-factory-bridge.md",
-        "docs/architecture/hermes-integration.md"
+        "docs/en/operating-model.md",
+        "docs/en/technical-model.md"
       ],
       "implementation_refs": [
         "factory/scripts/factoryctl.py",
@@ -381,8 +374,8 @@
       ],
       "boundary": "The watchdog is a board-state controller. Silent boards must pass through deterministic board reconciliation before any remediation card is created. It must not become a shadow scheduler, approve gates, complete work, choose phases from prose or replace native Hermes dispatch. Native Hermes dependency_wait must not page the operator, and block_loop_detected must route deterministic triage instead of repeated same-cause blocking.",
       "boundary_refs": [
-        "docs/architecture/hermes-integration.md",
-        "docs/operator/overkill-factory-bridge.md"
+        "docs/en/technical-model.md",
+        "docs/en/operating-model.md"
       ]
     }
   ]

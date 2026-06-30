@@ -10,6 +10,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = ROOT.parent
 MODULE_PATH = ROOT / "scripts" / "factory_bridge.py"
 
 
@@ -35,7 +36,7 @@ class FactoryBridgeTest(unittest.TestCase):
                 severity="requires_user",
                 source="hermes_transition_hook",
                 summary="R3 owner decision is required before done.",
-                refs=["docs/concepts/operator-journey.md"],
+                refs=["docs/en/manual.md"],
                 requires_user=True,
                 payload={"gate_type": "R3"},
             )
@@ -46,7 +47,7 @@ class FactoryBridgeTest(unittest.TestCase):
                 severity="requires_user",
                 source="hermes_transition_hook",
                 summary="R3 owner decision is required before done.",
-                refs=["docs/concepts/operator-journey.md"],
+                refs=["docs/en/manual.md"],
                 requires_user=True,
                 payload={"gate_type": "R3"},
             )
@@ -270,7 +271,7 @@ class FactoryBridgeTest(unittest.TestCase):
                 severity="requires_user",
                 source="factoryctl",
                 summary="Release owner decision is required.",
-                refs=["docs/operations/release-policy.md"],
+                refs=["docs/en/trust-and-evidence.md"],
                 requires_user=True,
             )
             decision = bridge.build_decision_record(
@@ -325,7 +326,7 @@ class FactoryBridgeTest(unittest.TestCase):
         self.assertIn("invalid JSONL record", corrupt_context)
 
     def test_operator_bridge_architecture_documents_the_bridge_modes(self) -> None:
-        architecture = (ROOT / "docs" / "operator" / "overkill-factory-bridge.md").read_text(encoding="utf-8")
+        architecture = (REPO_ROOT / "docs" / "en" / "operating-model.md").read_text(encoding="utf-8")
 
         for expected in [
             "status_bridge",

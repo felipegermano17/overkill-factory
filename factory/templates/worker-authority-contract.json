@@ -5,7 +5,7 @@
   "source_refs": [
     "agents/worker-permission-classes.public.json",
     "agents/worker-profiles.public.json",
-    "docs/agents/permission-model.md"
+    "docs/en/trust-and-evidence.md"
   ],
   "deterministic_authorities": {
     "phase_transition": "scripts/factory_v2_kernel.py and compiled workflow plan",

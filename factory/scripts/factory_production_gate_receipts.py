@@ -124,7 +124,7 @@ def build_runtime_status(
     live_evidence: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     worker_registry_present = (ROOT / "agents" / "worker-registry.public.json").is_file()
-    worker_profiles_present = (REPO_ROOT / "docs" / "agents" / "worker-profiles.md").is_file()
+    worker_profiles_present = (REPO_ROOT / "docs" / "en" / "technical-model.md").is_file()
     evidence_is_public_safe = live_evidence is None or public_safe(live_evidence)
     checks = {
         "hermes_status_readonly_passed": evidence_bool(live_evidence, "hermes_status_readonly_passed"),
@@ -147,8 +147,8 @@ def build_runtime_status(
     }
     evidence_refs = [
         "agents/worker-registry.public.json",
-        "docs/agents/worker-profiles.md",
-        "docs/architecture/hermes-integration.md",
+        "docs/en/technical-model.md",
+        "docs/en/technical-model.md",
     ]
     if live_evidence is not None:
         evidence_refs.extend(
@@ -266,7 +266,7 @@ def build_prepilot_master(paths: GatePaths, *, created_at: str | None = None) ->
             [
                 evidence("documentation", "README.md", "external operator entrypoint"),
                 evidence("documentation", "README.pt-BR.md", "Portuguese public entrypoint"),
-                evidence("documentation", "docs/operations/validation-and-release.md", "release validation path"),
+                evidence("documentation", "docs/en/usage.md", "release validation path"),
             ],
             "Docs do not prove live runtime readiness.",
         ),
@@ -291,8 +291,8 @@ def build_prepilot_master(paths: GatePaths, *, created_at: str | None = None) ->
             "Worker registry and profiles are present as public source-of-truth docs for external operators.",
             [
                 evidence("worker_registry", "agents/worker-registry.public.json", "registered worker ids"),
-                evidence("worker_profile", "docs/agents/worker-profiles.md", "worker responsibilities and boundaries"),
-                evidence("permission_matrix", "docs/agents/permission-model.md", "authority boundaries"),
+                evidence("worker_profile", "docs/en/technical-model.md", "worker responsibilities and boundaries"),
+                evidence("permission_matrix", "docs/en/trust-and-evidence.md", "authority boundaries"),
             ],
             "Public worker definitions do not prove profiles are installed in Hermes.",
         ),
@@ -390,7 +390,7 @@ def build_prepilot_master(paths: GatePaths, *, created_at: str | None = None) ->
         "created_at": created_at or utc_now(),
         "result": result,
         "readiness_level": readiness_level,
-        "source_plan": "docs/operations/validation-and-release.md",
+        "source_plan": "docs/en/usage.md",
         "coverage_rule": "All nine prepilot readiness tasks must be PASS or explicitly blocked before production readiness can be claimed.",
         "tasks": tasks,
         "limits": [

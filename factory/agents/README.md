@@ -58,10 +58,10 @@ python -m unittest tests.test_worker_profiles tests.test_worker_permission_class
 | Read | File | Purpose |
 | --- | --- | --- |
 | 1 | `agents/worker-roster.md` | Human overview of the 40 public workers by ownership group. |
-| 2 | `docs/agents/worker-profiles.md` | Operator-facing guide for every worker role. |
-| 3 | `docs/agents/factory-stage-agent-map.md` | Stage-by-stage map from the factory journey to real workers. |
-| 4 | `docs/agents/capability-packs.md` | Product-type coverage and pack activation rules. |
-| 5 | `docs/agents/permission-model.md` | Human explanation of worker authority classes. |
+| 2 | `docs/en/technical-model.md` | Operator-facing guide for every worker role. |
+| 3 | `docs/en/reference.md` | Stage-by-stage map from the factory journey to real workers. |
+| 4 | `docs/en/technical-model.md` | Product-type coverage and pack activation rules. |
+| 5 | `docs/en/trust-and-evidence.md` | Human explanation of worker authority classes. |
 
 Open the JSON files after that, when you need exact contracts.
 
@@ -85,9 +85,9 @@ used by scripts, tests and generated worker packets.
 | File | What It Explains |
 | --- | --- |
 | `agents/worker-roster.md` | The worker set in plain language. |
-| `docs/agents/live-agent-configuration.md` | How public worker contracts map to live Hermes profile materialization. |
-| `docs/agents/hermes-profile-manifest.md` | Expected Hermes profile shape. |
-| `docs/architecture/hermes-integration.md` | How Hermes, adapter hooks and worker packets fit together. |
+| `docs/en/technical-model.md` | How public worker contracts map to live Hermes profile materialization. |
+| `docs/en/technical-model.md` | Expected Hermes profile shape. |
+| `docs/en/technical-model.md` | How Hermes, adapter hooks and worker packets fit together. |
 
 The human guides must never become the runtime source of truth. When a guide
 and a machine contract disagree, fix the mismatch and let the executable gate

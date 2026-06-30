@@ -287,7 +287,7 @@ def build_receipt(created_at: str | None = None) -> dict[str, Any]:
         "readonly_checks": readonly_checks,
         "evidence_refs": [
             "docs/control-tower/discord-control-tower-os.md",
-            "docs/concepts/factory-flow.md",
+            "docs/en/operating-model.md",
         ],
         "created_at": timestamp,
     }

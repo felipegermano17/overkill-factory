@@ -12,6 +12,7 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = ROOT.parent if (ROOT.parent / ".github").exists() else ROOT
 SCRIPT_DIR = Path(__file__).resolve().parent
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
@@ -29,10 +30,12 @@ def now_iso() -> str:
 
 
 def repo_ref(path: Path) -> str:
-    try:
-        return path.relative_to(ROOT).as_posix()
-    except ValueError:
-        return f"external:{path.name}"
+    for root in (ROOT, REPO_ROOT):
+        try:
+            return path.relative_to(root).as_posix()
+        except ValueError:
+            continue
+    return f"external:{path.name}"
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -44,7 +47,7 @@ def load_text(path: Path) -> str:
 
 
 def exists(rel_path: str) -> bool:
-    return (ROOT / rel_path).exists()
+    return (ROOT / rel_path).exists() or (REPO_ROOT / rel_path).exists()
 
 
 def json_field(path: str, *keys: str) -> Any:
@@ -411,8 +414,8 @@ def public_worker_profile_layer_ready(runtime_proofs: list[dict[str, Any]] | Non
     return (
         exists("agents/worker-profiles.public.json")
         and exists("agents/hermes-profile-bindings.public.json")
-        and exists("docs/agents/live-agent-configuration.md")
-        and exists("docs/agents/security-specialist-matrix.md")
+        and exists("docs/en/technical-model.md")
+        and exists("docs/en/trust-and-evidence.md")
     )
 
 
@@ -465,8 +468,8 @@ def build_requirements(
                 [
                     "agents/worker-profiles.public.json",
                     "agents/hermes-profile-bindings.public.json",
-                    "docs/agents/live-agent-configuration.md",
-                    "docs/agents/security-specialist-matrix.md",
+                    "docs/en/technical-model.md",
+                    "docs/en/trust-and-evidence.md",
                     *(runtime_proof_refs or ["external:redacted-hermes-runtime-proof"]),
                 ],
                 "Workers must be executable Hermes profiles with identity, authority, tool policy, evidence, handoff and review contracts.",
@@ -475,8 +478,8 @@ def build_requirements(
     elif (
         exists("agents/worker-profiles.public.json")
         and exists("agents/hermes-profile-bindings.public.json")
-        and exists("docs/agents/live-agent-configuration.md")
-        and exists("docs/agents/security-specialist-matrix.md")
+        and exists("docs/en/technical-model.md")
+        and exists("docs/en/trust-and-evidence.md")
         and exists(".tmp/factory-runs/agents/worker-profile-validation.md")
     ):
         requirements.append(
@@ -486,8 +489,8 @@ def build_requirements(
                 [
                     "agents/worker-profiles.public.json",
                     "agents/hermes-profile-bindings.public.json",
-                    "docs/agents/live-agent-configuration.md",
-                    "docs/agents/security-specialist-matrix.md",
+                    "docs/en/technical-model.md",
+                    "docs/en/trust-and-evidence.md",
                     ".tmp/factory-runs/agents/worker-profile-validation.md",
                 ],
                 "Workers must be executable Hermes profiles with identity, authority, tool policy, evidence, handoff and review contracts.",
