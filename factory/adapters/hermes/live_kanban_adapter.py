@@ -4048,10 +4048,31 @@ def declared_artifact_owner_rerun_review_passes(rows: dict[str, list[dict[str, A
             if not isinstance(review, dict):
                 continue
             verdict = str(review.get("verdict") or "").strip().upper()
-            if "PASS" not in verdict or "READBACK" not in verdict:
+            if "PASS" not in verdict:
+                continue
+            review_text = task_record_text(record).lower()
+            coverage = review.get("review_coverage") if isinstance(review.get("review_coverage"), dict) else {}
+            coverage_text = json.dumps(coverage, ensure_ascii=False, sort_keys=True).lower() if coverage else ""
+            readback_context = (
+                "READBACK" in verdict
+                or "readback" in review_text
+                or "runtime" in review_text
+                or "artifact_existence" in coverage_text
+                or "stat_read_hash" in coverage_text
+                or "read_hash" in coverage_text
+            )
+            if not readback_context:
                 continue
             owner_ref = str(review.get("owner_rerun_task_id") or "").strip()
             target_ref = str(review.get("target_task_id") or review.get("target_task_ref") or "").strip()
+            if not owner_ref:
+                owner_match = re.search(r"owner rerun task\s+(`?)(t_[A-Za-z0-9_]+)\1", review_text)
+                if owner_match:
+                    owner_ref = owner_match.group(2)
+            if not target_ref:
+                target_match = re.search(r"target task\s+(`?)(t_[A-Za-z0-9_]+)\1", review_text)
+                if target_match:
+                    target_ref = target_match.group(2)
             owner = owner_by_id.get(owner_ref, {})
             if not target_ref:
                 target_ref = str(owner.get("target_task_ref") or "").strip()
