@@ -72,6 +72,7 @@ NO_IDLE_INTERNAL_REVIEW_REQUEST_MARKER = "factory_no_idle_internal_review_reques
 NO_IDLE_REVIEW_FAIL_REPAIR_MARKER = "factory_no_idle_review_fail_repair"
 NO_IDLE_CANONICAL_FRONTIER_RESUME_MARKER = "factory_no_idle_canonical_frontier_resume"
 NO_IDLE_MATERIALIZATION_CONTRACT_REPAIR_MARKER = "factory_no_idle_materialization_contract_repair"
+NO_IDLE_DECLARED_ARTIFACT_REPAIR_SUPERSEDED_MARKER = "factory_no_idle_declared_artifact_repair_superseded"
 NO_IDLE_STALE_REMEDIATION_REPLACEMENT_LIMIT = 8
 NO_IDLE_RUNNING_RESULT_CLOSEOUT_TIMEOUT_SECONDS = 5 * 60
 FACTORY_KANBAN_WORKFLOW_TEMPLATE_ID = "overkill-vfinal"
@@ -4003,6 +4004,122 @@ def declared_artifact_owner_rerun_candidate(rows: dict[str, list[dict[str, Any]]
         if candidate is not None:
             return candidate
     return None
+
+
+def declared_artifact_owner_rerun_review_passes(rows: dict[str, list[dict[str, Any]]]) -> list[dict[str, Any]]:
+    owner_by_id: dict[str, dict[str, Any]] = {}
+    for record in rows.get("done", []):
+        record_id = task_record_id(record)
+        body = task_body_json_object(record)
+        target_ref = str(body.get("target_task_ref") or "").strip()
+        if body.get("packet_type") == "factory_declared_artifact_owner_rerun_request" and record_id and target_ref:
+            owner_by_id[record_id] = {
+                "owner_rerun_task_ref": record_id,
+                "target_task_ref": target_ref,
+                "owner_worker": str(body.get("owner_worker") or record.get("assignee") or ""),
+            }
+        for run in record.get("runs") or []:
+            if not isinstance(run, dict):
+                continue
+            metadata = parse_json_object(run.get("metadata"))
+            if not isinstance(metadata, dict):
+                continue
+            result = metadata.get("declared_artifact_owner_rerun_result")
+            if not isinstance(result, dict):
+                continue
+            target_ref = str(result.get("target_task_id") or result.get("target_task_ref") or target_ref).strip()
+            if record_id and target_ref:
+                owner_by_id[record_id] = {
+                    "owner_rerun_task_ref": record_id,
+                    "target_task_ref": target_ref,
+                    "owner_worker": str(result.get("owner_worker") or record.get("assignee") or ""),
+                    "created_independent_readback_task": str(result.get("created_independent_readback_task") or "").strip(),
+                }
+    passes: list[dict[str, Any]] = []
+    for record in rows.get("done", []):
+        review_id = task_record_id(record)
+        for run in record.get("runs") or []:
+            if not isinstance(run, dict):
+                continue
+            metadata = parse_json_object(run.get("metadata"))
+            if not isinstance(metadata, dict):
+                continue
+            review = metadata.get("independent_review_result")
+            if not isinstance(review, dict):
+                continue
+            verdict = str(review.get("verdict") or "").strip().upper()
+            if "PASS" not in verdict or "READBACK" not in verdict:
+                continue
+            owner_ref = str(review.get("owner_rerun_task_id") or "").strip()
+            target_ref = str(review.get("target_task_id") or review.get("target_task_ref") or "").strip()
+            owner = owner_by_id.get(owner_ref, {})
+            if not target_ref:
+                target_ref = str(owner.get("target_task_ref") or "").strip()
+            if not target_ref:
+                continue
+            passes.append(
+                {
+                    "target_task_ref": target_ref,
+                    "owner_rerun_task_ref": owner_ref or owner.get("owner_rerun_task_ref"),
+                    "independent_readback_task_ref": review_id,
+                    "verdict": verdict,
+                }
+            )
+    return passes
+
+
+def superseded_declared_artifact_repair_candidates(rows: dict[str, list[dict[str, Any]]]) -> list[dict[str, Any]]:
+    passes_by_target = {str(item.get("target_task_ref")): item for item in declared_artifact_owner_rerun_review_passes(rows)}
+    candidates: list[dict[str, Any]] = []
+    for repair in rows.get("blocked", []):
+        candidate = declared_artifact_owner_rerun_candidate_from_repair_record(repair)
+        if candidate is None:
+            continue
+        target_ref = str(candidate.get("target_task_ref") or "").strip()
+        readback_pass = passes_by_target.get(target_ref)
+        if not readback_pass:
+            continue
+        candidates.append({**candidate, **readback_pass, "repair_task_ref": task_record_id(repair)})
+    return candidates
+
+
+def close_superseded_declared_artifact_repairs(
+    *,
+    hermes_bin: str,
+    board: str,
+    candidates: list[dict[str, Any]],
+    runner: Runner,
+) -> list[dict[str, Any]]:
+    closed: list[dict[str, Any]] = []
+    for candidate in candidates:
+        task_id = str(candidate.get("repair_task_ref") or "").strip()
+        if not task_id:
+            continue
+        metadata = {
+            "marker": NO_IDLE_DECLARED_ARTIFACT_REPAIR_SUPERSEDED_MARKER,
+            "record_type": "factory_no_idle_declared_artifact_repair_superseded",
+            "runtime_authority": "hermes_kanban",
+            "local_state_authority": False,
+            "repair_task_ref": task_id,
+            "target_task_ref": candidate.get("target_task_ref"),
+            "owner_rerun_task_ref": candidate.get("owner_rerun_task_ref"),
+            "independent_readback_task_ref": candidate.get("independent_readback_task_ref"),
+            "reason": "Blocked declared-artifact readback repair was superseded by owner-worker rerun plus independent runtime readback PASS.",
+            "human_gate_required": False,
+            "operator_input_required": False,
+        }
+        complete_task(
+            hermes_bin=hermes_bin,
+            board=board,
+            task_id=task_id,
+            result="DONE",
+            summary="Closed by no-idle after owner-worker rerun and independent readback PASS superseded the blocked artifact repair.",
+            metadata=metadata,
+            required_readback_markers=[NO_IDLE_DECLARED_ARTIFACT_REPAIR_SUPERSEDED_MARKER],
+            runner=runner,
+        )
+        closed.append({"repair_task_ref": task_id, "target_task_ref": candidate.get("target_task_ref")})
+    return closed
 
 
 def create_declared_artifact_owner_rerun_task(
@@ -11146,6 +11263,61 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
             write_json(args.out, public_envelope)
         return public_envelope
     reconcile_blockers = [str(item) for item in (reconcile_plan.get("blocked_reasons") or [])]
+    superseded_repair_candidates = superseded_declared_artifact_repair_candidates(rows)
+    if superseded_repair_candidates:
+        closed_repairs: list[dict[str, Any]] = []
+        if args.create_remediation:
+            closed_repairs = close_superseded_declared_artifact_repairs(
+                hermes_bin=args.hermes_bin,
+                board=args.board,
+                candidates=superseded_repair_candidates,
+                runner=runner,
+            )
+        classification = {
+            "status": "active" if closed_repairs else "remediation_required",
+            "classification": "declared_artifact_repair_superseded_by_owner_readback_pass",
+            "blocked": False if closed_repairs else True,
+            "remediation_required": False if closed_repairs else True,
+            "human_gate_required": False,
+            "operator_input_required": False,
+            "native_dispatch_required_next": False,
+            "superseded_repair_candidates": superseded_repair_candidates,
+            "closed_repairs": closed_repairs,
+            "next_action": "owner rerun and independent readback PASS superseded the blocked declared-artifact repair; continue normal reconciliation",
+            "state": summarize_no_idle_rows(rows),
+        }
+        envelope = {
+            "$schema": LIVE_ADAPTER_SCHEMA,
+            "mode": "no-idle",
+            "board": args.board,
+            "blocked": bool(not closed_repairs),
+            "no_idle_state": classification,
+            "board_reconcile_plan": reconcile_plan,
+            "artifact_materialization": artifact_materialization,
+            "targeted_remediation_plan": {
+                "record_type": "factory_no_idle_targeted_repair_plan",
+                "plan_action": "close_superseded_declared_artifact_readback_repair",
+                "candidates": superseded_repair_candidates,
+                "closed_repairs": closed_repairs,
+                "human_gate_required": False,
+                "operator_input_required": False,
+            },
+            "remediation_task_id": None,
+            "hook": {
+                "runtime_authority": "hermes_kanban",
+                "local_state_authority": False,
+                "no_shadow_dispatcher": True,
+                "dispatch_called_by_this_command": False,
+                "reporting_policy": (
+                    "No-idle closed a blocked declared-artifact repair only after owner-worker rerun "
+                    "and independent runtime readback PASS were present."
+                ),
+            },
+        }
+        public_envelope = sanitize_public_refs(envelope)
+        if args.out:
+            write_json(args.out, public_envelope)
+        return public_envelope
     owner_rerun_candidate = declared_artifact_owner_rerun_candidate(rows)
     if owner_rerun_candidate is not None:
         remediation_task_id = None
