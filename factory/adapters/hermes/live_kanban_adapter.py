@@ -3923,6 +3923,149 @@ def deterministic_reconcile_task_body(
     return task_body
 
 
+def declared_artifact_owner_rerun_candidate_from_repair_record(repair: dict[str, Any]) -> dict[str, Any] | None:
+    body = task_body_json_object(repair)
+    if str(body.get("plan_action") or "").strip() != "repair_declared_artifacts":
+        return None
+    if str(body.get("required_output") or "").strip() != "declared_artifact_readback_repair":
+        return None
+    raw_repair_target = body.get("repair_target")
+    repair_target: dict[str, Any] = raw_repair_target if isinstance(raw_repair_target, dict) else {}
+    text = task_record_text(repair)
+
+    def candidate_from_parts(orchestration: dict[str, Any] | None = None) -> dict[str, Any] | None:
+        orch: dict[str, Any] = orchestration if isinstance(orchestration, dict) else {}
+        route = orch.get("route_registry_resolution") if isinstance(orch.get("route_registry_resolution"), dict) else {}
+        target_task_ref = str(
+            orch.get("repair_target_task")
+            or repair_target.get("task_ref")
+            or ""
+        ).strip()
+        if not target_task_ref or target_task_ref.startswith("kanban:"):
+            match = re.search(r"`(t_[A-Za-z0-9_]+)`", text)
+            if match:
+                target_task_ref = match.group(1)
+        target_worker = str(
+            route.get("target_worker_declared")
+            or repair_target.get("assignee")
+            or ""
+        ).strip()
+        if not target_worker and "product-face" in text:
+            target_worker = "product-face"
+        review_worker = str(route.get("review_worker_declared") or "independent-reviewer").strip()
+        readback = orch.get("declared_artifact_readback_repair")
+        if not isinstance(readback, dict):
+            readback = {}
+        missing_names = readback.get("missing_artifact_names") or repair_target.get("missing_artifact_names") or []
+        missing_artifact_names = [str(item).strip() for item in missing_names if str(item or "").strip()]
+        if not target_task_ref or not target_worker:
+            return None
+        return {
+            "repair_task_ref": task_record_id(repair),
+            "target_task_ref": target_task_ref,
+            "target_title": str(orch.get("repair_target_title") or repair_target.get("title") or ""),
+            "target_worker": target_worker,
+            "review_worker": review_worker or "independent-reviewer",
+            "missing_artifact_names": sorted(set(missing_artifact_names)),
+            "source_status": str(orch.get("status") or "blocked_readback_repair"),
+        }
+
+    for run in repair.get("runs") or []:
+        if not isinstance(run, dict):
+            continue
+        metadata = parse_json_object(run.get("metadata"))
+        if not isinstance(metadata, dict):
+            metadata = {}
+        orchestration = metadata.get("orchestration_result") if isinstance(metadata.get("orchestration_result"), dict) else metadata
+        if not isinstance(orchestration, dict):
+            continue
+        readback = orchestration.get("declared_artifact_readback_repair")
+        if not isinstance(readback, dict):
+            readback = {}
+        verdict = str(readback.get("repair_verdict") or orchestration.get("status") or "").strip().upper()
+        if "BLOCK" in verdict:
+            candidate = candidate_from_parts(orchestration)
+            if candidate is not None:
+                return candidate
+    if (
+        "declared-artifact repair blocked" in text
+        or "exact artifact repair not possible" in text
+        or "cannot be reconstructed safely" in text
+        or "rerun product-face" in text
+    ):
+        return candidate_from_parts({"status": "blocked_exact_artifact_repair_not_possible_from_runtime_readback"})
+    return None
+
+
+def declared_artifact_owner_rerun_candidate(rows: dict[str, list[dict[str, Any]]]) -> dict[str, Any] | None:
+    for repair in rows.get("blocked", []):
+        candidate = declared_artifact_owner_rerun_candidate_from_repair_record(repair)
+        if candidate is not None:
+            return candidate
+    return None
+
+
+def create_declared_artifact_owner_rerun_task(
+    *,
+    hermes_bin: str,
+    board: str,
+    workspace: str,
+    candidate: dict[str, Any],
+    runner: Runner,
+) -> str | None:
+    target_task_ref = str(candidate.get("target_task_ref") or "").strip()
+    target_worker = str(candidate.get("target_worker") or "").strip()
+    if not target_task_ref or not target_worker:
+        return None
+    body = {
+        "packet_type": "factory_declared_artifact_owner_rerun_request",
+        "marker": "factory_declared_artifact_owner_rerun",
+        "board": board,
+        "target_task_ref": target_task_ref,
+        "target_title": candidate.get("target_title"),
+        "owner_worker": target_worker,
+        "review_worker": str(candidate.get("review_worker") or "independent-reviewer"),
+        "source_repair_task_ref": candidate.get("repair_task_ref"),
+        "missing_artifact_names": candidate.get("missing_artifact_names") or [],
+        "objective": (
+            "Recreate or restore the missing declared artifacts with the original owner worker; "
+            "do not fabricate byte-equivalent evidence from hashes or prose."
+        ),
+        "required_output": "declared_artifact_owner_rerun_result",
+        "allowed_actions": [
+            "rerun or repair the original owner-worker artifact generation from source evidence",
+            "write fresh runtime-readable artifact files and recompute sha256 hashes",
+            "create or request an independent-reviewer readback of the repaired artifacts",
+        ],
+        "forbidden_actions": [
+            "fabricate missing artifact bytes from hashes or review prose",
+            "mark downstream verification/review/closure phases unblocked without fresh runtime readback",
+            "approve, waive, deploy, release, spend funds, touch production, mainnet, custody or signing",
+        ],
+        "human_gate_required": False,
+        "operator_input_required": False,
+        "native_dispatch_required_next": True,
+        "runtime_authority": "hermes_kanban",
+        "local_state_authority": False,
+        "agent_may_choose_phase": False,
+    }
+    digest = idempotency_digest_fragment(contract_digest(body))
+    return create_task(
+        hermes_bin=hermes_bin,
+        board=board,
+        title=f"Rerun owner worker for missing artifacts in {target_task_ref}",
+        body=compact_json_argument(body),
+        assignee=target_worker,
+        idempotency_key=f"overkill:declared-artifact-owner-rerun:{public_safe_slug(board, fallback='board')}:{digest}",
+        created_by=NO_IDLE_AUTHOR,
+        workspace=workspace,
+        blocked=False,
+        workflow_template_id=FACTORY_KANBAN_WORKFLOW_TEMPLATE_ID,
+        current_step_key=FACTORY_KANBAN_DEFAULT_STEP_KEY,
+        runner=runner,
+    )
+
+
 def create_deterministic_reconcile_task(
     *,
     hermes_bin: str,
@@ -11003,6 +11146,70 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
             write_json(args.out, public_envelope)
         return public_envelope
     reconcile_blockers = [str(item) for item in (reconcile_plan.get("blocked_reasons") or [])]
+    owner_rerun_candidate = declared_artifact_owner_rerun_candidate(rows)
+    if owner_rerun_candidate is not None:
+        remediation_task_id = None
+        task_runtime: dict[str, Any] = {}
+        if args.create_remediation:
+            remediation_task_id = create_declared_artifact_owner_rerun_task(
+                hermes_bin=args.hermes_bin,
+                board=args.board,
+                workspace=args.workspace,
+                candidate=owner_rerun_candidate,
+                runner=runner,
+            )
+            task_runtime = remediation_task_runtime_metadata(
+                hermes_bin=args.hermes_bin,
+                board=args.board,
+                task_id=remediation_task_id,
+                runner=runner,
+            )
+        classification = {
+            "status": "remediation_required",
+            "classification": "declared_artifact_owner_rerun_task_created" if remediation_task_id else "declared_artifact_owner_rerun_required",
+            "blocked": True,
+            "remediation_required": True,
+            "human_gate_required": False,
+            "operator_input_required": False,
+            "native_dispatch_required_next": bool(remediation_task_id and task_runtime.get("native_dispatch_required_next")),
+            "owner_rerun_candidate": owner_rerun_candidate,
+            "remediation_task_ref": remediation_task_id,
+            "next_action": "rerun the original owner worker to recreate missing declared artifacts, then require independent readback review",
+            "state": summarize_no_idle_rows(rows),
+        }
+        classification.update(task_runtime)
+        envelope = {
+            "$schema": LIVE_ADAPTER_SCHEMA,
+            "mode": "no-idle",
+            "board": args.board,
+            "blocked": True,
+            "no_idle_state": classification,
+            "board_reconcile_plan": reconcile_plan,
+            "artifact_materialization": artifact_materialization,
+            "targeted_remediation_plan": {
+                "record_type": "factory_no_idle_targeted_repair_plan",
+                "plan_action": "rerun_owner_worker_for_missing_declared_artifacts",
+                "candidate": owner_rerun_candidate,
+                "native_dispatch_required_next": bool(remediation_task_id),
+                "human_gate_required": False,
+                "operator_input_required": False,
+            },
+            "remediation_task_id": remediation_task_id,
+            "hook": {
+                "runtime_authority": "hermes_kanban",
+                "local_state_authority": False,
+                "no_shadow_dispatcher": True,
+                "dispatch_called_by_this_command": False,
+                "reporting_policy": (
+                    "No-idle escalated a blocked declared-artifact readback repair to the original owner worker; "
+                    "it must not repeat the generic readback repair or fabricate missing bytes."
+                ),
+            },
+        }
+        public_envelope = sanitize_public_refs(envelope)
+        if args.out:
+            write_json(args.out, public_envelope)
+        return public_envelope
     legacy_remediation_strategy = str(legacy_classification.get("remediation_strategy") or "")
     targeted_legacy_repair_available = legacy_remediation_strategy in {
         "create_targeted_review_repair_task",
