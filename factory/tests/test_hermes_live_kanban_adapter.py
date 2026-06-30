@@ -6497,7 +6497,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
                     "operator_input_required": False,
                 }
             ),
-            "latest_summary": "Independent review PASS for t_block001; reducer should close the reviewed task.",
+            "latest_summary": "Independent review PASS for reviewed task; reducer should close the reviewed task.",
             "events": [{"type": "completed", "payload": {"summary": "PASS"}}],
         }
         args = adapter.build_parser().parse_args(["no-idle", "--board", TEST_BOARD, "--create-remediation"])

@@ -17,9 +17,9 @@ SPEC.loader.exec_module(quality)
 def test_shallow_product_sot_scope_summary_fails_prd_grade_quality():
     sot = {
         "record_type": "product_sot_candidate",
-        "product": "KAXIS V1",
-        "scope_in": ["USDC stake", "cadastro", "admin"],
-        "scope_out": ["Pix", "mobile"],
+        "product": "Product Alpha V1",
+        "scope_in": ["stablecoin subscription", "signup", "admin"],
+        "scope_out": ["instant payment rail", "mobile"],
         "acceptance_criteria": ["operator can approve scope"],
     }
 
@@ -38,10 +38,10 @@ def test_shallow_product_sot_scope_summary_fails_prd_grade_quality():
 def test_prd_grade_product_sot_passes_quality_firewall():
     sot = {
         "record_type": "product_sot_candidate",
-        "product_intent": "KAXIS V1 delivers a global web/onchain USDC stake product with Web3 mostly under the hood.",
+        "product_intent": "Product Alpha V1 delivers a global web subscription product with complex payment and operations flows.",
         "source_traceability": [
-            {"source_ref": "complement#flow-v6", "requirement_ids": ["REQ-UX-001", "REQ-STAKE-001"]},
-            {"source_ref": "20apy-ff#repo-study", "requirement_ids": ["REQ-ARCH-001"]},
+            {"source_ref": "brief#flow-v6", "requirement_ids": ["REQ-UX-001", "REQ-SUB-001"]},
+            {"source_ref": "legacy-app#repo-study", "requirement_ids": ["REQ-ARCH-001"]},
         ],
         "personas": ["retail investor", "operations admin"],
         "user_journeys": [
