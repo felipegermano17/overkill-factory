@@ -137,7 +137,10 @@ they should not become mandatory user labor.
 For Telegram-first operation, important decisions should not be made from a
 short chat summary alone. The operator should receive a briefing package with a
 deep document and PDF attachment, and the bot should proactively push meaningful
-state changes instead of waiting for the operator to poll.
+state changes instead of waiting for the operator to poll. If the decision is an
+artifact review, the artifact under review is the main content: a Product SOT
+review must deliver the Product SOT candidate itself, not only a formal approval
+cover sheet.
 
 Telegram delivery is plain-text first. Markdown/PDF are ordinary file
 attachments; Telegram rich cards, rich drafts, media groups and table-rendered
