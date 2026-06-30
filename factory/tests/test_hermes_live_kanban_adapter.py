@@ -5497,6 +5497,93 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertFalse(body["agent_may_choose_phase"])
         self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
 
+    def test_no_idle_creates_owner_rerun_after_declared_artifact_readback_repair_blocks(self) -> None:
+        fake = FakeHermes()
+        target_id = "t_" + "wu04rdone"
+        repair_id = "t_" + "readbackblock"
+        missing_artifact = "/tmp/missing/wu04r_v1_safe_public_copy_spec.json"
+        fake.tasks[target_id] = {
+            "id": target_id,
+            "status": "done",
+            "assignee": "product-face",
+            "title": "F15/WU-04R - V1-safe public copy remediation packet",
+            "body": json.dumps({"objective": "produce WU-04R packet/spec/ledger"}),
+            "runs": [
+                {
+                    "status": "done",
+                    "outcome": "completed",
+                    "metadata": json.dumps({"artifacts": [missing_artifact]}),
+                }
+            ],
+        }
+        fake.tasks[repair_id] = {
+            "id": repair_id,
+            "status": "blocked",
+            "assignee": "factory-orchestrator",
+            "title": "Repair missing declared artifacts for board",
+            "body": json.dumps(
+                {
+                    "packet_type": "factory_deterministic_reconcile_task",
+                    "marker": "factory_deterministic_reconcile",
+                    "plan_action": "repair_declared_artifacts",
+                    "required_output": "declared_artifact_readback_repair",
+                    "repair_target": {
+                        "task_ref": target_id,
+                        "title": "F15/WU-04R - V1-safe public copy remediation packet",
+                        "assignee": "product-face",
+                        "missing_artifact_names": ["wu04r_v1_safe_public_copy_spec.json"],
+                    },
+                }
+            ),
+            "runs": [
+                {
+                    "status": "blocked",
+                    "outcome": "blocked",
+                    "metadata": json.dumps(
+                        {
+                            "orchestration_result": {
+                                "receipt_type": "declared_artifact_readback_repair",
+                                "repair_target_task": target_id,
+                                "repair_target_title": "F15/WU-04R - V1-safe public copy remediation packet",
+                                "status": "blocked_exact_artifact_repair_not_possible_from_runtime_readback",
+                                "route_registry_resolution": {
+                                    "target_worker_declared": "product-face",
+                                    "review_worker_declared": "independent-reviewer",
+                                },
+                                "declared_artifact_readback_repair": {
+                                    "missing_artifact_names": ["wu04r_v1_safe_public_copy_spec.json"],
+                                    "repair_verdict": "BLOCKED",
+                                },
+                            }
+                        }
+                    ),
+                }
+            ],
+        }
+        args = adapter.build_parser().parse_args(
+            ["no-idle", "--board", TEST_BOARD, "--create-remediation", "--workspace", "scratch"]
+        )
+
+        result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertEqual(state["classification"], "declared_artifact_owner_rerun_task_created")
+        self.assertTrue(state["native_dispatch_required_next"])
+        rerun_tasks = [
+            task for task in fake.tasks.values()
+            if adapter.parse_json_object(str(task.get("body") or "{}")).get("packet_type")
+            == "factory_declared_artifact_owner_rerun_request"
+        ]
+        self.assertEqual(len(rerun_tasks), 1)
+        self.assertEqual(rerun_tasks[0]["status"], "ready")
+        self.assertEqual(rerun_tasks[0]["assignee"], "product-face")
+        body = adapter.parse_json_object(str(rerun_tasks[0].get("body") or "{}"))
+        self.assertEqual(body["target_task_ref"], target_id)
+        self.assertEqual(body["review_worker"], "independent-reviewer")
+        self.assertEqual(body["missing_artifact_names"], ["wu04r_v1_safe_public_copy_spec.json"])
+        self.assertFalse(body["human_gate_required"])
+        self.assertFalse(body["operator_input_required"])
+
     def test_declared_artifact_repair_idempotency_is_scoped_to_missing_target(self) -> None:
         def plan_for_missing(task_id: str, artifact_name: str) -> dict[str, Any]:
             fake = FakeHermes()

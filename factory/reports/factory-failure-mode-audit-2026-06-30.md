@@ -51,6 +51,8 @@ Mandate:
 
 | FM-024 | Ready work exists while another worker is running | ready tasks can sit idle if orchestrator reads only `running_work_exists` | running branch hid `native_dispatch_required_next` and ready refs | fixed locally: running state now exposes ready/running refs and dispatch signal when ready exists | Merge/CI | P1 |
 
+| FM-025 | Declared-artifact readback repair proves exact bytes cannot be restored | no-idle repeats the same factory-orchestrator repair forever; downstream remains frozen without owner rerun | blocked repair result existed only in comments/summary, not run metadata | fixed locally: detector reads blocked readback repair comments/summary and creates owner-worker rerun (`factory_declared_artifact_owner_rerun_request`) for original assignee, requiring fresh hashes + independent readback | `test_no_idle_creates_owner_rerun_after_declared_artifact_readback_repair_blocks` |
+
 ## Live-board observations during audit
 
 - 2026-06-30T12:32Z: board had `blocked=3`, `running=1`, `todo=14`; running task was `Repair factory materialization contracts` and blockers were WU-09/WU-10/WU-13 input/capability materialization issues.
