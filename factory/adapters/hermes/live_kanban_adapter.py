@@ -2615,13 +2615,19 @@ def classify_no_idle_state(rows: dict[str, list[dict[str, Any]]]) -> dict[str, A
     post_review_gate_refs = sorted(task_record_id(item) for item in post_review_gate_candidates if task_record_id(item))
     closed_post_review_gate_refs = closed_post_review_owner_gate_refs(done)
     if running:
+        ready_refs = sorted(task_record_id(item) for item in ready if task_record_id(item))
+        running_refs = sorted(task_record_id(item) for item in running if task_record_id(item))
         return {
             "status": "active",
             "classification": "running_work_exists",
             "blocked": False,
             "remediation_required": False,
             "human_gate_required": False,
-            "next_action": "observe running Hermes tasks",
+            "operator_input_required": False,
+            "native_dispatch_required_next": bool(ready_refs),
+            "ready_task_refs": ready_refs,
+            "running_task_refs": running_refs,
+            "next_action": "run native Hermes dispatch for ready work while observing running tasks" if ready_refs else "observe running Hermes tasks",
             "state": state,
         }
     if ready:

@@ -49,6 +49,8 @@ Mandate:
 | FM-022 | Materialization text mixed with external API/private key requirement | no-idle creates internal repair for work requiring operator/credential input | external markers did not include API/private-key phrases | fixed locally: external API/private key/wallet key markers route to operator input, not materialization repair; regression added | Merge/CI | P1 |
 | FM-023 | Complete human-gate package mentions `target_repo_paths`/scan scope as context | decision-ready gate is misclassified as operator input | contextual operator-input markers outranked complete human gate packet | fixed locally: complete decision package wins unless explicit operator input is requested; regression added | Merge/CI | P1 |
 
+| FM-024 | Ready work exists while another worker is running | ready tasks can sit idle if orchestrator reads only `running_work_exists` | running branch hid `native_dispatch_required_next` and ready refs | fixed locally: running state now exposes ready/running refs and dispatch signal when ready exists | Merge/CI | P1 |
+
 ## Live-board observations during audit
 
 - 2026-06-30T12:32Z: board had `blocked=3`, `running=1`, `todo=14`; running task was `Repair factory materialization contracts` and blockers were WU-09/WU-10/WU-13 input/capability materialization issues.
