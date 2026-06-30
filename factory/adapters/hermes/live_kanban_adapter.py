@@ -71,6 +71,7 @@ NO_IDLE_REVIEW_PASS_REDUCER_MARKER = "factory_no_idle_review_pass_reducer"
 NO_IDLE_INTERNAL_REVIEW_REQUEST_MARKER = "factory_no_idle_internal_review_request"
 NO_IDLE_REVIEW_FAIL_REPAIR_MARKER = "factory_no_idle_review_fail_repair"
 NO_IDLE_CANONICAL_FRONTIER_RESUME_MARKER = "factory_no_idle_canonical_frontier_resume"
+NO_IDLE_MATERIALIZATION_CONTRACT_REPAIR_MARKER = "factory_no_idle_materialization_contract_repair"
 NO_IDLE_RUNNING_RESULT_CLOSEOUT_TIMEOUT_SECONDS = 5 * 60
 FACTORY_KANBAN_WORKFLOW_TEMPLATE_ID = "overkill-vfinal"
 FACTORY_KANBAN_DEFAULT_STEP_KEY = "F1-intake"
@@ -1318,6 +1319,51 @@ def is_factory_owned_package_blocker(record: dict[str, Any]) -> bool:
         "delivery assets",
     )
     return any(marker in text for marker in package_markers)
+
+
+def is_factory_materialization_contract_blocker(record: dict[str, Any]) -> bool:
+    """Return True for factory-owned missing-contract/input defects.
+
+    These are not operator questions. They mean the adapter/materializer failed to
+    supply deterministic runtime fields or source artifacts to a worker, so
+    no-idle must create internal repair work instead of asking for status/input.
+    """
+    if is_human_gate_decision_ready_blocker(record):
+        return False
+    text = task_record_text(record)
+    materialization_markers = (
+        "factory-integration-defect",
+        "factory integration/input defect",
+        "factory integration defect",
+        "materialization defect",
+        "repair materialization",
+        "adapter/materializer",
+        "runtime_contract",
+        "security_contract",
+        "source_packet_artifact",
+        "source packet artifact",
+        "f15_worker_packets.json",
+        "declared source/parent artifacts",
+        "source/parent artifacts",
+        "parent artifacts",
+        "input contract",
+        "worker packet",
+    )
+    if not any(marker in text for marker in materialization_markers):
+        return False
+    true_external_markers = (
+        "operator must provide",
+        "waiting for operator to provide",
+        "human must provide",
+        "requires external credential",
+        "requires production credential",
+        "requires paid cloud",
+        "requires mainnet",
+        "requires funds",
+        "requires custody",
+        "requires signing",
+    )
+    return not any(marker in text for marker in true_external_markers)
 
 
 def is_factory_owned_repair_task(record: dict[str, Any]) -> bool:
@@ -2606,6 +2652,7 @@ def classify_no_idle_state(rows: dict[str, list[dict[str, Any]]]) -> dict[str, A
         item
         for item in blocked
         if is_operator_input_blocker(item)
+        and not is_factory_materialization_contract_blocker(item)
     ]
     operator_input_refs = sorted(task_record_id(item) for item in operator_input_blockers if task_record_id(item))
     review_repair_blockers = [
@@ -2614,6 +2661,33 @@ def classify_no_idle_state(rows: dict[str, list[dict[str, Any]]]) -> dict[str, A
         if is_review_failed_factory_repair_blocker(item)
     ]
     review_repair_refs = sorted(task_record_id(item) for item in review_repair_blockers if task_record_id(item))
+    materialization_contract_blockers = [
+        item
+        for item in blocked
+        if is_factory_materialization_contract_blocker(item)
+    ]
+    materialization_contract_refs = sorted(
+        task_record_id(item) for item in materialization_contract_blockers if task_record_id(item)
+    )
+    if blocked and materialization_contract_blockers and len(materialization_contract_blockers) == len(blocked) and not todo:
+        return {
+            "status": "remediation_required",
+            "classification": "only_materialization_contract_blockers_seen",
+            "blocked": True,
+            "remediation_required": True,
+            "human_gate_required": False,
+            "operator_input_required": False,
+            "operator_input_task_refs": [],
+            "human_gate_task_refs": human_gate_refs,
+            "materialization_contract_task_refs": materialization_contract_refs,
+            "remediation_strategy": "create_materialization_contract_repair_task",
+            "remediation_reason": (
+                "All visible blocked work is stopped by missing runtime/security contracts, source packets, "
+                "target repo paths, or parent artifacts. This is a factory materialization defect, not an operator gate."
+            ),
+            "next_action": "create internal materialization-contract repair work and dispatch it; do not ask the operator",
+            "state": state,
+        }
     if blocked and len(operator_input_blockers) == len(blocked) and not todo:
         return {
             "status": "input_required",
@@ -2722,8 +2796,14 @@ def classify_no_idle_state(rows: dict[str, list[dict[str, Any]]]) -> dict[str, A
         human_gate_dependency_refs = [
             ref for ref in blocker_refs if is_human_gate_blocker(blocked_by_task_id.get(ref, {}))
         ]
+        materialization_dependency_refs = [
+            ref for ref in blocker_refs if is_factory_materialization_contract_blocker(blocked_by_task_id.get(ref, {}))
+        ]
         input_dependency_refs = [
-            ref for ref in blocker_refs if is_operator_input_blocker(blocked_by_task_id.get(ref, {}))
+            ref
+            for ref in blocker_refs
+            if is_operator_input_blocker(blocked_by_task_id.get(ref, {}))
+            and not is_factory_materialization_contract_blocker(blocked_by_task_id.get(ref, {}))
         ]
         factory_package_dependency_refs = [
             ref
@@ -2761,6 +2841,29 @@ def classify_no_idle_state(rows: dict[str, list[dict[str, Any]]]) -> dict[str, A
                     "an independent ready work unit with a repairs_task_ref, not as a child of the blocker."
                 ),
                 "next_action": "repair the Kanban dependency graph, then let native Hermes dispatch run the factory-owned repair",
+                "state": state,
+            }
+        if materialization_dependency_refs or materialization_contract_refs:
+            return {
+                "status": "remediation_required",
+                "classification": "todo_dependency_gated_by_materialization_contract_blocker",
+                "blocked": True,
+                "remediation_required": True,
+                "human_gate_required": False,
+                "operator_input_required": False,
+                "human_gate_task_refs": sorted(set(human_gate_dependency_refs + human_gate_refs)),
+                "operator_input_task_refs": [],
+                "materialization_contract_task_refs": sorted(
+                    set(materialization_dependency_refs + materialization_contract_refs)
+                ),
+                "dependency_gated_task_refs": sorted(dependency_blockers),
+                "dependency_blocker_task_refs": blocker_refs,
+                "remediation_strategy": "create_materialization_contract_repair_task",
+                "remediation_reason": (
+                    "Visible todo work is dependency-gated behind missing runtime/security contracts, source packets, "
+                    "target repo paths, or parent artifacts. The factory must repair its materialization inputs before dispatch continues."
+                ),
+                "next_action": "create targeted materialization-contract repair work; do not ask the operator",
                 "state": state,
             }
         if factory_package_dependency_refs or factory_package_refs:
@@ -2982,6 +3085,66 @@ def create_factory_package_dependency_remediation_task(
         body=compact_json_argument(body),
         assignee=assignee,
         idempotency_key=f"overkill:no-idle-package-repair:{public_safe_slug(board, fallback='board')}:{digest}",
+        created_by=NO_IDLE_AUTHOR,
+        workspace=workspace,
+        blocked=False,
+        workflow_template_id=FACTORY_KANBAN_WORKFLOW_TEMPLATE_ID,
+        current_step_key=FACTORY_KANBAN_DEFAULT_STEP_KEY,
+        runner=runner,
+    )
+
+
+def create_materialization_contract_repair_task(
+    *,
+    hermes_bin: str,
+    board: str,
+    workspace: str,
+    assignee: str,
+    classification: dict[str, Any],
+    runner: Runner,
+) -> str:
+    body = no_idle_remediation_body(board=board, classification=classification)
+    body["marker"] = NO_IDLE_MATERIALIZATION_CONTRACT_REPAIR_MARKER
+    body["packet_type"] = "factory_no_idle_materialization_contract_repair_request"
+    body["objective"] = (
+        "Repair missing runtime/security contracts, source packets, target repo paths, and parent-artifact "
+        "materialization so blocked workers can rerun without guessing or asking the operator."
+    )
+    body["targeted_remediation"] = {
+        "plan_action": "repair_materialization_contract_inputs",
+        "materialization_contract_task_refs": classification.get("materialization_contract_task_refs") or [],
+        "dependency_gated_task_refs": classification.get("dependency_gated_task_refs") or [],
+        "dependency_blocker_task_refs": classification.get("dependency_blocker_task_refs") or [],
+        "create_new_canonical_card": False,
+        "human_gate_required": False,
+        "operator_input_required": False,
+        "repair_task_must_not_be_child_of_blocker_it_repairs": True,
+    }
+    body["allowed_actions"] = [
+        "inspect blocked workers, comments, events, and declared source packet refs",
+        "materialize or patch missing runtime_contract/security_contract fields from verified factory state",
+        "derive target_repo_paths from actual repo/project context instead of operator memory",
+        "reconstruct source/parent artifact manifests only from readable done-task outputs or repo state",
+        "comment exact repair manifest paths and next action on each repaired blocker",
+    ]
+    body["forbidden_actions"].extend(
+        [
+            "ask the operator for target_repo_paths, runtime_contract, security_contract, or source_packet_artifact when they are derivable from factory/repo state",
+            "invent source artifacts or ledger values without readback evidence",
+            "make the repair task a child of the blocker it is supposed to repair",
+            "touch production, cloud spend, secrets, mainnet, funds, custody, signing, deploy or release",
+        ]
+    )
+    body["human_gate_required"] = False
+    body["operator_input_required"] = False
+    digest = idempotency_digest_fragment(contract_digest(body))
+    return create_task(
+        hermes_bin=hermes_bin,
+        board=board,
+        title="Repair factory materialization contracts",
+        body=compact_json_argument(body),
+        assignee=assignee,
+        idempotency_key=f"overkill:no-idle-materialization-contract-repair:{public_safe_slug(board, fallback='board')}:{digest}",
         created_by=NO_IDLE_AUTHOR,
         workspace=workspace,
         blocked=False,
@@ -9900,6 +10063,10 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
             write_json(args.out, public_envelope)
         return public_envelope
     artifact_materialization: list[dict[str, Any]] = []
+    early_ready_work_unit_plan_path = latest_ready_work_unit_materialization_plan_path(rows)
+    ready_work_unit_reconciliation_available = (
+        early_ready_work_unit_plan_path is not None and board_has_ready_work_unit_execution_requests(rows)
+    )
     review_fail_repair_candidates = internal_review_fail_repair_candidates(rows)
     if review_fail_repair_candidates:
         created_repair_task_refs: list[str] = []
@@ -9967,7 +10134,7 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
         if args.out:
             write_json(args.out, public_envelope)
         return public_envelope
-    internal_review_blockers = internal_review_required_blockers(rows)
+    internal_review_blockers = [] if ready_work_unit_reconciliation_available else internal_review_required_blockers(rows)
     if internal_review_blockers:
         existing_review_refs = {
             task_record_id(blocker): existing_internal_review_task_refs(rows, task_record_id(blocker))
@@ -10888,6 +11055,46 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
                 "factory_repair_task_unlinked_and_promoted"
                 if released_repair_tasks
                 else "factory_repair_task_unlink_promote_failed"
+            )
+        elif classification.get("remediation_strategy") == "create_materialization_contract_repair_task":
+            targeted_remediation_plan = {
+                "record_type": "factory_no_idle_targeted_repair_plan",
+                "plan_action": "repair_materialization_contract_inputs",
+                "board": args.board,
+                "materialization_contract_task_refs": classification.get("materialization_contract_task_refs") or [],
+                "dependency_gated_task_refs": classification.get("dependency_gated_task_refs") or [],
+                "dependency_blocker_task_refs": classification.get("dependency_blocker_task_refs") or [],
+                "assignee": args.assignee,
+                "native_dispatch_required_next": True,
+                "human_gate_required": False,
+                "operator_input_required": False,
+            }
+            remediation_task_id = create_materialization_contract_repair_task(
+                hermes_bin=args.hermes_bin,
+                board=args.board,
+                workspace=args.workspace,
+                assignee=args.assignee,
+                classification=classification,
+                runner=runner,
+            )
+            task_runtime = remediation_task_runtime_metadata(
+                hermes_bin=args.hermes_bin,
+                board=args.board,
+                task_id=remediation_task_id,
+                runner=runner,
+            )
+            classification["targeted_remediation_plan"] = targeted_remediation_plan
+            classification["remediation_task_ref"] = remediation_task_id
+            classification.update(task_runtime)
+            classification["native_dispatch_required_next"] = bool(
+                remediation_task_id
+                and targeted_remediation_plan.get("native_dispatch_required_next") is True
+                and task_runtime.get("native_dispatch_required_next") is True
+            )
+            classification["classification"] = (
+                "deterministic_materialization_contract_repair_task_created"
+                if remediation_task_id and not classification.get("remediation_task_stale")
+                else "materialization_contract_repair_task_not_created"
             )
         elif classification.get("classification") in {
             "only_factory_owned_package_blockers_seen",
