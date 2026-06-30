@@ -3944,6 +3944,10 @@ def declared_artifact_owner_rerun_candidate_from_repair_record(repair: dict[str,
         ).strip()
         if not target_task_ref or target_task_ref.startswith("kanban:"):
             match = re.search(r"`(t_[A-Za-z0-9_]+)`", text)
+            if not match:
+                match = re.search(r"\btarget\s+(t_[A-Za-z0-9_]+)\b", text)
+            if not match:
+                match = re.search(r"\btarget task\s+(t_[A-Za-z0-9_]+)\b", text)
             if match:
                 target_task_ref = match.group(1)
         target_worker = str(
@@ -3951,6 +3955,10 @@ def declared_artifact_owner_rerun_candidate_from_repair_record(repair: dict[str,
             or repair_target.get("assignee")
             or ""
         ).strip()
+        if not target_worker:
+            worker_match = re.search(r"\b([a-z][a-z0-9-]{2,})\s+rerun\b", text)
+            if worker_match:
+                target_worker = worker_match.group(1)
         if not target_worker and "product-face" in text:
             target_worker = "product-face"
         review_worker = str(route.get("review_worker_declared") or "independent-reviewer").strip()
@@ -3990,9 +3998,13 @@ def declared_artifact_owner_rerun_candidate_from_repair_record(repair: dict[str,
                 return candidate
     if (
         "declared-artifact repair blocked" in text
+        or "declared-artifact-readback blocked" in text
+        or "declared artifact readback" in text and "blocked" in text and "rerun" in text
         or "exact artifact repair not possible" in text
         or "cannot be reconstructed safely" in text
         or "rerun product-face" in text
+        or "product-architect rerun" in text
+        or "product-sot-planner rerun" in text
     ):
         return candidate_from_parts({"status": "blocked_exact_artifact_repair_not_possible_from_runtime_readback"})
     return None
