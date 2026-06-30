@@ -3261,7 +3261,7 @@ def internal_review_reviewer_for_blocker(item: dict[str, Any]) -> str:
 
 def existing_internal_review_task_refs(rows: dict[str, list[dict[str, Any]]], target_task_ref: str) -> list[str]:
     refs: list[str] = []
-    for status in ("ready", "running", "todo", "blocked", "done"):
+    for status in ("ready", "running", "todo", "blocked"):
         for item in rows.get(status, []):
             body = task_body_json_object(item)
             if body.get("marker") != NO_IDLE_INTERNAL_REVIEW_REQUEST_MARKER:
@@ -3473,12 +3473,27 @@ def remediation_task_runtime_metadata(
     }
 
 
+def review_record_timestamp(record: dict[str, Any], fallback: float = 0.0) -> float:
+    for key in ("completed_at", "updated_at", "created_at", "started_at"):
+        value = parse_timestamp_seconds(record.get(key))
+        if value is not None:
+            return value
+    return fallback
+
+
 def internal_review_pass_references(record: dict[str, Any], blocked_refs: set[str]) -> list[str]:
     body = task_body_json_object(record)
     text = task_record_text(record)
     text_lower = text.lower()
     result = str(body.get("result") or body.get("verdict") or "").strip().upper()
-    pass_seen = result == "PASS" or "independent review pass" in text_lower or "review pass" in text_lower or '"result": "pass' in text_lower or " pass" in text_lower
+    if result in {"FAIL", "FAILED", "BLOCK", "BLOCKED"}:
+        return []
+    pass_seen = (
+        result == "PASS"
+        or "independent review pass" in text_lower
+        or "review pass" in text_lower
+        or '"result": "pass' in text_lower
+    )
     if not pass_seen:
         return []
     if str(record.get("assignee") or "").strip() not in {"independent-reviewer", "autoreview-gate"}:
@@ -3609,12 +3624,23 @@ def internal_review_fail_repair_candidates(rows: dict[str, list[dict[str, Any]]]
     blocked_by_id = {task_record_id(item): item for item in rows.get("blocked", []) if task_record_id(item)}
     if not blocked_by_id:
         return []
+    blocked_refs = set(blocked_by_id)
+    latest_pass_by_ref: dict[str, float] = {}
+    for index, review in enumerate(rows.get("done", [])):
+        for blocked_ref in internal_review_pass_references(review, blocked_refs):
+            latest_pass_by_ref[blocked_ref] = max(
+                latest_pass_by_ref.get(blocked_ref, float("-inf")),
+                review_record_timestamp(review, fallback=float(index)),
+            )
     candidates: list[dict[str, Any]] = []
-    for review in rows.get("done", []):
+    for index, review in enumerate(rows.get("done", [])):
         review_id = task_record_id(review)
         if not review_id:
             continue
-        for blocked_ref in internal_review_fail_references(review, set(blocked_by_id)):
+        review_timestamp = review_record_timestamp(review, fallback=float(index))
+        for blocked_ref in internal_review_fail_references(review, blocked_refs):
+            if latest_pass_by_ref.get(blocked_ref, float("-inf")) >= review_timestamp:
+                continue
             candidates.append({
                 "task_ref": blocked_ref,
                 "review_task_ref": review_id,
@@ -6683,8 +6709,8 @@ def latest_ready_work_unit_materialization_plan_path(rows: dict[str, list[dict[s
             continue
         path = ready_work_unit_materialization_plan_path_from_task(task)
         if path is not None:
-            completed = int(task.get("completed_at") or task.get("created_at") or index)
-            candidates.append((completed, path))
+            completed = parse_timestamp_seconds(task.get("completed_at") or task.get("created_at"))
+            candidates.append((int(completed if completed is not None else index), path))
     if not candidates:
         return None
     candidates.sort(key=lambda item: item[0])
@@ -11083,22 +11109,39 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
                 "human_gate_required": False,
                 "operator_input_required": False,
             }
-            remediation_task_id = create_materialization_contract_repair_task(
-                hermes_bin=args.hermes_bin,
-                board=args.board,
-                workspace=args.workspace,
-                assignee=args.assignee,
-                classification=classification,
-                runner=runner,
-            )
-            task_runtime = remediation_task_runtime_metadata(
-                hermes_bin=args.hermes_bin,
-                board=args.board,
-                task_id=remediation_task_id,
-                runner=runner,
-            )
+            stale_remediation_task_refs: list[str] = []
+            remediation_replacement_attempts = 0
+            remediation_task_id = ""
+            task_runtime: dict[str, Any] = {}
+            for attempt in range(0, 4):
+                create_classification = dict(classification)
+                if attempt:
+                    create_classification["remediation_replacement_attempt"] = attempt
+                    create_classification["stale_remediation_task_refs"] = list(stale_remediation_task_refs)
+                remediation_task_id = create_materialization_contract_repair_task(
+                    hermes_bin=args.hermes_bin,
+                    board=args.board,
+                    workspace=args.workspace,
+                    assignee=args.assignee,
+                    classification=create_classification,
+                    runner=runner,
+                )
+                task_runtime = remediation_task_runtime_metadata(
+                    hermes_bin=args.hermes_bin,
+                    board=args.board,
+                    task_id=remediation_task_id,
+                    runner=runner,
+                )
+                if not (remediation_task_id and task_runtime.get("remediation_task_stale")):
+                    break
+                if remediation_task_id in stale_remediation_task_refs:
+                    break
+                stale_remediation_task_refs.append(remediation_task_id)
+                remediation_replacement_attempts += 1
             classification["targeted_remediation_plan"] = targeted_remediation_plan
             classification["remediation_task_ref"] = remediation_task_id
+            classification["stale_remediation_task_refs"] = stale_remediation_task_refs
+            classification["remediation_replacement_attempts"] = remediation_replacement_attempts
             classification.update(task_runtime)
             classification["native_dispatch_required_next"] = bool(
                 remediation_task_id
