@@ -6424,7 +6424,10 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
             "status": "blocked",
             "assignee": "evidence-reconciler",
             "title": "F15/WU-00 - Freeze/replay source and gate evidence index",
-            "body": "review-required: evidence index PASS; independent-reviewer must review before this card is treated as done.",
+            "body": (
+                "review-required: evidence index PASS; independent-reviewer must review before this card is treated as done. "
+                "Stop rule mentions operator input/approval only as forbidden escalation, not as the current blocker."
+            ),
             "events": [
                 {
                     "type": "blocked",

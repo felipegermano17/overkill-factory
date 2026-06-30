@@ -3066,13 +3066,22 @@ def internal_review_required_blockers(rows: dict[str, list[dict[str, Any]]]) -> 
         text = task_record_text(item)
         if "review-required" not in text and "review required" not in text and "review_required" not in text:
             continue
-        if "operator" in text and ("approval" in text or "input" in text or "decision" in text):
+        has_internal_review_marker = (
+            "independent-reviewer" in text
+            or "must independently review" in text
+            or "must review" in text
+        )
+        if (
+            not has_internal_review_marker
+            and "operator" in text
+            and ("approval" in text or "input" in text or "decision" in text)
+        ):
             continue
         if is_human_gate_decision_ready_blocker(item):
             continue
         if "owner review" in text or "owner approval" in text or "product sot owner" in text:
             continue
-        if "independent-reviewer" in text or "must independently review" in text or "must review" in text:
+        if has_internal_review_marker:
             blockers.append(item)
     return blockers
 
