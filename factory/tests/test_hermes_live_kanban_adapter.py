@@ -6829,6 +6829,37 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertNotEqual(state["classification"], "internal_review_fail_repair_task_created")
         self.assertNotEqual(state["classification"], "internal_review_fail_repair_task_already_exists")
 
+    def test_no_idle_review_pass_completion_overrides_instructional_review_fail_text(self) -> None:
+        fake = FakeHermes()
+        blocker_id = "t_" + "blockpass"
+        review_id = "t_" + "reviewpass"
+        fake.tasks[blocker_id] = {
+            "id": blocker_id,
+            "status": "blocked",
+            "assignee": "cloud-infra-security-specialist",
+            "title": "F15/WU-15 - Cloud readiness",
+            "body": "review-required",
+            "events": [{"type": "blocked", "payload": {"kind": "needs_input", "reason": "review-required"}}],
+        }
+        fake.tasks[review_id] = {
+            "id": review_id,
+            "status": "done",
+            "assignee": "security-orchestrator",
+            "title": "Internal review: accept repaired WU-15 cloud readiness packet",
+            "body": (
+                f"Target repaired task: {blocker_id}. Completion must use wording: "
+                "REVIEW PASS or REVIEW FAIL."
+            ),
+            "events": [{"type": "completed", "payload": {"summary": f"REVIEW PASS for target {blocker_id}"}}],
+        }
+        args = adapter.build_parser().parse_args(["no-idle", "--board", TEST_BOARD, "--create-remediation"])
+
+        result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertEqual(state["classification"], "internal_review_pass_reduced_blockers")
+        self.assertEqual(fake.tasks[blocker_id]["status"], "done")
+
     def test_no_idle_reports_running_closeout_without_mutation_when_not_remediating(self) -> None:
         fake = FakeHermes()
         running_id = "t_" + "runclose2"
