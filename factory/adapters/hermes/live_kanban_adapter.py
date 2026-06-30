@@ -72,6 +72,7 @@ NO_IDLE_INTERNAL_REVIEW_REQUEST_MARKER = "factory_no_idle_internal_review_reques
 NO_IDLE_REVIEW_FAIL_REPAIR_MARKER = "factory_no_idle_review_fail_repair"
 NO_IDLE_CANONICAL_FRONTIER_RESUME_MARKER = "factory_no_idle_canonical_frontier_resume"
 NO_IDLE_MATERIALIZATION_CONTRACT_REPAIR_MARKER = "factory_no_idle_materialization_contract_repair"
+NO_IDLE_STALE_REMEDIATION_REPLACEMENT_LIMIT = 8
 NO_IDLE_RUNNING_RESULT_CLOSEOUT_TIMEOUT_SECONDS = 5 * 60
 FACTORY_KANBAN_WORKFLOW_TEMPLATE_ID = "overkill-vfinal"
 FACTORY_KANBAN_DEFAULT_STEP_KEY = "F1-intake"
@@ -10951,7 +10952,7 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
         stale_remediation_task_refs: list[str] = []
         remediation_replacement_attempts = 0
         if create_allowed and args.create_remediation:
-            for _attempt in range(3):
+            for _attempt in range(NO_IDLE_STALE_REMEDIATION_REPLACEMENT_LIMIT):
                 remediation_task_id = create_deterministic_reconcile_task(
                     hermes_bin=args.hermes_bin,
                     board=args.board,
@@ -11225,7 +11226,7 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
             stale_remediation_task_refs: list[str] = []
             remediation_replacement_attempts = 0
             task_runtime: dict[str, Any] = {}
-            for _attempt in range(3):
+            for _attempt in range(NO_IDLE_STALE_REMEDIATION_REPLACEMENT_LIMIT):
                 remediation_task_id = create_deterministic_reconcile_task(
                     hermes_bin=args.hermes_bin,
                     board=args.board,
