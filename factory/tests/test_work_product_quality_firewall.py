@@ -63,6 +63,18 @@ def test_prd_grade_product_sot_passes_quality_firewall():
         "state_model_requirements": [
             "empty", "loading", "error", "success", "blocked", "pending", "expired", "review"
         ],
+        "examples_by_flow": {
+            "cadastro": ["Example: referral code expired -> user sees blocked state and support path."],
+            "stake": ["Example: wallet event exists but DB row missing -> reconciliation divergence state."],
+        },
+        "tradeoffs": [
+            {"decision": "Use explicit reconciliation state", "cost": "More admin UX", "benefit": "Safer operator recovery"},
+            {"decision": "Separate claim from release", "cost": "More gate work", "benefit": "Prevents accidental production authority"},
+        ],
+        "rejected_alternatives": [
+            {"alternative": "Treat payment success as product readiness", "reason": "Hides ledger/onchain divergence"},
+        ],
+        "failure_empty_blocked_states": ["empty portfolio", "payment error", "admin review blocked"],
         "data_ledger_reconciliation_requirements": [
             "payment intent must reconcile against wallet/onchain/database events",
             "divergence must surface as explicit operational state",
@@ -89,6 +101,44 @@ def test_prd_grade_product_sot_passes_quality_firewall():
     assert result.readback_pass is True
     assert result.quality_pass is True
     assert result.findings == []
+
+
+def test_generic_product_sot_with_counts_but_no_excellence_depth_fails_quality():
+    sot = {
+        "record_type": "product_sot_candidate",
+        "product_intent": "Build a useful DeFi product with onboarding, payments, dashboard, and admin operations.",
+        "source_traceability": [
+            {"source_ref": "chat#1", "requirement_ids": ["REQ-001"]},
+            {"source_ref": "issue#595", "requirement_ids": ["REQ-002"]},
+        ],
+        "personas": ["user", "admin"],
+        "user_journeys": [{"id": "UJ-1"}, {"id": "UJ-2"}],
+        "admin_journeys": [{"id": "AJ-1"}],
+        "functional_requirements": [{"id": "F1"}, {"id": "F2"}, {"id": "F3"}],
+        "non_functional_requirements": [{"id": "N1"}, {"id": "N2"}],
+        "state_model_requirements": ["start", "middle", "done", "pending", "review"],
+        "data_ledger_reconciliation_requirements": ["reconcile data"],
+        "acceptance_criteria_by_flow": {"flow1": ["works"], "flow2": ["works"]},
+        "downstream_handoff": {
+            "architecture": [],
+            "ux": [],
+            "security": [],
+            "implementation": [],
+            "qa": [],
+        },
+    }
+
+    result = quality.validate_product_sot_prd_grade(sot)
+
+    assert result.process_pass is True
+    assert result.readback_pass is True
+    assert result.quality_pass is False
+    codes = {finding.code for finding in result.findings}
+    assert "missing_examples" in codes
+    assert "missing_tradeoffs" in codes
+    assert "missing_rejected_alternatives" in codes
+    assert "missing_failure_states" in codes
+    assert quality.can_promote(result) is False
 
 
 def test_quality_firewall_refuses_process_pass_without_quality_pass():

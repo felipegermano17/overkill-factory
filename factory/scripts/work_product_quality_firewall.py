@@ -95,6 +95,10 @@ def validate_product_sot_prd_grade(sot: Mapping[str, Any] | str) -> QualityResul
             "missing_functional_requirements": ["functional requirement", "requisito funcional"],
             "missing_non_functional_requirements": ["non-functional", "não funcional", "nao funcional", "nfr"],
             "missing_state_model": ["state model", "modelo de estado"],
+            "missing_examples": ["example", "exemplo", "for example"],
+            "missing_tradeoffs": ["tradeoff", "trade-off", "trade off", "contrapartida", "compromisso"],
+            "missing_rejected_alternatives": ["rejected alternative", "alternativa rejeitada", "rejeitado"],
+            "missing_failure_states": ["error", "erro", "empty", "vazio", "blocked", "bloqueado"],
             "missing_data_ledger_reconciliation": ["reconciliation", "reconciliação", "reconciliacao", "ledger"],
             "missing_downstream_handoff": ["downstream handoff", "handoff", "arquitetura"],
         }
@@ -120,6 +124,14 @@ def validate_product_sot_prd_grade(sot: Mapping[str, Any] | str) -> QualityResul
             findings.append(_finding("missing_non_functional_requirements", "Product SOT must include non-functional requirements."))
         if _count(data.get("state_model_requirements")) < 5:
             findings.append(_finding("missing_state_model", "Product SOT must include state model requirements."))
+        if _count(data.get("examples_by_flow")) < 2:
+            findings.append(_finding("missing_examples", "Product SOT must include concrete examples by flow, not only generic requirements."))
+        if _count(data.get("tradeoffs")) < 2:
+            findings.append(_finding("missing_tradeoffs", "Product SOT must include tradeoffs so architecture/product decisions are reviewable."))
+        if _count(data.get("rejected_alternatives")) < 1:
+            findings.append(_finding("missing_rejected_alternatives", "Product SOT must record at least one rejected alternative or explain why none exists."))
+        if _count(data.get("failure_empty_blocked_states")) < 3:
+            findings.append(_finding("missing_failure_states", "Product SOT must include empty/error/blocked states for critical flows."))
         if _count(data.get("data_ledger_reconciliation_requirements")) < 1:
             findings.append(_finding("missing_data_ledger_reconciliation", "Product SOT must include data/ledger/reconciliation requirements."))
         if _count(data.get("acceptance_criteria_by_flow")) < 2:
