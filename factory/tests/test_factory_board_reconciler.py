@@ -701,6 +701,34 @@ class FactoryBoardReconcilerTest(unittest.TestCase):
         self.assertEqual(blockers, [])
         self.assertIsNone(selected)
 
+    def test_declared_artifact_readback_repair_tasks_are_not_repaired_again(self) -> None:
+        repair = {
+            "id": "repair-fixture",
+            "status": "done",
+            "title": "Repair missing declared artifacts for board",
+            "assignee": "factory-orchestrator",
+            "missing_declared_artifacts": [
+                {"artifact_name": "declared_artifact_readback_repair_fixture.md"},
+            ],
+            "metadata": json.dumps(
+                {
+                    "orchestration_result": {
+                        "packet_type": "declared_artifact_readback_repair",
+                        "target_task_ref": "fixture-rel002",
+                        "target_fingerprint": "abc123",
+                        "readback_verdict": "FAIL_DECLARED_ARTIFACTS_ABSENT",
+                    }
+                }
+            ),
+        }
+
+        blockers, selected = factoryctl.board_reconcile_missing_declared_artifact_blockers(
+            {"done": [repair]}
+        )
+
+        self.assertEqual(blockers, [])
+        self.assertIsNone(selected)
+
     def test_phase_engine_runtime_strict_rejects_template_scaffold_artifacts(self) -> None:
         card = load_vfinal_card()
 
