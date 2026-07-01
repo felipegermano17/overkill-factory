@@ -4919,6 +4919,88 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertNotIn("missing_declared_artifacts", routing_record)
         self.assertTrue(routing_record["missing_declared_artifacts_suppressed_by_readback_pass"])
 
+    def test_no_idle_consumes_manager_needs_replan_after_f16_readback_pass(self) -> None:
+        fake = FakeHermes()
+        blocker_id = "t_" + "f17blocked"
+        f16_id = "t_" + "f16rerun"
+        readback_id = "t_" + "f16readback"
+        fake.tasks[blocker_id] = {
+            "id": blocker_id,
+            "status": "blocked",
+            "title": "F17 - Verificacao",
+            "assignee": "qa-verification-worker",
+            "body": json.dumps(
+                {
+                    "phase_id": "F17",
+                    "packet_type": "factory_run_graph_node",
+                    "runtime_contract": "missing release/readiness proof package",
+                }
+            ),
+            "comments": [
+                {
+                    "author": "overkill-factory-gerente",
+                    "body": (
+                        "OWNER ESCALATION / needs_replan: operator rejected passive status. "
+                        "This is not release approval. The factory must replan an actionable non-production "
+                        "proof/staging/DevNet path or deliver the exact blocker package."
+                    ),
+                },
+                {
+                    "author": "overkill-factory-gerente",
+                    "body": (
+                        "FACTORY DEFECT / needs_replan_not_consumed: ready=0 running=0 blocked=1; "
+                        "this is a factory-owned routing/remediation gap."
+                    ),
+                },
+            ],
+            "events": [
+                {
+                    "type": "blocked",
+                    "payload": {
+                        "kind": "capability",
+                        "reason": "missing runtime_contract and release/readiness proof package",
+                    },
+                }
+            ],
+        }
+        fake.tasks[f16_id] = {
+            "id": f16_id,
+            "status": "done",
+            "title": "F16 rerun after WU-19 release/readiness routing packet",
+            "assignee": "evidence-reconciler",
+            "body": json.dumps({"phase": "F16", "marker": "factory_f16_rerun_after_wu19_release_readiness_routing"}),
+        }
+        fake.tasks[readback_id] = {
+            "id": readback_id,
+            "status": "done",
+            "title": f"Independent readback: F16 consolidated reconciliation packet {f16_id}",
+            "assignee": "independent-reviewer",
+            "latest_summary": f"PASS_READBACK_ONLY_NO_AUTHORITY_GRANT for {f16_id}",
+            "body": json.dumps({"producer_task": f16_id, "verdict": "PASS_READBACK_ONLY_NO_AUTHORITY_GRANT"}),
+        }
+        args = adapter.build_parser().parse_args(
+            ["no-idle", "--board", TEST_BOARD, "--create-remediation", "--workspace", "scratch"]
+        )
+
+        result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertEqual(state["classification"], "release_replan_task_created")
+        self.assertEqual(state["remediation_strategy"], "create_release_replan_task")
+        self.assertTrue(state["native_dispatch_required_next"])
+        self.assertFalse(state["operator_input_required"])
+        self.assertFalse(state["human_gate_required"])
+        created_tasks = [task for task_id, task in fake.tasks.items() if task_id not in {blocker_id, f16_id, readback_id}]
+        self.assertEqual(len(created_tasks), 1)
+        created = created_tasks[0]
+        self.assertEqual(created["assignee"], "release-ops-worker")
+        created_body = json.loads(str(created["body"]))
+        self.assertEqual(created_body["marker"], adapter.NO_IDLE_RELEASE_REPLAN_MARKER)
+        self.assertEqual(created_body["targeted_remediation"]["plan_action"], "replan_actionable_nonproduction_release_path")
+        self.assertEqual(created_body["targeted_remediation"]["blocked_task_refs"], [blocker_id])
+        self.assertFalse(created_body["operator_input_required"])
+        self.assertIn("do not ask the operator a vague question", " ".join(created_body["forbidden_actions"]).lower())
+
     def test_declared_artifact_owner_rerun_candidate_from_done_readback_repair_missing_files(self) -> None:
         target_id = "t_" + "releasepkg"
         repair_id = "t_" + "readbackdone"

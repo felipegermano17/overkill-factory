@@ -73,6 +73,7 @@ NO_IDLE_REVIEW_FAIL_REPAIR_MARKER = "factory_no_idle_review_fail_repair"
 NO_IDLE_CANONICAL_FRONTIER_RESUME_MARKER = "factory_no_idle_canonical_frontier_resume"
 NO_IDLE_MATERIALIZATION_CONTRACT_REPAIR_MARKER = "factory_no_idle_materialization_contract_repair"
 NO_IDLE_RELEASE_READINESS_REPAIR_MARKER = "factory_no_idle_release_readiness_repair"
+NO_IDLE_RELEASE_REPLAN_MARKER = "factory_no_idle_release_replan"
 NO_IDLE_OWNER_GATE_DELIVERY_MARKER = "factory_no_idle_owner_gate_delivery"
 NO_IDLE_DECLARED_ARTIFACT_REPAIR_SUPERSEDED_MARKER = "factory_no_idle_declared_artifact_repair_superseded"
 NO_IDLE_STALE_REMEDIATION_REPLACEMENT_LIMIT = 8
@@ -1415,6 +1416,40 @@ def f16_release_readiness_readback_pass_after_routing(done: list[dict[str, Any]]
             if "PASS" in verdict and "READBACK" in verdict:
                 return True
     return False
+
+
+def release_replan_requested_blocker_refs(rows: dict[str, list[dict[str, Any]]]) -> list[str]:
+    refs: list[str] = []
+    for item in rows.get("blocked", []):
+        item_ref = task_record_id(item)
+        if not item_ref:
+            continue
+        text = task_record_text(item).lower()
+        if "needs_replan" not in text:
+            continue
+        if any(
+            marker in text
+            for marker in (
+                "factory_no_idle_release_replan",
+                "release_replan_task_created",
+                "actionable_nonproduction_release_path",
+            )
+        ):
+            continue
+        if any(
+            marker in text
+            for marker in (
+                "release/readiness",
+                "release readiness",
+                "f17",
+                "proof/staging/devnet",
+                "non-production",
+                "non production",
+            )
+        ):
+            refs.append(item_ref)
+    return sorted(set(refs))
+
 
 
 def release_readiness_resolved_by_materialization_repair_refs(
@@ -2993,6 +3028,31 @@ def classify_no_idle_state(rows: dict[str, list[dict[str, Any]]]) -> dict[str, A
         done,
         materialization_contract_refs,
     )
+    replan_requested_refs = release_replan_requested_blocker_refs(rows)
+    if replan_requested_refs:
+        return {
+            "status": "remediation_required",
+            "classification": "release_replan_requested_by_manager",
+            "blocked": True,
+            "remediation_required": True,
+            "remediation_strategy": "create_release_replan_task",
+            "human_gate_required": False,
+            "operator_input_required": False,
+            "operator_input_task_refs": [],
+            "human_gate_task_refs": human_gate_refs,
+            "blocked_task_refs": replan_requested_refs,
+            "release_readiness_task_refs": materialization_contract_refs,
+            "remediation_reason": (
+                "The gerente recorded needs_replan/needs_replan_not_consumed after an operator escalation. "
+                "That is a factory-owned routing gap: create an actionable non-production proof/replan task "
+                "instead of staying blocked or asking a vague human question."
+            ),
+            "next_action": (
+                "create release-ops replan task: either execute safe non-production proof work that needs no human, "
+                "or prepare one exact human ask with consequences and required inputs"
+            ),
+            "state": state,
+        }
     if materialization_contract_refs and f16_release_readiness_readback_pass_after_routing(done):
         return {
             "status": "blocked",
@@ -3587,6 +3647,71 @@ def create_release_readiness_repair_task(
         body=compact_json_argument(body),
         assignee="release-ops-worker",
         idempotency_key=f"overkill:no-idle-release-readiness-repair:{public_safe_slug(board, fallback='board')}:{digest}",
+        created_by=NO_IDLE_AUTHOR,
+        workspace=workspace,
+        blocked=False,
+        workflow_template_id=FACTORY_KANBAN_WORKFLOW_TEMPLATE_ID,
+        current_step_key=FACTORY_KANBAN_DEFAULT_STEP_KEY,
+        runner=runner,
+    )
+
+
+
+def create_release_replan_task(
+    *,
+    hermes_bin: str,
+    board: str,
+    workspace: str,
+    classification: dict[str, Any],
+    runner: Runner,
+) -> str:
+    body = no_idle_remediation_body(board=board, classification=classification)
+    body["marker"] = NO_IDLE_RELEASE_REPLAN_MARKER
+    body["packet_type"] = "factory_no_idle_release_replan_request"
+    body["objective"] = (
+        "Consume the gerente needs_replan event: convert a passive F17/release-readiness block into an actionable "
+        "non-production proof plan. Execute factory-owned safe checks when possible; if a human input is truly "
+        "needed, produce exactly one concrete ask with required inputs and consequences."
+    )
+    body["targeted_remediation"] = {
+        "plan_action": "replan_actionable_nonproduction_release_path",
+        "blocked_task_refs": classification.get("blocked_task_refs") or [],
+        "release_readiness_task_refs": classification.get("release_readiness_task_refs") or [],
+        "required_outputs": [
+            "factory_owned_work_items_that_can_run_without_human",
+            "exact_human_ask_if_any_human_input_is_truly_required",
+            "next_kanban_task_refs_or_delivery_receipt",
+        ],
+        "native_dispatch_required_next": True,
+        "human_gate_required": False,
+        "operator_input_required": False,
+    }
+    body["allowed_actions"] = [
+        "run or create safe non-production proof tasks that do not touch production, Mainnet, funds, custody, signing, secrets or cloud spend",
+        "separate factory-owned missing setup from true human authority gaps",
+        "turn each blocker into either an executable factory task or one exact owner ask",
+        "create follow-up Kanban tasks and dispatch them natively when safe",
+        "record why any remaining blocker cannot be solved by the factory alone",
+    ]
+    body["forbidden_actions"].extend(
+        [
+            "do not ask the operator a vague question",
+            "do not restate passive blocked status as progress",
+            "do not create another duplicate WU-19/F16 repair loop",
+            "do not treat safe non-production proof authority as release, production, Mainnet, waiver, funds, custody, signing, secrets or cloud authority",
+            "do not unblock F17/F18/Receipt Five without concrete proof or explicit authority",
+        ]
+    )
+    body["human_gate_required"] = False
+    body["operator_input_required"] = False
+    digest = idempotency_digest_fragment(contract_digest(body))
+    return create_task(
+        hermes_bin=hermes_bin,
+        board=board,
+        title="Replan actionable non-production release proof path",
+        body=compact_json_argument(body),
+        assignee="release-ops-worker",
+        idempotency_key=f"overkill:no-idle-release-replan:{public_safe_slug(board, fallback='board')}:{digest}",
         created_by=NO_IDLE_AUTHOR,
         workspace=workspace,
         blocked=False,
@@ -12348,6 +12473,7 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
         return public_envelope
     legacy_remediation_strategy = str(legacy_classification.get("remediation_strategy") or "")
     targeted_legacy_repair_available = legacy_remediation_strategy in {
+        "create_release_replan_task",
         "create_owner_gate_delivery_task",
         "create_targeted_review_repair_task",
         "create_post_review_owner_gate_package_task",
@@ -12491,6 +12617,44 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
                 "factory_repair_task_unlinked_and_promoted"
                 if released_repair_tasks
                 else "factory_repair_task_unlink_promote_failed"
+            )
+        elif classification.get("remediation_strategy") == "create_release_replan_task":
+            targeted_remediation_plan = {
+                "record_type": "factory_no_idle_targeted_repair_plan",
+                "plan_action": "replan_actionable_nonproduction_release_path",
+                "board": args.board,
+                "blocked_task_refs": classification.get("blocked_task_refs") or [],
+                "release_readiness_task_refs": classification.get("release_readiness_task_refs") or [],
+                "assignee": "release-ops-worker",
+                "native_dispatch_required_next": True,
+                "human_gate_required": False,
+                "operator_input_required": False,
+            }
+            remediation_task_id = create_release_replan_task(
+                hermes_bin=args.hermes_bin,
+                board=args.board,
+                workspace=args.workspace,
+                classification=classification,
+                runner=runner,
+            )
+            task_runtime = remediation_task_runtime_metadata(
+                hermes_bin=args.hermes_bin,
+                board=args.board,
+                task_id=remediation_task_id,
+                runner=runner,
+            )
+            classification["targeted_remediation_plan"] = targeted_remediation_plan
+            classification["remediation_task_ref"] = remediation_task_id
+            classification.update(task_runtime)
+            classification["native_dispatch_required_next"] = bool(
+                remediation_task_id
+                and targeted_remediation_plan.get("native_dispatch_required_next") is True
+                and task_runtime.get("native_dispatch_required_next") is True
+            )
+            classification["classification"] = (
+                "release_replan_task_created"
+                if remediation_task_id and not classification.get("remediation_task_stale")
+                else "release_replan_task_not_created"
             )
         elif classification.get("remediation_strategy") == "create_owner_gate_delivery_task":
             targeted_remediation_plan = {
