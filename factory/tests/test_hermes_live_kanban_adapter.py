@@ -5001,6 +5001,57 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertFalse(created_body["operator_input_required"])
         self.assertIn("do not ask the operator a vague question", " ".join(created_body["forbidden_actions"]).lower())
 
+    def test_no_idle_does_not_duplicate_consumed_manager_needs_replan(self) -> None:
+        fake = FakeHermes()
+        blocker_id = "t_" + "f17blocked"
+        replan_id = "t_" + "replanold"
+        fake.tasks[blocker_id] = {
+            "id": blocker_id,
+            "status": "blocked",
+            "title": "F17 - Verificacao",
+            "assignee": "qa-verification-worker",
+            "body": json.dumps({"phase_id": "F17", "runtime_contract": "present", "release_readiness_status": "blocked"}),
+            "comments": [
+                {
+                    "author": "overkill-factory-gerente",
+                    "body": "FACTORY DEFECT / needs_replan_not_consumed: ready=0 running=0 blocked=1; factory-owned routing gap.",
+                }
+            ],
+            "events": [{"type": "blocked", "payload": {"kind": "capability", "reason": "release/readiness proof gap"}}],
+        }
+        fake.tasks[replan_id] = {
+            "id": replan_id,
+            "status": "done",
+            "title": "Replan actionable non-production release proof path",
+            "assignee": "release-ops-worker",
+            "body": json.dumps(
+                {
+                    "marker": adapter.NO_IDLE_RELEASE_REPLAN_MARKER,
+                    "targeted_remediation": {
+                        "plan_action": "replan_actionable_nonproduction_release_path",
+                        "blocked_task_refs": [blocker_id],
+                    },
+                }
+            ),
+            "events": [{"type": "completed"}],
+        }
+        args = adapter.build_parser().parse_args(
+            ["no-idle", "--board", TEST_BOARD, "--create-remediation", "--workspace", "scratch"]
+        )
+
+        result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertNotEqual(state["classification"], "release_replan_task_created")
+        self.assertFalse(state.get("remediation_strategy") == "create_release_replan_task")
+        created_replans = [
+            task
+            for task_id, task in fake.tasks.items()
+            if task_id not in {blocker_id, replan_id}
+            and "Replan actionable non-production release proof path" in str(task.get("title") or "")
+        ]
+        self.assertEqual(created_replans, [])
+
     def test_declared_artifact_owner_rerun_candidate_from_done_readback_repair_missing_files(self) -> None:
         target_id = "t_" + "releasepkg"
         repair_id = "t_" + "readbackdone"

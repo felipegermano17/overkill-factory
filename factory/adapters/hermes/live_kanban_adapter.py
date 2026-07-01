@@ -1418,11 +1418,34 @@ def f16_release_readiness_readback_pass_after_routing(done: list[dict[str, Any]]
     return False
 
 
+def release_replan_consumed_blocker_refs(rows: dict[str, list[dict[str, Any]]]) -> set[str]:
+    consumed: set[str] = set()
+    blocked_refs = {
+        task_record_id(item)
+        for item in rows.get("blocked", [])
+        if task_record_id(item)
+    }
+    if not blocked_refs:
+        return consumed
+    for bucket in ("ready", "running", "todo", "blocked", "done"):
+        for item in rows.get(bucket, []):
+            text = task_record_text(item)
+            lowered = text.lower()
+            if NO_IDLE_RELEASE_REPLAN_MARKER not in lowered and "replan_actionable_nonproduction_release_path" not in lowered:
+                continue
+            for ref in blocked_refs:
+                if ref and ref in text:
+                    consumed.add(ref)
+    return consumed
+
+
+
 def release_replan_requested_blocker_refs(rows: dict[str, list[dict[str, Any]]]) -> list[str]:
     refs: list[str] = []
+    consumed_refs = release_replan_consumed_blocker_refs(rows)
     for item in rows.get("blocked", []):
         item_ref = task_record_id(item)
-        if not item_ref:
+        if not item_ref or item_ref in consumed_refs:
             continue
         text = task_record_text(item).lower()
         if "needs_replan" not in text:
