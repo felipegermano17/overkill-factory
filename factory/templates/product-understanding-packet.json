@@ -1,0 +1,78 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/product-understanding-packet.schema.json",
+  "record_type": "product_understanding_packet",
+  "packet_id": "product-understanding-public-template",
+  "created_at": "2026-07-01T00:00:00+00:00",
+  "factory_method_version": "OVERKILL_VFINAL",
+  "source_envelope_ref": "external:operator-source-envelope",
+  "start_conversation_ref": "templates/factory-start-conversation.json",
+  "approval_state": {
+    "status": "pending_operator_confirmation",
+    "operator_response_ref": "pending:operator-reply",
+    "packet_required_before_material_execution": true,
+    "understanding_confirmed_or_deferred": false,
+    "free_text_chat_is_not_execution_approval": true
+  },
+  "product_understanding": {
+    "intent": "Confirm the product intent before the factory starts Product SOT, architecture or execution.",
+    "target_users": ["target product users to be confirmed by the operator"],
+    "scope_in": ["bounded first product outcome to be confirmed before Product SOT"],
+    "scope_out_non_goals": ["implementation, deploy, credentials, funds, signing and release are not approved by this packet"],
+    "ux_expectations": ["operator-readable product experience expectations must be captured before Product SOT"],
+    "architecture_preview": ["architecture constraints and integration boundaries must be previewed before material execution"],
+    "access_and_capabilities": ["missing access or capability requirements must be listed early instead of discovered during execution"],
+    "risk_boundaries": ["authority, access, budget, custody, destructive and release risks remain gated"],
+    "success_criteria": ["success criteria must be explicit enough that later obvious questions become factory bugs"],
+    "expected_deliverables": ["Product SOT, method route, architecture packet and execution readiness only after required gates pass"]
+  },
+  "grouped_human_questions": [
+    {
+      "question": "Esse entendimento descreve o produto certo antes da fabrica continuar?",
+      "why_it_matters": "Evita que a fabrica transforme material inicial em escopo errado.",
+      "decision_scope": "product_understanding_only",
+      "required_before": "factory_start",
+      "blocked_if_unanswered": true,
+      "factory_can_continue_without_answer": false
+    },
+    {
+      "question": "Quais limites, nao-objetivos ou riscos nao podem entrar no primeiro ciclo?",
+      "why_it_matters": "Evita execucao material fora do limite autorizado.",
+      "decision_scope": "scope_and_risk_boundary",
+      "required_before": "material_execution",
+      "blocked_if_unanswered": true,
+      "factory_can_continue_without_answer": false
+    }
+  ],
+  "deferred_decision_ledger": [],
+  "material_execution_boundary": {
+    "execution_allowed": false,
+    "material_execution_blocked_until_packet_confirmed_or_deferred": true,
+    "later_repeated_obvious_questions_are_factory_bugs": true,
+    "human_questions_grouped_before_execution": true,
+    "no_raw_private_evidence_embedded": true,
+    "no_gate_approval_from_chat_free_text": true
+  },
+  "handoff": {
+    "next_artifact": "operator_understanding_confirmation",
+    "next_worker": "overkill-factory-gerente",
+    "factory_owned_next_step": false,
+    "user_decision_required": true,
+    "next_safe_action": "Ask the operator to confirm, correct or defer the Product Understanding Packet before material execution."
+  },
+  "public_private_boundary": {
+    "public_safe_refs_only": true,
+    "raw_private_evidence_embedded": false,
+    "private_context_retained_outside_public_repo": true,
+    "operator_instance_may_hold_private_source": true
+  },
+  "acceptance": {
+    "packet_created": true,
+    "approved_or_deferred_decision_ledger": false,
+    "product_sot_created": false,
+    "execution_allowed": false,
+    "evidence_refs": [
+      "schemas/product-understanding-packet.schema.json",
+      "templates/factory-start-conversation.json"
+    ]
+  }
+}

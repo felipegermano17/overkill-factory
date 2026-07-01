@@ -36,8 +36,8 @@ Done without evidence is only a claim. Receipt Five, review, runtime state and p
 | Hermes profile bindings | 40 | `agents/hermes-profile-bindings.public.json` |
 | Operating systems | 17 | `templates/factory-operating-system-registry.json` |
 | Method engines | 8 | `templates/method-engine-registry.json` |
-| JSON schemas | 249 | `schemas/*.json` |
-| Templates | 166 | `templates/*` |
+| JSON schemas | 250 | `schemas/*.json` |
+| Templates | 167 | `templates/*` |
 | Public surfaces | 19 | `docs/public-surface.manifest.json` |
 
 ## Factory Phases
@@ -166,7 +166,7 @@ Done without evidence is only a claim. Receipt Five, review, runtime state and p
 | OS | Priority | Status | Owner | Purpose | Proof commands |
 | --- | --- | --- | --- | --- | --- |
 | Deterministic Control Plane OS | P0 | active | factory-orchestrator | Own the reducer-first factory spine: phase graph, commands, events, decision outbox, replay and promotion boundaries. | factoryctl validate-phase-graph, factoryctl compile-workflow, factoryctl validate-workflow-compiled-plan, factoryctl validate-factory-run, factoryctl validate-hermes-reducer-mutation-proof, +3 more |
-| Product Truth and Research OS | P0 | active | source-ledger-worker | Own deep product starts before Product SOT: sources, claims, conflicts, brownfield study, research decisions and operator understanding. | factoryctl source-resolution, factoryctl source-ledger, factoryctl understanding-confirmation, factoryctl outcome-contract, factoryctl product-sot, +1 more |
+| Product Truth and Research OS | P0 | active | source-ledger-worker | Own deep product starts before Product SOT: sources, claims, conflicts, brownfield study, research decisions and operator understanding. | factoryctl start-conversation, factoryctl product-understanding-packet, factoryctl validate-product-understanding-packet, factoryctl source-resolution, factoryctl source-ledger, +4 more |
 | Method OS | P0 | active | factory-orchestrator | Turn method routing into deterministic method engines rather than broad method-family labels. | factoryctl method-engines, factoryctl method-contract, factoryctl validate-method-contract |
 | Product Architecture OS | P0 | active | product-architect | Own architecture candidates, trust boundaries, integration shape, data boundaries and technical decisions before decomposition. | factoryctl product-creation-plan, factoryctl gate-report, factoryctl validate-card |
 | Product Experience, Design and Brand OS | P0 | active | product-face | Own UX, information architecture, brand/identity, design system, component proof, accessibility and visual regression for product surfaces. | factoryctl product-implementation-readiness, factoryctl validate-product-experience-control-plane, factoryctl gate-report, factoryctl validate-card, factoryctl validate-completion |
@@ -379,6 +379,7 @@ These are the public JSON schemas the factory exposes. They are not decoration; 
 - `schemas/product-sot.schema.json`
 - `schemas/product-source-ledger.schema.json`
 - `schemas/product-surface-stack-plan.schema.json`
+- `schemas/product-understanding-packet.schema.json`
 - `schemas/production-full-product-graph-contract.schema.json`
 - `schemas/production-promotion-ladder.schema.json`
 - `schemas/production-readiness-plan.schema.json`
@@ -575,6 +576,7 @@ Templates are starter records paired with schemas. They are examples of valid sh
 - `templates/product-sot.md`
 - `templates/product-source-ledger.json`
 - `templates/product-surface-stack-plan.json`
+- `templates/product-understanding-packet.json`
 - `templates/production-full-product-graph-qvg.contract.json`
 - `templates/production-promotion-ladder.json`
 - `templates/production-readiness-plan.json`

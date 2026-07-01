@@ -190,7 +190,7 @@ class UserFacingAutonomyHelpRouterTest(unittest.TestCase):
         self.assertIn("human_gate_packet.decision_package_delivery.summary_only_forbidden must be true", errors)
         self.assertIn("human_gate_packet.decision_package_delivery.material_before_question must be true", errors)
         self.assertIn(
-            "human_gate_packet.decision_package_delivery.attachment_order must include markdown_document and pdf_document",
+            "human_gate_packet.decision_package_delivery.attachment_order must include pdf_document",
             errors,
         )
         self.assertIn(

@@ -190,6 +190,11 @@ def _default_next_action(status: str) -> str:
 
 
 def build_card(percent: int = 42, phase: str = "F5 Product SOT", blocker: str = "aguardando confirmação do escopo") -> dict:
+    done = ["estado real lido do Hermes/Kanban", "sinais internos resumidos sem expor JSON/logs"]
+    doing = [f"fase atual: {phase}"]
+    remaining = ["concluir o próximo artefato de fase", "preparar pacote legível se existir gate humano real"]
+    risks = ["percentual cai para indefinido se faltar base runtime"]
+    next_action = "Gerente envia status em PT-BR e só pede decisão com pacote PDF/vídeo e recibo."
     return {
         "record_type": "operator_progress_card",
         "result": "PASS",
@@ -198,13 +203,22 @@ def build_card(percent: int = 42, phase: str = "F5 Product SOT", blocker: str = 
         "kanban_dump_required": False,
         "progress_basis": "legacy_explicit_percent",
         "progress_percent": percent,
+        "percent_basis": "Hermes/Kanban state projection; never chat memory or vibes",
         "current_phase": phase,
         "status": "blocked_needs_input" if blocker else "running",
+        "done_since_last_update": done,
+        "doing_now": doing,
+        "remaining_work": remaining,
+        "blockers": [blocker] if blocker else [],
+        "risks": risks,
+        "human_action_required": bool(blocker),
+        "next_action": next_action,
+        "next_update_window": "até a próxima mudança material de fase, bloqueio ou gate",
         "blocker": blocker,
-        "next_safe_action": "Gerente envia pacote de entendimento e aguarda confirmação do operador.",
+        "next_safe_action": next_action,
         "next_possible_gate": "owner_approved_product_sot",
         "worker_visibility_policy": "workers never contact the operator directly",
-        "human_text": render_text(percent, phase, blocker),
+        "human_text": render_text(percent, phase, blocker, done, doing, remaining, risks, next_action),
     }
 
 
@@ -248,15 +262,33 @@ def render_model_text(card: dict[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
-def render_text(percent: int, phase: str, blocker: str) -> str:
+def render_text(
+    percent: int,
+    phase: str,
+    blocker: str,
+    done: list[str] | None = None,
+    doing: list[str] | None = None,
+    remaining: list[str] | None = None,
+    risks: list[str] | None = None,
+    next_action: str | None = None,
+) -> str:
     blocker_text = blocker or "nenhum bloqueio real no momento"
+    done = done or ["estado real lido do Hermes/Kanban"]
+    doing = doing or [f"fase atual: {phase}"]
+    remaining = remaining or ["próximo artefato de fase"]
+    risks = risks or ["sem risco novo informado"]
+    next_action = next_action or "Gerente envia o pacote certo; o operador não precisa abrir Kanban."
     return (
         "Progresso da fábrica\n"
         f"Progresso: {percent}%\n"
         f"Fase atual: {phase}\n"
+        f"Feito: {'; '.join(done)}\n"
+        f"Fazendo: {'; '.join(doing)}\n"
+        f"Falta: {'; '.join(remaining)}\n"
         f"Bloqueador: {blocker_text}\n"
-        "Próxima ação: Gerente envia o pacote certo; o operador não precisa abrir Kanban.\n"
-        "Próximo gate possível: owner-approved Product SOT\n"
+        f"Riscos: {'; '.join(risks)}\n"
+        f"Próxima ação: {next_action}\n"
+        "Ação do operador: só quando houver gate real com pacote legível e recibo.\n"
     )
 
 

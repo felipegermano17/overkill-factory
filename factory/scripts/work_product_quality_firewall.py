@@ -153,32 +153,60 @@ def validate_product_sot_prd_grade(sot: Mapping[str, Any] | str) -> QualityResul
 def validate_human_gate_artifact(package: Mapping[str, Any]) -> QualityResult:
     data = _as_mapping(package)
     findings: list[QualityFinding] = []
-    process_pass = _nonempty(data.get("primary_message")) and _nonempty(data.get("valid_replies"))
+    process_pass = _nonempty(data.get("primary_message")) and (
+        _nonempty(data.get("valid_replies")) or data.get("record_type") == "operator_delivery_receipt"
+    )
     readback_pass = process_pass
 
-    attachment = _as_mapping(data.get("primary_attachment"))
+    attachment = _as_mapping(data.get("primary_attachment") or data.get("primary_artifact"))
     media_type = str(attachment.get("media_type", "")).lower()
-    path = str(attachment.get("path", "")).lower()
-    if media_type == "application/json" or path.endswith(".json"):
-        findings.append(_finding("primary_attachment_json", "Raw JSON cannot be the primary human gate attachment."))
-    if media_type == "application/pdf" or path.endswith(".pdf"):
+    path = str(attachment.get("path") or attachment.get("asset_ref") or "").lower()
+    kind = str(attachment.get("kind", "")).lower()
+    if media_type in {"application/json", "text/markdown", "text/x-markdown"} or path.endswith((".json", ".md", ".markdown")):
+        findings.append(_finding("primary_attachment_raw_internal_format", "Raw JSON/Markdown cannot be the primary human gate attachment."))
+        if media_type == "application/json" or path.endswith(".json"):
+            findings.append(_finding("primary_attachment_json", "Raw JSON cannot be the primary human gate attachment."))
+        if "markdown" in media_type or path.endswith((".md", ".markdown")):
+            findings.append(_finding("primary_attachment_markdown", "Raw Markdown cannot be the primary human gate attachment."))
+    if media_type in {"application/pdf", "video/mp4"} or path.endswith((".pdf", ".mp4")) or kind in {"pdf_document", "video_explainer"}:
         if attachment.get("fallback_renderer") is True:
-            findings.append(_finding("fallback_pdf_primary", "Fallback text-style PDF cannot be the primary normal gate artifact."))
+            findings.append(_finding("fallback_pdf_primary", "Fallback text-style PDF/video cannot be the primary normal gate artifact."))
         if attachment.get("designed_artifact") is not True:
-            findings.append(_finding("primary_pdf_not_marked_designed", "Primary PDF must be marked/proven as designed operator artifact."))
+            findings.append(_finding("primary_artifact_not_marked_designed", "Primary PDF/video must be marked/proven as designed operator artifact."))
     elif not findings:
-        findings.append(_finding("unsupported_primary_attachment", "Primary gate attachment must be designed PDF/equivalent, not a technical dump."))
+        findings.append(_finding("unsupported_primary_attachment", "Primary gate attachment must be designed PDF/video, not a technical dump."))
+
+    if data.get("record_type") == "operator_delivery_receipt":
+        findings.extend(_validate_operator_delivery_receipt_requirements(data))
 
     message = str(data.get("primary_message", ""))
     if len(message.strip()) < 80:
         findings.append(_finding("primary_message_too_short", "Gate message must state the decision and consequence."))
-    if _count(data.get("approval_does_not_authorize")) < 4:
-        findings.append(_finding("missing_non_authorization_boundary", "Gate must state what approval does not authorize."))
-    if _count(data.get("approval_authorizes")) < 1:
-        findings.append(_finding("missing_authorization_boundary", "Gate must state exactly what approval authorizes."))
+    if data.get("record_type") != "operator_delivery_receipt":
+        if _count(data.get("approval_does_not_authorize")) < 4:
+            findings.append(_finding("missing_non_authorization_boundary", "Gate must state what approval does not authorize."))
+        if _count(data.get("approval_authorizes")) < 1:
+            findings.append(_finding("missing_authorization_boundary", "Gate must state exactly what approval authorizes."))
 
     quality_pass = process_pass and readback_pass and not [f for f in findings if f.severity == "error"]
     return QualityResult("human_gate_artifact", process_pass, readback_pass, quality_pass, findings)
+
+
+def _validate_operator_delivery_receipt_requirements(data: Mapping[str, Any]) -> list[QualityFinding]:
+    findings: list[QualityFinding] = []
+    if data.get("manager_profile") != "overkill-factory-gerente":
+        findings.append(_finding("missing_manager_delivery", "Operator delivery must be gerente-led."))
+    if data.get("delivery_path") != "gerente_to_human":
+        findings.append(_finding("invalid_delivery_path", "Cron/watchdog/worker signals must wake gerente; gerente talks to the human."))
+    if data.get("direct_worker_or_watchdog_to_human") is not False:
+        findings.append(_finding("direct_internal_signal_to_human", "Workers, cron and watchdogs must not notify the human directly."))
+    if data.get("material_delivered_before_question") is not True:
+        findings.append(_finding("material_not_delivered_before_question", "Decision material must be delivered before asking the question."))
+    if data.get("raw_json_markdown_primary_surface") is not False:
+        findings.append(_finding("raw_json_markdown_primary_surface", "Raw JSON/Markdown may be internal evidence only, never the primary human surface."))
+    if _count(data.get("internal_evidence_refs")) < 1:
+        findings.append(_finding("missing_internal_evidence_refs", "JSON/Markdown evidence refs must remain available internally."))
+    return findings
 
 
 def validate_completion_readback(completion: Mapping[str, Any], root: str | Path) -> QualityResult:
@@ -321,7 +349,7 @@ def validate_artifact(artifact_type: str, path: Path, *, root: Path | None = Non
     payload = load_artifact(path)
     if artifact_type == "product_sot":
         return validate_product_sot_prd_grade(payload)
-    if artifact_type == "human_gate":
+    if artifact_type == "human_gate" or artifact_type == "operator_delivery_receipt":
         if not isinstance(payload, Mapping):
             return QualityResult(
                 "human_gate_artifact",
@@ -356,7 +384,7 @@ def validate_artifact(artifact_type: str, path: Path, *, root: Path | None = Non
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Validate Overkill Factory work-product quality floor.")
-    parser.add_argument("artifact_type", choices=["product_sot", "human_gate", "completion_readback", "real_effectiveness"])
+    parser.add_argument("artifact_type", choices=["product_sot", "human_gate", "operator_delivery_receipt", "completion_readback", "real_effectiveness"])
     parser.add_argument("path", type=Path)
     parser.add_argument("--root", type=Path, help="Root directory for completion readback artifact paths")
     parser.add_argument("--json", action="store_true", help="Emit JSON result")

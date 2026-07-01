@@ -90,6 +90,8 @@
       "purpose": "Own deep product starts before Product SOT: sources, claims, conflicts, brownfield study, research decisions and operator understanding.",
       "weak_point": "Rich materials can be flattened into a shallow summary before Product SOT is safe.",
       "primary_contract_refs": [
+        "schemas/factory-start-conversation.schema.json",
+        "schemas/product-understanding-packet.schema.json",
         "schemas/universal-signal-intake.schema.json",
         "schemas/source-resolution-packet.schema.json",
         "schemas/product-source-ledger.schema.json",
@@ -102,6 +104,9 @@
         "docs/en/operating-model.md"
       ],
       "enforcement_command_refs": [
+        "factoryctl start-conversation",
+        "factoryctl product-understanding-packet",
+        "factoryctl validate-product-understanding-packet",
         "factoryctl source-resolution",
         "factoryctl source-ledger",
         "factoryctl understanding-confirmation",
@@ -110,6 +115,7 @@
         "factoryctl full-scope-coverage"
       ],
       "validation_test_refs": [
+        "tests/test_operator_experience.py",
         "tests/test_universal_signal_intake.py",
         "tests/test_product_method_sot_planning.py"
       ],

@@ -225,7 +225,7 @@ def test_human_gate_primary_json_attachment_fails_operator_quality():
 
 def test_human_gate_designed_pdf_passes_operator_quality():
     package = {
-        "record_type": "operator_delivery_receipt",
+        "record_type": "human_gate_package",
         "primary_message": "Decisão pendente: aprovar Product SOT revisada. Se aprovar, segue para método/arquitetura. Aprovar não autoriza implementação, deploy, mainnet, fundos, secrets, custody ou signing.",
         "primary_attachment": {"path": "gate.pdf", "media_type": "application/pdf", "role": "primary", "designed_artifact": True, "fallback_renderer": False},
         "valid_replies": ["Aprovo", "Corrigir: ...", "Ainda falta: ..."],
@@ -237,6 +237,39 @@ def test_human_gate_designed_pdf_passes_operator_quality():
 
     assert result.quality_pass is True
     assert result.findings == []
+
+
+def test_operator_delivery_receipt_pdf_video_first_template_passes_quality():
+    receipt = json.loads((ROOT / "templates" / "operator-delivery-receipt.json").read_text(encoding="utf-8"))
+
+    result = quality.validate_human_gate_artifact(receipt)
+
+    assert result.quality_pass is True
+    assert result.findings == []
+
+
+def test_operator_delivery_receipt_rejects_direct_watchdog_and_raw_markdown_primary():
+    receipt = {
+        "record_type": "operator_delivery_receipt",
+        "manager_profile": "watchdog",
+        "delivery_path": "watchdog_to_human",
+        "direct_worker_or_watchdog_to_human": True,
+        "primary_message": "Decisão pendente: leia o anexo antes de aprovar. Esta aprovação não libera implementação, deploy, Mainnet, fundos, secrets, custody ou signing.",
+        "primary_artifact": {"kind": "markdown_document", "media_type": "text/markdown", "asset_ref": "gate.md", "designed_artifact": False, "fallback_renderer": True},
+        "internal_evidence_refs": [],
+        "material_delivered_before_question": False,
+        "raw_json_markdown_primary_surface": True,
+    }
+
+    result = quality.validate_human_gate_artifact(receipt)
+
+    assert result.quality_pass is False
+    codes = {finding.code for finding in result.findings}
+    assert "primary_attachment_markdown" in codes
+    assert "missing_manager_delivery" in codes
+    assert "invalid_delivery_path" in codes
+    assert "direct_internal_signal_to_human" in codes
+    assert "raw_json_markdown_primary_surface" in codes
 
 
 def test_cli_returns_nonzero_for_shallow_product_sot(tmp_path):

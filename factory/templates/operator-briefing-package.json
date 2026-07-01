@@ -27,8 +27,8 @@
     {
       "kind": "markdown_document",
       "asset_ref": "reports/product-sot-public-template/briefing.md",
-      "required_for_operator_decision": true,
-      "purpose": "deep readable source document"
+      "required_for_operator_decision": false,
+      "purpose": "internal evidence/source document, not primary human surface"
     },
     {
       "kind": "pdf_document",
@@ -57,8 +57,8 @@
   ],
   "interface_projection": {
     "short_caption": "Documento profundo preparado; leia o anexo antes de confirmar, corrigir ou rejeitar.",
-    "attachment_order": ["markdown_document", "pdf_document", "diagram", "video_explainer", "audio_explainer"],
-    "fallback_when_attachment_fails": "send markdown document and public-safe artifact refs, then retry PDF asynchronously",
+    "attachment_order": ["pdf_document", "video_explainer", "diagram", "audio_explainer", "markdown_document"],
+    "fallback_when_attachment_fails": "send concise PT-BR notice plus public-safe artifact refs, retry PDF/video asynchronously, and do not treat gate as delivered until receipt exists",
     "max_questions_after_delivery": 5
   },
   "decision_boundary": {

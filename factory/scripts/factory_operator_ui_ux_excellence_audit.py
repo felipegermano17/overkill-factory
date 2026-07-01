@@ -29,10 +29,14 @@ REQUIRED_MANAGER_RESPONSIBILITIES = {
 REQUIRED_PROGRESS_FIELDS = {
     "percent_complete",
     "done_since_last_update",
-    "currently_executing",
+    "doing_now",
     "remaining_work",
-    "blockers_or_waiting_on",
+    "blockers",
+    "risks",
+    "next_action",
+    "human_action_required",
     "next_human_gate_if_any",
+    "evidence_basis",
 }
 REQUIRED_GATE_ASSETS = {
     "short_plain_language_message",

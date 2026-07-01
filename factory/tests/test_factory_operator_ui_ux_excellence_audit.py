@@ -9,6 +9,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT_PATH = ROOT / "scripts" / "factory_operator_ui_ux_excellence_audit.py"
 REGISTRY_PATH = ROOT / "templates" / "factory-operator-ui-ux-excellence-registry.json"
+POLICY_PATH = ROOT / "templates" / "operator-notification-policy.json"
 
 
 def load_module():
@@ -53,10 +54,13 @@ class FactoryOperatorUiUxExcellenceAuditTest(unittest.TestCase):
         required = set(progress["required_fields"])
         self.assertIn("percent_complete", required)
         self.assertIn("done_since_last_update", required)
-        self.assertIn("currently_executing", required)
+        self.assertIn("doing_now", required)
         self.assertIn("remaining_work", required)
-        self.assertIn("blockers_or_waiting_on", required)
-        self.assertIn("next_human_gate_if_any", required)
+        self.assertIn("blockers", required)
+        self.assertIn("risks", required)
+        self.assertIn("next_action", required)
+        self.assertIn("human_action_required", required)
+        self.assertIn("evidence_basis", required)
         self.assertLessEqual(progress["max_silent_minutes_when_running"], 30)
         self.assertTrue(progress["batch_internal_noise"])
         self.assertFalse(progress["notify_on_every_worker_event"])
@@ -86,6 +90,47 @@ class FactoryOperatorUiUxExcellenceAuditTest(unittest.TestCase):
         self.assertEqual(result["result"], "FAIL")
         self.assertTrue(any("pdf_document" in err for err in result["errors"]))
         self.assertTrue(any("percent_complete" in err for err in result["errors"]))
+
+    def test_operator_briefing_package_is_pdf_first_not_markdown_primary(self) -> None:
+        briefing = json.loads((ROOT / "templates" / "operator-briefing-package.json").read_text(encoding="utf-8"))
+        order = briefing["interface_projection"]["attachment_order"]
+        self.assertEqual(order[0], "pdf_document")
+        markdown_assets = [asset for asset in briefing["delivery_assets"] if asset["kind"] == "markdown_document"]
+        self.assertTrue(markdown_assets)
+        self.assertFalse(any(asset["required_for_operator_decision"] for asset in markdown_assets))
+
+    def test_operator_notification_policy_routes_cron_watchdogs_through_gerente(self) -> None:
+        policy = json.loads(POLICY_PATH.read_text(encoding="utf-8"))
+        routing = policy["signal_routing"]
+        self.assertIn("cron", routing["internal_signal_sources"])
+        self.assertIn("watchdog", routing["internal_signal_sources"])
+        self.assertEqual(routing["route_to_manager_profile"], "overkill-factory-gerente")
+        self.assertTrue(routing["manager_talks_to_human"])
+        self.assertFalse(routing["direct_human_delivery_from_internal_signal"])
+        self.assertFalse(routing["raw_signal_payload_human_visible"])
+
+    def test_operator_notification_policy_defines_plain_status_and_pdf_video_receipts(self) -> None:
+        policy = json.loads(POLICY_PATH.read_text(encoding="utf-8"))
+        status_fields = set(policy["proactive_status_contract"]["required_fields"])
+        for field in {
+            "percent_complete",
+            "done_since_last_update",
+            "doing_now",
+            "remaining_work",
+            "blockers",
+            "risks",
+            "next_action",
+            "human_action_required",
+            "evidence_basis",
+        }:
+            self.assertIn(field, status_fields)
+        artifact_policy = policy["artifact_delivery_policy"]
+        self.assertIn("pdf_document", artifact_policy["primary_human_artifacts"])
+        self.assertIn("video_explainer", artifact_policy["primary_human_artifacts"])
+        self.assertTrue(artifact_policy["pdf_required_for_human_gate"])
+        self.assertTrue(artifact_policy["delivery_receipt_required"])
+        self.assertTrue(artifact_policy["raw_json_markdown_allowed_only_as_internal_evidence"])
+        self.assertTrue(artifact_policy["primary_raw_json_markdown_forbidden"])
 
     def test_cli_writes_json_and_markdown(self) -> None:
         module = load_module()
