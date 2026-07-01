@@ -4717,6 +4717,131 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertFalse(created_body["operator_input_required"])
         self.assertNotIn("parents", created_tasks[0])
 
+    def test_missing_human_gate_artifacts_are_suppressed_when_delivery_receipt_exists(self) -> None:
+        gate_id = "t_" + "humangate"
+        missing_artifacts = [
+            f"/tmp/scratch/{gate_id}/sample_release_readiness_human_gate_{gate_id}.json",
+            f"/tmp/scratch/{gate_id}/sample_release_readiness_human_gate_{gate_id}.md",
+            f"/tmp/scratch/{gate_id}/operator_delivery_receipt_{gate_id}.json",
+        ]
+        record = {
+            "id": gate_id,
+            "status": "done",
+            "title": "DELIVER HUMAN GATE: sample release/readiness decision",
+            "assignee": "human-gate-clerk",
+            "comments": [
+                {
+                    "author": "human-gate-clerk",
+                    "body": "operator_delivery_receipt: Telegram message_id 1462; Discord message_id 1521698141030580314",
+                }
+            ],
+            "runs": [
+                {
+                    "status": "done",
+                    "metadata": {
+                        "delivery_evidence": {
+                            "operator_delivery_receipt": True,
+                            "telegram_message_id": "1462",
+                            "discord_message_id": "1521698141030580314",
+                        },
+                        "artifacts": missing_artifacts,
+                    },
+                }
+            ],
+        }
+
+        self.assertEqual(adapter.missing_declared_local_artifacts(record), [])
+
+    def test_no_idle_creates_delivery_task_for_hidden_release_human_gate_without_receipt(self) -> None:
+        fake = FakeHermes()
+        blocker_id = "t_" + "f17blocked"
+        fake.tasks[blocker_id] = {
+            "id": blocker_id,
+            "status": "blocked",
+            "title": "F17 - Verificacao",
+            "assignee": "qa-verification-worker",
+            "body": json.dumps(
+                {
+                    "packet_type": "release_readiness_blocker",
+                    "human_gate_required": True,
+                    "operator_input_required": True,
+                    "blocked_reasons": ["REL-008 human gate/waiver required"],
+                }
+            ),
+            "comments": [
+                {
+                    "author": "evidence-reconciler",
+                    "body": "F17 remains blocked: release/readiness requires human gate/waiver. No Receipt Five/release authorized.",
+                }
+            ],
+            "events": [{"type": "blocked", "payload": {"kind": "human", "reason": "release human gate required"}}],
+        }
+        args = adapter.build_parser().parse_args(
+            ["no-idle", "--board", TEST_BOARD, "--create-remediation", "--workspace", "scratch"]
+        )
+
+        result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertEqual(state["classification"], "hidden_owner_gate_delivery_missing")
+        self.assertEqual(state["remediation_strategy"], "create_owner_gate_delivery_task")
+        self.assertTrue(state["native_dispatch_required_next"])
+        self.assertFalse(state["operator_input_required"])
+        created_tasks = [task for task_id, task in fake.tasks.items() if task_id != blocker_id]
+        self.assertEqual(len(created_tasks), 1)
+        created = created_tasks[0]
+        self.assertEqual(created["assignee"], "human-gate-clerk")
+        created_body = json.loads(str(created["body"]))
+        self.assertEqual(created_body["marker"], adapter.NO_IDLE_OWNER_GATE_DELIVERY_MARKER)
+        self.assertEqual(created_body["blocked_task_refs"], [blocker_id])
+        self.assertFalse(created_body["operator_input_required"])
+        self.assertTrue(created_body["native_dispatch_required_next"])
+
+    def test_delivered_human_gate_does_not_create_generic_declared_artifact_repair(self) -> None:
+        fake = FakeHermes()
+        gate_id = "t_" + "gate_done"
+        blocker_id = "t_" + "f17blocked"
+        fake.tasks[gate_id] = {
+            "id": gate_id,
+            "status": "done",
+            "title": "DELIVER HUMAN GATE: sample release/readiness decision",
+            "assignee": "human-gate-clerk",
+            "body": json.dumps({"packet_type": "operator_human_gate_delivery_request"}),
+            "comments": [
+                {"author": "human-gate-clerk", "body": "operator_delivery_receipt recorded: Telegram message_id 1462"}
+            ],
+            "events": [],
+            "runs": [
+                {
+                    "status": "done",
+                    "metadata": {
+                        "artifacts": [
+                            f"/tmp/scratch/{gate_id}/sample_release_readiness_human_gate_{gate_id}.json",
+                            f"/tmp/scratch/{gate_id}/operator_delivery_receipt_{gate_id}.md",
+                        ]
+                    },
+                }
+            ],
+        }
+        fake.tasks[blocker_id] = {
+            "id": blocker_id,
+            "status": "blocked",
+            "title": "F17 - Verificacao",
+            "assignee": "qa-verification-worker",
+            "body": json.dumps({"human_gate_required": True}),
+            "comments": [{"author": "human-gate-clerk", "body": f"operator_delivery_receipt references {gate_id}"}],
+            "events": [{"type": "blocked", "payload": {"kind": "human"}}],
+        }
+        args = adapter.build_parser().parse_args(["no-idle", "--board", TEST_BOARD, "--workspace", "scratch"])
+
+        result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertNotEqual(state["classification"], "repair_declared_artifacts")
+        self.assertFalse(state["remediation_required"])
+        self.assertTrue(state["human_gate_required"])
+        self.assertEqual(state["classification"], "human_gate_delivered_waiting_for_operator")
+
     def test_declared_artifact_owner_rerun_candidate_from_done_readback_repair_missing_files(self) -> None:
         target_id = "t_" + "releasepkg"
         repair_id = "t_" + "readbackdone"

@@ -73,6 +73,7 @@ NO_IDLE_REVIEW_FAIL_REPAIR_MARKER = "factory_no_idle_review_fail_repair"
 NO_IDLE_CANONICAL_FRONTIER_RESUME_MARKER = "factory_no_idle_canonical_frontier_resume"
 NO_IDLE_MATERIALIZATION_CONTRACT_REPAIR_MARKER = "factory_no_idle_materialization_contract_repair"
 NO_IDLE_RELEASE_READINESS_REPAIR_MARKER = "factory_no_idle_release_readiness_repair"
+NO_IDLE_OWNER_GATE_DELIVERY_MARKER = "factory_no_idle_owner_gate_delivery"
 NO_IDLE_DECLARED_ARTIFACT_REPAIR_SUPERSEDED_MARKER = "factory_no_idle_declared_artifact_repair_superseded"
 NO_IDLE_STALE_REMEDIATION_REPLACEMENT_LIMIT = 8
 NO_IDLE_RUNNING_RESULT_CLOSEOUT_TIMEOUT_SECONDS = 5 * 60
@@ -2244,12 +2245,73 @@ def completed_declared_artifact_readback_repair_is_self_evidenced(record: dict[s
     return False
 
 
+def operator_delivery_receipt_exists(record: dict[str, Any]) -> bool:
+    text = task_record_text(record).lower()
+    if "operator_delivery_receipt" in text and (
+        "message_id" in text
+        or "telegram" in text
+        or "discord" in text
+        or "chat_id" in text
+        or "delivered" in text
+        or "entrega realizada" in text
+    ):
+        return True
+    for run in record.get("runs") or []:
+        if not isinstance(run, dict):
+            continue
+        metadata = parse_json_object(run.get("metadata"))
+        if not isinstance(metadata, dict):
+            continue
+        metadata_text = json.dumps(metadata, ensure_ascii=False).lower()
+        if "operator_delivery_receipt" in metadata_text and (
+            "message_id" in metadata_text
+            or "telegram" in metadata_text
+            or "discord" in metadata_text
+            or "chat_id" in metadata_text
+            or "delivery" in metadata_text
+        ):
+            return True
+    return False
+
+
+def is_human_gate_delivery_record(record: dict[str, Any]) -> bool:
+    body = task_body_json_object(record)
+    text = task_record_text(record).lower()
+    if str(body.get("marker") or "").strip() == NO_IDLE_OWNER_GATE_DELIVERY_MARKER:
+        return True
+    if str(body.get("packet_type") or "").strip() in {
+        "operator_human_gate_delivery_request",
+        "human_gate_delivery_request",
+    }:
+        return True
+    return (
+        "deliver human gate" in text
+        or "human-gate delivery" in text
+        or "human_gate" in text and "operator_delivery_receipt" in text
+    )
+
+
+def human_gate_delivery_artifact_is_covered_by_receipt(record: dict[str, Any], artifact_name: str) -> bool:
+    if not operator_delivery_receipt_exists(record):
+        return False
+    if not is_human_gate_delivery_record(record):
+        return False
+    normalized_name = normalized_artifact_token(artifact_name)
+    return (
+        "humangate" in normalized_name
+        or "operatordeliveryreceipt" in normalized_name
+        or "release readiness human gate".replace(" ", "") in normalized_name
+    )
+
+
 def missing_declared_local_artifacts(record: dict[str, Any]) -> list[dict[str, Any]]:
     missing: list[dict[str, Any]] = []
     suppress_self_evidenced_repair_refs = completed_declared_artifact_readback_repair_is_self_evidenced(record)
     for ref in declared_artifact_refs_from_task_record(record):
         path = Path(ref)
         if not path.is_absolute():
+            continue
+        if human_gate_delivery_artifact_is_covered_by_receipt(record, path.name):
             continue
         if suppress_self_evidenced_repair_refs and path.name in {
             "declared-artifact-readback-repair.json",
@@ -2600,6 +2662,81 @@ def materialize_missing_declared_artifacts(
     return records
 
 
+def human_gate_blocker_needs_owner_delivery(item: dict[str, Any]) -> bool:
+    body = task_body_json_object(item)
+    text = task_record_text(item).lower()
+    if any(marker in text for marker in ("not approval-ready", "missing operator briefing", "missing decision package")):
+        return False
+    if "human_gate_packet" in text and "release/readiness" not in text and "release readiness" not in text:
+        return False
+    release_or_authority_gate = any(
+        marker in text
+        for marker in (
+            "release/readiness",
+            "release readiness",
+            "rel-008",
+            "receipt five",
+            "f17",
+            "production/mainnet",
+            "mainnet/funds",
+            "waiver",
+        )
+    )
+    if str(body.get("packet_type") or "").strip() in {
+        "release_readiness_blocker",
+        "operator_human_gate_delivery_request",
+    }:
+        return True
+    if body.get("human_gate_required") is True and release_or_authority_gate:
+        return True
+    return release_or_authority_gate and (
+        "human gate" in text or "human_gate" in text or "operator authority" in text
+    )
+
+
+def record_mentions_any_task_ref(record: dict[str, Any], refs: list[str]) -> bool:
+    text = task_record_text(record)
+    return any(ref and ref in text for ref in refs)
+
+
+def owner_gate_delivery_receipt_exists_for_blockers(
+    rows: dict[str, list[dict[str, Any]]],
+    blocker_refs: list[str],
+) -> bool:
+    for item in rows.get("blocked", []):
+        if task_record_id(item) in set(blocker_refs) and operator_delivery_receipt_exists(item):
+            return True
+    for item in rows.get("done", []):
+        if not is_human_gate_delivery_record(item):
+            continue
+        if not operator_delivery_receipt_exists(item):
+            continue
+        if not blocker_refs or record_mentions_any_task_ref(item, blocker_refs):
+            return True
+        # Human-gate delivery tasks often reference only platform message ids in the receipt;
+        # a single delivered gate is still authoritative when the board has one owner gate.
+        if len(blocker_refs) == 1:
+            return True
+    return False
+
+
+def active_owner_gate_delivery_task_refs(rows: dict[str, list[dict[str, Any]]], blocker_refs: list[str]) -> list[str]:
+    refs: list[str] = []
+    for status in ("ready", "running", "todo", "blocked"):
+        for item in rows.get(status, []):
+            if not is_human_gate_delivery_record(item):
+                continue
+            if blocker_refs and not record_mentions_any_task_ref(item, blocker_refs):
+                body = task_body_json_object(item)
+                blocked_refs = body.get("blocked_task_refs")
+                if not isinstance(blocked_refs, list) or not any(ref in blocker_refs for ref in blocked_refs):
+                    continue
+            ref = task_record_id(item)
+            if ref:
+                refs.append(ref)
+    return sorted(set(refs))
+
+
 def summarize_no_idle_rows(rows: dict[str, list[dict[str, Any]]]) -> dict[str, Any]:
     return {
         status: {
@@ -2735,7 +2872,62 @@ def classify_no_idle_state(rows: dict[str, list[dict[str, Any]]]) -> dict[str, A
             "state": state,
         }
     human_gate_blockers = [item for item in blocked if is_human_gate_decision_ready_blocker(item)]
+    owner_gate_delivery_blockers = [item for item in blocked if human_gate_blocker_needs_owner_delivery(item)]
     human_gate_refs = sorted(task_record_id(item) for item in human_gate_blockers if task_record_id(item))
+    owner_gate_delivery_refs = sorted(
+        task_record_id(item) for item in owner_gate_delivery_blockers if task_record_id(item)
+    )
+    owner_gate_active_delivery_refs = active_owner_gate_delivery_task_refs(rows, owner_gate_delivery_refs)
+    if owner_gate_delivery_refs and not owner_gate_delivery_receipt_exists_for_blockers(rows, owner_gate_delivery_refs):
+        if owner_gate_active_delivery_refs:
+            return {
+                "status": "dispatch_available",
+                "classification": "owner_gate_delivery_task_exists_without_receipt",
+                "blocked": False,
+                "remediation_required": False,
+                "human_gate_required": False,
+                "operator_input_required": False,
+                "native_dispatch_required_next": any(
+                    ref == task_record_id(item)
+                    for ref in owner_gate_active_delivery_refs
+                    for item in rows.get("ready", [])
+                ),
+                "human_gate_task_refs": owner_gate_delivery_refs,
+                "owner_gate_delivery_task_refs": owner_gate_active_delivery_refs,
+                "next_action": "dispatch or observe the existing owner-gate delivery task; do not wait silently",
+                "state": state,
+            }
+        return {
+            "status": "remediation_required",
+            "classification": "hidden_owner_gate_delivery_missing",
+            "blocked": True,
+            "remediation_required": True,
+            "human_gate_required": False,
+            "operator_input_required": False,
+            "native_dispatch_required_next": False,
+            "human_gate_task_refs": owner_gate_delivery_refs,
+            "operator_input_task_refs": [],
+            "remediation_strategy": "create_owner_gate_delivery_task",
+            "remediation_reason": (
+                "A blocker needs operator authority, but no operator_delivery_receipt or live delivery task exists. "
+                "The factory/gerente must deliver the human gate package before waiting for a reply."
+            ),
+            "next_action": "create and dispatch an owner-facing human-gate delivery task; do not leave the board idle",
+            "state": state,
+        }
+    if owner_gate_delivery_refs and owner_gate_delivery_receipt_exists_for_blockers(rows, owner_gate_delivery_refs) and not todo:
+        return {
+            "status": "human_gate_required",
+            "classification": "human_gate_delivered_waiting_for_operator",
+            "blocked": True,
+            "remediation_required": False,
+            "human_gate_required": True,
+            "operator_input_required": True,
+            "human_gate_task_refs": owner_gate_delivery_refs,
+            "operator_input_task_refs": [],
+            "next_action": "wait for the already-delivered operator decision; do not create generic remediation",
+            "state": state,
+        }
     operator_input_blockers = [
         item
         for item in blocked
@@ -3228,6 +3420,59 @@ def create_factory_package_dependency_remediation_task(
         current_step_key=FACTORY_KANBAN_DEFAULT_STEP_KEY,
         runner=runner,
     )
+
+
+def create_owner_gate_delivery_task(
+    *,
+    hermes_bin: str,
+    board: str,
+    workspace: str,
+    classification: dict[str, Any],
+    runner: Runner,
+) -> str:
+    body = no_idle_remediation_body(board=board, classification=classification)
+    body["marker"] = NO_IDLE_OWNER_GATE_DELIVERY_MARKER
+    body["packet_type"] = "factory_no_idle_owner_gate_delivery_request"
+    body["objective"] = (
+        "Deliver the owner-facing human gate package through the gerente/operator channel and "
+        "record an operator_delivery_receipt before the factory waits for a reply."
+    )
+    body["blocked_task_refs"] = classification.get("human_gate_task_refs") or []
+    body["required_output"] = "operator_delivery_receipt"
+    body["required_actions"] = [
+        "read the blocked task and evidence that require operator authority",
+        "produce a short plain-language operator decision memo in Portuguese",
+        "attach or link the primary decision artifact before asking for a reply",
+        "send through the configured gerente/operator channel when available",
+        "record platform/chat/message ids or equivalent refs as operator_delivery_receipt on the blocked task",
+    ]
+    body["forbidden_actions"].extend(
+        [
+            "approve, reject, waive, or infer the operator decision",
+            "leave the decision only in Kanban without operator-channel delivery",
+            "ask a vague status question instead of sending decision options",
+            "touch production, mainnet, funds, custody, signing, secrets, deploy or release",
+        ]
+    )
+    body["human_gate_required"] = False
+    body["operator_input_required"] = False
+    body["native_dispatch_required_next"] = True
+    digest = idempotency_digest_fragment(contract_digest(body))
+    return create_task(
+        hermes_bin=hermes_bin,
+        board=board,
+        title="Deliver owner-facing human gate package",
+        body=compact_json_argument(body),
+        assignee="human-gate-clerk",
+        idempotency_key=f"overkill:no-idle-owner-gate-delivery:{public_safe_slug(board, fallback='board')}:{digest}",
+        created_by=NO_IDLE_AUTHOR,
+        workspace=workspace,
+        blocked=False,
+        workflow_template_id=FACTORY_KANBAN_WORKFLOW_TEMPLATE_ID,
+        current_step_key=FACTORY_KANBAN_DEFAULT_STEP_KEY,
+        runner=runner,
+    )
+
 
 
 def create_release_readiness_repair_task(
@@ -12019,6 +12264,7 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
         return public_envelope
     legacy_remediation_strategy = str(legacy_classification.get("remediation_strategy") or "")
     targeted_legacy_repair_available = legacy_remediation_strategy in {
+        "create_owner_gate_delivery_task",
         "create_targeted_review_repair_task",
         "create_post_review_owner_gate_package_task",
         "create_materialization_contract_repair_task",
@@ -12161,6 +12407,38 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
                 "factory_repair_task_unlinked_and_promoted"
                 if released_repair_tasks
                 else "factory_repair_task_unlink_promote_failed"
+            )
+        elif classification.get("remediation_strategy") == "create_owner_gate_delivery_task":
+            targeted_remediation_plan = {
+                "record_type": "factory_no_idle_targeted_repair_plan",
+                "plan_action": "deliver_owner_human_gate_package",
+                "board": args.board,
+                "blocked_task_refs": classification.get("human_gate_task_refs") or [],
+                "assignee": "human-gate-clerk",
+                "native_dispatch_required_next": True,
+                "human_gate_required": False,
+                "operator_input_required": False,
+            }
+            remediation_task_id = create_owner_gate_delivery_task(
+                hermes_bin=args.hermes_bin,
+                board=args.board,
+                workspace=args.workspace,
+                classification=classification,
+                runner=runner,
+            )
+            task_runtime = remediation_task_runtime_metadata(
+                hermes_bin=args.hermes_bin,
+                board=args.board,
+                task_id=remediation_task_id,
+                runner=runner,
+            )
+            classification["targeted_remediation_plan"] = targeted_remediation_plan
+            classification["remediation_task_ref"] = remediation_task_id
+            classification.update(task_runtime)
+            classification["native_dispatch_required_next"] = bool(
+                remediation_task_id
+                and targeted_remediation_plan.get("native_dispatch_required_next") is True
+                and task_runtime.get("native_dispatch_required_next") is True
             )
         elif classification.get("remediation_strategy") == "route_release_readiness_repair_or_gate_packet":
             targeted_remediation_plan = {
