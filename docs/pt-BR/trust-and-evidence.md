@@ -126,6 +126,6 @@ Um Receipt Five bem formado prova que a conclusão foi reconciliada.
 
 Essas coisas não são iguais.
 
-Não dá para usar smoke local como prova de produto entregue. Não dá para usar arquivo existente como prova de readback. Não dá para usar aprovação genérica como autorização de mainnet.
+Não dá para usar smoke local como prova de produto entregue. Não dá para usar arquivo existente como prova de readback. Não dá para usar aprovação genérica como autorização de mainnet. Publicação pública também precisa bloquear vazamento de caminhos privados, artefatos humanos, referências internas brutas e segredos.
 
 A fábrica precisa manter essa fronteira visível, mesmo quando seria mais conveniente fingir que está tudo pronto.

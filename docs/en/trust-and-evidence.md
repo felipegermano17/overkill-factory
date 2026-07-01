@@ -76,7 +76,7 @@ This prevents a common failure: turning every process failure into “the human 
 
 ## Local evidence, live evidence, and public evidence
 
-A passing local command proves checkout coherence. A worker result proves a worker ran in that scope. Receipt Five proves closure when it points to request, change, evidence, review, and next state. Public publication also needs surface and secret safety.
+A passing local command proves checkout coherence. A worker result proves a worker ran in that scope. Receipt Five proves closure when it points to request, change, evidence, review, and next state. Public publication also needs surface, secret, public/private, sensitive-boundary, and human-artifact leak checks.
 
 These proofs are not interchangeable. Do not use local smoke to claim live product delivery, artifact existence as readback, or generic human approval as waiver for release, security, funds, or mainnet.
 
