@@ -174,7 +174,7 @@ def is_text_rel(rel: str) -> bool:
         return False
     if path.suffix.lower() in SKIP_SUFFIXES:
         return False
-    if rel == "scripts/public_safety_scan.py":
+    if rel == "scripts/public_safety_scan.py" or rel.endswith("/scripts/public_safety_scan.py"):
         return False
     return True
 

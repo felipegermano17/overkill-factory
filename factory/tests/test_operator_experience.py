@@ -549,6 +549,21 @@ class OperatorExperienceTest(unittest.TestCase):
         deferred = next(check for check in payload["checks"] if check["id"] == "hermes_e2e_deferred")
         self.assertEqual(deferred["status"], "INFO")
 
+    def test_doctor_redacts_hermes_home_path_from_json_summary(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            hermes_home = Path(tmpdir) / "private-hermes-home"
+            hermes_home.mkdir()
+
+            result = run_factoryctl("doctor", "--json", "--hermes-home", str(hermes_home))
+            payload = json.loads(result.stdout)
+            summary_text = json.dumps(payload, sort_keys=True)
+
+        self.assertEqual(payload["result"], "PASS")
+        runtime_check = next(check for check in payload["checks"] if check["id"] == "hermes_runtime_optional")
+        self.assertEqual(runtime_check["status"], "PASS")
+        self.assertIn("public-safe local runtime ref", runtime_check["summary"])
+        self.assertNotIn(str(hermes_home), summary_text)
+
     def test_run_minimal_uses_factoryctl_entrypoint(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             tmp = Path(tmpdir)

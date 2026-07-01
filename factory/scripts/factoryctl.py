@@ -3036,7 +3036,7 @@ def build_doctor_report(hermes_home: Path | None = None) -> dict[str, Any]:
             "hermes_runtime_optional",
             "PASS" if hermes_configured else "WARN",
             (
-                f"Hermes home detected at {hermes_path}."
+                "Hermes home detected at public-safe local runtime ref."
                 if hermes_configured
                 else "Hermes runtime was not checked. Local factory validation can run before Hermes integration."
             ),
