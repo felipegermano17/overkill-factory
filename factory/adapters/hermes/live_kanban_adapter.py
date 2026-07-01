@@ -4118,6 +4118,11 @@ def declared_artifact_owner_rerun_candidate_from_repair_record(repair: dict[str,
     raw_repair_target = body.get("repair_target")
     repair_target: dict[str, Any] = raw_repair_target if isinstance(raw_repair_target, dict) else {}
     text = task_record_text(repair)
+    repair_target_missing_names = {
+        str(item).strip()
+        for item in (repair_target.get("missing_artifact_names") or [])
+        if str(item or "").strip()
+    }
 
     def candidate_from_parts(orchestration: dict[str, Any] | None = None) -> dict[str, Any] | None:
         orch: dict[str, Any] = orchestration if isinstance(orchestration, dict) else {}
@@ -4137,11 +4142,19 @@ def declared_artifact_owner_rerun_candidate_from_repair_record(repair: dict[str,
                 raw_nested_readback = evidence_refs.get("readback_records")
                 readback_records = raw_nested_readback if isinstance(raw_nested_readback, dict) else {}
             if isinstance(readback_records, dict):
+                fallback_target_ref = ""
                 for ref in readback_records:
-                    ref_match = re.match(r"^workspace:(t_[A-Za-z0-9_]+)/", str(ref))
-                    if ref_match:
+                    ref_text = str(ref)
+                    ref_match = re.match(r"^workspace:(t_[A-Za-z0-9_]+)/(.+)$", ref_text)
+                    if not ref_match:
+                        continue
+                    if not fallback_target_ref:
+                        fallback_target_ref = ref_match.group(1)
+                    if repair_target_missing_names and Path(ref_match.group(2)).name in repair_target_missing_names:
                         target_task_ref = ref_match.group(1)
                         break
+                if (not target_task_ref or target_task_ref.startswith("kanban:")) and fallback_target_ref:
+                    target_task_ref = fallback_target_ref
         if not target_task_ref or target_task_ref.startswith("kanban:"):
             match = re.search(r"`(t_[A-Za-z0-9_]+)`", text)
             if not match:
@@ -4335,30 +4348,177 @@ def workspace_ref_current_and_hash_match(ref: str, info: dict[str, Any], workspa
     return True
 
 
+def local_path_current_and_hash_match(path_text: str, expected_sha256: str = "") -> bool:
+    path = Path(str(path_text or "").strip())
+    if not path.is_absolute():
+        return True
+    if not path.is_file():
+        return False
+    expected = str(expected_sha256 or "").strip().lower()
+    if expected:
+        actual = hashlib.sha256(path.read_bytes()).hexdigest()
+        return actual == expected
+    return True
+
+
+def artifacts_from_review_evidence(review: dict[str, Any]) -> list[dict[str, Any]]:
+    raw_evidence = review.get("evidence_reviewed")
+    if isinstance(raw_evidence, dict):
+        artifacts = raw_evidence.get("artifacts")
+        if isinstance(artifacts, list):
+            return [item for item in artifacts if isinstance(item, dict)]
+        rows = raw_evidence.get("task_attachments_rows")
+        if isinstance(rows, list):
+            return [item for item in rows if isinstance(item, dict)]
+        return []
+    if isinstance(raw_evidence, list):
+        items: list[dict[str, Any]] = []
+        for entry in raw_evidence:
+            if isinstance(entry, str):
+                items.append({"path": entry})
+                continue
+            if not isinstance(entry, dict):
+                continue
+            rows = entry.get("rows")
+            if isinstance(rows, list):
+                items.extend(item for item in rows if isinstance(item, dict))
+                continue
+            items.append(entry)
+        return items
+    return []
+
+
 def independent_readback_pass_artifacts_current(
     review: dict[str, Any], rows: dict[str, list[dict[str, Any]]]
 ) -> bool:
     target_artifacts = review.get("target_artifacts")
-    if not isinstance(target_artifacts, dict) or not target_artifacts:
-        return True
     workspace_root = workspace_root_from_rows(rows)
-    for ref, raw_info in target_artifacts.items():
-        info = raw_info if isinstance(raw_info, dict) else {}
-        if not workspace_ref_current_and_hash_match(str(ref), info, workspace_root):
-            return False
+    if isinstance(target_artifacts, dict) and target_artifacts:
+        for ref, raw_info in target_artifacts.items():
+            info = raw_info if isinstance(raw_info, dict) else {}
+            if not workspace_ref_current_and_hash_match(str(ref), info, workspace_root):
+                return False
+    artifacts = artifacts_from_review_evidence(review)
+    if artifacts:
+        for raw_item in artifacts:
+            if not isinstance(raw_item, dict):
+                continue
+            expected = str(raw_item.get("sha256") or raw_item.get("expected_sha256") or "").strip()
+            durable_values = [
+                str(raw_item.get(key) or "").strip()
+                for key in ("durable_attachment_path", "stored_path")
+                if str(raw_item.get(key) or "").strip()
+            ]
+            if durable_values:
+                for value in durable_values:
+                    if not local_path_current_and_hash_match(value, expected):
+                        return False
+                continue
+            for key in ("workspace_path",):
+                value = str(raw_item.get(key) or "").strip()
+                if value and not local_path_current_and_hash_match(value, expected):
+                    return False
     return True
 
+
+def artifact_class_name(name: str) -> str:
+    text = str(name or "").strip()
+    if text.startswith("rel006_appsec_privacy"):
+        return "rel006_appsec_privacy"
+    if text.startswith("rel007_solana_quasar") or text.startswith("solana_quasar"):
+        return "rel007_solana_quasar"
+    if text.startswith("rel005_cloud_release_authority"):
+        return "rel005_cloud_release_authority"
+    if text.startswith("rel004_monitoring_proof"):
+        return "rel004_monitoring_proof"
+    if text.startswith("rel002_rel003_smoke_rollback"):
+        return "rel002_rel003_smoke_rollback"
+    text = str(name or "").strip()
+    for prefix in (
+        "f16_reconciliation_after_durable_wu19",
+        "f16_input_contract_packet_readback_manifest",
+        "f16_input_contract_packet",
+        "transition_plan",
+        "card_snapshot",
+        "wu19_release_readiness_repair_package",
+        "wu19_current_blocker_release_packet",
+        "rel002_rel003_smoke_rollback_packet",
+        "rel004_monitoring_proof_packet",
+        "rel005_cloud_release_authority_packet",
+        "rel006_appsec_privacy_packet",
+        "rel006_appsec_privacy_acceptance_blocker",
+        "rel007_solana_quasar_consistency_packet",
+        "solana_quasar_consistency_packet",
+        "independent_readback",
+        "declared_artifact_readback_repair",
+    ):
+        if text.startswith(prefix):
+            return prefix
+    return text
+
+
+def artifact_names_from_text(text: str) -> set[str]:
+    names: set[str] = set()
+    pattern = re.compile(
+        r"[A-Za-z0-9_./-]*(?:f16_input_contract|wu19_|rel\d{3}|solana_quasar|independent_readback|declared_artifact)[A-Za-z0-9_./-]*\.(?:json|md|py)"
+    )
+    for match in pattern.findall(str(text or "")):
+        name = Path(match).name
+        if name:
+            names.add(name)
+    return names
+
+
+def artifact_names_from_readback_review(review: dict[str, Any]) -> set[str]:
+    names: set[str] = set()
+    target_artifacts = review.get("target_artifacts")
+    if isinstance(target_artifacts, dict):
+        for ref in target_artifacts:
+            name = Path(str(ref).split("/", 1)[-1]).name
+            if name:
+                names.add(name)
+    artifacts = artifacts_from_review_evidence(review)
+    if artifacts:
+        for raw_item in artifacts:
+            if not isinstance(raw_item, dict):
+                continue
+            for key in ("workspace_path", "durable_attachment_path", "stored_path", "path", "review_report"):
+                value = str(raw_item.get(key) or "").strip()
+                if value:
+                    names.add(Path(value).name)
+    return {name for name in names if name}
 
 
 def suppress_missing_declared_artifacts_with_readback_pass(
     rows: dict[str, list[dict[str, Any]]]
 ) -> dict[str, list[dict[str, Any]]]:
+    passes = declared_artifact_owner_rerun_review_passes(rows)
     pass_targets = {
         str(item.get("target_task_ref") or "").strip()
-        for item in declared_artifact_owner_rerun_review_passes(rows)
+        for item in passes
         if str(item.get("target_task_ref") or "").strip()
     }
-    if not pass_targets:
+    pass_owner_refs = {
+        str(item.get("owner_rerun_task_ref") or "").strip()
+        for item in passes
+        if str(item.get("owner_rerun_task_ref") or "").strip()
+    }
+    pass_artifacts_by_target: dict[str, set[str]] = {}
+    pass_artifact_classes_by_phase: dict[str, set[str]] = {}
+    pass_artifact_classes_all: set[str] = set()
+    for item in passes:
+        target = str(item.get("target_task_ref") or "").strip()
+        artifact_names = {
+            str(name).strip() for name in (item.get("artifact_names") or []) if str(name or "").strip()
+        }
+        artifact_classes = {artifact_class_name(name) for name in artifact_names}
+        pass_artifact_classes_all.update(artifact_classes)
+        if target:
+            pass_artifacts_by_target.setdefault(target, set()).update(artifact_names)
+        phase = str(item.get("phase") or "").strip()
+        if phase:
+            pass_artifact_classes_by_phase.setdefault(phase, set()).update(artifact_classes)
+    if not pass_targets and not pass_artifact_classes_by_phase and not pass_artifact_classes_all:
         return rows
     next_rows = dict(rows)
     done_rows: list[dict[str, Any]] = []
@@ -4368,8 +4528,49 @@ def suppress_missing_declared_artifacts_with_readback_pass(
         raw_repair_target = body.get("repair_target")
         repair_target = raw_repair_target if isinstance(raw_repair_target, dict) else {}
         repair_target_ref = str(repair_target.get("task_ref") or "").strip()
-        if item.get("missing_declared_artifacts") and (
-            item_ref in pass_targets or repair_target_ref in pass_targets
+        missing_artifacts = item.get("missing_declared_artifacts")
+        missing_names = {
+            str(entry.get("artifact_name") or Path(str(entry.get("local_path") or "")).name).strip()
+            for entry in (missing_artifacts if isinstance(missing_artifacts, list) else [])
+            if isinstance(entry, dict)
+        }
+        candidate_target_ref = ""
+        repair_candidate = declared_artifact_owner_rerun_candidate_from_repair_record(item)
+        if repair_candidate is not None:
+            resolved_candidate = resolve_redacted_owner_rerun_target(repair_candidate, rows)
+            if resolved_candidate is not None:
+                candidate_target_ref = str(resolved_candidate.get("target_task_ref") or "").strip()
+        item_text = task_record_text(item)
+        text_target_ref = ""
+        text_match = re.search(r"\b(t_[A-Za-z0-9_]+)\b", item_text)
+        if text_match:
+            text_target_ref = text_match.group(1)
+        target_refs = {ref for ref in (item_ref, repair_target_ref, candidate_target_ref, text_target_ref) if ref}
+        artifact_pass_match = any(
+            target in pass_artifacts_by_target
+            and bool(missing_names)
+            and bool(missing_names & pass_artifacts_by_target[target])
+            for target in target_refs
+        )
+        item_body_phase = str(body.get("phase") or "").strip()
+        if not item_body_phase:
+            item_body_phase_match = re.search(r"\bF\d{1,2}\b", str(item.get("title") or ""))
+            item_body_phase = item_body_phase_match.group(0) if item_body_phase_match else ""
+        missing_classes = {artifact_class_name(name) for name in missing_names if name}
+        phase_pass_match = (
+            bool(item_body_phase)
+            and item_body_phase in pass_artifact_classes_by_phase
+            and bool(missing_classes & pass_artifact_classes_by_phase[item_body_phase])
+        )
+        global_artifact_pass_match = bool(missing_classes & pass_artifact_classes_all)
+        if missing_artifacts and (
+            item_ref in pass_targets
+            or item_ref in pass_owner_refs
+            or repair_target_ref in pass_targets
+            or candidate_target_ref in pass_targets
+            or artifact_pass_match
+            or phase_pass_match
+            or global_artifact_pass_match
         ):
             item = dict(item)
             item["suppressed_missing_declared_artifacts"] = item.pop("missing_declared_artifacts")
@@ -4443,8 +4644,24 @@ def declared_artifact_owner_rerun_review_passes(rows: dict[str, list[dict[str, A
                 continue
             owner_ref = str(review.get("owner_rerun_task_id") or review.get("owner_rerun_task_ref") or "").strip()
             target_ref = str(review.get("target_task_id") or review.get("target_task_ref") or review.get("repair_target_task_ref") or "").strip()
+            review_body = task_body_json_object(record)
+            if not owner_ref:
+                owner_ref = str(
+                    review_body.get("source_owner_task_ref")
+                    or review_body.get("owner_rerun_task_ref")
+                    or review_body.get("producer_task")
+                    or ""
+                ).strip()
+            if not target_ref:
+                target_ref = str(review_body.get("target_task_ref") or review_body.get("target_task_id") or "").strip()
             raw_signoffs = review.get("owner_reviewer_signoffs")
             signoffs: dict[str, Any] = raw_signoffs if isinstance(raw_signoffs, dict) else {}
+            if not owner_ref:
+                owner_match = re.search(r"\bproducer\s+task\s+(`?)(t_[A-Za-z0-9_]+)\1", review_text)
+                if not owner_match:
+                    owner_match = re.search(r"\bfrom\s+task\s+(`?)(t_[A-Za-z0-9_]+)\1", review_text)
+                if owner_match:
+                    owner_ref = owner_match.group(2)
             if not owner_ref:
                 owner_ref_text = str(signoffs.get("owner_result_ref") or signoffs.get("owner_repair_task_ref") or "")
                 owner_path_match = re.search(r"/(t_[A-Za-z0-9_]+)/", owner_ref_text)
@@ -4465,7 +4682,9 @@ def declared_artifact_owner_rerun_review_passes(rows: dict[str, list[dict[str, A
             owner = owner_by_id.get(owner_ref, {})
             if not target_ref:
                 target_ref = str(owner.get("target_task_ref") or "").strip()
-            if not target_ref:
+            phase_value = str(review_body.get("phase") or "").strip()
+            artifact_names = artifact_names_from_readback_review(review) | artifact_names_from_text(task_record_text(record))
+            if not target_ref and not phase_value and not owner_ref and not artifact_names:
                 continue
             passes.append(
                 {
@@ -4473,6 +4692,8 @@ def declared_artifact_owner_rerun_review_passes(rows: dict[str, list[dict[str, A
                     "owner_rerun_task_ref": owner_ref or owner.get("owner_rerun_task_ref"),
                     "independent_readback_task_ref": review_id,
                     "verdict": verdict,
+                    "artifact_names": sorted(artifact_names),
+                    "phase": phase_value,
                 }
             )
     return passes
