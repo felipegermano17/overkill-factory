@@ -1,0 +1,97 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-operator-progress-model.schema.json",
+  "record_type": "factory_operator_progress_model",
+  "language": "pt-BR",
+  "manager_profile": "overkill-factory-gerente",
+  "process_counts": {
+    "done": 0,
+    "total": 1
+  },
+  "gates": [
+    {
+      "id": "discovery",
+      "label": "Discovery",
+      "weight": 15,
+      "readiness": "not_started",
+      "critical": true,
+      "gate_ref": "gate:product-understanding-confirmed",
+      "evidence_refs": [],
+      "artifacts": [
+        {
+          "id": "product_understanding_packet",
+          "status": "missing"
+        }
+      ],
+      "blockers": []
+    },
+    {
+      "id": "architecture",
+      "label": "Architecture",
+      "weight": 25,
+      "readiness": "not_started",
+      "critical": true,
+      "gate_ref": "gate:architecture-approved",
+      "evidence_refs": [],
+      "artifacts": [
+        {
+          "id": "architecture_package",
+          "status": "missing"
+        }
+      ],
+      "blockers": []
+    },
+    {
+      "id": "execution",
+      "label": "Execution",
+      "weight": 30,
+      "readiness": "not_started",
+      "critical": true,
+      "gate_ref": "gate:material-execution-complete",
+      "evidence_refs": [],
+      "artifacts": [
+        {
+          "id": "working_product",
+          "status": "missing"
+        }
+      ],
+      "blockers": []
+    },
+    {
+      "id": "proof",
+      "label": "Proof",
+      "weight": 20,
+      "readiness": "not_started",
+      "critical": true,
+      "gate_ref": "gate:receipt-five-ready",
+      "evidence_refs": [],
+      "artifacts": [
+        {
+          "id": "receipt_five",
+          "status": "missing"
+        }
+      ],
+      "blockers": []
+    },
+    {
+      "id": "release",
+      "label": "Release",
+      "weight": 10,
+      "readiness": "not_started",
+      "critical": true,
+      "gate_ref": "gate:release-ready",
+      "evidence_refs": [],
+      "artifacts": [
+        {
+          "id": "release_packet",
+          "status": "missing"
+        }
+      ],
+      "blockers": []
+    }
+  ],
+  "uncertainty": {
+    "confidence": 0.4,
+    "range_percent": [0, 10],
+    "unknowns": ["No gate evidence has been reconciled yet."]
+  }
+}

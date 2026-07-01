@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/factory-operator-progress-model.schema.json",
+  "title": "Factory Operator Progress Model",
+  "type": "object",
+  "required": ["record_type", "gates"],
+  "additionalProperties": true,
+  "properties": {
+    "record_type": {"const": "factory_operator_progress_model"},
+    "language": {"type": "string"},
+    "manager_profile": {"type": "string"},
+    "process_counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "done": {"type": "number", "minimum": 0},
+        "total": {"type": "number", "minimum": 1}
+      }
+    },
+    "gates": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "label", "weight", "readiness"],
+        "additionalProperties": true,
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "label": {"type": "string", "minLength": 1},
+          "weight": {"type": "number", "minimum": 0.000001},
+          "readiness": {
+            "type": "string",
+            "enum": ["ready", "approved", "complete", "completed", "usable", "pass", "partial", "in_progress", "draft", "needs_review", "blocked", "not_started", "missing", "failed", "fail", "unknown"]
+          },
+          "critical": {"type": "boolean"},
+          "gate_ref": {"type": "string"},
+          "evidence_refs": {"type": "array", "items": {"type": "string"}},
+          "artifacts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["id", "status"],
+              "additionalProperties": true,
+              "properties": {
+                "id": {"type": "string"},
+                "status": {
+                  "type": "string",
+                  "enum": ["usable", "ready", "approved", "complete", "completed", "pass", "partial", "in_progress", "draft", "needs_review", "blocked", "not_started", "missing", "failed", "fail", "unknown"]
+                },
+                "evidence_ref": {"type": "string"}
+              }
+            }
+          },
+          "blockers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["id", "kind", "summary"],
+              "additionalProperties": true,
+              "properties": {
+                "id": {"type": "string"},
+                "kind": {"type": "string"},
+                "summary": {"type": "string"},
+                "owner": {"type": "string"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "uncertainty": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "range_percent": {
+          "type": "array",
+          "items": {"type": "number", "minimum": 0, "maximum": 100},
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "unknowns": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  }
+}
