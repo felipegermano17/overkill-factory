@@ -22494,6 +22494,11 @@ def build_board_reconcile_plan(
     ) = board_reconcile_ready_dispatch_blockers(rows)
     runtime_contract_blockers, runtime_contract_ref = board_reconcile_runtime_contract_blockers(rows)
     missing_artifact_blockers, missing_artifact_ref = board_reconcile_missing_declared_artifact_blockers(rows)
+    legacy_missing_declared_artifacts = (
+        [missing_artifact_ref]
+        if unfinished and missing_artifact_ref is not None and missing_artifact_blockers
+        else []
+    )
     canonical_frontier_task, canonical_frontier_ref, canonical_frontier_reasons = (
         select_reconciled_canonical_frontier_task(rows)
     )
@@ -22598,7 +22603,7 @@ def build_board_reconcile_plan(
             assignee=next_owner,
         )
         native_dispatch_required_next = True
-    elif missing_artifact_blockers:
+    elif missing_artifact_blockers and not unfinished:
         selected_ref = missing_artifact_ref
         plan_action = "repair_declared_artifacts"
         reason = "completed Hermes work declared local artifacts that are missing from the runtime"
@@ -22846,6 +22851,7 @@ def build_board_reconcile_plan(
             "plan_action": plan_action,
             "reason": reason,
             "blocked_reasons": sorted(set(blocked_reasons)),
+            "legacy_missing_declared_artifacts": legacy_missing_declared_artifacts,
             "selected_card": selected_ref,
             "phase_engine": phase_engine,
             "factory_help": factory_help,

@@ -729,6 +729,52 @@ class FactoryBoardReconcilerTest(unittest.TestCase):
         self.assertEqual(blockers, [])
         self.assertIsNone(selected)
 
+
+
+    def test_legacy_missing_declared_artifacts_do_not_preempt_live_frontier(self) -> None:
+        snapshot = {
+            "rows": {
+                "done": [
+                    {
+                        "id": "legacy-evidence",
+                        "status": "done",
+                        "title": "F16 legacy evidence packet",
+                        "assignee": "evidence-reconciler",
+                        "missing_declared_artifacts": [
+                            {"artifact_name": "legacy_f16_packet.json"},
+                        ],
+                    }
+                ],
+                "blocked": [
+                    {
+                        "id": "phase-f23",
+                        "status": "blocked",
+                        "title": "F23 - Operacoes de producao",
+                        "assignee": "release-ops-worker",
+                        "workflow_template_id": "overkill-vfinal",
+                        "current_step_key": "F23-production-operations",
+                    }
+                ],
+                "todo": [
+                    {
+                        "id": "phase-f24",
+                        "status": "todo",
+                        "title": "F24 - Release ou bloqueio",
+                        "workflow_template_id": "overkill-vfinal",
+                        "current_step_key": "F24-release-or-block",
+                    }
+                ],
+            }
+        }
+
+        plan = factoryctl.build_board_reconcile_plan(snapshot, board="product-alpha")
+
+        self.assertNotEqual(plan["plan_action"], "repair_declared_artifacts")
+        self.assertFalse(plan["create_task_allowed"])
+        self.assertIsNone(plan["create_task_contract"])
+        self.assertIn("legacy_missing_declared_artifacts", plan)
+        self.assertEqual(plan["legacy_missing_declared_artifacts"][0]["task_ref"], "legacy-evidence")
+
     def test_phase_engine_runtime_strict_rejects_template_scaffold_artifacts(self) -> None:
         card = load_vfinal_card()
 
