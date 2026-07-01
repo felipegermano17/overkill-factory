@@ -21625,6 +21625,19 @@ def board_reconcile_ready_dispatch_blockers(
     return sorted(set(blockers)), selected_repair_card, selected_repair_ref, selected_repair_action
 
 
+def _task_is_declared_artifact_readback_repair(task: dict[str, Any]) -> bool:
+    for payload in _task_payload_objects(task):
+        candidates: list[dict[str, Any]] = []
+        if isinstance(payload.get("orchestration_result"), dict):
+            candidates.append(payload["orchestration_result"])
+        candidates.append(payload)
+        for candidate in candidates:
+            output = str(candidate.get("required_output") or candidate.get("packet_type") or "").strip()
+            if output == "declared_artifact_readback_repair":
+                return True
+    return False
+
+
 def _declared_artifact_readback_repair_target_fingerprints(done: list[dict[str, Any]]) -> set[str]:
     fingerprints: set[str] = set()
     for task in done:
@@ -21658,6 +21671,8 @@ def board_reconcile_missing_declared_artifact_blockers(
         if _task_has_architecture_review(review_task)
     ]
     for task_index, task in enumerate(done):
+        if _task_is_declared_artifact_readback_repair(task):
+            continue
         if _task_has_failed_architecture_review(task):
             continue
         task_key = _task_temporal_key(task, task_index)
