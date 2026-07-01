@@ -1,204 +1,155 @@
-# Manual do produto
+# Manual
 
-Se você me perguntasse no chat "o que é a Overkill Factory?", eu não começaria falando de schema, worker, registry ou fase.
+A Overkill Factory é mais fácil de entender se você esquecer, por um minuto, os nomes internos.
 
-Eu começaria assim: é uma forma de fazer agentes trabalharem sem virar bagunça.
+Pense numa conversa normal.
 
-Você pede uma coisa. Pode ser um produto novo, uma correção, um release, uma revisão de segurança, uma tela, um fluxo, uma integração, uma operação em produção. Um agente comum tenta resolver direto. Às vezes acerta. Muitas vezes ele parece ocupado, escreve bastante, move alguma coisa, entrega um resumo bonito e deixa o problema real no mesmo lugar.
+Você diz: "quero criar esse produto". Ou: "esse release pode ir?". Ou: "corrige esse bug sem quebrar o resto". Ou: "tem algo errado nesse board, os agentes parecem ocupados, mas nada anda".
 
-A Overkill Factory existe para evitar esse teatro.
+Um agente comum tenta responder fazendo. Ele pode ser útil, mas trabalha com um risco enorme: ele quer avançar antes de ter certeza do que está avançando.
 
-Ela transforma um pedido em produção controlada. Primeiro entende a fonte. Depois define o produto. Depois escolhe o caminho. Depois divide o trabalho. Depois manda os workers certos pelo Hermes. Depois cobra prova. Depois revisa. Depois fecha, bloqueia ou aprende.
+A fábrica existe para colocar um processo entre o pedido e a execução.
 
-Isso é a fábrica.
+Não processo no sentido ruim, de burocracia. Processo no sentido de chão firme. Antes de alguém mexer no produto, a fábrica precisa saber o que foi pedido, o que é fato, o que é suposição, qual é o produto, que tipo de trabalho é, quem tem autoridade, que prova vai contar e o que acontece se a prova não aparecer.
 
-## O problema que ela resolve
+Isso é produção controlada.
 
-O problema não é "agente erra". Isso todo mundo já sabe.
+## Por que isso importa
 
-O problema é pior: agente erra de um jeito que parece certo.
+O erro mais perigoso de um agente não é falhar claramente.
 
-Ele escreve um arquivo, mas o arquivo não resolve o pedido. Ele passa um teste, mas o teste não cobre o comportamento importante. Ele diz que revisou, mas não leu o artefato certo. Ele marca uma tarefa como pronta, mas a evidência não existe. Ele pede aprovação humana, mas não entrega o material que a pessoa precisa aprovar.
+Falha clara é fácil. O comando quebrou. O arquivo não existe. A API recusou. O teste falhou.
 
-Aí o operador vira fiscal. Tem que perguntar: isso está mesmo pronto? Quem revisou? Onde está a prova? Esse bloqueio é meu ou é trabalho da fábrica? Esse "pass" vale alguma coisa?
+O erro perigoso é a entrega que parece certa.
 
-Esse é o trabalho que a fábrica precisa tirar das costas do operador.
+O agente cria um documento, mas o documento não responde à pergunta. Cria uma tela, mas não cobre os estados importantes. Escreve um teste, mas testa o caminho feliz e ignora o risco. Faz uma revisão, mas não relê o artefato. Diz que precisa do humano, mas na verdade faltou readback, faltou anexar prova, faltou rodar um worker.
 
-## A ideia em uma frase
+Aí o operador vira fiscal de tudo.
 
-A fábrica não deixa um pedido virar execução antes de virar verdade, método, trabalho pequeno e prova.
+Ele precisa perguntar onde está a prova. Precisa notar que o card andou sem dependência. Precisa perceber que o reviewer só carimbou. Precisa descobrir que o bloqueio era interno. Precisa virar gerente, QA, auditor e detetive.
 
-Essa frase é o centro do produto.
+A fábrica foi desenhada para impedir isso.
 
-Sem verdade, o agente constrói em cima de mal-entendido.
+## O que a fábrica promete
 
-Sem método, todo pedido vira a mesma tarefa genérica.
+A promessa não é "agentes nunca erram".
 
-Sem trabalho pequeno, ninguém sabe revisar.
+A promessa é melhor: quando a fábrica está funcionando, erro vira estado visível. Lacuna vira lacuna. Risco vira risco. Bloqueio vira bloqueio com dono. Pronto vira pronto com prova.
 
-Sem prova, "pronto" é só uma opinião.
+O operador não precisa acreditar no tom do agente. Ele olha o recibo.
 
-## O que entra na fábrica
+## O caminho de um pedido
 
-Pode entrar quase qualquer sinal de trabalho:
+Um pedido entra quase sempre meio torto. Isso é normal. Produto real começa assim mesmo.
 
-- "cria esse produto";
-- "corrige esse bug";
-- "prepara esse release";
-- "revisa essa mudança perigosa";
-- "descobre por que isso parou";
-- "transforma esse repo em algo publicável";
-- "faz essa tela ficar usável";
-- "prepara um fluxo com carteira, assinatura ou dinheiro";
-- "melhora esse worker porque ele está sendo raso".
+"Cria o onboarding".
 
-A fábrica não deveria responder a tudo com a mesma receita. Bug precisa de reprodução. Release precisa de rollback. Interface precisa de prova visual. Segurança precisa de arquitetura. Produto novo precisa de verdade de produto. Mainnet, fundos, segredos e produção precisam de autoridade humana explícita.
+Certo. Mas onboarding de quem? Com que conta? Com carteira? Com permissão? Com KYC? Com trial? Com pagamento? Com convite? Com dados sensíveis? O sucesso é chegar numa tela? É fazer a primeira ação? É depositar dinheiro? É assinar uma transação? É convidar alguém?
 
-## A primeira obrigação: entender antes de fazer
+A fábrica não deveria pular essas perguntas. Também não deveria jogar tudo de volta para o operador se ela consegue resolver com a fonte que já existe.
 
-Quando o pedido entra, a fábrica precisa proteger a fonte.
+O primeiro trabalho é preservar a fonte e separar o que é sabido do que é palpite.
 
-Isso quer dizer: guardar o que foi pedido de verdade, separar fato de suposição, marcar conflito, listar lacuna e dizer o que ainda não pode ser assumido.
+Depois vem a verdade do produto. Internamente isso aparece como Product SOT. Em português simples: é o acordo sobre o que está sendo construído.
 
-Parece básico. Não é. É onde muito trabalho com agente começa a morrer.
+Só depois faz sentido escolher método, criar tarefas e mandar workers.
 
-Um resumo malfeito vira plano. Um plano malfeito vira execução. Uma execução malfeita vira uma entrega que parece pronta, mas nasceu torta.
+## O que é verdade do produto
 
-A fábrica tenta quebrar essa sequência logo no começo.
+Verdade do produto não é um resumo bonito.
 
-## A verdade do produto
+É o lugar onde a fábrica registra:
 
-Depois da fonte vem a verdade do produto. O nome interno é Product SOT. Pode esquecer o nome por um segundo. A pergunta é simples:
+- qual é o pedido;
+- quem é o usuário ou operador afetado;
+- que problema precisa ser resolvido;
+- o que entra no escopo;
+- o que fica fora;
+- que riscos importam;
+- que decisões já foram tomadas;
+- que decisões ainda dependem do humano;
+- que prova vai contar como aceite.
 
-"Que produto estamos construindo, exatamente?"
+Sem isso, qualquer plano parece razoável. Com isso, o plano pode ser cobrado.
 
-Não basta dizer "um dashboard", "um app", "um onboarding" ou "um agente". A fábrica precisa saber para quem é, que problema resolve, o que entra, o que fica fora, quais promessas precisam ser cumpridas, que risco existe e que prova vai contar.
+A fábrica também precisa cuidar de uma armadilha comum: transformar a primeira fatia executável no produto inteiro. Se o produto é maior, cada parte importante precisa ter destino. Pode estar planejada, bloqueada, fora de escopo, delegada ao humano ou provada. Não pode simplesmente sumir.
 
-Sem isso, um worker pode trabalhar muito e ainda entregar a coisa errada.
+## Método não é enfeite
 
-Quando o trabalho é um produto inteiro, a fábrica também precisa olhar a cobertura do escopo. A primeira fatia prática não pode virar "o produto" só porque foi a parte mais fácil de executar. Cada promessa importante precisa ter destino: planejada, bloqueada com dono, fora de escopo com justificativa, decidida pelo humano ou provada.
+Trabalhos diferentes precisam de caminhos diferentes.
 
-## A fábrica escolhe o caminho
+Bug pede reprodução e regressão.
 
-Depois de entender o produto, a fábrica escolhe o caminho.
+Release pede prontidão, rollback, dono e monitoramento.
 
-Um bug não anda como um release. Um release não anda como uma tela. Uma tela não anda como uma mudança de chave. Uma integração crítica não anda como uma alteração de texto.
+Interface pede jornada, estados, tela, erro, carregamento, acessibilidade básica e prova visual.
 
-A fábrica tem rotas e métodos para isso. O leitor não precisa decorar os nomes. O ponto é outro: a fábrica precisa escolher a régua certa antes de distribuir trabalho.
+Segurança pede fronteira, ameaça, segredo, permissão, supply chain, revisão e decisão sobre risco residual.
 
-Se é bug, cadê a reprodução?
+Incidente pede contenção, causa, comunicação e aprendizado.
 
-Se é produto, cadê a definição?
+Produto novo pede verdade do produto, decomposição, workers, revisão e aceite.
 
-Se é interface, cadê a jornada e os estados?
+Se a fábrica trata tudo igual, ela é só uma fila de tarefas com nome bonito.
 
-Se é segurança, cadê a ameaça e a fronteira?
+## O papel do Hermes
 
-Se é produção, cadê rollback, dono e monitoramento?
+Hermes é o chão da fábrica.
 
-Essa escolha muda o que será pedido aos workers e muda o que vai contar como prova.
+É onde ficam os cards, dependências, status, workers, comentários, workspaces, anexos, bloqueios e transições.
 
-## Workers não são personagens
+A Overkill Factory não deveria criar outro estado escondido. Ela define o contrato do trabalho: que artefatos precisam existir, que gates bloqueiam, que worker entra, que prova volta, que decisão é humana e que atalhos são proibidos.
 
-Um worker não deveria ser "um agente esperto com um prompt bom".
+Hermes mostra o trabalho vivo. A fábrica diz o que esse trabalho precisa respeitar.
 
-Na fábrica, worker é papel com limite. Ele recebe um pacote pequeno dizendo o que fazer, o que não fazer, o que devolver e que autoridade ele não tem.
+## O que é um worker bom
 
-Isso vale para quem planeja, quem constrói, quem testa, quem revisa, quem faz segurança, quem prepara release, quem reconcilia evidência e quem registra decisão humana.
+Um worker bom não recebe "faz o produto".
 
-O worker pode ter autonomia dentro da faixa. Fora da faixa, ele bloqueia.
+Recebe um pacote pequeno.
 
-Esse limite é o que permite velocidade sem entregar o volante inteiro para o agente.
+O pacote diz: faça isto, usando esta fonte, dentro deste limite, sem essa autoridade, devolvendo esta evidência. Se faltar algo, bloqueie deste jeito.
 
-## Hermes é o chão da fábrica
+Isso parece simples, mas muda a qualidade da autonomia. O worker pode andar rápido porque a faixa está marcada. E a revisão consegue olhar uma entrega pequena em vez de tentar julgar uma missão nebulosa.
 
-O Hermes guarda o estado vivo: cards, dependências, workers, comentários, workspaces, bloqueios e transições.
+## Onde o humano entra
 
-A Overkill Factory não tenta substituir isso. Ela define o contrato de produção: que artefatos precisam existir, que gates bloqueiam, que worker entra, que prova precisa voltar, que decisão é humana e o que não pode ser autorizado por um agente.
+O humano não deveria ser chamado para limpar bagunça da fábrica.
 
-Essa separação é saudável.
+Se falta arquivo, readback, evidência, revisão, PDF, link, hash, screenshot, worker result ou reparo interno, a fábrica trabalha.
 
-Hermes mostra o que está acontecendo.
+O humano entra quando a autoridade é dele: produção, mainnet, fundos, segredos, orçamento, release, risco material, waiver, mudança de poder.
 
-A fábrica diz o que pode acontecer com segurança.
+E quando entra, a fábrica precisa respeitar o tempo dele. Nada de "aprova?" sem contexto. Nada de JSON cru. Nada de caminho local como se fosse decisão.
 
-## Pronto quer dizer provado
+Um gate humano bom entrega uma decisão clara:
 
-Aqui está a regra mais importante: pronto quer dizer provado.
+"Você está aprovando este artefato, com estes riscos, para permitir este próximo passo. Você não está aprovando aquilo. Se recusar, o caminho seguro é este".
 
-Não quer dizer "o worker disse que terminou".
+## O que significa pronto
 
-Não quer dizer "um arquivo apareceu".
+Pronto quer dizer provado.
 
-Não quer dizer "o teste que ele mesmo escolheu passou".
+Não quer dizer que o agente ficou confiante. Não quer dizer que um arquivo apareceu. Não quer dizer que um teste qualquer passou. Não quer dizer que alguém falou "ok" no chat.
 
-Não quer dizer "alguém aprovou no chat sem ver o material".
+A fábrica precisa conseguir contar a história:
 
-Pronto quer dizer que a fábrica consegue apontar para o pedido, para a mudança, para a evidência, para a revisão e para o próximo estado.
+"O pedido era este. A fonte usada foi esta. O produto definido foi este. O método escolhido foi este. Estes workers rodaram. Estas provas voltaram. Esta revisão foi consumida. Este gate humano autorizou isto. O que ainda falta é aquilo".
 
-O nome interno desse recibo é Receipt Five. Ele não é burocracia. Ele é o freio contra conclusão falsa.
+Se essa história não existe, a entrega não está pronta. Ela pode estar em revisão, bloqueada, incompleta ou aguardando decisão. Mas pronta, não.
 
-## Quando o humano entra
+## O que falta quando a fábrica parece ruim
 
-O humano entra quando a decisão é realmente dele.
+Quando a documentação, o board ou a execução parecem ruins, normalmente é porque uma dessas coisas sumiu:
 
-Produção. Mainnet. Fundos. Segredos. Orçamento. Risco material. Release. Waiver. Mudança que pode afetar cliente, dinheiro, segurança ou reputação.
+- a dor do operador;
+- a verdade do produto;
+- o motivo de cada fase;
+- a fronteira entre Hermes e fábrica;
+- a diferença entre prova local e entrega viva;
+- a explicação de por que um humano está sendo chamado;
+- a ligação entre worker, evidência, revisão e recibo.
 
-Mas a fábrica não deveria chamar o humano para resolver bagunça interna. Se falta readback, se falta PDF, se falta artefato, se falta revisão, se um worker foi raso, isso é trabalho da fábrica.
+A fábrica não pode virar uma coleção de termos internos. Se o leitor precisa decorar nomes para entender o produto, a documentação falhou.
 
-Quando existe gate humano de verdade, ele precisa vir como pacote de decisão. Uma mensagem curta, em português claro, dizendo:
-
-- que decisão está sendo pedida;
-- que material está em revisão;
-- o que aprovar permite;
-- o que aprovar não permite;
-- quais são as opções;
-- qual é o risco;
-- qual é o próximo passo seguro.
-
-JSON cru não é gate humano. Pergunta vaga no chat também não.
-
-## Um exemplo simples
-
-Você pede: "cria o onboarding do cliente".
-
-Um agente comum pode começar a desenhar tela.
-
-A fábrica deveria parar e perguntar, mesmo que internamente:
-
-Quem é o cliente? O que ele precisa conseguir fazer no primeiro uso? Tem conta? Tem permissão? Tem carteira? Tem pagamento? Tem dado sensível? Tem design pronto? O que conta como sucesso? O que não entra agora?
-
-Depois disso, a fábrica separa o trabalho:
-
-- alguém define a verdade do fluxo;
-- alguém planeja a experiência;
-- alguém implementa a tela;
-- alguém implementa API ou dados, se houver;
-- alguém testa a jornada;
-- alguém olha a prova visual;
-- alguém revisa;
-- alguém fecha com evidência.
-
-O operador não deveria coordenar tudo isso na mão. Ele deveria receber o estado claro e ser chamado apenas quando houver decisão real.
-
-## O que a fábrica ainda precisa provar
-
-A documentação pública prova a intenção e o contrato do kernel. Os testes locais provam que o repositório está coerente.
-
-Isso não é a mesma coisa que dizer que uma execução privada, num Hermes vivo, entregou um produto específico.
-
-Para isso, precisa de estado real no Hermes, worker results atuais, evidência do produto, revisão consumida e decisão humana quando o risco pedir.
-
-Essa fronteira é importante. A fábrica não fica mais fraca por dizer isso. Ela fica mais confiável.
-
-## Se você só lembrar de uma coisa
-
-A Overkill Factory é uma tentativa de transformar agentes em linha de produção confiável.
-
-Não é mágica. Não é um agente único. Não é um prompt gigante.
-
-É um jeito de impedir que velocidade vire chute.
-
-Pedido entra. A fábrica entende, organiza, executa, prova, revisa e fecha.
-
-Quando não consegue provar, ela não finge. Ela bloqueia e diz o que falta.
+A versão boa precisa parecer uma conversa séria: simples na superfície, precisa por baixo, honesta sobre o que existe e o que ainda precisa ser provado.
