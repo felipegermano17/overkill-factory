@@ -4782,6 +4782,55 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertEqual(candidate["target_worker"], "release-ops-worker")
         self.assertEqual(candidate["missing_artifact_names"], ["wu19_release_readiness_repair_package.json"])
 
+    def test_owner_rerun_candidate_prefers_missing_artifact_record_over_repair_artifact_record(self) -> None:
+        stale_repair_id = "t_" + "stalerepair"
+        target_id = "t_" + "releasepkg"
+        repair = {
+            "id": "t_readbackrepair",
+            "status": "done",
+            "title": "Repair missing declared artifacts for board",
+            "assignee": "factory-orchestrator",
+            "body": json.dumps(
+                {
+                    "plan_action": "repair_declared_artifacts",
+                    "required_output": "declared_artifact_readback_repair",
+                    "repair_target": {
+                        "task_ref": "kanban:<redacted>",
+                        "title": "Repair WU-19 release/readiness blockers",
+                        "assignee": "release-ops-worker",
+                        "missing_artifact_names": [
+                            f"wu19_release_readiness_repair_package_{target_id}.json",
+                            f"wu19_release_readiness_repair_package_{target_id}.md",
+                        ],
+                    },
+                }
+            ),
+            "runs": [
+                {
+                    "status": "done",
+                    "metadata": {
+                        "orchestration_result": {
+                            "status": "READBACK_REPAIR_MATERIALIZED__NO_GATE_APPROVED",
+                            "route_registry_resolution": "release-ops-worker remains owner",
+                            "evidence_refs": {
+                                "readback_records": {
+                                    f"workspace:{stale_repair_id}/declared_artifact_readback_repair_{stale_repair_id}.json": {"exists": False},
+                                    f"workspace:{target_id}/wu19_release_readiness_repair_package_{target_id}.json": {"exists": False},
+                                    f"workspace:{target_id}/wu19_release_readiness_repair_package_{target_id}.md": {"exists": False},
+                                }
+                            },
+                        }
+                    },
+                }
+            ],
+        }
+
+        candidate = adapter.declared_artifact_owner_rerun_candidate_from_repair_record(repair)
+
+        self.assertIsNotNone(candidate)
+        self.assertEqual(candidate["target_task_ref"], target_id)
+        self.assertEqual(candidate["target_worker"], "release-ops-worker")
+
     def test_declared_artifact_owner_rerun_candidate_suppressed_after_readback_pass(self) -> None:
         target_id = "t_" + "releasepkgpass"
         repair_id = "t_" + "readbackdonepass"
