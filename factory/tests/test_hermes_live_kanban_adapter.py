@@ -6246,12 +6246,16 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertEqual(created_task["status"], "ready")
         body = json.loads(str(created_task["body"]))
         self.assertEqual(body["plan_action"], "repair_board_contract")
+        self.assertEqual(body["required_output"], "kanban_first_runtime_contract_repair_evidence")
         self.assertTrue(body["native_dispatch_required_next"])
         self.assertFalse(body["agent_may_choose_phase"])
         self.assertIn("approve or waive human gates", body["forbidden_actions"])
         self.assertIn(
             "choose a later phase from title, chat, memory, prose or declared phase alone",
             body["forbidden_actions"],
+        )
+        self.assertTrue(
+            any("canonical_factory_card" in item and "blocked_reasons remain unreduced" in item for item in body["forbidden_actions"])
         )
         self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
 
@@ -6287,6 +6291,11 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
             if json.loads(str(task.get("body") or "{}")).get("marker") == "factory_deterministic_reconcile"
         )
         self.assertEqual(created_task["status"], "ready")
+        body = json.loads(str(created_task["body"]))
+        self.assertEqual(body["required_output"], "kanban_first_runtime_contract_repair_evidence")
+        self.assertTrue(
+            any("canonical_factory_card" in item and "blocked_reasons remain unreduced" in item for item in body["forbidden_actions"])
+        )
         self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
 
     def test_no_idle_creates_fresh_reconcile_card_when_idempotent_card_is_terminal_stale(self) -> None:

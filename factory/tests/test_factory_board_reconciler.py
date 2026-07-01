@@ -280,7 +280,11 @@ class FactoryBoardReconcilerTest(unittest.TestCase):
         self.assertTrue(plan["create_task_allowed"])
         self.assertEqual(plan["create_task_contract"]["workflow_template_id"], "overkill-vfinal")
         self.assertEqual(plan["create_task_contract"]["current_step_key"], "F1-intake")
-        self.assertEqual(plan["create_task_contract"]["body"]["required_output"], "canonical_factory_card")
+        body = plan["create_task_contract"]["body"]
+        self.assertEqual(body["required_output"], "kanban_first_runtime_contract_repair_evidence")
+        self.assertTrue(
+            any("canonical_factory_card" in item and "blocked_reasons remain unreduced" in item for item in body["forbidden_actions"])
+        )
         self.assertFalse(plan["create_task_contract"]["body"]["agent_may_choose_phase"])
         self.assertFalse(plan["human_gate_required"])
 
@@ -383,7 +387,11 @@ class FactoryBoardReconcilerTest(unittest.TestCase):
         self.assertTrue(plan["create_task_allowed"])
         self.assertFalse(plan["human_gate_required"])
         self.assertFalse(plan["user_decision_required"])
-        self.assertEqual(plan["create_task_contract"]["body"]["required_output"], "canonical_factory_card")
+        body = plan["create_task_contract"]["body"]
+        self.assertEqual(body["required_output"], "kanban_first_runtime_contract_repair_evidence")
+        self.assertTrue(
+            any("canonical_factory_card" in item and "blocked_reasons remain unreduced" in item for item in body["forbidden_actions"])
+        )
         self.assertTrue(any("bypassed Kanban-first adapter" in item for item in plan["blocked_reasons"]))
         self.assertTrue(any("no native phase children" in item for item in plan["blocked_reasons"]))
         self.assertTrue(any("overkill-factory-product-intake" in item for item in plan["blocked_reasons"]))
