@@ -1,0 +1,175 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-15-point-hardening-program.schema.json",
+  "program_id": "factory-15-point-hardening-2026-07",
+  "record_type": "factory_15_point_hardening_program",
+  "status": "active",
+  "master_issue_ref": "github:issue:595",
+  "scope_lock": {
+    "expected_point_count": 15,
+    "partial_must_not_be_reported_done": true,
+    "negative_closeout_counts_as_progress": false,
+    "factory_owned_blocker_requires_repair_loop": true,
+    "human_stop_requires_exact_external_authority": true
+  },
+  "global_completion_bar": [
+    "public_issue_or_mapped_issue_section",
+    "kanban_or_runtime_task_result_artifact",
+    "productized_code_schema_template_or_doc_update",
+    "regression_test_or_validator_coverage",
+    "green_ci_and_merge_when_repo_changes",
+    "live_or_simulated_behavior_proof",
+    "no_factory_owned_blocker_left_as_passive_bureaucracy"
+  ],
+  "points": [
+    {
+      "id": "P01",
+      "title": "Real effectiveness rule",
+      "problem": "The factory can count ritual as progress.",
+      "required_behavior": "Separate product/material progress from process ritual; done counts only when product outcome advances or executable repair is created.",
+      "workstream": "control_plane_invariants",
+      "issue_refs": ["github:issue:595"],
+      "required_artifact_classes": ["validator", "regression_test", "runtime_policy"],
+      "verification": ["process_pass_readback_pass_quality_pass_product_progress_pass_are_distinct"]
+    },
+    {
+      "id": "P02",
+      "title": "Universal automatic repair loop",
+      "problem": "Blockers can become passive or negative closeout.",
+      "required_behavior": "Every factory-owned blocker loops repair -> audit -> rerun -> reconcile until resolved or true external/human authority remains.",
+      "workstream": "control_plane_invariants",
+      "issue_refs": ["github:issue:594", "github:issue:595"],
+      "required_artifact_classes": ["reducer_rule", "no_idle_rule", "regression_test"],
+      "verification": ["downstream_final_phases_are_gated_on_reconciliation"]
+    },
+    {
+      "id": "P03",
+      "title": "Interactive factory start/discovery OS",
+      "problem": "Factory start can be too mechanical and under-aligned.",
+      "required_behavior": "Gerente-led discovery captures intent, scope, non-goals, UX, architecture preview, access/capability needs, risks and success criteria before material execution.",
+      "workstream": "discovery_preflight_capability",
+      "issue_refs": ["github:issue:593", "github:issue:595"],
+      "required_artifact_classes": ["product_understanding_packet", "deferred_decision_ledger", "gerente_flow"],
+      "verification": ["material_execution_requires_understanding_packet_or_explicit_deferred_ledger"]
+    },
+    {
+      "id": "P04",
+      "title": "Hermes environment preflight",
+      "problem": "Factory starts without proving Hermes environment readiness.",
+      "required_behavior": "Run doctor/preflight for profiles, bindings, skills, toolsets, browser, computer use, terminal/file/web, cron, gateway, PDF/video/media, domain providers and access readiness.",
+      "workstream": "discovery_preflight_capability",
+      "issue_refs": ["github:issue:588", "github:issue:595"],
+      "required_artifact_classes": ["doctor_command", "schema", "regression_test"],
+      "verification": ["preflight_status_ready_ready_with_deferred_or_blocked_with_exact_human_input"]
+    },
+    {
+      "id": "P05",
+      "title": "Gerente as proactive manager",
+      "problem": "Gerente is not yet a proactive human relationship manager.",
+      "required_behavior": "Gerente owns status, asks, summaries, progress and artifact delivery; cron/watchdog wakes gerente, not human directly.",
+      "workstream": "operator_ux",
+      "issue_refs": ["github:issue:589", "github:issue:595"],
+      "required_artifact_classes": ["operator_notification_policy", "status_contract", "delivery_receipt"],
+      "verification": ["cron_to_gerente_to_human_path_is_enforced"]
+    },
+    {
+      "id": "P06",
+      "title": "Human UX / artifact quality",
+      "problem": "Human can receive raw technical dumps.",
+      "required_behavior": "Human-facing gates/status use PDF/equivalent and video where configured/requested; JSON/Markdown are internal evidence only.",
+      "workstream": "operator_ux",
+      "issue_refs": ["github:issue:590", "github:issue:595"],
+      "required_artifact_classes": ["human_artifact_validator", "pdf_package_contract", "video_explainer_contract"],
+      "verification": ["raw_json_markdown_rejected_as_primary_material_gate_artifact"]
+    },
+    {
+      "id": "P07",
+      "title": "Architecture approval gate",
+      "problem": "Material execution can start without operator-readable architecture approval.",
+      "required_behavior": "Present architecture PDF/optional video with system shape, tradeoffs, rejected alternatives, boundaries, integrations, security, costs and operations before material execution.",
+      "workstream": "architecture_quality",
+      "issue_refs": ["github:issue:591", "github:issue:595"],
+      "required_artifact_classes": ["architecture_approval_package", "human_gate", "regression_test"],
+      "verification": ["material_execution_waits_for_architecture_gate_when_architecture_is_material"]
+    },
+    {
+      "id": "P08",
+      "title": "Domain-specialized capability requirement",
+      "problem": "Generic agents can handle specialized domains without capability proof.",
+      "required_behavior": "Mandatory capability/provider registry per domain; Solana/onchain requires Solana AI Kit or approved official Solana capability before generic execution.",
+      "workstream": "discovery_preflight_capability",
+      "issue_refs": ["github:issue:592", "github:issue:595"],
+      "required_artifact_classes": ["capability_registry", "routing_guard", "solana_ai_kit_receipt"],
+      "verification": ["generic_solana_execution_refused_without_solana_ai_kit_capability"]
+    },
+    {
+      "id": "P09",
+      "title": "Quality firewall",
+      "problem": "Shallow structured output can pass.",
+      "required_behavior": "Definition of Excellence per critical artifact; lazy/generic artifacts fail and route to repair.",
+      "workstream": "architecture_quality",
+      "issue_refs": ["github:issue:595"],
+      "required_artifact_classes": ["quality_firewall", "definition_of_excellence", "review_regression_test"],
+      "verification": ["shallow_artifacts_route_to_repair_even_when_schema_valid"]
+    },
+    {
+      "id": "P10",
+      "title": "Real progress metric",
+      "problem": "Done counts are not meaningful to the human.",
+      "required_behavior": "Report product percent and critical path by gates/artifacts/readiness, not raw task counts.",
+      "workstream": "operator_ux",
+      "issue_refs": ["github:issue:595"],
+      "required_artifact_classes": ["progress_model", "gerente_status_renderer", "evidence_reconciler_rule"],
+      "verification": ["status_reports_product_progress_with_uncertainty_and_blockers"]
+    },
+    {
+      "id": "P11",
+      "title": "Hard boundary between plan/proof/ready/release",
+      "problem": "Bounded evidence can look like readiness.",
+      "required_behavior": "Plan, spec, bounded proof, report-only pass, QA pass, release readiness, production readiness and Receipt Five are distinct machine states.",
+      "workstream": "control_plane_invariants",
+      "issue_refs": ["github:issue:595"],
+      "required_artifact_classes": ["state_model", "validator", "regression_test"],
+      "verification": ["report_only_or_negative_results_cannot_masquerade_as_approval"]
+    },
+    {
+      "id": "P12",
+      "title": "Capability acquisition lane",
+      "problem": "Missing tools/providers can stop the factory instead of acquisition.",
+      "required_behavior": "Missing factory-acquirable capabilities create acquisition/eval/smoke/promotion path before human block except true external authority.",
+      "workstream": "discovery_preflight_capability",
+      "issue_refs": ["github:issue:595"],
+      "required_artifact_classes": ["capability_acquisition_lane", "smoke_test", "promotion_demote_policy"],
+      "verification": ["missing_factory_acquirable_capability_creates_acquisition_task"]
+    },
+    {
+      "id": "P13",
+      "title": "Worker accountability",
+      "problem": "Bad workers can keep being trusted.",
+      "required_behavior": "Track worker quality, failure and rework; demote or route review/repair when repeated poor output occurs.",
+      "workstream": "worker_safety_accountability",
+      "issue_refs": ["github:issue:595"],
+      "required_artifact_classes": ["worker_accountability_ledger", "routing_consequence", "eval_policy"],
+      "verification": ["repeated_worker_quality_failures_change_routing_or_require_review"]
+    },
+    {
+      "id": "P14",
+      "title": "Public/private/security boundary automation",
+      "problem": "Safety boundaries rely on humans remembering rules.",
+      "required_behavior": "Automated checks for secrets, private paths, raw internal artifacts, Mainnet/funds/signing/custody boundaries and human artifact leaks.",
+      "workstream": "worker_safety_accountability",
+      "issue_refs": ["github:issue:595"],
+      "required_artifact_classes": ["safety_scan", "boundary_validator", "ci_gate"],
+      "verification": ["unsafe_public_or_operator_artifact_fails_before_delivery_or_publication"]
+    },
+    {
+      "id": "P15",
+      "title": "Adaptive system, not blind linear phase rail",
+      "problem": "F1..F27 can become a dumb conveyor.",
+      "required_behavior": "Phase graph supports lateral loops, re-entry, blocker-specific repair lanes, and downstream gating on reconciliation.",
+      "workstream": "control_plane_invariants",
+      "issue_refs": ["github:issue:595"],
+      "required_artifact_classes": ["phase_graph_rule", "board_reconciler_rule", "regression_test"],
+      "verification": ["lateral_repair_loop_blocks_downstream_final_phase_until_reconciled"]
+    }
+  ]
+}
