@@ -3191,6 +3191,89 @@ def _capability_acquisition_route(capability_id: str, summary: str) -> dict[str,
     }
 
 
+HERMES_PREFLIGHT_PLACEHOLDER_MARKERS = (
+    "placeholder",
+    "example",
+    "sample",
+    "dummy",
+    "fake",
+    "todo",
+    "changeme",
+    "replace-me",
+    "replace_me",
+    "your-token",
+    "your_secret",
+    "not-set",
+    "unset",
+)
+
+HERMES_PREFLIGHT_INACCESSIBLE_TOKEN_MARKERS = ("expired", "revoked", "inaccessible", "denied", "unauthorized", "invalid")
+HERMES_PREFLIGHT_OK_TOKEN_MARKERS = ("active", "valid", "reachable", "accessible", "ok", "ready")
+HERMES_PREFLIGHT_BROAD_SCOPE_MARKERS = ("*", "admin", "administrator", "owner", "root", "full-access", "full_access")
+
+
+def _looks_placeholder_or_fake(value: str) -> bool:
+    normalized = value.strip().lower()
+    if not normalized:
+        return True
+    return any(marker in normalized for marker in HERMES_PREFLIGHT_PLACEHOLDER_MARKERS)
+
+
+def _safe_env_var_readiness(env_var_names: list[str], environ: dict[str, str] | None = None) -> dict[str, Any]:
+    environ = environ if environ is not None else os.environ
+    missing = 0
+    placeholder = 0
+    present = 0
+    for name in env_var_names:
+        value = environ.get(name)
+        if value is None or value == "":
+            missing += 1
+        elif _looks_placeholder_or_fake(value):
+            placeholder += 1
+        else:
+            present += 1
+    return {
+        "declared_env_var_count": len(env_var_names),
+        "present_env_var_count": present,
+        "missing_env_var_count": missing,
+        "placeholder_env_var_count": placeholder,
+    }
+
+
+def _access_scope_readiness(required_scopes: list[str], granted_scopes: list[str]) -> dict[str, Any]:
+    required = {scope.strip().lower() for scope in required_scopes if scope.strip()}
+    granted = {scope.strip().lower() for scope in granted_scopes if scope.strip()}
+    broad = sorted(scope for scope in granted if scope in HERMES_PREFLIGHT_BROAD_SCOPE_MARKERS or scope.endswith(":*") or scope.endswith("/*"))
+    missing = sorted(required - granted)
+    return {
+        "required_scope_count": len(required),
+        "granted_scope_count": len(granted),
+        "missing_required_scope_count": len(missing),
+        "broad_scope_count": len(broad),
+        "least_privilege_ok": not missing and not broad,
+    }
+
+
+def _token_status_readiness(token_status_refs: list[str]) -> dict[str, Any]:
+    inaccessible = 0
+    active = 0
+    unknown = 0
+    for ref in token_status_refs:
+        normalized = ref.strip().lower()
+        if any(marker in normalized for marker in HERMES_PREFLIGHT_INACCESSIBLE_TOKEN_MARKERS):
+            inaccessible += 1
+        elif any(marker in normalized for marker in HERMES_PREFLIGHT_OK_TOKEN_MARKERS):
+            active += 1
+        else:
+            unknown += 1
+    return {
+        "token_status_ref_count": len(token_status_refs),
+        "active_token_status_ref_count": active,
+        "inaccessible_token_status_ref_count": inaccessible,
+        "unknown_token_status_ref_count": unknown,
+    }
+
+
 def build_hermes_environment_preflight_report(
     *,
     hermes_home: Path | None = None,
@@ -3200,7 +3283,13 @@ def build_hermes_environment_preflight_report(
     capability_packs_path: Path = CAPABILITY_PACKS_PATH,
     require: list[str] | None = None,
     credential_refs: list[str] | None = None,
+    credential_env_vars: list[str] | None = None,
+    secret_binding_refs: list[str] | None = None,
     access_refs: list[str] | None = None,
+    required_access_scopes: list[str] | None = None,
+    granted_access_scopes: list[str] | None = None,
+    required_domain_providers: list[str] | None = None,
+    token_status_refs: list[str] | None = None,
     capability_overrides: dict[str, bool] | None = None,
     command_resolver: Callable[[str], str | None] | None = None,
     created_at: str | None = None,
@@ -3215,7 +3304,13 @@ def build_hermes_environment_preflight_report(
     """
     required = {str(item).strip().replace("-", "_") for item in (require or []) if str(item).strip()}
     credential_refs = [ref for ref in (credential_refs or []) if str(ref).strip()]
+    credential_env_vars = [ref for ref in (credential_env_vars or []) if str(ref).strip()]
+    secret_binding_refs = [ref for ref in (secret_binding_refs or []) if str(ref).strip()]
     access_refs = [ref for ref in (access_refs or []) if str(ref).strip()]
+    required_access_scopes = [ref for ref in (required_access_scopes or []) if str(ref).strip()]
+    granted_access_scopes = [ref for ref in (granted_access_scopes or []) if str(ref).strip()]
+    required_domain_providers = [ref for ref in (required_domain_providers or []) if str(ref).strip()]
+    token_status_refs = [ref for ref in (token_status_refs or []) if str(ref).strip()]
     resolver = command_resolver or shutil.which
     checks: list[dict[str, Any]] = []
     acquisition_routes: list[dict[str, Any]] = []
@@ -3324,6 +3419,23 @@ def build_hermes_environment_preflight_report(
     )
     if not domain_provider_ids:
         acquisition_routes.append(_capability_acquisition_route("domain_providers", "No specialized domain providers are active."))
+    if required_domain_providers:
+        active_provider_set = set(active_providers)
+        missing_domain_provider_count = len([provider for provider in required_domain_providers if provider not in active_provider_set])
+        checks.append(
+            _preflight_check(
+                "required_domain_provider_access",
+                "PASS" if missing_domain_provider_count == 0 else "DEFERRED",
+                "Required domain providers are registered and available." if missing_domain_provider_count == 0 else "One or more required domain providers need acquisition or provider registration.",
+                required=True,
+                detail={
+                    "required_domain_provider_count": len(required_domain_providers),
+                    "missing_domain_provider_count": missing_domain_provider_count,
+                },
+            )
+        )
+        if missing_domain_provider_count:
+            acquisition_routes.append(_capability_acquisition_route("domain_providers", "Required domain provider access is missing."))
 
     for capability_id, info in HERMES_FACTORY_ACQUIRABLE_CAPABILITIES.items():
         is_required = capability_id in required
@@ -3362,21 +3474,52 @@ def build_hermes_environment_preflight_report(
         acquisition_routes.append(_capability_acquisition_route("hermes_home", "Hermes home is not declared or accessible."))
 
     credentials_required = bool({"credentials", "access", "credentials_access", "credentials_access_readiness"} & required)
-    credentials_ready = bool(credential_refs and access_refs)
-    if credentials_required and not credentials_ready:
+    credential_placeholder_count = len([ref for ref in [*credential_refs, *secret_binding_refs] if _looks_placeholder_or_fake(ref)])
+    access_placeholder_count = len([ref for ref in access_refs if _looks_placeholder_or_fake(ref)])
+    env_readiness = _safe_env_var_readiness(credential_env_vars)
+    scope_readiness = _access_scope_readiness(required_access_scopes, granted_access_scopes)
+    token_readiness = _token_status_readiness(token_status_refs)
+    credential_evidence_ready = bool((credential_refs or secret_binding_refs) and credential_placeholder_count == 0) or env_readiness["present_env_var_count"] > 0
+    access_evidence_ready = bool(access_refs and access_placeholder_count == 0)
+    if required_access_scopes:
+        access_evidence_ready = access_evidence_ready and bool(granted_access_scopes) and scope_readiness["least_privilege_ok"]
+    if token_status_refs:
+        access_evidence_ready = access_evidence_ready and token_readiness["inaccessible_token_status_ref_count"] == 0 and token_readiness["unknown_token_status_ref_count"] == 0
+    credential_access_blocked = bool(
+        (credentials_required and not (credential_evidence_ready and access_evidence_ready))
+        or credential_placeholder_count
+        or access_placeholder_count
+        or env_readiness["missing_env_var_count"]
+        or env_readiness["placeholder_env_var_count"]
+        or scope_readiness["missing_required_scope_count"]
+        or scope_readiness["broad_scope_count"]
+        or token_readiness["inaccessible_token_status_ref_count"]
+        or token_readiness["unknown_token_status_ref_count"]
+    )
+    if credential_access_blocked:
         human_requests.append(
             {
                 "input_id": "credentials_access_readiness",
-                "exact_request": "Provide public-safe credential/access readiness refs; do not paste secrets or private tokens.",
+                "exact_request": "Provide public-safe credential/access readiness refs, valid secret binding refs, non-placeholder env var bindings, least-privilege scope proof, and reachable token/access proof; do not paste secrets or private tokens.",
             }
         )
     checks.append(
         _preflight_check(
             "credentials_access_readiness",
-            "PASS" if (credentials_ready or not credentials_required) else "BLOCKED",
-            "Credential/access readiness is declared or not required for this preflight." if (credentials_ready or not credentials_required) else "Credential/access readiness needs exact human input.",
+            "PASS" if not credential_access_blocked else "BLOCKED",
+            "Credential/access readiness is declared, scoped, non-placeholder, and safe to share." if not credential_access_blocked else "Credential/access readiness needs exact human input or least-privilege repair.",
             required=credentials_required,
-            detail={"credential_ref_count": len(credential_refs), "access_ref_count": len(access_refs), "secrets_inspected": False},
+            detail={
+                "credential_ref_count": len(credential_refs),
+                "secret_binding_ref_count": len(secret_binding_refs),
+                "access_ref_count": len(access_refs),
+                "placeholder_credential_ref_count": credential_placeholder_count,
+                "placeholder_access_ref_count": access_placeholder_count,
+                **env_readiness,
+                **scope_readiness,
+                **token_readiness,
+                "secrets_inspected": False,
+            },
         )
     )
 
@@ -25236,8 +25379,14 @@ def command_hermes_environment_preflight(args: argparse.Namespace) -> int:
         skill_provider_registry_path=args.skill_provider_registry,
         capability_packs_path=args.capability_packs,
         require=args.require,
-        credential_refs=args.credential_ref,
-        access_refs=args.access_ref,
+        credential_refs=getattr(args, "credential_ref", []),
+        credential_env_vars=getattr(args, "credential_env", []),
+        secret_binding_refs=getattr(args, "secret_binding_ref", []),
+        access_refs=getattr(args, "access_ref", []),
+        required_access_scopes=getattr(args, "required_access_scope", []),
+        granted_access_scopes=getattr(args, "granted_access_scope", []),
+        required_domain_providers=getattr(args, "required_domain_provider", []),
+        token_status_refs=getattr(args, "token_status_ref", []),
     )
     if args.out:
         args.out.parent.mkdir(parents=True, exist_ok=True)
@@ -25423,10 +25572,46 @@ def build_parser() -> argparse.ArgumentParser:
         help="Public-safe credential readiness reference. Never pass secret values.",
     )
     hermes_preflight_parser.add_argument(
+        "--credential-env",
+        action="append",
+        default=[],
+        help="Name of a required credential environment variable. The value is only checked for presence/placeholder and is never printed.",
+    )
+    hermes_preflight_parser.add_argument(
+        "--secret-binding-ref",
+        action="append",
+        default=[],
+        help="Public-safe secret binding reference, such as an external vault binding id. Never pass secret values.",
+    )
+    hermes_preflight_parser.add_argument(
         "--access-ref",
         action="append",
         default=[],
         help="Public-safe access readiness reference. Never pass token values.",
+    )
+    hermes_preflight_parser.add_argument(
+        "--required-access-scope",
+        action="append",
+        default=[],
+        help="Least-privilege scope required by the factory capability, e.g. repo:read. Public labels only.",
+    )
+    hermes_preflight_parser.add_argument(
+        "--granted-access-scope",
+        action="append",
+        default=[],
+        help="Public-safe granted scope label used to compare least privilege. Do not pass tokens.",
+    )
+    hermes_preflight_parser.add_argument(
+        "--required-domain-provider",
+        action="append",
+        default=[],
+        help="Domain/provider id required for this preflight, e.g. cloud-infra-security.",
+    )
+    hermes_preflight_parser.add_argument(
+        "--token-status-ref",
+        action="append",
+        default=[],
+        help="Public-safe token/access status evidence ref such as active/reachable or expired/inaccessible; never pass token material.",
     )
     hermes_preflight_parser.set_defaults(func=command_hermes_environment_preflight)
 
