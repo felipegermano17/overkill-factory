@@ -2,7 +2,7 @@
   "$schema": "https://overkill-factory.dev/schemas/factory-15-point-hardening-program.schema.json",
   "program_id": "factory-15-point-hardening-2026-07",
   "record_type": "factory_15_point_hardening_program",
-  "status": "active",
+  "status": "complete",
   "master_issue_ref": "github:issue:595",
   "scope_lock": {
     "expected_point_count": 15,
@@ -27,9 +27,18 @@
       "problem": "The factory can count ritual as progress.",
       "required_behavior": "Separate product/material progress from process ritual; done counts only when product outcome advances or executable repair is created.",
       "workstream": "control_plane_invariants",
-      "issue_refs": ["github:issue:595"],
-      "required_artifact_classes": ["validator", "regression_test", "runtime_policy"],
-      "verification": ["process_pass_readback_pass_quality_pass_product_progress_pass_are_distinct"]
+      "issue_refs": [
+        "github:issue:595"
+      ],
+      "required_artifact_classes": [
+        "validator",
+        "regression_test",
+        "runtime_policy"
+      ],
+      "verification": [
+        "process_pass_readback_pass_quality_pass_product_progress_pass_are_distinct"
+      ],
+      "implementation_status": "complete"
     },
     {
       "id": "P02",
@@ -37,9 +46,19 @@
       "problem": "Blockers can become passive or negative closeout.",
       "required_behavior": "Every factory-owned blocker loops repair -> audit -> rerun -> reconcile until resolved or true external/human authority remains.",
       "workstream": "control_plane_invariants",
-      "issue_refs": ["github:issue:594", "github:issue:595"],
-      "required_artifact_classes": ["reducer_rule", "no_idle_rule", "regression_test"],
-      "verification": ["downstream_final_phases_are_gated_on_reconciliation"]
+      "issue_refs": [
+        "github:issue:594",
+        "github:issue:595"
+      ],
+      "required_artifact_classes": [
+        "reducer_rule",
+        "no_idle_rule",
+        "regression_test"
+      ],
+      "verification": [
+        "downstream_final_phases_are_gated_on_reconciliation"
+      ],
+      "implementation_status": "complete"
     },
     {
       "id": "P03",
@@ -47,9 +66,19 @@
       "problem": "Factory start can be too mechanical and under-aligned.",
       "required_behavior": "Gerente-led discovery captures intent, scope, non-goals, UX, architecture preview, access/capability needs, risks and success criteria before material execution.",
       "workstream": "discovery_preflight_capability",
-      "issue_refs": ["github:issue:593", "github:issue:595"],
-      "required_artifact_classes": ["product_understanding_packet", "deferred_decision_ledger", "gerente_flow"],
-      "verification": ["material_execution_requires_understanding_packet_or_explicit_deferred_ledger"]
+      "issue_refs": [
+        "github:issue:593",
+        "github:issue:595"
+      ],
+      "required_artifact_classes": [
+        "product_understanding_packet",
+        "deferred_decision_ledger",
+        "gerente_flow"
+      ],
+      "verification": [
+        "material_execution_requires_understanding_packet_or_explicit_deferred_ledger"
+      ],
+      "implementation_status": "complete"
     },
     {
       "id": "P04",
@@ -57,9 +86,19 @@
       "problem": "Factory starts without proving Hermes environment readiness.",
       "required_behavior": "Run doctor/preflight for profiles, bindings, skills, toolsets, browser, computer use, terminal/file/web, cron, gateway, PDF/video/media, domain providers and access readiness.",
       "workstream": "discovery_preflight_capability",
-      "issue_refs": ["github:issue:588", "github:issue:595"],
-      "required_artifact_classes": ["doctor_command", "schema", "regression_test"],
-      "verification": ["preflight_status_ready_ready_with_deferred_or_blocked_with_exact_human_input"]
+      "issue_refs": [
+        "github:issue:588",
+        "github:issue:595"
+      ],
+      "required_artifact_classes": [
+        "doctor_command",
+        "schema",
+        "regression_test"
+      ],
+      "verification": [
+        "preflight_status_ready_ready_with_deferred_or_blocked_with_exact_human_input"
+      ],
+      "implementation_status": "complete"
     },
     {
       "id": "P05",
@@ -67,9 +106,19 @@
       "problem": "Gerente is not yet a proactive human relationship manager.",
       "required_behavior": "Gerente owns status, asks, summaries, progress and artifact delivery; cron/watchdog wakes gerente, not human directly.",
       "workstream": "operator_ux",
-      "issue_refs": ["github:issue:589", "github:issue:595"],
-      "required_artifact_classes": ["operator_notification_policy", "status_contract", "delivery_receipt"],
-      "verification": ["cron_to_gerente_to_human_path_is_enforced"]
+      "issue_refs": [
+        "github:issue:589",
+        "github:issue:595"
+      ],
+      "required_artifact_classes": [
+        "operator_notification_policy",
+        "status_contract",
+        "delivery_receipt"
+      ],
+      "verification": [
+        "cron_to_gerente_to_human_path_is_enforced"
+      ],
+      "implementation_status": "complete"
     },
     {
       "id": "P06",
@@ -77,9 +126,19 @@
       "problem": "Human can receive raw technical dumps.",
       "required_behavior": "Human-facing gates/status use PDF/equivalent and video where configured/requested; JSON/Markdown are internal evidence only.",
       "workstream": "operator_ux",
-      "issue_refs": ["github:issue:590", "github:issue:595"],
-      "required_artifact_classes": ["human_artifact_validator", "pdf_package_contract", "video_explainer_contract"],
-      "verification": ["raw_json_markdown_rejected_as_primary_material_gate_artifact"]
+      "issue_refs": [
+        "github:issue:590",
+        "github:issue:595"
+      ],
+      "required_artifact_classes": [
+        "human_artifact_validator",
+        "pdf_package_contract",
+        "video_explainer_contract"
+      ],
+      "verification": [
+        "raw_json_markdown_rejected_as_primary_material_gate_artifact"
+      ],
+      "implementation_status": "complete"
     },
     {
       "id": "P07",
@@ -87,9 +146,19 @@
       "problem": "Material execution can start without operator-readable architecture approval.",
       "required_behavior": "Present architecture PDF/optional video with system shape, tradeoffs, rejected alternatives, boundaries, integrations, security, costs and operations before material execution.",
       "workstream": "architecture_quality",
-      "issue_refs": ["github:issue:591", "github:issue:595"],
-      "required_artifact_classes": ["architecture_approval_package", "human_gate", "regression_test"],
-      "verification": ["material_execution_waits_for_architecture_gate_when_architecture_is_material"]
+      "issue_refs": [
+        "github:issue:591",
+        "github:issue:595"
+      ],
+      "required_artifact_classes": [
+        "architecture_approval_package",
+        "human_gate",
+        "regression_test"
+      ],
+      "verification": [
+        "material_execution_waits_for_architecture_gate_when_architecture_is_material"
+      ],
+      "implementation_status": "complete"
     },
     {
       "id": "P08",
@@ -97,9 +166,19 @@
       "problem": "Generic agents can handle specialized domains without capability proof.",
       "required_behavior": "Mandatory capability/provider registry per domain; Solana/onchain requires Solana AI Kit or approved official Solana capability before generic execution.",
       "workstream": "discovery_preflight_capability",
-      "issue_refs": ["github:issue:592", "github:issue:595"],
-      "required_artifact_classes": ["capability_registry", "routing_guard", "solana_ai_kit_receipt"],
-      "verification": ["generic_solana_execution_refused_without_solana_ai_kit_capability"]
+      "issue_refs": [
+        "github:issue:592",
+        "github:issue:595"
+      ],
+      "required_artifact_classes": [
+        "capability_registry",
+        "routing_guard",
+        "solana_ai_kit_receipt"
+      ],
+      "verification": [
+        "generic_solana_execution_refused_without_solana_ai_kit_capability"
+      ],
+      "implementation_status": "complete"
     },
     {
       "id": "P09",
@@ -107,9 +186,18 @@
       "problem": "Shallow structured output can pass.",
       "required_behavior": "Definition of Excellence per critical artifact; lazy/generic artifacts fail and route to repair.",
       "workstream": "architecture_quality",
-      "issue_refs": ["github:issue:595"],
-      "required_artifact_classes": ["quality_firewall", "definition_of_excellence", "review_regression_test"],
-      "verification": ["shallow_artifacts_route_to_repair_even_when_schema_valid"]
+      "issue_refs": [
+        "github:issue:595"
+      ],
+      "required_artifact_classes": [
+        "quality_firewall",
+        "definition_of_excellence",
+        "review_regression_test"
+      ],
+      "verification": [
+        "shallow_artifacts_route_to_repair_even_when_schema_valid"
+      ],
+      "implementation_status": "complete"
     },
     {
       "id": "P10",
@@ -117,9 +205,18 @@
       "problem": "Done counts are not meaningful to the human.",
       "required_behavior": "Report product percent and critical path by gates/artifacts/readiness, not raw task counts.",
       "workstream": "operator_ux",
-      "issue_refs": ["github:issue:595"],
-      "required_artifact_classes": ["progress_model", "gerente_status_renderer", "evidence_reconciler_rule"],
-      "verification": ["status_reports_product_progress_with_uncertainty_and_blockers"]
+      "issue_refs": [
+        "github:issue:595"
+      ],
+      "required_artifact_classes": [
+        "progress_model",
+        "gerente_status_renderer",
+        "evidence_reconciler_rule"
+      ],
+      "verification": [
+        "status_reports_product_progress_with_uncertainty_and_blockers"
+      ],
+      "implementation_status": "complete"
     },
     {
       "id": "P11",
@@ -127,9 +224,18 @@
       "problem": "Bounded evidence can look like readiness.",
       "required_behavior": "Plan, spec, bounded proof, report-only pass, QA pass, release readiness, production readiness and Receipt Five are distinct machine states.",
       "workstream": "control_plane_invariants",
-      "issue_refs": ["github:issue:595"],
-      "required_artifact_classes": ["state_model", "validator", "regression_test"],
-      "verification": ["report_only_or_negative_results_cannot_masquerade_as_approval"]
+      "issue_refs": [
+        "github:issue:595"
+      ],
+      "required_artifact_classes": [
+        "state_model",
+        "validator",
+        "regression_test"
+      ],
+      "verification": [
+        "report_only_or_negative_results_cannot_masquerade_as_approval"
+      ],
+      "implementation_status": "complete"
     },
     {
       "id": "P12",
@@ -137,9 +243,18 @@
       "problem": "Missing tools/providers can stop the factory instead of acquisition.",
       "required_behavior": "Missing factory-acquirable capabilities create acquisition/eval/smoke/promotion path before human block except true external authority.",
       "workstream": "discovery_preflight_capability",
-      "issue_refs": ["github:issue:595"],
-      "required_artifact_classes": ["capability_acquisition_lane", "smoke_test", "promotion_demote_policy"],
-      "verification": ["missing_factory_acquirable_capability_creates_acquisition_task"]
+      "issue_refs": [
+        "github:issue:595"
+      ],
+      "required_artifact_classes": [
+        "capability_acquisition_lane",
+        "smoke_test",
+        "promotion_demote_policy"
+      ],
+      "verification": [
+        "missing_factory_acquirable_capability_creates_acquisition_task"
+      ],
+      "implementation_status": "complete"
     },
     {
       "id": "P13",
@@ -147,9 +262,18 @@
       "problem": "Bad workers can keep being trusted.",
       "required_behavior": "Track worker quality, failure and rework; demote or route review/repair when repeated poor output occurs.",
       "workstream": "worker_safety_accountability",
-      "issue_refs": ["github:issue:595"],
-      "required_artifact_classes": ["worker_accountability_ledger", "routing_consequence", "eval_policy"],
-      "verification": ["repeated_worker_quality_failures_change_routing_or_require_review"]
+      "issue_refs": [
+        "github:issue:595"
+      ],
+      "required_artifact_classes": [
+        "worker_accountability_ledger",
+        "routing_consequence",
+        "eval_policy"
+      ],
+      "verification": [
+        "repeated_worker_quality_failures_change_routing_or_require_review"
+      ],
+      "implementation_status": "complete"
     },
     {
       "id": "P14",
@@ -157,9 +281,18 @@
       "problem": "Safety boundaries rely on humans remembering rules.",
       "required_behavior": "Automated checks for secrets, private paths, raw internal artifacts, Mainnet/funds/signing/custody boundaries and human artifact leaks.",
       "workstream": "worker_safety_accountability",
-      "issue_refs": ["github:issue:595"],
-      "required_artifact_classes": ["safety_scan", "boundary_validator", "ci_gate"],
-      "verification": ["unsafe_public_or_operator_artifact_fails_before_delivery_or_publication"]
+      "issue_refs": [
+        "github:issue:595"
+      ],
+      "required_artifact_classes": [
+        "safety_scan",
+        "boundary_validator",
+        "ci_gate"
+      ],
+      "verification": [
+        "unsafe_public_or_operator_artifact_fails_before_delivery_or_publication"
+      ],
+      "implementation_status": "complete"
     },
     {
       "id": "P15",
@@ -167,9 +300,18 @@
       "problem": "F1..F27 can become a dumb conveyor.",
       "required_behavior": "Phase graph supports lateral loops, re-entry, blocker-specific repair lanes, and downstream gating on reconciliation.",
       "workstream": "control_plane_invariants",
-      "issue_refs": ["github:issue:595"],
-      "required_artifact_classes": ["phase_graph_rule", "board_reconciler_rule", "regression_test"],
-      "verification": ["lateral_repair_loop_blocks_downstream_final_phase_until_reconciled"]
+      "issue_refs": [
+        "github:issue:595"
+      ],
+      "required_artifact_classes": [
+        "phase_graph_rule",
+        "board_reconciler_rule",
+        "regression_test"
+      ],
+      "verification": [
+        "lateral_repair_loop_blocks_downstream_final_phase_until_reconciled"
+      ],
+      "implementation_status": "complete"
     }
   ]
 }

@@ -22,13 +22,13 @@ def load_template() -> dict:
     return json.loads(TEMPLATE_PATH.read_text(encoding="utf-8"))
 
 
-def test_template_is_complete_scope_lock_without_claiming_done() -> None:
+def test_template_is_complete_scope_lock_and_all_points_done() -> None:
     module = load_module()
     result = module.audit_program(load_template())
 
-    assert result["result"] == "PASS_SCOPE_LOCK_PARTIAL_IMPLEMENTATION"
+    assert result["result"] == "PASS_COMPLETE"
     assert result["point_count"] == 15
-    assert result["incomplete_point_ids"] == [f"P{i:02d}" for i in range(1, 16)]
+    assert result["incomplete_point_ids"] == []
     assert not result["errors"]
 
 
@@ -46,7 +46,7 @@ def test_missing_point_fails_loud() -> None:
 def test_complete_status_is_rejected_until_every_point_is_complete() -> None:
     module = load_module()
     program = load_template()
-    program["status"] = "complete"
+    program["points"][0].pop("implementation_status", None)
 
     result = module.audit_program(program)
 
@@ -57,6 +57,8 @@ def test_complete_status_is_rejected_until_every_point_is_complete() -> None:
 def test_require_complete_fails_until_each_point_has_complete_status() -> None:
     module = load_module()
     program = load_template()
+    program["status"] = "active"
+    program["points"][0]["implementation_status"] = "partial"
 
     result = module.audit_program(program, require_complete=True)
 
