@@ -118,6 +118,10 @@ class PublicSafetyScanTest(unittest.TestCase):
         self.assertFalse(public_safety_scan.is_text_rel("site/index.html"))
         self.assertFalse(public_safety_scan.is_binary_asset_rel("site/webfonts/fa-solid-900.woff2"))
 
+    def test_git_ref_scan_skips_public_safety_scanner_itself_from_any_repo_root(self) -> None:
+        self.assertFalse(public_safety_scan.is_text_rel("scripts/public_safety_scan.py"))
+        self.assertFalse(public_safety_scan.is_text_rel("factory/scripts/public_safety_scan.py"))
+
     def test_worktree_scan_checks_all_sibling_files_and_skips_tmp(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
