@@ -1976,6 +1976,30 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         dispatch_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "dispatch"]
         self.assertEqual(dispatch_calls, [])
 
+    def test_product_creation_repair_required_is_executable_loop_not_negative_bureaucracy(self) -> None:
+        for next_action in ("repair_required", "blocked_with_owner"):
+            with self.subTest(next_action=next_action):
+                contract = adapter.product_creation_next_route_contract(
+                    next_action,
+                    {
+                        "blockers": [
+                            {
+                                "blocker_id": "any_factory_owned_problem",
+                                "owner": "factory-orchestrator",
+                                "reason": "something failed before final closeout",
+                                "next_repair_action": "repair, audit, rerun, and reconcile until resolved",
+                            }
+                        ]
+                    },
+                )
+
+                self.assertEqual(contract["route_contract_type"], "iterative_problem_resolution_loop")
+                self.assertIn("create executable repair tasks", contract["done_definition"])
+                self.assertIn("rerun the failed/blocked proof or worker path", contract["done_definition"])
+                self.assertIn("stop only for genuine human/external authority", contract["done_definition"])
+                self.assertFalse(contract["output_contract"]["negative_closeout_counts_as_progress"])
+                self.assertIn("repair_loop_result", contract["output_contract"]["receipt_field"])
+
     def test_close_product_creation_run_routes_learnback_with_worker_contract(self) -> None:
         fake = FakeHermes()
         with tempfile.TemporaryDirectory() as tmp:

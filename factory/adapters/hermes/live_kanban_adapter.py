@@ -10464,6 +10464,55 @@ def product_creation_next_route_contract(next_action: str, closeout: dict[str, A
                 "may_create_public_safe_issue": True,
             },
         }
+    if next_action in {"repair_required", "blocked_with_owner"}:
+        return {
+            **common,
+            "route_contract_type": "iterative_problem_resolution_loop",
+            "factory_invariant": (
+                "Any non-human/factory-owned problem must be advanced through repair, audit, rerun, "
+                "and reconciliation until resolved. Negative closeout is not progress."
+            ),
+            "done_definition": [
+                "create executable repair tasks",
+                "route each blocker to the owning worker or specialist with exact evidence and next action",
+                "audit the repair when safety/security/release semantics are involved",
+                "rerun the failed/blocked proof or worker path",
+                "reconcile the rerun result back into the original blocker",
+                "repeat the repair loop while blockers remain factory-owned",
+                "stop only for genuine human/external authority",
+                "gate final/production/release downstream on the reconciliation result",
+                "do not count a negative/no-Receipt-Five closeout as progress when repairable blockers remain",
+            ],
+            "evidence_expected": [
+                "blocker inventory with owners and next_repair_action",
+                "created repair task refs or exact reason no repair can be created",
+                "audit/review refs when the repair touches safety/security/release-sensitive paths",
+                "rerun command/results or exact remaining external blocker",
+                "reconciliation result linked to downstream gates",
+            ],
+            "output_contract": {
+                "receipt_field": "repair_loop_result",
+                "allowed_results": [
+                    "REPAIRED_AND_RECONCILED",
+                    "NEXT_REPAIR_CREATED",
+                    "HUMAN_OR_EXTERNAL_AUTHORITY_REQUIRED",
+                ],
+                "pass_requires": [
+                    "all factory-owned blockers resolved or next repair task created",
+                    "downstream final/release/production gates remain blocked until reconciliation passes",
+                    "evidence refs for repair, audit/rerun, and reconciliation",
+                ],
+                "human_stop_requires": [
+                    "specific unavailable external/human authority",
+                    "single exact question or required artifact",
+                    "why no factory-owned repair remains possible",
+                ],
+                "block_requires": ["owner", "reason", "next_repair_action", "repair_task_ref_or_human_stop_reason"],
+                "negative_closeout_counts_as_progress": False,
+                "production_promotion_allowed": False,
+                "complete_product_claim_allowed": False,
+            },
+        }
     if next_action == "release_readiness_required":
         return {
             **common,
