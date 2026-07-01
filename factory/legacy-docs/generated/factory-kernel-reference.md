@@ -36,8 +36,8 @@ Done without evidence is only a claim. Receipt Five, review, runtime state and p
 | Hermes profile bindings | 40 | `agents/hermes-profile-bindings.public.json` |
 | Operating systems | 17 | `templates/factory-operating-system-registry.json` |
 | Method engines | 8 | `templates/method-engine-registry.json` |
-| JSON schemas | 247 | `schemas/*.json` |
-| Templates | 164 | `templates/*` |
+| JSON schemas | 248 | `schemas/*.json` |
+| Templates | 165 | `templates/*` |
 | Public surfaces | 19 | `docs/public-surface.manifest.json` |
 
 ## Factory Phases
@@ -305,6 +305,7 @@ These are the public JSON schemas the factory exposes. They are not decoration; 
 - `schemas/full-product-worker-graph.schema.json`
 - `schemas/gate-report.schema.json`
 - `schemas/hermes-blocked-first-protocol-receipt.schema.json`
+- `schemas/hermes-environment-preflight.schema.json`
 - `schemas/hermes-evidence-package.schema.json`
 - `schemas/hermes-live-adapter-result.schema.json`
 - `schemas/hermes-production-proof.schema.json`
@@ -530,6 +531,7 @@ Templates are starter records paired with schemas. They are examples of valid sh
 - `templates/full-product-run-manifest.json`
 - `templates/full-product-sot-scope-coverage.json`
 - `templates/hermes-blocked-first-protocol-receipt.json`
+- `templates/hermes-environment-preflight.json`
 - `templates/hermes-production-proof.json`
 - `templates/hermes-reducer-mutation-proof.json`
 - `templates/hermes-typed-block-policy.json`
