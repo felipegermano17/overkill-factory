@@ -1,14 +1,10 @@
-# Ciclo da fábrica
+# Ciclo simples
 
-Esta página estava complicada demais. O ciclo da fábrica não deveria parecer uma tabela técnica com inglês vazando por todos os lados.
+O workflow compilado é a fonte factual para a máquina. Ele tem fases, gates, workers e artefatos.
 
-O workflow compilado é a fonte factual para a máquina. Para o leitor, ele precisa virar uma história simples.
+Mas a pessoa que está tentando entender a fábrica não deveria começar decorando fase.
 
-A ideia é mais simples: um pedido entra cru e só pode virar entrega depois de passar por alguns momentos de proteção.
-
-Não decore fase. Entenda o movimento.
-
-## O ciclo em linguagem humana
+O ciclo humano é este:
 
 ```text
 pedido
@@ -16,156 +12,135 @@ pedido
 -> entendimento
 -> verdade do produto
 -> caminho escolhido
--> trabalho dividido
+-> trabalho pequeno
 -> execução no Hermes
--> prova e revisão
--> decisão humana, se precisar
+-> prova
+-> revisão
+-> decisão humana, se houver
 -> entrega, bloqueio ou aprendizado
 ```
 
-É isso.
+## 1. Pedido
 
-Por baixo existem fases, gates, workers e schemas. Eles importam para a máquina. Para o leitor, o mais importante é entender por que cada momento existe.
+Tudo começa com um sinal.
 
-## 1. Antes de começar: proteger a fonte
+Pode ser uma frase, um bug, um repo, um documento, uma conversa, uma tela, um incidente, um pedido de release.
 
-A fábrica começa antes da execução.
+A fábrica ainda não sabe se isso é produto, correção, operação, risco, pesquisa ou decisão. Então ela não deveria sair executando.
 
-O operador pode mandar uma ideia, um documento, um bug, um link, um repo, uma conversa ou um pedido de release. A fábrica precisa guardar isso sem deformar.
+## 2. Fonte protegida
 
-O erro comum é resumir cedo demais. Um resumo curto vira plano. O plano vira execução. Depois todo mundo descobre que a primeira interpretação estava errada.
+Antes de interpretar, a fábrica preserva a fonte.
 
-Então o começo da fábrica protege a fonte, cria o pedido inicial e diz qual runtime vai carregar o trabalho.
+Isso impede que a primeira versão resumida vire verdade oficial.
 
-Nome interno que aparece no workflow: F0 — Pre-Start / Sealed Source Envelope.
+Se o operador mandou contexto longo, a fábrica não pode amputar o contexto e depois construir sobre o pedaço que sobrou.
 
-## 2. Entender o que entrou
+## 3. Entendimento
 
-Depois a fábrica pergunta: "que tipo de sinal é esse?"
+A fábrica separa fato, inferência, decisão, conflito e lacuna.
 
-É produto novo? Bug? Incidente? Release? Segurança? UI? Integração? Migração? Trabalho em agente? Documentação?
+Aqui ela deve conseguir dizer em português claro: "sabemos isso, achamos aquilo, falta isto, este ponto conflita".
 
-Ela também separa fato, palpite, decisão, conflito e lacuna. Isso é chato de fazer, mas salva a execução. Se essa separação não acontece, o agente começa a construir em cima de uma mistura perigosa.
+Se essa leitura está fraca, o resto ainda não deveria andar.
 
-O operador deveria enxergar algo simples: "entendemos isto, falta aquilo, isso não podemos assumir".
+## 4. Verdade do produto
 
-Aqui vivem as fases de entrada, source ledger, source resolution e descoberta.
+Agora o pedido vira definição.
 
-## 3. Definir a verdade do produto
+Qual é o produto? Para quem? Que problema resolve? O que entra? O que fica fora? Que risco importa? Que prova conta?
 
-Antes de construir produto, a fábrica precisa dizer que produto é esse.
+A fábrica chama isso de Product SOT, mas a ideia é só esta: ninguém deveria construir antes de saber o que está construindo.
 
-Essa é a fase do Product SOT. Em português: a verdade do produto.
+## 5. Caminho escolhido
 
-Ela define escopo, não escopo, usuário, problema, critério de aceite, risco e prova. Se o trabalho é grande, também precisa cobrir o escopo inteiro. A primeira fatia não pode fingir ser o todo.
+A fábrica escolhe rota e método.
 
-O atalho perigoso aqui é executar a partir de uma conversa ou de um paper sem transformar aquilo em verdade revisável.
+Bug, release, incidente, segurança, interface, integração, docs, agente, Solana e produto novo não andam do mesmo jeito.
 
-Se a verdade do produto está fraca, o resto pode ficar bonito e ainda assim errado.
+A rota escolhe a régua. O método escolhe como provar.
 
-## 4. Escolher a rota e o método
+## 6. Capacidade e autoridade
 
-Com a verdade na mesa, a fábrica escolhe o caminho.
+Antes de mandar worker, a fábrica pergunta se tem capacidade e autoridade.
 
-Bug não anda como release. Release não anda como tela. Segurança não anda como docs. Produto com interface não anda como backend puro. Mainnet, fundos e segredo não andam como tarefa comum.
+Tem worker certo? Tem acesso? Tem pack para essa superfície? Toca segredo? Toca produção? Toca mainnet? Toca fundos? Precisa de humano?
 
-Rota responde: "que tipo de trabalho é esse?"
+Se falta capacidade, bloqueia. Se precisa de decisão humana, prepara pacote. Se é problema interno, repara.
 
-Método responde: "como esse trabalho deve ser feito e provado?"
+## 7. Trabalho pequeno
 
-O operador não precisa escolher engine interno. A fábrica escolhe e explica o suficiente para o humano confiar na direção.
+O produto vira unidades menores.
 
-O atalho perigoso é começar arquitetura, PR ou worker packet antes de método claro.
+Cada unidade precisa ter entrada, saída, dono, dependência, evidência, reviewer e regra de pronto.
 
-## 5. Checar capacidade, risco e autoridade
+Sem isso, não é trabalho. É desejo.
 
-Antes de execução material, a fábrica precisa perguntar:
+## 8. Execução no Hermes
 
-Temos o tipo certo de worker?
+Hermes é onde o trabalho vivo aparece.
 
-Temos acesso?
+Cards, dependências, workers, comentários, workspaces, anexos, bloqueios e transições precisam estar no runtime. A fábrica não deveria manter uma verdade paralela escondida.
 
-Tem orçamento?
+Se algo depende de outra coisa, a dependência precisa estar no grafo.
 
-Tem risco de produção, mainnet, segredo, privacidade, carteira, assinatura ou dinheiro?
+## 9. Prova
 
-Tem pacote de capacidade para esse tipo de produto?
+Cada worker devolve evidência.
 
-Se falta capacidade, bloqueia. Se a decisão é humana, prepara pacote. Se a decisão é da fábrica, a fábrica trabalha.
+Para código, pode ser teste, diff, build, scan.
 
-Essa parte existe para impedir falsa competência. É melhor dizer "não tenho cobertura ainda" do que fingir especialista.
+Para interface, tela, jornada, estado, console, viewport.
 
-## 6. Planejar o trabalho de verdade
+Para CLI, transcript, instalação, help, erro.
 
-Agora o produto vira unidades pequenas.
+Para release, prontidão, rollback, dono.
 
-Uma unidade boa tem dono, reviewer, prova, dependência e regra de pronto. Se não tem isso, ainda é desejo, não trabalho.
+Para docs, clareza, navegação, primeiro sucesso.
 
-Aqui entram planos de desenvolvimento, grafo de specs, plano de loop, plano de criação do produto e prontidão de implementação.
+A prova precisa bater com o pedido.
 
-O atalho perigoso é mandar agentes trabalharem em paralelo sem saber quem depende de quem e que prova fecha cada pedaço.
+## 10. Revisão
 
-## 7. Rodar no Hermes
+A revisão olha o artefato real.
 
-Hermes é o chão da fábrica.
+Ela passa, falha, pede reparo ou registra risco. Depois a fábrica precisa consumir esse resultado.
 
-Quando a execução começa, ela precisa aparecer como cards, dependências, workers, workspaces, comentários, bloqueios e transições no Hermes. A fábrica pode reconciliar e reparar, mas não pode esconder um segundo estado por fora.
+Revisão que não muda nada é só comentário.
 
-Se tem trabalho pronto, Hermes despacha. Se tem dependência, espera. Se o board fica silencioso sem motivo, no-idle repara ou falha de forma visível.
+## 11. Decisão humana
 
-O atalho perigoso é deixar um agente operar numa lista privada e depois tentar sincronizar a verdade no fim.
+Algumas decisões pertencem ao operador.
 
-## 8. Provar o que foi feito
+Produção, mainnet, fundos, segredos, orçamento, risco residual, release, waiver.
 
-Worker que executa precisa devolver resultado com evidência.
+Nesses casos, a fábrica prepara um pacote de decisão. O humano aprova ou bloqueia sabendo exatamente o que está autorizando.
 
-Dependendo do trabalho, evidência pode ser teste, diff, screenshot, transcript, log, scan, auditoria, simulação, pacote de release, proof remoto ou documento revisado.
+## 12. Fechamento
 
-Produto visível precisa de prova visível. CLI precisa de transcript. Documentação precisa provar que leva o leitor ao primeiro sucesso. Segurança precisa de evidência de risco. Release precisa de rollback e prontidão.
+No fim, a fábrica não escolhe uma palavra bonita. Ela escolhe um estado honesto.
 
-O atalho perigoso é tratar existência de arquivo ou pacote de worker como prova.
+Entregue, se há prova suficiente.
 
-## 9. Revisar e reconciliar
+Bloqueado, se falta algo material.
 
-Depois da execução vem a parte que muita gente pula: consumir a revisão.
+Aprendizado, se a execução mostrou que a fábrica precisa mudar.
 
-Revisão boa não é comentário solto. Ela passa ou falha algo específico. Se passa, destrava. Se falha, cria reparo. Se sobra risco, registra dono e decisão.
+Esse é o ciclo. O resto são mecanismos para garantir que ele não vire teatro.
 
-Depois vem o Receipt Five, que amarra pedido, mudança, evidência, revisão e próximo estado.
+## Nomes internos que você pode encontrar
 
-Sem isso, "feito" ainda é frágil.
+Se você abrir o workflow compilado, vai ver nomes como `F0 — Pre-Start / Sealed Source Envelope`. Não precisa gostar do nome nem ler isso como copy de produto. Esse nome existe para a máquina e para os testes: ele marca o momento em que a fábrica sela a fonte antes de qualquer interpretação.
 
-## 10. Chamar o humano quando a decisão é humana
+A regra de leitura é esta: quando aparecer um nome interno em inglês, traduza mentalmente para a proteção que ele oferece. `Sealed Source Envelope` quer dizer "não destrua a fonte original". `Product SOT` quer dizer "defina a verdade do produto". `Receipt Five` quer dizer "não chame de pronto sem recibo".
 
-Algumas coisas não podem ser decididas por worker.
+## Como ver o workflow interno
 
-Produção. Mainnet. Fundos. Segredos. Orçamento. Risco residual. Release. Waiver.
-
-Nesses casos, a fábrica precisa entregar um pacote de decisão. A pessoa recebe o material, a escolha, o risco, o que aprovar autoriza e o que não autoriza.
-
-O atalho perigoso é pedir "posso seguir?" sem entregar o artefato sob revisão.
-
-## 11. Entregar, bloquear ou aprender
-
-No final, só existem três saídas honestas.
-
-Entrega: a prova existe, a revisão foi consumida, os gates passaram e o próximo estado está claro.
-
-Bloqueio: falta prova, acesso, autoridade, capacidade ou segurança. O bloqueio precisa ter dono e próximo passo.
-
-Aprendizado: a execução mostrou que a própria fábrica precisa melhorar. Isso pode virar teste, doc, skill, worker, gate, issue ou mudança de processo.
-
-A fábrica não deve chamar tudo de sucesso. Às vezes a melhor resposta é um bloqueio bem explicado.
-
-## Onde entram as fases internas
-
-O workflow compilado ainda tem fases internas. Elas existem para a máquina e para os maintainers.
-
-A versão atual expõe 26 fases em `docs/factory-workflow.catalog.json`. Você pode inspecionar com:
+Para inspecionar a versão compilada usada pelos testes:
 
 ```bash
 cd factory
 python3 scripts/factoryctl.py compile-workflow --out .tmp/factory-workflow-compiled-plan.json
 ```
 
-Mas para ler o produto, use o ciclo simples desta página. As fases internas são o mecanismo. O movimento humano é: entender, organizar, executar, provar e fechar.
+Esse comando ajuda maintainers. Para entender o produto, o ciclo acima é o mapa certo.

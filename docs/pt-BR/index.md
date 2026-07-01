@@ -1,60 +1,44 @@
 # Overkill Factory
 
-A Overkill Factory é uma fábrica para trabalho com agentes. Ela existe para uma situação bem concreta: você pede algo importante, o agente começa a trabalhar, tudo parece andar, mas ninguém consegue provar com segurança que o produto certo ficou pronto.
+A Overkill Factory é uma resposta para um problema que aparece rápido quando começamos a usar agentes para trabalho sério.
 
-A fábrica tenta resolver isso sem transformar o operador em fiscal. O pedido entra. A fonte é preservada. A fábrica entende o produto, escolhe o caminho, divide o trabalho, roda pelo Hermes, cobra prova, revisa e só então entrega, bloqueia ou aprende.
+Você pede uma coisa importante. O agente entende uma parte, completa outra parte com palpite, faz bastante barulho, talvez abra arquivos, talvez passe testes, talvez diga que terminou. Só que, no fim, você ainda precisa perguntar: "isso entregou mesmo o produto que eu pedi?".
 
-O objetivo é tornar a velocidade confiável. Não é fazer o agente correr mais; é fazer a corrida deixar rastro, prova e responsabilidade.
+A fábrica existe para tirar essa pergunta do improviso.
 
-Isso é produção controlada.
+Ela pega um pedido e transforma em produção controlada: fonte preservada, verdade do produto, caminho escolhido, trabalho dividido, execução no Hermes, prova, revisão, decisão humana quando precisa e fechamento honesto.
 
-## Leia como uma conversa
+O objetivo é tornar a velocidade confiável. Não é fazer agente correr mais. É fazer cada avanço deixar rastro suficiente para alguém confiar, revisar ou bloquear.
 
-Se você só quer entender o produto, leia assim:
+## O que ler primeiro
 
-1. [Manual](manual.md): o que é a fábrica e por que ela existe.
-2. [Como a fábrica trabalha](operating-model.md): o que acontece com um pedido por dentro.
-3. [Confiança e evidência](trust-and-evidence.md): como saber que "pronto" não é teatro.
-4. [Ciclo da fábrica](lifecycle.md): o caminho simples da ideia até entrega, bloqueio ou aprendizado.
+Se você está chegando agora, não comece pelo modelo técnico. Comece pela pergunta que você tem na cabeça.
 
-Depois disso, se quiser rodar ou manter o projeto:
+- [Manual](manual.md): "o que é essa fábrica e por que ela existe?"
+- [Como a fábrica trabalha](operating-model.md): "o que acontece depois que eu mando um pedido?"
+- [Confiança e prova](trust-and-evidence.md): "como eu sei que isso não é só teatro de agente?"
+- [Ciclo simples](lifecycle.md): "qual é o caminho do começo ao fim?"
 
-- [Uso](usage.md): comandos locais e fronteira do que eles provam.
-- [Modelo técnico](technical-model.md): como Hermes, workers, bindings, schemas e validadores se encaixam.
-- [Referência](reference.md): nomes, caminhos e comandos para consulta rápida.
+Depois, se você for operar ou manter o repo:
+
+- [Uso](usage.md): comandos para provar o checkout local.
+- [Modelo técnico](technical-model.md): como Hermes, workers, schemas, adapters e validadores se encaixam.
+- [Referência](reference.md): nomes e caminhos para consulta rápida.
 
 ## A versão curta
 
-A fábrica não deixa um agente sair fazendo só porque a tarefa parece clara.
+A fábrica não confia em frase bonita. Ela confia em fonte, escopo, método, trabalho pequeno e prova.
 
-Ela precisa saber:
+Um pedido não deveria virar código antes de virar entendimento. Um release não deveria sair porque alguém escreveu "pass". Um gate humano não deveria ser uma pergunta vaga no chat. Um worker não deveria julgar o próprio trabalho. E um bloqueio interno da fábrica não deveria cair no colo do operador como se fosse decisão humana.
 
-- qual era a fonte;
-- que produto está sendo construído;
-- que tipo de trabalho é;
-- quem pode executar;
-- quem pode aprovar;
-- que prova precisa voltar;
-- o que acontece se a prova não vier.
+Se a fábrica funciona, o operador não fica caçando evidência. Ele recebe estado claro, decisão clara e recibo claro.
 
-Sem isso, velocidade vira chute.
+## O que esta documentação prova
 
-## A fronteira honesta
+O kernel público atual está na versão `3.0.2`. Ele tem workflow compilado, rotas, métodos, schemas, workers, exemplos, validadores e testes.
 
-O kernel público atual está na versão `3.0.2`. Ele expõe 26 fases compiladas, 14 classes de rota, 8 motores de método, 17 áreas de sistema operacional da fábrica, 40 workers públicos, 244 schemas JSON, 156 templates JSON e 97 arquivos de teste.
+Isso prova uma coisa específica: o repositório público tem um contrato verificável.
 
-Esses números não são promessa de que qualquer produto privado foi entregue. Eles provam que existe um kernel público testável. Entrega real ainda precisa de Hermes vivo, worker results atuais, evidência específica do produto, revisão consumida e decisão humana quando o risco pedir.
+Não prova que uma execução privada terminou. Não prova que um produto vivo foi entregue. Não prova aprovação humana em produção. Para isso, precisa de estado real no Hermes, resultados atuais de workers, evidência do produto, revisão consumida e autorização explícita quando houver risco.
 
-## Primeira prova local
-
-```bash
-cd factory
-python3 scripts/factoryctl.py doctor
-python3 scripts/factoryctl.py run minimal
-```
-
-Se isso passa, o checkout local está coerente. Ainda não significa que uma execução real terminou.
-
-## O que ficou fora da navegação principal
-
-A documentação antiga continua em `factory/legacy-docs/`. Ela tem histórico e detalhe técnico útil, mas não é mais a explicação pública principal. A ideia desta seção em português é ser legível primeiro. O detalhe vem depois.
+Essa fronteira é parte do produto. A fábrica só vale se souber dizer o que sabe e o que ainda não sabe.
