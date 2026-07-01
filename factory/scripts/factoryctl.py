@@ -2702,6 +2702,89 @@ def is_human_gate_recovery(*, blocker_type: str, repair_owner_worker: str) -> bo
     return blocker_type == "human_gate" or repair_owner_worker == "human-gate-clerk"
 
 
+AUTOMATIC_REPAIR_LOOP_STAGES = ["repair", "audit", "rerun", "reconcile"]
+
+
+def automatic_repair_loop_contract(
+    *,
+    route_id: str,
+    repair_owner_worker: str,
+    output_field: str,
+    human_gate_required: bool,
+) -> dict[str, Any]:
+    """Materialize the repair→audit→rerun→reconcile loop for factory-owned blockers.
+
+    Human gates deliberately do not get a factory-owned automatic loop: they stop
+    at the human gate record. Every non-human blocked worker result or generated
+    recovery route must name the same deterministic Hermes/Kanban loop so no-idle,
+    reducers, transition hooks and closeout can all reason over one contract.
+    """
+    if human_gate_required:
+        return {
+            "required": False,
+            "reason": "human_gate_record_required",
+            "runtime_authority": "hermes_kanban",
+            "local_state_authority": False,
+        }
+    worker_slug = sanitize_slug(repair_owner_worker, fallback="worker")
+    field_slug = sanitize_slug(output_field, fallback="worker-result")
+    return {
+        "required": True,
+        "factory_owned_repair_allowed": True,
+        "runtime_authority": "hermes_kanban",
+        "local_state_authority": False,
+        "route_ref": route_id,
+        "loop_id": f"automatic-repair:{sanitize_slug(route_id, fallback='recovery-route')}",
+        "stage_order": list(AUTOMATIC_REPAIR_LOOP_STAGES),
+        "stages": [
+            {
+                "stage": "repair",
+                "owner_worker": repair_owner_worker,
+                "expected_output_ref": f"worker-result:{output_field}:fresh-repair",
+                "exit_condition": "repair worker produces a fresh replacement artifact/result in Hermes Kanban",
+            },
+            {
+                "stage": "audit",
+                "owner_worker": "independent-reviewer",
+                "expected_output_ref": f"worker-result:{output_field}:fresh-review-pass",
+                "exit_condition": "independent review records PASS against the replacement artifact/result",
+            },
+            {
+                "stage": "rerun",
+                "owner_worker": repair_owner_worker,
+                "expected_output_ref": f"worker-result:{output_field}:fresh-pass-or-waiver",
+                "exit_condition": "original worker route is rerun or explicitly waived under Hermes task history",
+            },
+            {
+                "stage": "reconcile",
+                "owner_worker": "evidence-reconciler",
+                "command_or_route": "reconcile-ready-work-units",
+                "expected_output_ref": f"reconcile-ready-work-units:{field_slug}",
+                "exit_condition": "Hermes/Kanban readback confirms stale blockers remain blocked and eligible downstream work unblocks",
+            },
+        ],
+        "native_primitives": [
+            "kanban_task",
+            "parent_link",
+            "blocked_state",
+            "comment_metadata",
+            "run_history",
+            "reclaim_reassign",
+        ],
+        "retry_attempt_source": "hermes_task_history",
+        "post_repair_reconciliation_required": True,
+        "fresh_review_required": True,
+        "no_idle_visible_marker": f"factory_recovery_attempt:{worker_slug}:{field_slug}",
+        "stop_classes": [
+            "human_gate",
+            "secret_or_access_required",
+            "external_mutation_required",
+            "ambiguous_product_decision",
+            "repeated_failed_recovery",
+        ],
+    }
+
+
 def recovery_recommendation_for_worker(
     *,
     worker_id: str,
@@ -2737,6 +2820,12 @@ def recovery_recommendation_for_worker(
         "unblock_authority_ref": "Hermes blocked event plus fresh review PASS" if not human_gate_required else "human_gate_record",
         "retry_policy": recovery_retry_policy(attempt_number=attempt_number),
         "hermes_runtime_boundary": recovery_runtime_boundary(),
+        "automatic_repair_loop": automatic_repair_loop_contract(
+            route_id=route_id,
+            repair_owner_worker=worker_id,
+            output_field=output_field,
+            human_gate_required=human_gate_required,
+        ),
     }
 
 
@@ -16959,6 +17048,12 @@ def recovery_route_from_action(card: dict[str, Any], action: dict[str, Any], ind
             "comments_metadata_policy": "Store blocker type, invalidation refs, retry attempt and unblock authority in Hermes comments/metadata.",
             "local_state_authority": False,
         },
+        "automatic_repair_loop": automatic_repair_loop_contract(
+            route_id=route_id,
+            repair_owner_worker=worker_id,
+            output_field=field,
+            human_gate_required=human_gate_required,
+        ),
     }
 
 
@@ -17061,6 +17156,12 @@ def recovery_route_from_recommendation(
         ),
         "audit_trail_refs": audit_refs,
         "hermes_materialization": recovery_materialization_contract(route_id),
+        "automatic_repair_loop": automatic_repair_loop_contract(
+            route_id=route_id,
+            repair_owner_worker=repair_owner_worker,
+            output_field=field,
+            human_gate_required=human_gate_required,
+        ),
     }
 
 
@@ -17690,6 +17791,37 @@ def _record_specific_errors(data: dict[str, Any], evidence_kind: str) -> list[st
     return errors
 
 
+def automatic_repair_loop_errors(loop: Any, *, at: str) -> list[str]:
+    if not isinstance(loop, dict):
+        return [f"{at}.automatic_repair_loop is required for factory-owned blocked recovery"]
+    errors: list[str] = []
+    if loop.get("required") is not True:
+        errors.append(f"{at}.automatic_repair_loop.required must be true")
+    if loop.get("runtime_authority") != "hermes_kanban":
+        errors.append(f"{at}.automatic_repair_loop.runtime_authority must be hermes_kanban")
+    if loop.get("local_state_authority") is not False:
+        errors.append(f"{at}.automatic_repair_loop.local_state_authority must be false")
+    if loop.get("post_repair_reconciliation_required") is not True:
+        errors.append(f"{at}.automatic_repair_loop.post_repair_reconciliation_required must be true")
+    stage_order = string_list(loop.get("stage_order"))
+    if stage_order != AUTOMATIC_REPAIR_LOOP_STAGES:
+        errors.append(f"{at}.automatic_repair_loop.stage_order must be repair,audit,rerun,reconcile")
+    stages = loop.get("stages") if isinstance(loop.get("stages"), list) else []
+    stage_names = [str(stage.get("stage") or "") for stage in stages if isinstance(stage, dict)]
+    if stage_names != AUTOMATIC_REPAIR_LOOP_STAGES:
+        errors.append(f"{at}.automatic_repair_loop.stages must materialize repair,audit,rerun,reconcile")
+    reconcile = next((stage for stage in stages if isinstance(stage, dict) and stage.get("stage") == "reconcile"), {})
+    if not isinstance(reconcile, dict) or reconcile.get("command_or_route") != "reconcile-ready-work-units":
+        errors.append(f"{at}.automatic_repair_loop.reconcile must route through reconcile-ready-work-units")
+    audit = next((stage for stage in stages if isinstance(stage, dict) and stage.get("stage") == "audit"), {})
+    if not isinstance(audit, dict) or str(audit.get("owner_worker") or "") not in WORKERS:
+        errors.append(f"{at}.automatic_repair_loop.audit owner_worker must be a registered worker")
+    stop_classes = set(string_list(loop.get("stop_classes")))
+    if "human_gate" not in stop_classes or "repeated_failed_recovery" not in stop_classes:
+        errors.append(f"{at}.automatic_repair_loop.stop_classes must include human_gate and repeated_failed_recovery")
+    return errors
+
+
 def validate_worker_result_record(
     data: dict[str, Any],
     expected_field: str | None = None,
@@ -17751,6 +17883,16 @@ def validate_worker_result_record(
                         errors.append("human_gate recovery must not route through fresh review")
                     if recovery.get("unblock_authority_ref") != "human_gate_record":
                         errors.append("human_gate recovery unblock_authority_ref must be human_gate_record")
+                    human_loop = recovery.get("automatic_repair_loop") if isinstance(recovery.get("automatic_repair_loop"), dict) else {}
+                    if human_loop.get("required") is True:
+                        errors.append("human_gate recovery must not materialize an automatic factory-owned repair loop")
+                elif recovery.get("factory_owned_repair_allowed") is True:
+                    errors.extend(
+                        automatic_repair_loop_errors(
+                            recovery.get("automatic_repair_loop"),
+                            at="recovery_recommendation",
+                        )
+                    )
                 retry_policy = recovery.get("retry_policy") if isinstance(recovery.get("retry_policy"), dict) else None
                 if not isinstance(retry_policy, dict):
                     errors.append("recovery_recommendation.retry_policy is required")
@@ -19628,6 +19770,12 @@ def summarize_recovery_route_for_help(route: dict[str, Any]) -> dict[str, Any]:
     human_gate_required = route.get("human_gate_required") is True
     factory_owned = route.get("factory_owned_repair_allowed") is True and not human_gate_required
     retry_policy = route.get("retry_policy") if isinstance(route.get("retry_policy"), dict) else {}
+    automatic_loop = route.get("automatic_repair_loop") if isinstance(route.get("automatic_repair_loop"), dict) else automatic_repair_loop_contract(
+        route_id=route_id or "recovery:unknown",
+        repair_owner_worker=repair_owner or "human-gate-clerk",
+        output_field=WORKERS.get(repair_owner, WORKERS["factory-orchestrator"]).output_field if repair_owner in WORKERS else "worker_result",
+        human_gate_required=human_gate_required,
+    )
     summary = {
         "recovery_route_id": route_id,
         "route_digest": recovery_route_digest(route) if route_id else "",
@@ -19637,6 +19785,7 @@ def summarize_recovery_route_for_help(route: dict[str, Any]) -> dict[str, Any]:
         "repair_owner_worker": repair_owner,
         "unblock_authority_ref": str(route.get("unblock_authority_ref") or ""),
         "downstream_freeze_scope": _list_items(route.get("downstream_freeze_scope")),
+        "automatic_repair_loop": automatic_loop,
         "retry_state": {
             "attempt_number": int(retry_policy.get("attempt_number") or 1),
             "max_attempts": int(retry_policy.get("max_attempts") or 1),
