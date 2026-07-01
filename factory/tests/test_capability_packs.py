@@ -93,6 +93,7 @@ class CapabilityPacksTest(unittest.TestCase):
             "cli-tui-product-pack",
             "operator-onboarding-pack",
             "public-docs-knowledge-pack",
+            "operator-artifact-media-pack",
             "mobile-app-pack",
             "desktop-app-pack",
             "game-product-pack",
@@ -113,6 +114,7 @@ class CapabilityPacksTest(unittest.TestCase):
             "cli-tui-product-pack",
             "operator-onboarding-pack",
             "public-docs-knowledge-pack",
+            "operator-artifact-media-pack",
             "mobile-app-pack",
             "desktop-app-pack",
             "game-product-pack",
@@ -130,7 +132,7 @@ class CapabilityPacksTest(unittest.TestCase):
     def test_new_operator_packs_have_executable_contracts(self) -> None:
         packs = json.loads((ROOT / "agents" / "capability-packs.public.json").read_text(encoding="utf-8"))["packs"]
 
-        for pack_id in ["operator-onboarding-pack", "public-docs-knowledge-pack"]:
+        for pack_id in ["operator-onboarding-pack", "public-docs-knowledge-pack", "operator-artifact-media-pack"]:
             with self.subTest(pack_id=pack_id):
                 pack = packs[pack_id]
                 self.assertTrue(pack["plain_purpose"])

@@ -5,6 +5,17 @@
   "created_at": "2026-06-26T00:00:00+00:00",
   "capability_gap": "unknown-specialist-surface",
   "contract_ref": "templates/capability-acquisition-contract.json",
+  "acquisition_plan": {
+    "ordered_steps": [
+      "match_existing_core_ready_pack",
+      "match_existing_pack_template",
+      "search_reference_repositories_for_best_agent_or_skill",
+      "create_or_install_candidate_capability",
+      "run_smoke_and_eval",
+      "activate_pack_or_block_with_evidence"
+    ],
+    "factory_owned_until_external_authority": true
+  },
   "search_completed": true,
   "candidates": [
     {
@@ -23,6 +34,22 @@
   "activation_decision": "activate",
   "smoke_result": "PASS",
   "eval_result": "PASS",
+  "promotion_result": {
+    "promotion_decision": "promote",
+    "promoted_candidate_id": "existing-provider-match",
+    "permission_class": "bounded-factory-capability",
+    "profile_binding_ref": "agents/skill-provider-registry.public.json#existing-provider-match",
+    "reviewer_ref": "agents/worker-registry.public.json#independent-reviewer",
+    "security_handoff_ref": "agents/worker-registry.public.json#agentic-ai-security-specialist",
+    "next_action": "Promote the selected candidate only with smoke, eval, reviewer and binding evidence attached to the worker packet.",
+    "external_authority_required": false
+  },
+  "operator_block": {
+    "allowed": false,
+    "reason_class": "none",
+    "factory_owned_lane_completed": true,
+    "smallest_safe_next_action": "Use the promoted bounded capability candidate; no operator block is allowed for this acquisition run."
+  },
   "block_allowed": false,
   "evidence_refs": [
     "agents/skill-provider-registry.public.json",
