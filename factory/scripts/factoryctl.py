@@ -16,6 +16,7 @@ import importlib.util
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import sysconfig
@@ -3054,6 +3055,359 @@ def build_doctor_report(hermes_home: Path | None = None) -> dict[str, Any]:
         "factory_version": read_project_version(),
         "checks": checks,
         "next_step": "Run factoryctl run minimal, then factoryctl init for your project workspace.",
+    }
+
+
+HERMES_ENVIRONMENT_PREFLIGHT_STATUSES = {
+    "READY",
+    "READY_WITH_DEFERRED",
+    "BLOCKED_WITH_EXACT_HUMAN_INPUT",
+}
+HERMES_FACTORY_ACQUIRABLE_CAPABILITIES = {
+    "browser": {
+        "surface": "browser",
+        "summary": "Browser evidence tooling is missing or unproven.",
+        "factory_acquirable": True,
+    },
+    "computer_use": {
+        "surface": "computer-use",
+        "summary": "Computer-use desktop control is missing or unproven.",
+        "factory_acquirable": True,
+    },
+    "cron": {
+        "surface": "cron",
+        "summary": "Scheduled autonomous run support is missing or unproven.",
+        "factory_acquirable": True,
+    },
+    "gateway": {
+        "surface": "gateway",
+        "summary": "Gateway/message delivery bridge readiness is missing or unproven.",
+        "factory_acquirable": True,
+    },
+    "pdf": {
+        "surface": "operator-artifact",
+        "summary": "PDF generation/delivery readiness is missing or unproven.",
+        "factory_acquirable": True,
+    },
+    "video": {
+        "surface": "operator-artifact",
+        "summary": "Video generation/delivery readiness is missing or unproven.",
+        "factory_acquirable": True,
+    },
+    "media": {
+        "surface": "operator-artifact",
+        "summary": "Media delivery readiness is missing or unproven.",
+        "factory_acquirable": True,
+    },
+}
+
+
+def _public_preflight_ref(path: Path) -> str:
+    try:
+        return str(path.resolve().relative_to(ROOT.resolve()))
+    except Exception:
+        return path.name
+
+
+def _load_public_json_object(path: Path) -> dict[str, Any]:
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        raise ValueError(f"expected JSON object at {_public_preflight_ref(path)}")
+    return data
+
+
+def _preflight_check(check_id: str, status: str, summary: str, *, required: bool = True, detail: dict[str, Any] | None = None) -> dict[str, Any]:
+    payload: dict[str, Any] = {"id": check_id, "status": status, "required": required, "summary": summary}
+    if detail is not None:
+        payload["detail"] = detail
+    return payload
+
+
+def _provider_ids(registry: dict[str, Any]) -> set[str]:
+    return {
+        str(provider.get("provider_id"))
+        for provider in registry.get("providers", [])
+        if isinstance(provider, dict) and provider.get("provider_id")
+    }
+
+
+def _active_provider_ids(registry: dict[str, Any]) -> set[str]:
+    return {
+        str(provider.get("provider_id"))
+        for provider in registry.get("providers", [])
+        if isinstance(provider, dict) and provider.get("provider_id") and provider.get("status") in {"active", "available", "core_ready"}
+    }
+
+
+def _capability_pack_surfaces(capability_packs: dict[str, Any]) -> set[str]:
+    surfaces: set[str] = set()
+    packs = capability_packs.get("packs", {})
+    if isinstance(packs, dict):
+        for pack in packs.values():
+            if not isinstance(pack, dict):
+                continue
+            for surface in pack.get("covers_surfaces", []) or []:
+                surfaces.add(str(surface))
+    return surfaces
+
+
+def _capability_available(
+    capability_id: str,
+    *,
+    provider_registry: dict[str, Any],
+    capability_packs: dict[str, Any],
+    command_resolver: Callable[[str], str | None],
+    capability_overrides: dict[str, bool] | None,
+) -> bool:
+    if capability_overrides is not None and capability_id in capability_overrides:
+        return bool(capability_overrides[capability_id])
+    providers = _active_provider_ids(provider_registry)
+    surfaces = _capability_pack_surfaces(capability_packs)
+    if capability_id == "browser":
+        return "browser" in providers or any(command_resolver(cmd) for cmd in ["chromium", "chromium-browser", "google-chrome", "chrome"])
+    if capability_id == "computer_use":
+        return "computer-use" in providers or "computer-use" in surfaces
+    if capability_id in {"pdf", "video", "media"}:
+        return capability_id in providers or capability_id in surfaces
+    if capability_id == "cron":
+        return "cron" in providers or bool(command_resolver("crontab"))
+    if capability_id == "gateway":
+        return "gateway" in providers or "operator-delivery" in surfaces
+    return capability_id in providers or capability_id in surfaces
+
+
+def _capability_acquisition_route(capability_id: str, summary: str) -> dict[str, Any]:
+    info = HERMES_FACTORY_ACQUIRABLE_CAPABILITIES.get(capability_id, {})
+    return {
+        "capability_id": capability_id,
+        "surface": str(info.get("surface") or capability_id),
+        "reason": summary,
+        "next_action": "capability-acquisition-run",
+        "command": f"factoryctl capability-acquisition-run --capability-gap {capability_id} --surface {info.get('surface') or capability_id}",
+    }
+
+
+def build_hermes_environment_preflight_report(
+    *,
+    hermes_home: Path | None = None,
+    profile_bindings_path: Path = PROFILE_BINDINGS_PATH,
+    profile_readiness_path: Path = PROFILE_READINESS_PATH,
+    skill_provider_registry_path: Path = SKILL_PROVIDER_REGISTRY_PATH,
+    capability_packs_path: Path = CAPABILITY_PACKS_PATH,
+    require: list[str] | None = None,
+    credential_refs: list[str] | None = None,
+    access_refs: list[str] | None = None,
+    capability_overrides: dict[str, bool] | None = None,
+    command_resolver: Callable[[str], str | None] | None = None,
+    created_at: str | None = None,
+) -> dict[str, Any]:
+    """Build a public-safe Hermes/factory environment preflight report.
+
+    The report proves the factory can distinguish READY,
+    READY_WITH_DEFERRED, and BLOCKED_WITH_EXACT_HUMAN_INPUT without leaking
+    local paths, credentials, tokens, or private runtime payloads. Missing
+    factory-acquirable capabilities become acquisition routes; missing human
+    authority inputs become exact human-input requests.
+    """
+    required = {str(item).strip().replace("-", "_") for item in (require or []) if str(item).strip()}
+    credential_refs = [ref for ref in (credential_refs or []) if str(ref).strip()]
+    access_refs = [ref for ref in (access_refs or []) if str(ref).strip()]
+    resolver = command_resolver or shutil.which
+    checks: list[dict[str, Any]] = []
+    acquisition_routes: list[dict[str, Any]] = []
+    human_requests: list[dict[str, str]] = []
+
+    try:
+        readiness = _load_public_json_object(profile_readiness_path)
+        worker_readiness = readiness.get("worker_readiness", {})
+        readiness_ok = isinstance(worker_readiness, dict) and bool(worker_readiness)
+        checks.append(
+            _preflight_check(
+                "profiles",
+                "PASS" if readiness_ok else "FAIL",
+                "Worker profile readiness ledger is present." if readiness_ok else "Worker profile readiness ledger is missing or empty.",
+                detail={"profile_count": len(worker_readiness) if isinstance(worker_readiness, dict) else 0, "ref": _public_preflight_ref(profile_readiness_path)},
+            )
+        )
+    except Exception as exc:
+        checks.append(_preflight_check("profiles", "FAIL", "Worker profile readiness ledger cannot be read.", detail={"error": str(exc)}))
+        worker_readiness = {}
+
+    try:
+        bindings_payload = _load_public_json_object(profile_bindings_path)
+        bindings = bindings_payload.get("bindings", {})
+        binding_errors: list[str] = []
+        if not isinstance(bindings, dict) or not bindings:
+            binding_errors.append("bindings object is empty")
+            bindings = {}
+        for worker_id, binding in bindings.items():
+            if not isinstance(binding, dict):
+                binding_errors.append(f"{worker_id}: binding is not an object")
+                continue
+            for field in ["worker_id", "profile_id", "hermes_profile_name", "skill_refs", "result_schema", "receipt_field"]:
+                if not binding.get(field):
+                    binding_errors.append(f"{worker_id}: missing {field}")
+        checks.append(
+            _preflight_check(
+                "worker_bindings",
+                "PASS" if not binding_errors else "FAIL",
+                "Worker bindings resolve profile, skill, result schema and receipt fields." if not binding_errors else "Worker bindings are incomplete.",
+                detail={"binding_count": len(bindings), "errors": binding_errors[:20], "ref": _public_preflight_ref(profile_bindings_path)},
+            )
+        )
+    except Exception as exc:
+        bindings = {}
+        checks.append(_preflight_check("worker_bindings", "FAIL", "Worker bindings cannot be read.", detail={"error": str(exc)}))
+
+    try:
+        provider_registry = _load_public_json_object(skill_provider_registry_path)
+        providers = _provider_ids(provider_registry)
+        skill_refs = sorted({str(ref) for binding in bindings.values() if isinstance(binding, dict) for ref in (binding.get("skill_refs") or [])})
+        unresolved = sorted(set(skill_refs) - providers)
+        checks.append(
+            _preflight_check(
+                "skill_refs",
+                "PASS" if not unresolved else "DEFERRED",
+                "All profile skill refs resolve through the provider registry." if not unresolved else "Some skill refs need capability acquisition/provider registration.",
+                detail={"skill_ref_count": len(skill_refs), "unresolved": unresolved, "registry_ref": _public_preflight_ref(skill_provider_registry_path)},
+            )
+        )
+        for ref in unresolved:
+            acquisition_routes.append(_capability_acquisition_route(f"skill:{ref}", "Profile skill ref has no provider registry entry."))
+    except Exception as exc:
+        provider_registry = {"providers": []}
+        checks.append(_preflight_check("skill_refs", "FAIL", "Skill provider registry cannot be read.", detail={"error": str(exc)}))
+
+    try:
+        capability_packs = _load_public_json_object(capability_packs_path)
+    except Exception as exc:
+        capability_packs = {"packs": {}}
+        checks.append(_preflight_check("capability_packs", "FAIL", "Capability pack registry cannot be read.", detail={"error": str(exc)}))
+
+    builtin_tool_ok = bool(sys.executable) and bool(resolver("git"))
+    checks.append(
+        _preflight_check(
+            "terminal_file_web",
+            "PASS" if builtin_tool_ok else "DEFERRED",
+            "Terminal/file/Python and git-backed web preflight primitives are available." if builtin_tool_ok else "Terminal/file/web primitives need environment acquisition.",
+            detail={"python_runtime": bool(sys.executable), "git_command": bool(resolver("git"))},
+        )
+    )
+    if not builtin_tool_ok:
+        acquisition_routes.append(_capability_acquisition_route("terminal_file_web", "Terminal/file/web primitives are missing."))
+
+    declared_toolsets = sorted({surface for surface in _capability_pack_surfaces(capability_packs) if surface in {"terminal", "browser", "frontend", "backend", "api", "docs", "qa", "test", "agent", "profile", "adapter", "runtime", "environment"}})
+    checks.append(
+        _preflight_check(
+            "toolsets",
+            "PASS" if declared_toolsets else "DEFERRED",
+            "Factory toolset surfaces are declared by capability packs." if declared_toolsets else "Factory toolset surfaces are not declared.",
+            detail={"declared_toolsets": declared_toolsets[:30]},
+        )
+    )
+    if not declared_toolsets:
+        acquisition_routes.append(_capability_acquisition_route("toolsets", "No declared toolset surfaces found in capability packs."))
+
+    active_providers = _active_provider_ids(provider_registry)
+    domain_provider_ids = sorted(provider for provider in active_providers if provider in {"solana-ai-kit", "solanabr-auditor", "appsec-owasp", "agentic-ai-security", "cloud-infra-security", "key-management"})
+    checks.append(
+        _preflight_check(
+            "domain_providers",
+            "PASS" if domain_provider_ids else "DEFERRED",
+            "Domain providers are registered for specialized routing." if domain_provider_ids else "Specialized domain providers are missing.",
+            detail={"providers": domain_provider_ids},
+        )
+    )
+    if not domain_provider_ids:
+        acquisition_routes.append(_capability_acquisition_route("domain_providers", "No specialized domain providers are active."))
+
+    for capability_id, info in HERMES_FACTORY_ACQUIRABLE_CAPABILITIES.items():
+        is_required = capability_id in required
+        available = _capability_available(
+            capability_id,
+            provider_registry=provider_registry,
+            capability_packs=capability_packs,
+            command_resolver=resolver,
+            capability_overrides=capability_overrides,
+        )
+        status = "PASS" if available or not is_required else "DEFERRED"
+        summary = f"{capability_id.replace('_', ' ')} is available or not required for this preflight." if status == "PASS" else str(info["summary"])
+        checks.append(
+            _preflight_check(
+                capability_id,
+                status,
+                summary,
+                required=is_required,
+                detail={"factory_acquirable": bool(info.get("factory_acquirable")), "available": available},
+            )
+        )
+        if is_required and not available:
+            acquisition_routes.append(_capability_acquisition_route(capability_id, str(info["summary"])))
+
+    hermes_configured = hermes_home is not None and hermes_home.exists()
+    checks.append(
+        _preflight_check(
+            "hermes_home",
+            "PASS" if hermes_configured or "hermes_home" not in required else "DEFERRED",
+            "Hermes home is declared for live runtime checks." if hermes_configured else "Hermes home was not required for this public-safe preflight run.",
+            required="hermes_home" in required,
+            detail={"declared": hermes_home is not None, "exists": hermes_configured},
+        )
+    )
+    if "hermes_home" in required and not hermes_configured:
+        acquisition_routes.append(_capability_acquisition_route("hermes_home", "Hermes home is not declared or accessible."))
+
+    credentials_required = bool({"credentials", "access", "credentials_access", "credentials_access_readiness"} & required)
+    credentials_ready = bool(credential_refs and access_refs)
+    if credentials_required and not credentials_ready:
+        human_requests.append(
+            {
+                "input_id": "credentials_access_readiness",
+                "exact_request": "Provide public-safe credential/access readiness refs; do not paste secrets or private tokens.",
+            }
+        )
+    checks.append(
+        _preflight_check(
+            "credentials_access_readiness",
+            "PASS" if (credentials_ready or not credentials_required) else "BLOCKED",
+            "Credential/access readiness is declared or not required for this preflight." if (credentials_ready or not credentials_required) else "Credential/access readiness needs exact human input.",
+            required=credentials_required,
+            detail={"credential_ref_count": len(credential_refs), "access_ref_count": len(access_refs), "secrets_inspected": False},
+        )
+    )
+
+    if human_requests:
+        status = "BLOCKED_WITH_EXACT_HUMAN_INPUT"
+    elif any(check["status"] in {"FAIL", "BLOCKED"} for check in checks):
+        status = "BLOCKED_WITH_EXACT_HUMAN_INPUT"
+    elif acquisition_routes or any(check["status"] in {"DEFERRED", "WARN"} for check in checks):
+        status = "READY_WITH_DEFERRED"
+    else:
+        status = "READY"
+
+    if status == "BLOCKED_WITH_EXACT_HUMAN_INPUT" and not human_requests:
+        human_requests.append(
+            {
+                "input_id": "preflight_contract_failure",
+                "exact_request": "Repair failing public factory preflight contracts, then rerun factoryctl hermes-environment-preflight.",
+            }
+        )
+
+    return {
+        "$schema": "https://overkill-factory.dev/schemas/hermes-environment-preflight.schema.json",
+        "record_type": "hermes_environment_preflight",
+        "created_at": created_at or utc_now(),
+        "status": status,
+        "status_vocabulary": sorted(HERMES_ENVIRONMENT_PREFLIGHT_STATUSES),
+        "checks": checks,
+        "capability_acquisition_routes": acquisition_routes,
+        "human_input_requests": human_requests,
+        "public_safety": {
+            "secrets_inspected": False,
+            "private_paths_published": False,
+            "credential_values_published": False,
+        },
+        "next_step": "Proceed with factory start only when READY; run capability acquisition for READY_WITH_DEFERRED; answer exact human requests for BLOCKED_WITH_EXACT_HUMAN_INPUT.",
     }
 
 
@@ -24361,6 +24715,33 @@ def command_doctor(args: argparse.Namespace) -> int:
     return 0 if report["result"] == "PASS" else 1
 
 
+def command_hermes_environment_preflight(args: argparse.Namespace) -> int:
+    report = build_hermes_environment_preflight_report(
+        hermes_home=args.hermes_home,
+        profile_bindings_path=args.profile_bindings,
+        profile_readiness_path=args.profile_readiness,
+        skill_provider_registry_path=args.skill_provider_registry,
+        capability_packs_path=args.capability_packs,
+        require=args.require,
+        credential_refs=args.credential_ref,
+        access_refs=args.access_ref,
+    )
+    if args.out:
+        args.out.parent.mkdir(parents=True, exist_ok=True)
+        args.out.write_text(json.dumps(report, indent=2, ensure_ascii=True) + "\n", encoding="utf-8")
+    if args.json:
+        print(json.dumps(report, indent=2, ensure_ascii=True))
+    else:
+        print(f"Hermes environment preflight: {report['status']}")
+        for check in report["checks"]:
+            print(f"- {check['status']}: {check['id']} - {check['summary']}")
+        for route in report["capability_acquisition_routes"]:
+            print(f"- ACQUIRE: {route['capability_id']} via {route['command']}")
+        for request in report["human_input_requests"]:
+            print(f"- HUMAN INPUT: {request['exact_request']}")
+    return 1 if report["status"] == "BLOCKED_WITH_EXACT_HUMAN_INPUT" else 0
+
+
 def command_init(args: argparse.Namespace) -> int:
     try:
         write_operator_workspace(
@@ -24499,6 +24880,37 @@ def build_parser() -> argparse.ArgumentParser:
     doctor_parser.add_argument("--json", action="store_true")
     doctor_parser.add_argument("--hermes-home", type=Path)
     doctor_parser.set_defaults(func=command_doctor)
+
+    hermes_preflight_parser = sub.add_parser(
+        "hermes-environment-preflight",
+        help="Check Hermes/factory environment readiness before factory start.",
+    )
+    hermes_preflight_parser.add_argument("--json", action="store_true")
+    hermes_preflight_parser.add_argument("--out", type=Path)
+    hermes_preflight_parser.add_argument("--hermes-home", type=Path)
+    hermes_preflight_parser.add_argument("--profile-bindings", type=Path, default=PROFILE_BINDINGS_PATH)
+    hermes_preflight_parser.add_argument("--profile-readiness", type=Path, default=PROFILE_READINESS_PATH)
+    hermes_preflight_parser.add_argument("--skill-provider-registry", type=Path, default=SKILL_PROVIDER_REGISTRY_PATH)
+    hermes_preflight_parser.add_argument("--capability-packs", type=Path, default=CAPABILITY_PACKS_PATH)
+    hermes_preflight_parser.add_argument(
+        "--require",
+        action="append",
+        default=[],
+        help="Capability family required for this run, e.g. browser, pdf, video, credentials.",
+    )
+    hermes_preflight_parser.add_argument(
+        "--credential-ref",
+        action="append",
+        default=[],
+        help="Public-safe credential readiness reference. Never pass secret values.",
+    )
+    hermes_preflight_parser.add_argument(
+        "--access-ref",
+        action="append",
+        default=[],
+        help="Public-safe access readiness reference. Never pass token values.",
+    )
+    hermes_preflight_parser.set_defaults(func=command_hermes_environment_preflight)
 
     init_parser = sub.add_parser("init", help="Create a Hermes-friendly operator workspace.")
     init_parser.add_argument("--out", type=Path, required=True)

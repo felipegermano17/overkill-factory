@@ -1,0 +1,49 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/hermes-environment-preflight.schema.json",
+  "record_type": "hermes_environment_preflight",
+  "created_at": "2026-07-01T00:00:00+00:00",
+  "status": "READY_WITH_DEFERRED",
+  "status_vocabulary": [
+    "BLOCKED_WITH_EXACT_HUMAN_INPUT",
+    "READY",
+    "READY_WITH_DEFERRED"
+  ],
+  "checks": [
+    {
+      "id": "profiles",
+      "status": "PASS",
+      "required": true,
+      "summary": "Worker profile readiness ledger is present.",
+      "detail": {
+        "profile_count": 1,
+        "ref": "agents/worker-profile-readiness.public.json"
+      }
+    },
+    {
+      "id": "browser",
+      "status": "DEFERRED",
+      "required": true,
+      "summary": "Browser evidence tooling is missing or unproven.",
+      "detail": {
+        "factory_acquirable": true,
+        "available": false
+      }
+    }
+  ],
+  "capability_acquisition_routes": [
+    {
+      "capability_id": "browser",
+      "surface": "browser",
+      "reason": "Browser evidence tooling is missing or unproven.",
+      "next_action": "capability-acquisition-run",
+      "command": "factoryctl capability-acquisition-run --capability-gap browser --surface browser"
+    }
+  ],
+  "human_input_requests": [],
+  "public_safety": {
+    "secrets_inspected": false,
+    "private_paths_published": false,
+    "credential_values_published": false
+  },
+  "next_step": "Proceed with factory start only when READY; run capability acquisition for READY_WITH_DEFERRED; answer exact human requests for BLOCKED_WITH_EXACT_HUMAN_INPUT."
+}

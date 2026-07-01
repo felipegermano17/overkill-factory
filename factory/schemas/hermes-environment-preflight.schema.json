@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/hermes-environment-preflight.schema.json",
+  "title": "Hermes Environment Preflight",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "created_at",
+    "status",
+    "status_vocabulary",
+    "checks",
+    "capability_acquisition_routes",
+    "human_input_requests",
+    "public_safety",
+    "next_step"
+  ],
+  "properties": {
+    "$schema": {"const": "https://overkill-factory.dev/schemas/hermes-environment-preflight.schema.json"},
+    "record_type": {"const": "hermes_environment_preflight"},
+    "created_at": {"type": "string"},
+    "status": {
+      "enum": ["READY", "READY_WITH_DEFERRED", "BLOCKED_WITH_EXACT_HUMAN_INPUT"]
+    },
+    "status_vocabulary": {
+      "type": "array",
+      "items": {"enum": ["READY", "READY_WITH_DEFERRED", "BLOCKED_WITH_EXACT_HUMAN_INPUT"]},
+      "minItems": 3,
+      "uniqueItems": true
+    },
+    "checks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "status", "required", "summary"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "status": {"enum": ["PASS", "DEFERRED", "WARN", "FAIL", "BLOCKED"]},
+          "required": {"type": "boolean"},
+          "summary": {"type": "string", "minLength": 1},
+          "detail": {"type": "object"}
+        },
+        "additionalProperties": false
+      }
+    },
+    "capability_acquisition_routes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["capability_id", "surface", "reason", "next_action", "command"],
+        "properties": {
+          "capability_id": {"type": "string", "minLength": 1},
+          "surface": {"type": "string", "minLength": 1},
+          "reason": {"type": "string", "minLength": 1},
+          "next_action": {"const": "capability-acquisition-run"},
+          "command": {"type": "string", "minLength": 1}
+        },
+        "additionalProperties": false
+      }
+    },
+    "human_input_requests": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["input_id", "exact_request"],
+        "properties": {
+          "input_id": {"type": "string", "minLength": 1},
+          "exact_request": {"type": "string", "minLength": 1}
+        },
+        "additionalProperties": false
+      }
+    },
+    "public_safety": {
+      "type": "object",
+      "required": ["secrets_inspected", "private_paths_published", "credential_values_published"],
+      "properties": {
+        "secrets_inspected": {"const": false},
+        "private_paths_published": {"const": false},
+        "credential_values_published": {"const": false}
+      },
+      "additionalProperties": false
+    },
+    "next_step": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": false
+}
