@@ -1,87 +1,142 @@
 # Confiança e evidência
 
-A Overkill Factory parte de uma verdade incômoda: processo parecendo vivo não é a mesma coisa que progresso.
+A pergunta desta página é simples:
 
-Agentes podem escrever arquivos, mover cards, produzir resumos confiantes e ainda errar o produto. Um painel pode mostrar atividade enquanto o bloqueio real continua parado. Uma revisão pode dizer pass sem ler o artefato. Um humano pode ser chamado para aprovar algo sem receber o material que está aprovando.
+"Como eu sei que isso não é só um agente falando bonito?"
 
-A fábrica trata tudo isso como falha de produto.
+A resposta começa por uma verdade incômoda: processo parecendo vivo não é a mesma coisa que progresso.
 
-## Evidência antes de confiança
+Essa pergunta precisa ficar no centro da Overkill Factory. Agente é muito bom em parecer confiante. Ele escreve. Ele resume. Ele cria arquivo. Ele move card. Ele diz que passou. Mas nada disso, sozinho, prova que o produto ficou certo.
 
-A fábrica prefere evidência a tom de voz. Um worker dizendo "done" só ajuda se os artefatos existem, podem ser relidos e batem com o trabalho pedido. Um teste só ajuda se testa o comportamento certo. Uma revisão só ajuda se verifica o artefato certo e volta para a tarefa original.
+A fábrica existe porque progresso falso é caro.
 
-É por isso que muitos registros da fábrica parecem rígidos. Eles não são rígidos porque o projeto gosta de papelada. Eles são rígidos porque evidência frouxa cria progresso falso.
+## O inimigo é o teatro de progresso
 
-## Receipt Five
+Teatro de progresso é quando o sistema parece vivo, mas a entrega real não avançou.
 
-Receipt Five é o recibo de conclusão. Ele precisa responder cinco tipos de pergunta:
+Exemplos:
+
+- o worker diz "feito", mas não entrega evidência;
+- o arquivo existe, mas não resolve o pedido;
+- o teste passa, mas testa a coisa errada;
+- o reviewer aprova sem ler o artefato;
+- o humano é chamado para aprovar sem receber o material;
+- o board fica cheio de atividade, mas o bloqueio real continua lá;
+- a fábrica pede decisão humana para algo que ela mesma deveria reparar.
+
+Tudo isso deve ser tratado como falha de produto, não como detalhe de processo.
+
+## Evidência é mais importante que tom de voz
+
+A fábrica não confia em confiança. Confia em prova.
+
+Um worker bom não só diz o que fez. Ele aponta para o artefato, o comando, o resultado, a captura, o diff, o log, o teste, a revisão ou o pacote que prova.
+
+Mesmo assim, evidência não pode ser qualquer coisa. Um caminho local perdido não serve. Um arquivo temporário não serve. Um print sem contexto quase nunca serve. Um pass sem escopo não serve. Uma aprovação humana genérica não serve para liberar produção, fundo, segredo ou mainnet.
+
+A prova precisa ser atual, legível e ligada ao pedido.
+
+## Readback: ler o que foi entregue
+
+Readback é uma palavra feia para uma coisa simples: a fábrica precisa reler o que o worker diz que entregou.
+
+Se ele diz que escreveu um Product SOT, a fábrica lê o SOT.
+
+Se ele diz que anexou evidência, a fábrica confere se a evidência abre, se tem tamanho, se tem hash quando precisa, se pode ser lida depois e se não vaza segredo.
+
+Se ele diz que criou um teste, a fábrica confere se o teste cobre o comportamento certo.
+
+Sem readback, o processo pode estar correto e o produto errado.
+
+## Receipt Five: o recibo do pronto
+
+Receipt Five é o jeito da fábrica dizer "pronto" sem depender de humor, pressa ou autoridade do executor.
+
+Ele precisa responder cinco perguntas:
 
 1. O que foi pedido?
 2. O que foi feito ou decidido?
 3. Que evidência prova isso?
-4. Quem revisou e o que a revisão disse?
-5. O que continua bloqueado, arriscado ou pendente?
+4. Quem revisou e o que a revisão concluiu?
+5. O que continua pendente, bloqueado ou arriscado?
 
-Se o Receipt Five não consegue responder isso, o estado honesto não é pronto. Pode ser pronto para revisão, bloqueado, parcialmente completo ou aguardando decisão humana. Mas não é pronto.
+Se uma dessas respostas falta, o estado honesto não é pronto. Pode ser pronto para revisão. Pode ser parcialmente completo. Pode ser bloqueado. Pode estar aguardando decisão humana.
 
-## Readback
+Mas não é pronto.
 
-Readback quer dizer que a fábrica confere o artefato que o worker disse ter produzido. Não basta o worker dizer "escrevi o SOT" ou "adicionei o teste". A fábrica precisa ler o arquivo, confirmar que ele existe e decidir se ele tem qualidade para alimentar a próxima fase.
+## Revisão independente não é carimbo
 
-Isso protege contra uma falha muito comum: processo correto com produto ruim. O worker pode ter seguido o card, mas a entrega pode estar rasa, errada ou ausente.
+Review de verdade precisa ser consumido.
 
-## Revisão independente
+Não basta gerar um relatório de revisão. A fábrica precisa usar o resultado. Se passou, destrava ou fecha o item certo. Se falhou, cria reparo. Se achou risco residual, registra dono e decisão. Se o reviewer é a mesma identidade que executou, não é revisão independente.
 
-Trabalho material deve ser revisado por outra identidade quando o risco pede. O executor pode explicar o que fez. Ele não deveria ser o juiz final.
+Revisão parada é só mais um artefato bonito.
 
-A revisão pode passar, falhar ou pedir reparo. Se passa, precisa destravar ou fechar a tarefa original. Se falha, precisa gerar trabalho de reparo. Revisão parada, sem ser consumida, também é progresso falso.
+## Bloqueio honesto
 
-## No-idle e bloqueios
+Bloqueio bom diz:
 
-No-idle não é truque de produtividade. É um guard contra paradas silenciosas. Se o board tem trabalho que deveria andar, mas nada material muda, a fábrica deve reparar o estado, despachar o próximo worker seguro ou falhar de forma visível.
+- o que falta;
+- por que falta;
+- quem é dono;
+- qual é o menor próximo passo seguro;
+- se precisa ou não do operador.
 
-Bloqueio também precisa ser honesto. Alguns bloqueios são decisões humanas reais. Muitos não são. Se a fábrica precisa de revisão interna, readback, artefato faltando ou reparo, isso é trabalho da própria fábrica. Não deveria chegar ao operador como se o humano tivesse que resolver.
+Nem todo bloqueio é humano.
 
-## Gates humanos
+Se a dependência ainda não terminou, é espera. Se falta capacidade, a fábrica precisa buscar ou ativar um pacote. Se é erro transitório, tenta reparar. Se falta artefato, readback, PDF ou revisão, a fábrica trabalha.
 
-Gate humano é coisa séria. Ele pertence a decisões em que a autoridade é do operador: release em produção, mainnet, fundos, segredos, orçamento, risco relevante ou uma fronteira explícita de aprovação.
+O operador só entra quando existe decisão real de autoridade.
 
-Um bom gate humano é legível. Ele diz qual decisão precisa ser tomada, que evidência existe, o que pode dar errado e o que cada opção significa. O operador não deveria ter que decifrar JSON cru ou reconstruir a história por comentários espalhados.
+## Gate humano precisa respeitar o humano
 
-## Segurança e risco
+Gate humano não é "posso seguir?" jogado no chat.
 
-Segurança não é checklist no fim. É rota e arquitetura. Risco material pode exigir threat modeling, fronteiras de confiança, identidade e autorização, supply chain, segredos, privacidade, incidente e dono explícito para risco residual.
+Um gate humano sério entrega o material sob revisão. Se é Product SOT, entrega o SOT. Se é arquitetura, entrega a arquitetura. Se é release, entrega o pacote de release. Se é segurança, entrega o risco e as opções.
 
-A fábrica não deve prometer segurança perfeita. Ela deve prometer a melhor postura possível com evidência, gates e decisão explícita sobre risco residual.
+A primeira mensagem precisa ser clara e curta:
 
-A matriz pública de segurança agora faz parte deste modelo de confiança, em vez de ficar num arquivo operacional separado. Os domínios checáveis incluem `networking`, `linux-systems`, `web-security`, `application-security`, `ethical-hacking`, `security-tools`, `cloud-security`, `detection-monitoring`, `security-operations`, `cryptography`, `key-management`, `future-security`, `supply-chain` e `onchain-solana-quasar`.
+- decisão pedida;
+- resumo em português normal;
+- o que aprovar permite;
+- o que aprovar não permite;
+- opções de resposta;
+- consequência;
+- evidência;
+- urgência.
 
-## A fronteira honesta
+O anexo pode ser grande. A pergunta não pode ser vaga.
 
-Checks locais provam que o kernel público está coerente. Eles não provam que uma execução privada entregou um produto. Conclusão real de produto exige estado vivo no Hermes, evidência específica do produto, revisão e aprovação humana quando o risco pede.
+## Segurança não fica para o fim
 
-Essa fronteira não é fraqueza. É o jeito da fábrica continuar honesta.
+Segurança não é um scan no final para deixar a PR bonita.
 
-## Pacote de decisão antes da decisão
+Se o trabalho toca autenticação, permissão, segredo, chave, produção, supply chain, privacidade, carteira, assinatura, Solana, fundos ou mainnet, a segurança entra no caminho desde cedo.
 
-Um gate humano sem artefato é inválido. Se a fábrica pede aprovação para Product SOT, arquitetura, segurança, release ou Product Face, ela precisa entregar o material que está sendo aprovado ou uma projeção fiel com referência completa.
+Às vezes isso significa arquitetura. Às vezes significa threat model. Às vezes significa worker especialista. Às vezes significa gate humano. Às vezes significa bloquear.
 
-A primeira mensagem deve caber na cabeça do operador: decisão pedida, resumo em português claro, o que aprovar autoriza, o que não autoriza, opções de resposta, consequência e urgência. O anexo pode carregar o documento completo. O JSON é evidência interna, não experiência primária do operador.
+A fábrica não promete segurança perfeita. Promete não fingir que risco desapareceu.
 
-## Blocos tipados e fronteira com o humano
+## Prova local, prova viva e prova pública
 
-Nem todo bloqueio é pergunta para o operador. `dependency_wait` é espera de dependência. `capability` é busca ou ativação de pack. `transient` é retry ou reparo. `needs_input` só chega ao operador quando existe pacote de decisão completo.
+Essas três coisas são diferentes.
 
-Essa separação evita um vício comum: transformar qualquer falha de processo em “preciso que o humano decida”. Muitas vezes a decisão correta é a fábrica reparar o próprio estado.
+Um comando local passando prova que o checkout está coerente.
 
-## Evidência local, evidência viva e evidência pública
+Um Hermes vivo com worker result prova que aquele worker rodou naquele contexto.
 
-Um comando local passando prova coerência do checkout. Um worker result prova que um worker rodou naquele escopo. Um Receipt Five prova fechamento quando consegue apontar para pedido, mudança, evidência, review e próximo estado. Uma publicação pública precisa ainda passar segurança de superfície e segredo.
+Um Receipt Five bem formado prova que a conclusão daquele trabalho está ligada a pedido, mudança, evidência, revisão e próximo estado.
 
-Essas provas não são intercambiáveis. Não se deve usar smoke local para afirmar entrega de produto vivo, nem usar artifact existence como se fosse readback, nem usar uma aprovação humana genérica como waiver de release, segurança, fundos ou mainnet.
+Uma publicação pública ainda precisa passar por segurança de superfície e segredo.
 
-## Prontidão de implementação
+Não dá para trocar uma pela outra. Smoke local não prova produto entregue. Arquivo existente não prova readback. Aprovação genérica não prova release. Print bonito não prova jornada.
 
-Product Implementation Readiness é o ponto em que a fábrica pergunta: “já temos SOT, método, pesquisa, arquitetura, packs, acesso, workers, reviewers e prova suficiente para deixar a execução material começar?”.
+## Quando confiar
 
-Se essa resposta é fraca, a fábrica deve bloquear antes de gastar worker. Isso é mais barato do que descobrir no Receipt Five que o produto inteiro foi construído em cima de uma lacuna antiga.
+Você pode começar a confiar quando a fábrica consegue contar a história inteira sem pular etapa:
+
+"O pedido era este. A fonte dizia isto. A verdade do produto ficou assim. O método escolhido foi este. Estes workers rodaram. Estas evidências voltaram. Esta revisão foi consumida. Este gate humano autorizou exatamente isto. O que ainda falta é aquilo."
+
+Essa história precisa estar nos artefatos, não só na memória de quem estava no chat.
+
+Esse é o padrão.

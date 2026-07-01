@@ -21,9 +21,9 @@ nav:
   - Português:
       - Início: pt-BR/index.md
       - Manual: pt-BR/manual.md
-      - Modelo Operacional: pt-BR/operating-model.md
-      - Ciclo da Fábrica: pt-BR/lifecycle.md
-      - Confiança e Evidência: pt-BR/trust-and-evidence.md
-      - Modelo Técnico: pt-BR/technical-model.md
+      - Como a fábrica trabalha: pt-BR/operating-model.md
+      - Confiança e prova: pt-BR/trust-and-evidence.md
+      - Ciclo simples: pt-BR/lifecycle.md
       - Uso: pt-BR/usage.md
+      - Modelo técnico: pt-BR/technical-model.md
       - Referência: pt-BR/reference.md
