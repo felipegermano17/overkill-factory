@@ -60,6 +60,26 @@
     },
     "reason": { "type": "string", "minLength": 1 },
     "blocked_reasons": { "type": "array", "items": { "type": "string" } },
+    "legacy_missing_declared_artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["task_ref", "status", "title", "assignee", "selection_reason"],
+        "properties": {
+          "task_ref": { "type": "string", "minLength": 1 },
+          "status": { "type": "string", "minLength": 1 },
+          "title": { "type": "string", "minLength": 1 },
+          "assignee": { "type": "string" },
+          "selection_reason": { "type": "string", "minLength": 1 },
+          "target_fingerprint": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "missing_artifact_names": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
     "selected_card": {
       "type": ["object", "null"],
       "required": ["task_ref", "status", "title", "assignee", "selection_reason"],
