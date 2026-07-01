@@ -23623,6 +23623,65 @@ READINESS_SCOPE_FOR_STATE = {
 }
 
 
+CLAIM_BOUNDARY_STATES = {
+    "plan_or_spec",
+    "bounded_proof",
+    "report_only_pass",
+    "qa_pass",
+    "release_readiness",
+    "production_readiness",
+    "receipt_five_ready",
+    "negative_closeout",
+}
+CLAIM_PROMOTION_REQUIREMENTS = {
+    "qa_pass": ("qa_result_ref",),
+    "release_readiness": ("qa_result_ref", "release_evidence_ref"),
+    "production_readiness": ("qa_result_ref", "release_evidence_ref", "production_evidence_ref", "human_gate_ref"),
+    "receipt_five_ready": ("qa_result_ref", "release_evidence_ref", "production_evidence_ref", "receipt_five_ref", "human_gate_ref"),
+}
+CLAIM_WEAK_STATES = {"plan_or_spec", "bounded_proof", "report_only_pass", "negative_closeout"}
+CLAIM_STRONG_STATES = {"release_readiness", "production_readiness", "receipt_five_ready"}
+
+
+def validate_factory_claim_boundary(packet: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    schemas = bundled_schemas()
+    schema = schemas.get("factory-claim-boundary.schema.json")
+    if not isinstance(schema, dict):
+        return ["factory-claim-boundary schema is not bundled"]
+    errors.extend(validate_node(schema, packet, "factory_claim_boundary", schemas=schemas, root_schema=schema))
+
+    claimed_state = str(packet.get("claimed_state") or "")
+    source_state = str(packet.get("source_state") or "")
+    forbidden = set(_list_items(packet.get("forbidden_promotions")))
+    allowed = set(_list_items(packet.get("allowed_next_states")))
+    if claimed_state not in CLAIM_BOUNDARY_STATES:
+        return errors
+
+    if source_state in CLAIM_WEAK_STATES and claimed_state in CLAIM_STRONG_STATES:
+        errors.append(
+            f"source_state {source_state} cannot be promoted directly to {claimed_state}; use explicit QA/release/production/Receipt Five evidence"
+        )
+    if claimed_state in CLAIM_WEAK_STATES:
+        missing_forbidden = sorted(CLAIM_STRONG_STATES - forbidden)
+        if missing_forbidden:
+            errors.append(
+                f"claimed_state {claimed_state} must forbid stronger promotions: " + ", ".join(missing_forbidden)
+            )
+    for field in CLAIM_PROMOTION_REQUIREMENTS.get(claimed_state, ()):
+        if not str(packet.get(field) or "").strip():
+            errors.append(f"claimed_state {claimed_state} requires {field}")
+    if claimed_state == "negative_closeout" and CLAIM_STRONG_STATES & allowed:
+        errors.append("negative_closeout cannot list release/production/receipt_five states as allowed_next_states")
+    if claimed_state == "report_only_pass" and not {"qa_pass", "bounded_proof"} & allowed:
+        errors.append("report_only_pass must route to QA/bounded proof next, not closure")
+    return errors
+
+
+def command_validate_claim_boundary(args: argparse.Namespace) -> int:
+    return _print_validation_result(validate_factory_claim_boundary(load_json_like(args.path)))
+
+
 def validate_factory_v2_readiness_claim(packet: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     schemas = bundled_schemas()
@@ -25557,6 +25616,10 @@ def build_parser() -> argparse.ArgumentParser:
     validate_real_effectiveness_parser = sub.add_parser("validate-real-effectiveness")
     validate_real_effectiveness_parser.add_argument("path", type=Path)
     validate_real_effectiveness_parser.set_defaults(func=command_validate_real_effectiveness)
+
+    validate_claim_boundary_parser = sub.add_parser("validate-claim-boundary")
+    validate_claim_boundary_parser.add_argument("path", type=Path)
+    validate_claim_boundary_parser.set_defaults(func=command_validate_claim_boundary)
 
     validate_completion_parser = sub.add_parser("validate-completion")
     validate_completion_parser.add_argument("--card", type=Path, required=True)

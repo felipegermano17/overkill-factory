@@ -1,0 +1,17 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-claim-boundary.schema.json",
+  "record_type": "factory_claim_boundary",
+  "claim_id": "example-report-only-does-not-release",
+  "claimed_state": "report_only_pass",
+  "source_state": "report_only_pass",
+  "evidence_refs": ["worker-result:independent-reviewer:report-only-pass"],
+  "forbidden_promotions": [
+    "release_readiness",
+    "production_readiness",
+    "receipt_five_ready"
+  ],
+  "allowed_next_states": ["qa_pass"],
+  "known_limits": [
+    "Report-only review does not authorize release, production, Receipt Five, Mainnet, funds, custody, signing, or waiver."
+  ]
+}

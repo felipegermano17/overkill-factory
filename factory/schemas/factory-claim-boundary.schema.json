@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/factory-claim-boundary.schema.json",
+  "title": "Factory claim boundary",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "claim_id",
+    "claimed_state",
+    "source_state",
+    "evidence_refs",
+    "forbidden_promotions",
+    "allowed_next_states"
+  ],
+  "properties": {
+    "$schema": { "const": "https://overkill-factory.dev/schemas/factory-claim-boundary.schema.json" },
+    "record_type": { "const": "factory_claim_boundary" },
+    "claim_id": { "type": "string", "minLength": 1 },
+    "claimed_state": {
+      "enum": [
+        "plan_or_spec",
+        "bounded_proof",
+        "report_only_pass",
+        "qa_pass",
+        "release_readiness",
+        "production_readiness",
+        "receipt_five_ready",
+        "negative_closeout"
+      ]
+    },
+    "source_state": {
+      "enum": [
+        "plan_or_spec",
+        "bounded_proof",
+        "report_only_pass",
+        "qa_pass",
+        "release_readiness",
+        "production_readiness",
+        "receipt_five_ready",
+        "negative_closeout"
+      ]
+    },
+    "evidence_refs": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+    "forbidden_promotions": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+    "allowed_next_states": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "qa_result_ref": { "type": "string" },
+    "release_evidence_ref": { "type": "string" },
+    "production_evidence_ref": { "type": "string" },
+    "receipt_five_ref": { "type": "string" },
+    "human_gate_ref": { "type": "string" },
+    "known_limits": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": false
+}
