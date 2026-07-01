@@ -4842,6 +4842,83 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertTrue(state["human_gate_required"])
         self.assertEqual(state["classification"], "human_gate_delivered_waiting_for_operator")
 
+    def test_missing_release_readiness_routing_artifacts_suppressed_after_f16_readback_pass(self) -> None:
+        routing_id = "t_" + "routingpkt"
+        f16_id = "t_" + "f16rerun"
+        review_id = "t_" + "f16readback"
+        rows = {
+            "ready": [],
+            "running": [],
+            "todo": [],
+            "blocked": [],
+            "done": [
+                {
+                    "id": routing_id,
+                    "status": "done",
+                    "title": "Repair WU-19 release/readiness blockers",
+                    "assignee": "release-ops-worker",
+                    "body": json.dumps({"marker": adapter.NO_IDLE_RELEASE_READINESS_REPAIR_MARKER}),
+                    "missing_declared_artifacts": [
+                        {
+                            "artifact_name": f"release_readiness_routing_packet_{routing_id}.json",
+                            "local_path": f"/tmp/scratch/{routing_id}/release_readiness_routing_packet_{routing_id}.json",
+                        },
+                        {
+                            "artifact_name": f"release_readiness_routing_packet_{routing_id}.md",
+                            "local_path": f"/tmp/scratch/{routing_id}/release_readiness_routing_packet_{routing_id}.md",
+                        },
+                    ],
+                },
+                {
+                    "id": f16_id,
+                    "status": "done",
+                    "title": "F16 rerun after release/readiness routing packet",
+                    "assignee": "evidence-reconciler",
+                    "body": json.dumps(
+                        {
+                            "phase": "F16",
+                            "marker": "factory_f16_rerun_after_wu19_release_readiness_routing",
+                            "current_durable_evidence": {
+                                "routing_packet": f"parent task {routing_id} workspace release_readiness_routing_packet_{routing_id}.json"
+                            },
+                        }
+                    ),
+                },
+                {
+                    "id": review_id,
+                    "status": "done",
+                    "title": f"Independent readback: F16 consolidated reconciliation packet {f16_id}",
+                    "assignee": "independent-reviewer",
+                    "body": json.dumps({"phase": "F16", "producer_task": f16_id}),
+                    "latest_summary": f"PASS_READBACK_ONLY for F16 consolidated reconciliation packet {f16_id}",
+                    "runs": [
+                        {
+                            "status": "done",
+                            "metadata": {
+                                "independent_review_result": {
+                                    "verdict": "PASS_READBACK_ONLY_NO_AUTHORITY_GRANT",
+                                    "evidence_reviewed": [
+                                        f"attachments/{f16_id}/f16_consolidated_reconciliation_packet_{f16_id}.json",
+                                        f"attachments/{f16_id}/f16_consolidated_reconciliation_packet_{f16_id}.md",
+                                    ],
+                                    "owner_reviewer_signoffs": {
+                                        "executor_task": f16_id,
+                                        "reviewer_task": review_id,
+                                    },
+                                }
+                            },
+                        }
+                    ],
+                },
+            ],
+        }
+
+        suppressed = adapter.suppress_missing_declared_artifacts_with_readback_pass(rows)
+        routing_record = next(item for item in suppressed["done"] if item["id"] == routing_id)
+
+        self.assertNotIn("missing_declared_artifacts", routing_record)
+        self.assertTrue(routing_record["missing_declared_artifacts_suppressed_by_readback_pass"])
+
     def test_declared_artifact_owner_rerun_candidate_from_done_readback_repair_missing_files(self) -> None:
         target_id = "t_" + "releasepkg"
         repair_id = "t_" + "readbackdone"
