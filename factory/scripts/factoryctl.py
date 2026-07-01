@@ -103,6 +103,10 @@ def default_work_root() -> Path:
         cwd / "examples" / "minimal-hermes-project" / "card.md"
     ).exists():
         return cwd
+    if (CODE_ROOT / "agents" / "hermes-profile-bindings.public.json").exists() and (
+        CODE_ROOT / "examples" / "minimal-hermes-project" / "card.md"
+    ).exists():
+        return CODE_ROOT
     installed_root = installed_asset_root()
     if installed_root is not None:
         return installed_root
@@ -17296,6 +17300,11 @@ def domain_brain_provider_for_worker(worker_id: str, card: dict[str, Any]) -> di
         "usage_receipt_required": provider.get("usage_receipt_required") is True,
         "usage_receipt_field": SOLANA_AI_KIT_USAGE_RECEIPT_FIELD,
         "precedence_policy": _list_items(provider.get("precedence_policy")),
+        "capability_evidence_refs": [
+            f"agents/capability-packs.public.json#packs.{SOLANA_AI_KIT_PACK_ID}",
+            "agents/skill-provider-registry.public.json#providers.solana-ai-kit",
+            "schemas/solana-ai-kit-usage-receipt.schema.json",
+        ],
     }
 
 

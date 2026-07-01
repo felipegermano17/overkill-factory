@@ -427,18 +427,21 @@
         "provider_id",
         "source",
         "pinned_ref",
+        "pinned_commit",
         "required_before_execution",
         "install_modes",
         "load_contract",
         "usage_receipt_required",
         "usage_receipt_field",
-        "precedence_policy"
+        "precedence_policy",
+        "capability_evidence_refs"
       ],
       "properties": {
         "pack_id": { "type": "string", "minLength": 3 },
         "provider_id": { "type": "string", "minLength": 3 },
         "source": { "type": "string", "minLength": 3 },
         "pinned_ref": { "type": "string", "minLength": 1 },
+        "pinned_commit": { "type": "string", "minLength": 7 },
         "required_before_execution": { "type": "boolean" },
         "install_modes": {
           "type": "array",
@@ -456,6 +459,11 @@
           "type": "array",
           "minItems": 1,
           "items": { "type": "string", "minLength": 8 }
+        },
+        "capability_evidence_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 3 }
         }
       },
       "additionalProperties": false

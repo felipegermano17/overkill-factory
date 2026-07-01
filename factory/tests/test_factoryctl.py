@@ -726,6 +726,9 @@ PRIVATE_PATH_RE = re.compile(
 
 
 class FactoryCtlTest(unittest.TestCase):
+    def test_imported_source_tree_uses_source_assets_before_installed_assets(self) -> None:
+        self.assertEqual(factoryctl.ROOT, ROOT)
+
     def test_human_gate_packet_schema_requires_push_material_before_question(self) -> None:
         card = load_card("v35_valid_security_with_scan.md")
         packet = human_gate_packet_fixture()
@@ -873,6 +876,21 @@ class FactoryCtlTest(unittest.TestCase):
             packet["input_contract"]["domain_brain_provider_ref"],
             "agents/capability-packs.public.json#packs.solana-ai-kit-core.official_brain_provider",
         )
+        self.assertIn(
+            "agents/skill-provider-registry.public.json#providers.solana-ai-kit",
+            provider["capability_evidence_refs"],
+        )
+
+    def test_solana_worker_packet_with_domain_brain_validates_against_schema(self) -> None:
+        card_path = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"
+        card = factoryctl.load_json_like(card_path)
+        packet = factoryctl.build_worker_packet("solana-quasar-auditor", card, card_path)
+        schemas = factoryctl.bundled_schemas()
+        schema = schemas["worker-packet.schema.json"]
+
+        errors = factoryctl.validate_node(schema, packet, "worker_packet", schemas=schemas, root_schema=schema)
+
+        self.assertEqual(errors, [])
 
     def test_solana_domain_brain_reaches_lifecycle_wallet_and_security_workers(self) -> None:
         card_path = ROOT / "templates" / "vfinal-factory-card.json"
