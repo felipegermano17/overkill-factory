@@ -22198,17 +22198,20 @@ def _board_reconcile_task_contract(
     selected_card: dict[str, Any] | None,
     phase_engine: dict[str, Any] | None,
     factory_help: dict[str, Any] | None,
+    repair_target: dict[str, Any] | None = None,
     reason: str,
     assignee: str = "factory-orchestrator",
 ) -> dict[str, Any]:
     next_artifact = str((phase_engine or {}).get("next_required_artifact") or "canonical_factory_card").strip()
-    if plan_action == "repair_domain_brain_route":
+    if plan_action == "repair_board_contract":
+        next_artifact = "kanban_first_runtime_contract_repair_evidence"
+    elif plan_action == "repair_domain_brain_route":
         next_artifact = "solana_ai_kit_domain_brain_route"
     workflow_template_id = FACTORY_KANBAN_WORKFLOW_TEMPLATE_ID
     current_step_key = factory_workflow_step_key(phase_engine)
     card_id = str((selected_card or {}).get("card_id") or "board").strip() or "board"
     title_action = {
-        "repair_board_contract": "Materialize canonical factory card",
+        "repair_board_contract": "Repair Kanban-first runtime contract",
         "repair_declared_artifacts": "Repair missing declared artifacts",
         "create_next_artifact_task": f"Materialize {next_artifact}",
         "repair_domain_brain_route": "Materialize Solana AI Kit route",
@@ -22217,6 +22220,28 @@ def _board_reconcile_task_contract(
     }.get(plan_action, "Reconcile factory board")
     if plan_action == "repair_declared_artifacts":
         next_artifact = "declared_artifact_readback_repair"
+    allowed_actions = [
+        "inspect Hermes board and durable artifacts",
+        f"create or repair only {next_artifact}",
+        "record fresh evidence or a bounded blocker",
+        "leave downstream phases frozen until factory_phase_engine recomputes the frontier",
+    ]
+    forbidden_actions = [
+        "choose a later phase from title, chat, memory, prose or declared phase alone",
+        "ask for a human gate when phase_engine.human_gate_allowed is false",
+        "approve or waive human gates",
+        "start implementation, deploy, release, spend funds or touch production",
+    ]
+    if plan_action == "repair_board_contract":
+        allowed_actions = [
+            "inspect the exact blocked_reasons and selected repair_target",
+            "repair missing workflow_template_id/current_step_key/kanban_workflow_binding, parent edges, phase children, profile-skill compatibility, or runtime contract metadata named by blocked_reasons",
+            "write blocker-reducing repair evidence that names each before/after field or records a bounded blocker if a field cannot be repaired safely",
+            "rerun no-idle/reconcile after repair so progress is measured by reduced blockers or promoted runnable work",
+        ]
+        forbidden_actions.append(
+            "complete with canonical_factory_card.json/markdown, receipts, hashes, or summaries only while blocked_reasons remain unreduced"
+        )
     return {
         "title": f"{title_action} for {card_id}",
         "assignee": assignee,
@@ -22242,18 +22267,10 @@ def _board_reconcile_task_contract(
             "runtime_authority": "hermes_kanban",
             "local_state_authority": False,
             "agent_may_choose_phase": False,
-            "allowed_actions": [
-                "inspect Hermes board and durable artifacts",
-                f"create or repair only {next_artifact}",
-                "record fresh evidence or a bounded blocker",
-                "leave downstream phases frozen until factory_phase_engine recomputes the frontier",
-            ],
-            "forbidden_actions": [
-                "choose a later phase from title, chat, memory, prose or declared phase alone",
-                "ask for a human gate when phase_engine.human_gate_allowed is false",
-                "approve or waive human gates",
-                "start implementation, deploy, release, spend funds or touch production",
-            ],
+            "repair_target": repair_target,
+            "repair_blocked_reasons": [reason] if reason else [],
+            "allowed_actions": allowed_actions,
+            "forbidden_actions": forbidden_actions,
             "native_dispatch_required_next": True,
         },
     }
@@ -22334,6 +22351,7 @@ def build_board_reconcile_plan(
             board=board,
             selected_card=selected_card,
             phase_engine=phase_engine,
+            repair_target=selected_ref,
             factory_help=factory_help,
             reason=reason,
             assignee="factory-orchestrator",
