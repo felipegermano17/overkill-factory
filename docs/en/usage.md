@@ -70,7 +70,7 @@ python3 scripts/secret_safety_scan.py
 python3 scripts/generate_factory_reference_docs.py --check
 ```
 
-`validate_public_surface_sync.py` checks that public surfaces still match their manifest. `validate_promise_implementation_map.py` checks that public promises still have implementation and boundary references. `public_safety_scan.py` and `secret_safety_scan.py` protect the public repo boundary.
+`validate_public_surface_sync.py` checks that public surfaces still match their manifest. `validate_promise_implementation_map.py` checks that public promises still have implementation and boundary references. `public_safety_scan.py` blocks private paths, raw internal artifact references, human artifact location leaks, and mainnet/funds/signing/custody overclaims in public artifacts. `secret_safety_scan.py` blocks obvious credentials, mnemonic/seed phrases, Solana-style key arrays, and high-entropy sensitive key assignments.
 
 If a check fails, do not describe the public surface as ready. Fix the mismatch or state the boundary honestly.
 

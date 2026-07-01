@@ -43,7 +43,10 @@
           "public_repository_tree",
           "private_run_evidence",
           "sanitized_report",
-          "publication_candidate"
+          "publication_candidate",
+          "human_artifact_metadata",
+          "raw_internal_artifact_markers",
+          "sensitive_boundary_claims"
         ]
       }
     },

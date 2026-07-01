@@ -60,6 +60,47 @@ PATTERN_SPECS = [
     ("private_whimsical_board_marker", re.compile(r"--board-id\s+(?!<)[A-Za-z0-9_-]{4,}\b")),
 ]
 
+CONTEXT_PATTERN_SPECS = [
+    (
+        "raw_internal_artifact_marker",
+        re.compile(
+            r"\braw(?:[_ -](?:internal|private))?[_ -]"
+            r"(?:source[_ -]?extraction|study[_ -]?extraction|evidence|artifact|browser[_ -]?snapshot|"
+            r"session[_ -]?transcript|chat[_ -]?transcript|operator[_ -]?recording|screenshot)"
+            r"(?:[_ -]?(?:bundle|dump|json|file))?\b",
+            re.IGNORECASE,
+        ),
+    ),
+    (
+        "human_artifact_private_ref",
+        re.compile(
+            r"\b(?:screenshot|transcript|recording|screen[_ -]?capture|browser[_ -]?capture)\b"
+            r".*(?:C:\\\\Users|C:\\Users|/srv/hermes|/(?:home|Users)/[A-Za-z0-9._-]+|file://)",
+            re.IGNORECASE,
+        ),
+    ),
+    (
+        "sensitive_boundary_claim",
+        re.compile(
+            r"\b(?:mainnet|funds?|signing|custody)\b(?!-).{0,80}"
+            r"\b(?:approved|authorized|released|ready|safe|complete|completed|waived)\b",
+            re.IGNORECASE,
+        ),
+    ),
+]
+
+RAW_ARTIFACT_LEAK_CONTEXT_RE = re.compile(
+    r"\b(?:publish|commit|embed|include|attach|upload|download|link|leak|expose|paste|ship|release|share|open)\b"
+    r"|(?:\.json|\.md|\.txt|\.zip|://|/srv|C:\\)",
+    re.IGNORECASE,
+)
+
+BOUNDARY_POLICY_RE = re.compile(
+    r"\b(?:not|never|no|cannot|must not|blocked|block|blocks|requires?|gate|human|"
+    r"forbidden|before|without|boundary|policy|public[- ]safe|private|redacted|by local tests only)\b",
+    re.IGNORECASE,
+)
+
 BYTE_PATTERN_SPECS = [
     ("private_product_marker", b"KAXIS"),
     ("private_product_marker", b"Kaxis"),
@@ -110,6 +151,17 @@ def is_allowed_public_repo_metadata_line(rel: str, line: str) -> bool:
     return PUBLIC_REPO_URL in line
 
 
+def is_boundary_policy_line(line: str) -> bool:
+    """Allow public policy statements while still blocking concrete unsafe claims.
+
+    The public repository can explain that mainnet, funds, signing, custody,
+    private evidence, screenshots or transcripts are sensitive. It must not
+    publish concrete statements that those boundaries are approved/safe/released
+    or attach raw/private artifact locations to human evidence.
+    """
+    return BOUNDARY_POLICY_RE.search(line) is not None
+
+
 def rel_parts(rel: str) -> tuple[str, ...]:
     return PurePosixPath(rel).parts
 
@@ -146,6 +198,16 @@ def scan_text(rel: str, text: str) -> list[str]:
             if category == "private_owner_marker" and is_allowed_public_repo_metadata_line(rel, line):
                 continue
             if pattern.search(line):
+                findings.append(f"{rel}:{lineno}: {category}")
+                break
+        else:
+            for category, pattern in CONTEXT_PATTERN_SPECS:
+                if not pattern.search(line):
+                    continue
+                if category == "raw_internal_artifact_marker" and not RAW_ARTIFACT_LEAK_CONTEXT_RE.search(line):
+                    continue
+                if category != "human_artifact_private_ref" and is_boundary_policy_line(line):
+                    continue
                 findings.append(f"{rel}:{lineno}: {category}")
                 break
     return findings
@@ -187,7 +249,12 @@ def safe_ref(value: str | None) -> str | None:
 def build_summary(findings: list[str], *, git_ref: str | None = None, created_at: str | None = None) -> dict[str, object]:
     categories = Counter(finding_category(finding) for finding in findings)
     target = {"kind": "git_ref", "ref": safe_ref(git_ref)} if git_ref else {"kind": "worktree"}
-    artifact_classes = ["public_repository_tree"]
+    artifact_classes = [
+        "human_artifact_metadata",
+        "public_repository_tree",
+        "raw_internal_artifact_markers",
+        "sensitive_boundary_claims",
+    ]
     if git_ref:
         artifact_classes.append("publication_candidate")
     return {
@@ -204,6 +271,9 @@ def build_summary(findings: list[str], *, git_ref: str | None = None, created_at
             "publication_candidate": "fail_closed_on_any_private_marker",
             "private_kanban_task_ids": f"replace_with_{PUBLIC_SAFE_KANBAN_REF}",
             "stable_issue_refs": "allowed",
+            "raw_internal_artifacts": "forbidden_unless_reduced_to_public_safe_refs",
+            "mainnet_funds_signing_custody": "must_remain_blocked_without_human_gate_evidence",
+            "human_artifact_locations": "must_use_public_safe_external_refs_not_private_paths_or_file_uris",
         },
         "forbidden_hits": [
             {"category": category, "count": count}

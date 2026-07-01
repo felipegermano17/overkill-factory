@@ -70,7 +70,7 @@ python3 scripts/secret_safety_scan.py
 python3 scripts/generate_factory_reference_docs.py --check
 ```
 
-`validate_public_surface_sync.py` checa se as superfícies públicas continuam alinhadas ao manifest. `validate_promise_implementation_map.py` checa se promessas públicas ainda têm referência de implementação e fronteira. `public_safety_scan.py` e `secret_safety_scan.py` protegem a fronteira pública do repositório.
+`validate_public_surface_sync.py` checa se as superfícies públicas continuam alinhadas ao manifest. `validate_promise_implementation_map.py` checa se promessas públicas ainda têm referência de implementação e fronteira. `public_safety_scan.py` bloqueia caminhos privados, referências a artefatos internos brutos, vazamentos de localização de artefatos humanos e overclaims de mainnet/fundos/assinatura/custódia em artefatos públicos. `secret_safety_scan.py` bloqueia credenciais óbvias, frases mnemonic/seed, arrays de chave estilo Solana e assignments sensíveis de alta entropia.
 
 Se um check falhar, não descreva a superfície pública como pronta. Corrija a divergência ou explique a fronteira honestamente.
 

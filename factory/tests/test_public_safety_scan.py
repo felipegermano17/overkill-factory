@@ -38,7 +38,7 @@ class PublicSafetyScanTest(unittest.TestCase):
         self.assertEqual(public_safety_scan.scan_text("tests/example.py", line), [])
 
     def test_negative_fixture_guard_allows_declared_status_snapshot_sample_only(self) -> None:
-        blocked_ref = '  "ref": "' + "C:" + "\\\\Users\\\\operator\\\\raw-evidence.json" + '"'
+        blocked_ref = '  "ref": "' + "C:" + "\\\\Users\\\\operator\\\\" + "raw" + "-evidence.json" + '"'
 
         self.assertEqual(
             public_safety_scan.scan_text(
@@ -211,6 +211,37 @@ class PublicSafetyScanTest(unittest.TestCase):
 
         self.assertEqual(summary["target"]["ref"], "kanban:<redacted>")
         self.assertNotIn(RAW_TASK_MARKER, summary_text)
+
+    def test_blocks_internal_artifact_publication_refs(self) -> None:
+        artifact_line = "publish " + "raw" + "_evidence_bundle.json from the operator run"
+        findings = public_safety_scan.scan_text("docs/example.md", artifact_line)
+
+        self.assertTrue(findings)
+        self.assertIn("raw_" + "internal_artifact_marker", findings[0])
+
+    def test_allows_policy_language_about_private_artifacts(self) -> None:
+        policy_line = "Do not publish raw evidence; reduce it to redacted public-safe refs."
+
+        self.assertEqual(public_safety_scan.scan_text("docs/example.md", policy_line), [])
+
+    def test_blocks_sensitive_boundary_overclaim(self) -> None:
+        claim = "The " + "main" + "net" + " launch is safe and released after local smoke only."
+        findings = public_safety_scan.scan_text("docs/example.md", claim)
+
+        self.assertTrue(findings)
+        self.assertIn("sensitive_boundary_claim", findings[0])
+
+    def test_allows_sensitive_boundary_policy(self) -> None:
+        policy = "Mainnet and funds remain blocked until human gate evidence exists."
+
+        self.assertEqual(public_safety_scan.scan_text("docs/example.md", policy), [])
+
+    def test_blocks_human_artifact_private_ref(self) -> None:
+        private_path = "file" + "://operator/run/screen.png"
+        findings = public_safety_scan.scan_text("docs/example.md", "screenshot saved at " + private_path)
+
+        self.assertTrue(findings)
+        self.assertIn("human_artifact_private_ref", findings[0])
 
     def test_cli_writes_public_safe_summary_for_failing_git_ref_scan(self) -> None:
         original_root = public_safety_scan.ROOT
