@@ -28,6 +28,33 @@
         "factory_acquirable": true,
         "available": false
       }
+    },
+    {
+      "id": "credentials_access_readiness",
+      "status": "BLOCKED",
+      "required": true,
+      "summary": "Credential/access readiness needs exact human input or least-privilege repair.",
+      "detail": {
+        "credential_ref_count": 0,
+        "secret_binding_ref_count": 0,
+        "access_ref_count": 0,
+        "placeholder_credential_ref_count": 0,
+        "placeholder_access_ref_count": 0,
+        "declared_env_var_count": 0,
+        "present_env_var_count": 0,
+        "missing_env_var_count": 0,
+        "placeholder_env_var_count": 0,
+        "required_scope_count": 1,
+        "granted_scope_count": 0,
+        "missing_required_scope_count": 1,
+        "broad_scope_count": 0,
+        "least_privilege_ok": false,
+        "token_status_ref_count": 0,
+        "active_token_status_ref_count": 0,
+        "inaccessible_token_status_ref_count": 0,
+        "unknown_token_status_ref_count": 0,
+        "secrets_inspected": false
+      }
     }
   ],
   "capability_acquisition_routes": [

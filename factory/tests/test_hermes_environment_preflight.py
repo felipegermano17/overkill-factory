@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -83,10 +84,54 @@ class HermesEnvironmentPreflightTest(unittest.TestCase):
             [
                 {
                     "input_id": "credentials_access_readiness",
-                    "exact_request": "Provide public-safe credential/access readiness refs; do not paste secrets or private tokens.",
+                    "exact_request": "Provide public-safe credential/access readiness refs, valid secret binding refs, non-placeholder env var bindings, least-privilege scope proof, and reachable token/access proof; do not paste secrets or private tokens.",
                 }
             ],
         )
+
+    def test_credential_checks_block_placeholder_expired_and_broad_access_without_disclosure(self) -> None:
+        missing_env = "HERMES_PREFLIGHT_TEST_MISSING_SECRET"
+        os.environ.pop(missing_env, None)
+        report = factoryctl.build_hermes_environment_preflight_report(
+            require=["credentials"],
+            credential_refs=["external:placeholder-secret-ref"],
+            credential_env_vars=[missing_env],
+            access_refs=["external:operator-access-readiness"],
+            required_access_scopes=["repo:read"],
+            granted_access_scopes=["admin"],
+            token_status_refs=["external:expired-token-status"],
+            command_resolver=lambda _name: "/usr/bin/tool",
+            created_at="2026-07-01T00:00:00+00:00",
+        )
+
+        self.assertEqual(report["status"], "BLOCKED_WITH_EXACT_HUMAN_INPUT")
+        credential_check = next(check for check in report["checks"] if check["id"] == "credentials_access_readiness")
+        self.assertEqual(credential_check["status"], "BLOCKED")
+        self.assertEqual(credential_check["detail"]["placeholder_credential_ref_count"], 1)
+        self.assertEqual(credential_check["detail"]["missing_env_var_count"], 1)
+        self.assertEqual(credential_check["detail"]["broad_scope_count"], 1)
+        self.assertEqual(credential_check["detail"]["inaccessible_token_status_ref_count"], 1)
+        public_payload = json.dumps(report, sort_keys=True)
+        self.assertNotIn("external:placeholder-secret-ref", public_payload)
+        self.assertNotIn(missing_env, public_payload)
+        self.assertFalse(report["public_safety"]["credential_values_published"])
+        self.assertFalse(report["public_safety"]["secrets_inspected"])
+
+    def test_credential_checks_pass_with_secret_binding_scoped_access_and_active_token_status(self) -> None:
+        report = factoryctl.build_hermes_environment_preflight_report(
+            require=["credentials"],
+            secret_binding_refs=["external:vault-binding-ready"],
+            access_refs=["external:operator-access-ready"],
+            required_access_scopes=["repo:read"],
+            granted_access_scopes=["repo:read"],
+            token_status_refs=["external:active-token-status"],
+            command_resolver=lambda _name: "/usr/bin/tool",
+            created_at="2026-07-01T00:00:00+00:00",
+        )
+
+        credential_check = next(check for check in report["checks"] if check["id"] == "credentials_access_readiness")
+        self.assertEqual(credential_check["status"], "PASS")
+        self.assertEqual(report["human_input_requests"], [])
 
     def test_command_writes_json_and_summary(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
