@@ -316,7 +316,7 @@
     },
     {
       "claim_id": "public-release-readiness",
-      "public_promise": "Public release readiness is checked by preflight, public-surface sync, safety scans, worktree inventory, completion audit and Factory v1 Completion Gate.",
+      "public_promise": "Public release readiness is checked by preflight, public-surface sync, expanded public/private/security safety scans, worktree inventory, completion audit and Factory v1 Completion Gate.",
       "claim_level": "public_release_proof",
       "documentation_refs": [
         "README.md",

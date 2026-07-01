@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/factory-15-point-hardening-program.schema.json",
+  "title": "Factory 15-point hardening program",
+  "type": "object",
+  "required": [
+    "$schema",
+    "program_id",
+    "record_type",
+    "status",
+    "master_issue_ref",
+    "scope_lock",
+    "global_completion_bar",
+    "points"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "program_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "record_type": {
+      "const": "factory_15_point_hardening_program"
+    },
+    "status": {
+      "enum": [
+        "active",
+        "complete",
+        "partial",
+        "blocked"
+      ]
+    },
+    "master_issue_ref": {
+      "type": "string",
+      "pattern": "^github:issue:[0-9]+$"
+    },
+    "scope_lock": {
+      "type": "object",
+      "required": [
+        "expected_point_count",
+        "partial_must_not_be_reported_done",
+        "negative_closeout_counts_as_progress",
+        "factory_owned_blocker_requires_repair_loop",
+        "human_stop_requires_exact_external_authority"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "expected_point_count": {
+          "const": 15
+        },
+        "partial_must_not_be_reported_done": {
+          "const": true
+        },
+        "negative_closeout_counts_as_progress": {
+          "const": false
+        },
+        "factory_owned_blocker_requires_repair_loop": {
+          "const": true
+        },
+        "human_stop_requires_exact_external_authority": {
+          "const": true
+        }
+      }
+    },
+    "global_completion_bar": {
+      "type": "array",
+      "minItems": 7,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "contains": {
+        "const": "no_factory_owned_blocker_left_as_passive_bureaucracy"
+      }
+    },
+    "points": {
+      "type": "array",
+      "minItems": 15,
+      "maxItems": 15,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "problem",
+          "required_behavior",
+          "workstream",
+          "issue_refs",
+          "required_artifact_classes",
+          "verification"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^P(0[1-9]|1[0-5])$"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "problem": {
+            "type": "string",
+            "minLength": 1
+          },
+          "required_behavior": {
+            "type": "string",
+            "minLength": 1
+          },
+          "workstream": {
+            "enum": [
+              "control_plane_invariants",
+              "discovery_preflight_capability",
+              "operator_ux",
+              "architecture_quality",
+              "worker_safety_accountability"
+            ]
+          },
+          "issue_refs": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required_artifact_classes": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "verification": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "implementation_status": {
+            "enum": [
+              "complete",
+              "partial",
+              "blocked",
+              "not_yet_claimed_complete"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

@@ -20,7 +20,19 @@ from typing import Iterator
 CODE_ROOT = Path(__file__).resolve().parents[1]
 ROOT = CODE_ROOT.parent if (CODE_ROOT.parent / ".github").exists() else CODE_ROOT
 SKIP_SUFFIXES = {".png", ".jpg", ".jpeg", ".webp", ".gif", ".ico", ".pdf", ".tgz", ".zip"}
-SKIP_PARTS = {".git", ".tmp", ".pytest_cache", ".venv", "__pycache__", "build", "dist", "node_modules", "site", "venv"}
+SKIP_PARTS = {
+    ".git",
+    ".tmp",
+    ".pytest_cache",
+    ".venv",
+    ".worktrees",
+    "__pycache__",
+    "build",
+    "dist",
+    "node_modules",
+    "site",
+    "venv",
+}
 SKIP_PART_SUFFIXES = (".egg-info",)
 
 SECRET_PATTERNS = [
@@ -33,10 +45,22 @@ SECRET_PATTERNS = [
         r"\b(?:api[_-]?key|secret|token|password|passwd)\b\s*(?::(?!:)|=)\s*['\"]?[^'\"\s]{16,}",
         re.IGNORECASE,
     ),
+    re.compile(
+        r"\b(?:mnemonic|seed[_ -]?phrase|recovery[_ -]?phrase)\b\s*(?::(?!:)|=)\s*['\"]?"
+        r"(?:[a-z]{3,12}\s+){11,23}[a-z]{3,12}",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(?:wallet[_-]?private[_-]?key|secret[_-]?key|signing[_-]?key|custody[_-]?key|"
+        r"mainnet[_-]?key|funds?[_-]?key)\b\s*(?::(?!:)|=)\s*\[[0-9,\s]{80,}\]",
+        re.IGNORECASE,
+    ),
 ]
 
 ASSIGNMENT_RE = re.compile(
-    r"\b(?:api[_-]?key|secret|token|password|passwd|private[_-]?key)\b\s*(?::(?!:)|=)\s*['\"]?([A-Za-z0-9_./+=-]{24,})",
+    r"\b(?:api[_-]?key|secret|token|password|passwd|private[_-]?key|signing[_-]?key|"
+    r"custody[_-]?key|mainnet[_-]?key|funds?[_-]?key|wallet[_-]?key)\b"
+    r"\s*(?::(?!:)|=)\s*['\"]?([A-Za-z0-9_./+=-]{24,})",
     re.IGNORECASE,
 )
 

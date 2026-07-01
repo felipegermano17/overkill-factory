@@ -241,6 +241,7 @@ These are the public JSON schemas the factory exposes. They are not decoration; 
 - `schemas/discovery-brief.schema.json`
 - `schemas/evidence-graph.schema.json`
 - `schemas/execution-learnback-record.schema.json`
+- `schemas/factory-15-point-hardening-program.schema.json`
 - `schemas/factory-automation-run-record.schema.json`
 - `schemas/factory-automation-run-target.schema.json`
 - `schemas/factory-battery-result.schema.json`
@@ -480,6 +481,7 @@ Templates are starter records paired with schemas. They are examples of valid sh
 - `templates/discord-control-tower-owner-setup.json`
 - `templates/doc-implementation-obligations.json`
 - `templates/execution-learnback-record.json`
+- `templates/factory-15-point-hardening-program.json`
 - `templates/factory-automation-run-record.json`
 - `templates/factory-automation-run-target.json`
 - `templates/factory-bridge-decision.json`
