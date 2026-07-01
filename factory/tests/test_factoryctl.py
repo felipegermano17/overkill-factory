@@ -80,6 +80,10 @@ def worker_result(
         "security_orchestration_result": "security-orchestrator",
         "crypto_key_management_result": "crypto-key-management-specialist",
         "backend_api_build_result": "backend-api-builder",
+        "frontend_build_result": "frontend-builder",
+        "data_persistence_result": "data-persistence-builder",
+        "infra_devops_result": "infra-devops-builder",
+        "agent_runtime_result": "agent-runtime-builder",
         "remote_proof_result": "remote-proof-runner",
         "handoff_packet_result": "handoff-packer",
         "solana_quasar_build_result": "solana-quasar-builder",
@@ -880,12 +884,16 @@ class FactoryCtlTest(unittest.TestCase):
             "product-architect",
             "decomposition-planner",
             "product-face",
+            "frontend-builder",
             "wallet-transaction-builder",
             "crypto-key-management-specialist",
             "codex-security",
             "security-orchestrator",
             "backend-api-builder",
+            "data-persistence-builder",
             "integration-builder",
+            "infra-devops-builder",
+            "agent-runtime-builder",
             "test-automation-builder",
         ]:
             with self.subTest(worker_id=worker_id):
@@ -1093,6 +1101,34 @@ class FactoryCtlTest(unittest.TestCase):
             "solana_ai_kit_usage_receipt object is required for real PASS Solana worker results",
             errors,
         )
+
+    def test_real_generic_builder_results_require_solana_ai_kit_receipt_on_solana_card(self) -> None:
+        card = load_card("v35_valid_onchain_auditor_scan.md")
+        card["surfaces"] = ["frontend", "database", "infra", "agent-runtime", "solana", "wallet", "token-2022"]
+
+        for record_type, worker_id in [
+            ("frontend_build_result", "frontend-builder"),
+            ("data_persistence_result", "data-persistence-builder"),
+            ("infra_devops_result", "infra-devops-builder"),
+            ("agent_runtime_result", "agent-runtime-builder"),
+        ]:
+            with self.subTest(record_type=record_type):
+                result = worker_result(record_type, source_card=card)
+                result["evidence_kind"] = "real"
+                result["reusable_for_product"] = True
+
+                errors = factoryctl.validate_worker_result_record(
+                    result,
+                    expected_field=record_type,
+                    expected_worker_id=worker_id,
+                    card=card,
+                    evidence_root=ROOT,
+                )
+
+                self.assertIn(
+                    "solana_ai_kit_usage_receipt object is required for real PASS Solana worker results",
+                    errors,
+                )
 
     def test_worker_packet_carries_sdlc_feedback_loop_ref(self) -> None:
         card_path = ROOT / "templates" / "vfinal-factory-card.json"

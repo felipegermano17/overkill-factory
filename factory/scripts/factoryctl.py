@@ -663,10 +663,14 @@ OPERATOR_BRIEFING_DECISION_ARTIFACTS = {
     "release_decision",
 }
 SOLANA_DOMAIN_BRAIN_WORKERS = {
+    "agent-runtime-builder",
     "backend-api-builder",
     "codex-security",
     "crypto-key-management-specialist",
+    "data-persistence-builder",
     "decomposition-planner",
+    "frontend-builder",
+    "infra-devops-builder",
     "implementation-worker",
     "integration-builder",
     "product-architect",
@@ -681,11 +685,15 @@ SOLANA_DOMAIN_BRAIN_WORKERS = {
     "wallet-transaction-builder",
 }
 SOLANA_DOMAIN_BRAIN_OUTPUT_FIELDS = {
+    "agent_runtime_result",
     "architecture_result",
     "backend_api_build_result",
     "crypto_key_management_result",
+    "data_persistence_result",
     "decomposition_result",
+    "frontend_build_result",
     "implementation_result",
+    "infra_devops_result",
     "integration_build_result",
     "product_face_result",
     "product_sot_result",
