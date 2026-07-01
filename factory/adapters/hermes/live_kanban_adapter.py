@@ -4751,6 +4751,7 @@ def deterministic_reconcile_task_body(
             "local_state_authority": False,
         }
         task_body["stale_terminal_remediation_replacement"] = True
+        task_body["fresh_replacement_policy_version"] = "v2-distinct-runtime-replacement"
         task_body["supersedes_runtime_task_refs"] = stale_refs
     return task_body
 
