@@ -4788,6 +4788,10 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertEqual(len(fresh_tasks), 1)
         fresh_body = adapter.parse_json_object(str(fresh_tasks[0].get("body") or "{}"))
         self.assertTrue(fresh_body.get("stale_terminal_remediation_replacement"))
+        self.assertEqual(
+            fresh_body.get("fresh_replacement_policy_version"),
+            "v2-distinct-runtime-replacement",
+        )
 
     def test_no_idle_creates_materialization_contract_repair_for_internal_missing_inputs(self) -> None:
         fake = FakeHermes()
@@ -6346,6 +6350,10 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertEqual(
             replacement_body["runtime_lineage"]["lineage_type"],
             "stale_terminal_remediation_replacement",
+        )
+        self.assertEqual(
+            replacement_body.get("fresh_replacement_policy_version"),
+            "v2-distinct-runtime-replacement",
         )
         self.assertEqual(replacement_body["supersedes_runtime_task_refs"], [stale_id])
         self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
