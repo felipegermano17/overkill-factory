@@ -762,6 +762,46 @@ def assert_live_adapter_result_schema(testcase: unittest.TestCase, result: dict[
     testcase.assertEqual(errors, [])
 
 
+def rel007_reducer_receipt_fixture() -> dict:
+    verified_artifacts: dict[str, str] = {}
+    for role, target in adapter.REL007_BOUNDED_REDUCER_TARGETS.items():
+        for index, artifact_hash in enumerate(sorted(target["artifact_sha256s"])):
+            verified_artifacts[f"{role}_artifact_{index}"] = artifact_hash
+    return {
+        "orchestration_result": {
+            "task_id": "reducer-task",
+            "decision": adapter.REL007_REDUCER_DECISION,
+            "method_route": {
+                "route": "native Kanban completion reduction for REL-007 children",
+                "human_gate_required_now": False,
+                "operator_input_required_now": False,
+                "same_task_reblock": False,
+                "producer_rerun": False,
+            },
+            "evidence_refs": {
+                adapter.REL007_BANKRUN_CHILD_ROLE: "bankrun-child-task",
+                adapter.REL007_DEVNET_SPEC_CHILD_ROLE: "devnet-spec-child-task",
+                "downstream_native_graph": ["package-task", "review-task"],
+                "verified_artifacts": verified_artifacts,
+            },
+            "blocked_reasons": ["future executable proof still blocked"],
+            "kanban_dependency_state": {
+                "repair_to_materialize": "complete bounded child artifacts only",
+            },
+            "guardrails_preserved": {
+                "mainnet": False,
+                "devnet_transaction_execution": False,
+                "sendAndConfirmTransaction": False,
+                "real_funds": False,
+                "custody_or_signing_secrets": False,
+                "production_or_cloud_mutation": False,
+                "release_or_gate_approval": False,
+                "f17_f18_receipt_five_or_waiver": False,
+            },
+        }
+    }
+
+
 def assert_route_readiness_schema(testcase: unittest.TestCase, result: dict[str, object]) -> None:
     schema = json.loads((ROOT / "schemas" / "hermes-worker-route-readiness.schema.json").read_text(encoding="utf-8"))
     errors = validator.validate_node(schema, result, "$", schemas={"hermes-worker-route-readiness.schema.json": schema}, root_schema=schema)
@@ -1044,6 +1084,68 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         assert_route_readiness_schema(self, result)
         self.assertEqual(result["result"], "BLOCKED")
         self.assertIn("credential_not_proven", result["checks"][0]["blocked_reasons"])
+
+    def test_materialize_reducer_completion_completes_exact_bounded_rel007_children(self) -> None:
+        fake = FakeHermes()
+        fake.tasks["bankrun-child-task"] = {"status": "blocked", "events": [], "comments": []}
+        fake.tasks["devnet-spec-child-task"] = {"status": "blocked", "events": [], "comments": []}
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            receipt_path = tmp_path / "reducer-receipt.json"
+            out_path = tmp_path / "result.json"
+            receipt_path.write_text(json.dumps(rel007_reducer_receipt_fixture()), encoding="utf-8")
+            receipt_sha = hashlib.sha256(receipt_path.read_bytes()).hexdigest()
+            args = adapter.build_parser().parse_args(
+                [
+                    "materialize-reducer-completion",
+                    "--board",
+                    TEST_BOARD,
+                    "--reducer-receipt",
+                    str(receipt_path),
+                    "--receipt-sha256",
+                    receipt_sha,
+                    "--out",
+                    str(out_path),
+                ]
+            )
+            result = adapter.materialize_reducer_completion(args, runner=fake)
+
+        assert_live_adapter_result_schema(self, result)
+        self.assertEqual(result["mode"], "materialize-reducer-completion")
+        self.assertEqual(len(result["reducer_completion_task_ids"]), 2)
+        self.assertEqual(set(fake.tasks), {"bankrun-child-task", "devnet-spec-child-task"})
+        for role, expected in adapter.REL007_BOUNDED_REDUCER_TARGETS.items():
+            task_id = result["reducer_completion_task_ids"][role]
+            task = fake.tasks[task_id]
+            self.assertEqual(task["status"], "done")
+            metadata = json.loads(str(task["metadata"]))
+            self.assertEqual(metadata["marker"], adapter.REL007_REDUCER_COMPLETION_MARKER)
+            self.assertEqual(metadata["target_task_ref"], task_id)
+            self.assertEqual(metadata["evidence_verdict"], expected["evidence_verdict"])
+            self.assertFalse(metadata["guardrails_preserved"]["release_or_gate_approval"])
+            self.assertFalse(metadata["guardrails_preserved"]["devnet_transaction_execution"])
+
+    def test_materialize_reducer_completion_refuses_guardrail_regression(self) -> None:
+        fake = FakeHermes()
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            receipt = rel007_reducer_receipt_fixture()
+            receipt["orchestration_result"]["guardrails_preserved"]["mainnet"] = True
+            receipt_path = tmp_path / "unsafe-reducer-receipt.json"
+            receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
+            args = adapter.build_parser().parse_args(
+                [
+                    "materialize-reducer-completion",
+                    "--board",
+                    TEST_BOARD,
+                    "--reducer-receipt",
+                    str(receipt_path),
+                ]
+            )
+            with self.assertRaisesRegex(RuntimeError, "false guardrails"):
+                adapter.materialize_reducer_completion(args, runner=fake)
+
+        self.assertEqual(fake.calls, [])
 
     def test_factory_run_graph_backbone_is_derived_from_workflow_catalog(self) -> None:
         catalog_path = adapter.resolve_factory_workflow_catalog_path(ROOT / "docs" / "factory-workflow.catalog.json")
