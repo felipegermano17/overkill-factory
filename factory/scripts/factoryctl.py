@@ -24846,7 +24846,12 @@ def command_manager_profile_live_smoke(args: argparse.Namespace) -> int:
 
 def command_operator_progress_card(args: argparse.Namespace) -> int:
     script = ROOT / "scripts" / "factory_operator_progress_card.py"
-    return _run_python_script(script, ["--percent", str(args.percent), "--phase", str(args.phase), "--blocker", str(args.blocker), "--out", str(args.out), "--text-out", str(args.text_out)])
+    argv = ["--out", str(args.out), "--text-out", str(args.text_out)]
+    if args.model:
+        argv.extend(["--model", str(args.model)])
+    else:
+        argv.extend(["--percent", str(args.percent), "--phase", str(args.phase), "--blocker", str(args.blocker)])
+    return _run_python_script(script, argv)
 
 
 def command_operator_delivery_receipt(args: argparse.Namespace) -> int:
@@ -25719,6 +25724,7 @@ def build_parser() -> argparse.ArgumentParser:
     manager_live_parser.set_defaults(func=command_manager_profile_live_smoke)
 
     progress_parser = sub.add_parser("operator-progress-card", help="Render a gerente-facing progress card so the operator does not need Kanban.")
+    progress_parser.add_argument("--model", type=Path, help="Progress model JSON with weighted gates/artifacts/readiness.")
     progress_parser.add_argument("--percent", type=int, default=42)
     progress_parser.add_argument("--phase", default="F5 Product SOT")
     progress_parser.add_argument("--blocker", default="aguardando confirmação do escopo")
