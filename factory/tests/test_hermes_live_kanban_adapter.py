@@ -4717,6 +4717,105 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertFalse(created_body["operator_input_required"])
         self.assertNotIn("parents", created_tasks[0])
 
+    def test_no_idle_creates_triage_task_for_typed_block_loop(self) -> None:
+        fake = FakeHermes()
+        loop_id = "t_" + "looped"
+        fake.tasks[loop_id] = {
+            "id": loop_id,
+            "status": "triage",
+            "title": "REL-007 Solana/Quasar Bankrun/DevNet-safe proof packet",
+            "assignee": "solana-quasar-qa-engineer",
+            "body": json.dumps({"rel": "REL-007"}),
+            "events": [
+                {
+                    "type": "block_loop_detected",
+                    "payload": {
+                        "kind": "needs_input",
+                        "reason": "review-required/R3-onchain: auditor review required",
+                    },
+                }
+            ],
+        }
+        args = adapter.build_parser().parse_args(
+            ["no-idle", "--board", TEST_BOARD, "--create-remediation", "--workspace", "scratch"]
+        )
+
+        result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertEqual(state["classification"], "typed_block_loop_triage_task_created")
+        self.assertEqual(state["remediation_strategy"], "create_typed_block_loop_triage_task")
+        self.assertTrue(state["native_dispatch_required_next"])
+        created_tasks = [task for task_id, task in fake.tasks.items() if task_id != loop_id]
+        self.assertEqual(len(created_tasks), 1)
+        created_body = json.loads(str(created_tasks[0]["body"]))
+        self.assertEqual(created_body["targeted_remediation"]["plan_action"], "triage_typed_block_loop")
+        self.assertEqual(created_body["targeted_remediation"]["block_loop_task_refs"], [loop_id])
+        self.assertFalse(created_body["operator_input_required"])
+
+    def test_no_idle_unblocks_nonproduction_proof_task_after_operator_authority_receipt(self) -> None:
+        fake = FakeHermes()
+        proof_id = "t_" + "rel007proof"
+        fake.tasks[proof_id] = {
+            "id": proof_id,
+            "status": "blocked",
+            "title": "REL-007 Solana/Quasar Bankrun/DevNet-safe proof packet",
+            "assignee": "solana-quasar-qa-engineer",
+            "body": json.dumps({"rel": "REL-007", "proof_scope": "Bankrun/disposable DevNet"}),
+            "comments": [
+                {
+                    "author": "human-gate-clerk",
+                    "body": (
+                        "OPERATOR DECISION / non-production proof authority confirmed. "
+                        "decision record: approved/non-production-proof-only. Safe proof/staging/Bankrun/"
+                        "disposable-DevNet validation only; no production, no Mainnet, no real funds, no secrets."
+                    ),
+                }
+            ],
+            "events": [{"type": "blocked", "payload": {"kind": "needs_input", "reason": "disposable DevNet authority required"}}],
+        }
+        args = adapter.build_parser().parse_args(
+            ["no-idle", "--board", TEST_BOARD, "--create-remediation", "--workspace", "scratch"]
+        )
+
+        result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertEqual(state["classification"], "nonproduction_proof_authority_unblocked")
+        self.assertEqual(state["remediation_strategy"], "unblock_nonproduction_proof_authority_tasks")
+        self.assertEqual(state["unblocked_task_refs"], [adapter.PUBLIC_SAFE_KANBAN_REF])
+        self.assertTrue(state["native_dispatch_required_next"])
+        self.assertEqual(fake.tasks[proof_id]["status"], "ready")
+        self.assertFalse(state["operator_input_required"])
+        self.assertFalse(state["human_gate_required"])
+
+    def test_release_replan_duplicate_consumption_artifacts_do_not_trigger_repair(self) -> None:
+        task_id = "t_" + "dupreplan"
+        record = {
+            "id": task_id,
+            "status": "done",
+            "title": "Replan actionable non-production release proof path",
+            "assignee": "release-ops-worker",
+            "body": json.dumps({"marker": adapter.NO_IDLE_RELEASE_REPLAN_MARKER}),
+            "runs": [
+                {
+                    "status": "done",
+                    "summary": "Consumed duplicate release replan without creating another proof graph.",
+                    "metadata": {
+                        "release_ops_result": {
+                            "verdict": "DUPLICATE_REPLAN_CONSUMED_BY_EXISTING_NATIVE_PATH__PROMOTION_STILL_BLOCKED",
+                            "artifacts": [
+                                f"/tmp/missing/{task_id}/release_replan_duplicate_consumption_{task_id}.json",
+                                f"/tmp/missing/{task_id}/release_replan_duplicate_consumption_{task_id}.md",
+                            ],
+                        }
+                    },
+                }
+            ],
+        }
+
+        self.assertEqual(adapter.missing_declared_local_artifacts(record), [])
+
     def test_missing_human_gate_artifacts_are_suppressed_when_delivery_receipt_exists(self) -> None:
         gate_id = "t_" + "humangate"
         missing_artifacts = [
