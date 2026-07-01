@@ -21316,7 +21316,7 @@ def board_reconcile_runtime_contract_blockers(
     selected_ref: dict[str, Any] | None = None
     for status, items in rows.items():
         normalized_status = str(status or "").strip().lower()
-        if normalized_status in TERMINAL_BOARD_STATUSES:
+        if normalized_status in TERMINAL_BOARD_STATUSES or normalized_status.startswith("done_"):
             continue
         for task in items:
             task_ref = _task_public_ref(task)

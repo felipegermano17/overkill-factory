@@ -621,6 +621,37 @@ class FactoryBoardReconcilerTest(unittest.TestCase):
         self.assertFalse(plan["native_dispatch_required_next"])
         self.assertFalse(plan["blocked_reasons"])
 
+    def test_reconcile_ignores_terminal_history_omitted_from_enrichment(self) -> None:
+        snapshot = {
+            "rows": {
+                "done_omitted_from_enrichment": [
+                    {
+                        "id": "old-done-repair",
+                        "status": "done",
+                        "title": "Repair F15 blocked work-unit materialization contracts",
+                        "assignee": "factory-orchestrator",
+                        "created_by": "factory-no-idle-repair",
+                        "skills": ["kanban-workflows"],
+                    }
+                ],
+                "todo": [
+                    {
+                        "id": "task-f24",
+                        "status": "todo",
+                        "title": "F24 - Release ou bloqueio",
+                        "current_step_key": "F24-release-or-block",
+                    }
+                ],
+            }
+        }
+
+        plan = factoryctl.build_board_reconcile_plan(snapshot, board="product-alpha")
+
+        self.assertEqual(factoryctl.validate_board_reconcile_plan(plan), [])
+        serialized_plan = json.dumps(plan, sort_keys=True)
+        self.assertNotIn("skill(s) not allowed", serialized_plan)
+        self.assertNotIn("old-done-repair", serialized_plan)
+
     def test_phase_engine_runtime_strict_rejects_template_scaffold_artifacts(self) -> None:
         card = load_vfinal_card()
 
