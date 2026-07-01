@@ -1,106 +1,114 @@
-# Technical Model
+# Technical model
 
-Overkill Factory is implemented as a Python package, CLI, contract library, Hermes adapter surface, public worker registry, and documentation site.
+This page explains the implementation model without pretending that every reader wants to live inside the codebase.
 
-It is intentionally not a replacement for Hermes.
+The short version: Hermes owns runtime state. Overkill Factory owns the production contracts around that state. The repository contains the scripts, schemas, templates, registries, tests, and public docs that make the contract checkable.
 
 ## Repository shape
 
-```text
-README.md              public English entry
-README.pt-BR.md        public Portuguese entry
-docs/                  canonical public documentation and public catalogs
-factory/               implementation, contracts, tests, examples, legacy docs
-```
+The public repository has two important top-level areas:
 
-Inside `factory/`:
+- `docs/`: the public product manual and public catalogs.
+- `factory/`: the implementation, including scripts, schemas, templates, agents, adapters, examples, fixtures, tests, skills, and legacy docs.
 
-- `scripts/` contains `factoryctl.py` and validators;
-- `schemas/` contains JSON schemas for contracts;
-- `templates/` contains canonical example/contract templates;
-- `agents/` contains public worker registries, profiles, readiness, and bindings;
-- `adapters/hermes/` contains integration code for Hermes runtime boundaries;
-- `examples/` and `fixtures/` contain public examples and validation fixtures;
-- `tests/` protects behavior and public claims;
-- `legacy-docs/` preserves non-canonical older documentation.
+Old technical docs live under `factory/legacy-docs/`. They are preserved for history and compatibility, but they are not the canonical public explanation.
 
-## Public kernel counts
+## The executable surface
 
-The current executable surface inspected for this documentation contains:
+`factoryctl` is the main command surface. It validates cards, builds gate reports, compiles the workflow, prints registries, prepares worker packets, and runs the local public proof path.
 
-- 244 schemas;
-- 156 JSON templates;
-- 97 tests;
-- 40 public workers;
-- 14 route classes;
-- 8 method engines;
-- 17 operating-system areas;
-- 26 compiled workflow phases.
+The docs should never outrun this executable surface. If the docs claim a capability, the claim should trace to code, schema, test, command output, or a current product decision.
 
-## `factoryctl`
+## Runtime state
 
-`factoryctl` is the public control helper. It validates contracts, creates local proof artifacts, compiles workflow plans, generates worker packets, checks public JSON artifacts, and runs smoke paths.
+Hermes owns runtime state: Kanban cards, worker tasks, dependencies, transitions, comments, workspaces, blocked states, and done states. The factory should not recreate that state in prose or in a hidden sidecar.
 
-Important commands:
+The factory adds discipline around the runtime. It decides what artifacts are required, which gates apply, which worker profile should handle a task, what evidence must return, and what authority is forbidden.
 
-```bash
-cd factory
-python3 scripts/factoryctl.py doctor
-python3 scripts/factoryctl.py run minimal
-python3 scripts/factoryctl.py compile-workflow --out .tmp/factory-workflow-compiled-plan.json
-python3 scripts/factoryctl.py validate-runtime-contracts
-python3 scripts/factoryctl.py route-registry
-python3 scripts/factoryctl.py operating-systems
-python3 scripts/factoryctl.py method-engines
-```
+## Contracts and schemas
 
-`factoryctl` can prove local contract coherence. It does not replace Hermes runtime proof.
+The repository currently contains 244 JSON schemas and 156 JSON templates. That is the backbone of the system. The schemas define what valid records look like. The templates give examples or default contracts. The tests keep those contracts from drifting silently.
 
-## Runtime boundary
+Important contract families include workflow plans, factory commands, run events, promotion packets, worker authority, Product SOT, method contracts, capability packs, gate reports, Receipt Five, human gates, and runtime proof records.
 
-Hermes owns runtime state. Overkill Factory owns method contracts and checks.
+## Routes, methods, and operating systems
 
-That means:
+The route registry currently exposes 14 route classes. The method registry exposes 8 method engines. The operating-system registry exposes 17 operating-system areas.
 
-- a local JSON file is not a real running board;
-- a generated packet is not completed work;
-- a worker profile is not a worker result;
-- a passing local smoke is not a production release;
-- a human gate cannot be faked by a script.
+Route classes answer "what kind of work is this?" Method engines answer "how should this kind of work be handled?" Operating-system areas answer "which part of the factory owns this capability?"
 
-## Operating-system registry
+This gives the factory a way to adapt without becoming vague. It can handle product creation, bug repair, incidents, releases, security work, analytics, UX, migration, and agent quality changes without pretending they are the same job.
 
-The factory groups critical areas into operating-system entries:
+## Workers and profiles
 
-- **Deterministic Control Plane OS** (`deterministic_control_plane_os`): owner `factory-orchestrator`, status `active`. Own the reducer-first factory spine: phase graph, commands, events, decision outbox, replay and promotion boundaries.
-- **Product Truth and Research OS** (`product_truth_research_os`): owner `source-ledger-worker`, status `active`. Own deep product starts before Product SOT: sources, claims, conflicts, brownfield study, research decisions and operator understanding.
-- **Method OS** (`method_os`): owner `factory-orchestrator`, status `active`. Turn method routing into deterministic method engines rather than broad method-family labels.
-- **Product Architecture OS** (`product_architecture_os`): owner `product-architect`, status `active`. Own architecture candidates, trust boundaries, integration shape, data boundaries and technical decisions before decomposition.
-- **Product Experience, Design and Brand OS** (`product_experience_design_brand_os`): owner `product-face`, status `active`. Own UX, information architecture, brand/identity, design system, component proof, accessibility and visual regression for product surfaces.
-- **Work Unit and Execution Dispatch OS** (`work_unit_execution_dispatch_os`): owner `decomposition-planner`, status `active`. Own vertical work units, dispatch readiness, Hermes materialization plans, worker packets and execution ordering.
-- **Authority and Autonomy OS** (`authority_autonomy_os`): owner `factory-orchestrator`, status `active`. Decide when the factory proceeds, repairs, asks the operator, blocks or escalates without turning speed into unsafe YOLO.
-- **Hermes Worker Runtime OS** (`hermes_worker_runtime_os`): owner `factory-orchestrator`, status `blocked_pending_runtime_proof`. Own live worker operability: profile readiness, Hermes binding freshness, dispatch, no-idle, worker results and reconciliation.
-- **Evidence and Receipt OS** (`evidence_receipt_os`): owner `evidence-reconciler`, status `active`. Own proof tiers, evidence freshness, artifact readback, Receipt Five reconciliation and product-specific proof bundles.
-- **Capability Pack and Provider OS** (`capability_provider_os`): owner `factory-orchestrator`, status `active`. Own domain detection, capability pack activation, provider readiness, specialist acquisition and fail-closed pack execution.
-- **Agent and Profile Authority OS** (`agent_profile_authority_os`): owner `factory-orchestrator`, status `active`. Own worker identity, permissions, profile linting, binding readiness and the rule that agents execute contracts instead of deciding the line.
-- **Security OS** (`security_os`): owner `security-orchestrator`, status `active`. Own threat modeling, secrets, supply chain, privacy, runtime hardening, specialist security routing and risk evidence.
-- **Quality and Verification OS** (`quality_verification_os`): owner `qa-verification-worker`, status `active`. Own tests, QA plans, repair loops, visual verification, accessibility, product quality and independent evidence before done.
-- **Operator Experience OS** (`operator_experience_os`): owner `overkill-factory-gerente`, status `active`. Make one manager interface enough for Telegram-first operation: start, status, decisions, changes, briefings and proof.
-- **Release and Operations OS** (`release_operations_os`): owner `release-ops-worker`, status `active`. Own production readiness, release decision, rollback, monitoring, incident support and human R4 authority.
-- **Velocity, Cost and Throughput OS** (`velocity_cost_throughput_os`): owner `factory-orchestrator`, status `active`. Govern throughput, parallel lanes, retry budgets, token and time budgets, batching, dedupe and status cadence.
-- **Factory Learning OS** (`factory_learning_os`): owner `skill-eval-distiller`, status `hardened_existing`. Turn learnback, Hermes /learn drafts and repeated findings into inactive, reviewable, testable factory improvements.
+The public registry currently lists 40 public workers. A worker name is not enough. A worker needs a profile, a binding, result expectations, skill refs, evidence policy, and authority limits.
 
-These entries are not marketing categories. They name ownership, contracts, required proof, and failure boundaries.
+That is why the repository includes worker registries, worker profiles, Hermes profile bindings, readiness ledgers, and validators. A worker should not be a character in a prompt. It should be an operable role with a contract.
 
-## Method engines
+## Generated reference
 
-Method engines bind a route to proof. A method family cannot authorize execution by itself. The selected engine must produce the right artifacts and gates for the work.
+The full generated kernel reference is produced by `factory/scripts/generate_factory_reference_docs.py`. The generated output now lives under `factory/legacy-docs/generated/` because the public manual should stay readable. The generated file is still useful for maintainers and validators.
 
-- `spec_first_sdd` — Spec-First SDD Engine: family `spec_first`; used by product_creation, feature_delivery, critical_integration, migration_execution.
-- `test_first_tdd` — Test-First TDD Engine: family `test_first`; used by feature_delivery, bug_repair, critical_integration, migration_execution.
-- `behavior_first_bdd` — Behavior-First BDD Engine: family `behavior_first`; used by product_creation, feature_delivery, ux_product_experience.
-- `discovery_research` — Discovery and Research Engine: family `discovery_first`; used by product_creation, research_validation, brownfield_discovery.
-- `security_first_threat_model` — Security-First Threat Model Engine: family `security_first`; used by security_remediation, release_promotion, critical_integration, agent_quality_change.
-- `design_first_product_experience` — Design-First Product Experience Engine: family `design_first`; used by ux_product_experience, product_creation, feature_delivery.
-- `legacy_diagnosis` — Legacy Diagnosis Engine: family `legacy_diagnosis`; used by brownfield_discovery, migration_execution, bug_repair.
-- `incident_first` — Incident-First Engine: family `incident_first`; used by incident_response, bug_repair, security_remediation.
+## Validation stack
+
+The implementation is guarded by public JSON validators, public surface sync checks, promise-to-implementation checks, worker profile validation, public safety scans, secret safety scans, MkDocs strict build, and the Python test suite.
+
+The current public docs are meant to be read by humans, but they are still tied to these checks. That is what keeps the manual from becoming a story detached from the product.
+
+## How a request becomes state
+
+The factory does not trust a request just because it arrived in a chat. First it records source. Then it turns that source into structured artifacts. Those artifacts decide the route, the method, the gates, and the worker packets. Only then should runtime execution begin.
+
+That order is deliberate. If a worker starts from a vague instruction, the system has no stable way to decide whether the answer is right. If the request becomes state first, every later step can point back to the same source. The worker can be wrong, but the factory has something concrete to compare against.
+
+## What should be generated and what should be written by people
+
+Some material is better generated from code: full command catalogs, schema coverage, worker inventories, and large reference tables. Hand-writing those by memory is how documentation goes stale.
+
+Other material should be written for humans: this manual, the operating model, the trust model, and the usage path. A new operator does not need a thousand-line generated reference as the first explanation. They need the story in plain language, then exact commands when they are ready.
+
+The current repository keeps both layers. Generated material still exists for validation and maintainers. The public manual stays readable.
+
+## What can fail
+
+The technical model is strict because the failure modes are subtle. A path can exist but point to legacy documentation. A public manifest can name a file that was moved. A worker profile can look configured while its binding points at stale docs. A local proof can pass while live Hermes has not been checked. A public claim can be true for the kernel and false for a private product run.
+
+The validators are there to catch those mismatches. They are not a replacement for judgment, but they remove a lot of easy ways to fool ourselves.
+
+## How to change the factory safely
+
+A safe change usually touches three layers at once: the human explanation, the executable contract, and the tests or validators. If you change docs only, you may improve communication but not behavior. If you change code only, the public surface may lie. If you change tests only, you may enforce an old model.
+
+For public documentation work, the safest rule is simple: write from current code and command output, not from memory. Then run the validators. If the validators complain, treat that as a product signal, not as an annoyance.
+
+## Hermes bindings and live profiles
+
+A worker is operable only when four layers match: registry role, agent profile, Hermes binding, and card-specific worker packet. A profile name alone is not enough.
+
+The binding defines skill refs, queue policy, result schema, receipt field, and evidence path policy. That prevents a nice prompt persona from being treated as a real worker without a runtime contract.
+
+Readiness also has a boundary. An old smoke, a locally materialized profile, or a degraded ledger does not prove live execution. It says a configuration path exists. Real completion still needs a current worker result and evidence consumed by the gate.
+
+## Phase engine and Kanban graph
+
+The factory uses the phase engine to compute the current frontier from materialized artifacts. The phase declared on a card does not beat reality. If Product SOT, Method Contract, decision package, or readiness is missing, the later phase blocks.
+
+In Hermes, this must become a native graph: cards, dependencies, typed blockers, and linked work units. The factory may reconcile and repair, but it should not maintain a hidden parallel list. Runtime should show operational truth.
+
+## Operator interface
+
+The operator interface is a projection. Telegram, Discord, cockpit, and CLI bridge can receive source, send status, and deliver decision packages. They do not replace Hermes, Receipt Five, or worker results.
+
+The product rule is: the manager speaks to the human; workers and raw events feed internal state. A human gate needs a readable memo and the artifact under review, not a JSON dump or local path.
+
+## Artifact readback and durable attachments
+
+The Hermes integration should not accept “a file exists” as completion. For runtime artifacts and attachments, the factory needs readback: row or blob exists, size and hash match, parsing succeeded when applicable, safety checks passed, and the reference can be consumed later.
+
+References such as `artifact_readback` and `kanban-attachment` live at that boundary. They prevent metadata, local paths, or temporary files from being treated as permanent proof.
+
+## SDLC Feedback Loop
+
+Material autonomous work needs to keep the thread between signal, triage, model/profile choice, execution, evidence, and learnback. That thread is the SDLC Feedback Loop.
+
+Without it, a failure becomes chat memory; a model choice becomes implicit; learnback becomes opinion without a target. With it, the factory knows where the signal came from, why it chose a route, what proof returned, and what rule may change later.

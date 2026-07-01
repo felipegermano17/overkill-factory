@@ -1,85 +1,73 @@
-# Operating Model
+# Operating model
 
-This page describes the factory as it operates, not as an internal folder tree.
+This page follows the life of a request inside the factory. The central question is not “which script runs?”, but “how does a request become safe, proven, reviewable work?”.
 
-The simple mental model is: the factory receives a signal, protects the truth, chooses a safe route, creates bounded work, executes through Hermes, verifies evidence, and either releases, blocks, or learns.
+A request starts as a signal. It may be a product idea, a bug, a release, an incident, a screen, an integration, an audit, an agent change, or an improvement to the factory itself. The wrong answer is to start building. The right answer is to preserve source, understand the work type, choose the method, and only then execute.
 
-## 1. A signal enters
+## 1. The request enters through the right door
 
-A signal can be a product paper, bug report, feature idea, incident, repository, release request, UX request, integration, migration, security issue, analytics request, or agent/runtime change.
+The factory may speak with the operator through Telegram, Discord, a cockpit, CLI, or another channel. The channel is the front desk. It is not the source of truth.
 
-The route registry currently exposes these route classes:
+The operator provides material, goal, constraints, and decisions when those decisions truly belong to the operator. The factory should own the rest: source recording, fact/inference separation, Product SOT, routing, worker packets, Hermes state, evidence, review, human gates, and Receipt Five closure.
 
-- `product_creation`: request types product_new; method family `spec_first`; gates Source Gate, Product SOT Gate, Ready Gate.
-- `feature_delivery`: request types feature, slice; method family `behavior_first`; gates Source Gate, Method Gate, Ready Gate.
-- `bug_repair`: request types bug; method family `test_first`; gates Reproduction Gate, Regression Gate, Receipt Gate.
-- `incident_response`: request types incident; method family `incident_first`; gates Severity Gate, Mitigation Gate, Learnback Gate.
-- `brownfield_discovery`: request types migration, refactor, integration; method family `legacy_diagnosis`; gates Brownfield Baseline Gate, Regression Gate, Rollback Gate.
-- `release_promotion`: request types release; method family `spec_first`; gates Production Readiness Gate, Rollback Gate, Release Gate.
-- `research_validation`: request types feature, product_new, security, ux_ui, data_analytics, agent_skill; method family `research_first`; gates Source Quality Gate, Specialist Decision Gate, SOT Impact Gate.
-- `docs_onboarding`: request types doc; method family `docs_first`; gates Docs Utility Gate, First Run Gate.
-- `security_remediation`: request types security; method family `security_first`; gates Security Architecture Gate, Security Review Gate.
-- `critical_integration`: request types integration; method family `spec_first`; gates Dependency Gate, Contract Test Gate, Fallback Gate.
-- `migration_execution`: request types migration; method family `legacy_diagnosis`; gates Migration Plan Gate, Regression Gate, Rollback Gate.
-- `ux_product_experience`: request types ux_ui, product_new, feature; method family `design_first`; gates Product Experience Gate, Product Face Gate, Independent Design Review Gate.
-- `analytics_data`: request types data_analytics, product_new, feature; method family `analytics_first`; gates Data Contract Gate, Privacy Gate, Metrics Proof Gate.
-- `agent_quality_change`: request types agent_skill; method family `agent_eval_first`; gates Agent Eval Gate, Worker Profile Readiness Gate, Learnback Gate.
+That removes babysitting from the operator. The human should not have to notice that a worker was shallow, a review was not consumed, a board is idle because of process laziness, or a decision package is missing. When that happens, the factory failed.
 
-The route class matters because a bug should not be handled like a greenfield product, and a release should not be handled like discovery. The method and gates change with the route.
+## 2. Source is protected before planning
 
-## 2. Source comes before interpretation
+The first important artifact is the source envelope. It preserves what arrived before the factory summarizes, interprets, or decomposes it. Then the source ledger separates five things agents often mix:
 
-The factory first captures and resolves source material. It should not turn a long product paper into a shallow summary and call that truth.
+- fact from the source;
+- reasonable inference;
+- decision already made;
+- conflict between sources;
+- gap that still needs resolution.
 
-The expected sequence is:
+This simple separation changes the run. Without it, a short summary becomes “truth” and the product starts crooked.
 
-- capture the source envelope;
-- classify the signal;
-- resolve source references;
-- build a source ledger;
-- identify conflicts or missing material;
-- confirm understanding with the operator when product truth matters.
+## 3. The factory works in five layers
 
-Only after this can the factory create the product definition artifacts that downstream workers depend on.
+The legacy docs had a useful map that is still current. The factory operates in five layers:
 
-## 3. Product truth becomes executable scope
+1. Truth layer: source, source resolution, Product SOT, decisions, conflicts, and gaps.
+2. Method and planning layer: route, method, architecture, Product Creation Plan, Product Experience Plan, data, evals, and loop plan.
+3. Risk, authority, access, and cost layer: risk, budget, secrets, production, mainnet, privacy, compliance, and human gates.
+4. Execution and evidence layer: Hermes, worker packets, worker results, Product Face, QA, review, remote proof, and Receipt Five.
+5. Operations and learning layer: release, monitoring, support, incidents, learnback, and maturity audit.
 
-The Product SOT is the source-of-truth product definition used by the factory. It is not a casual summary. It is the artifact that downstream method, architecture, planning, decomposition, implementation, and review must trace to.
+The point of the map is that “doing the task” is only one part. The factory also needs to know whether the right task was chosen, authority existed, the product was proven, and the factory learned from the run.
 
-A product-facing run must also cover the full Product SOT scope. That prevents a first slice from silently becoming the whole product.
+## 4. Routing chooses the right weight
 
-## 4. Method is selected by contract
+Routes are how the factory says: this request is not like the others.
 
-The method engine registry currently contains:
+A bug needs reproduction and regression. A new product needs Product SOT and scope coverage. A release needs readiness, rollback, and owner. An incident needs severity, mitigation, and learnback. A critical integration needs contract, fallback, and tests. A security change needs architecture and review. A screen needs Product Face, states, journey, and visual proof.
 
-- `spec_first_sdd` — Spec-First SDD Engine: family `spec_first`; used by product_creation, feature_delivery, critical_integration, migration_execution.
-- `test_first_tdd` — Test-First TDD Engine: family `test_first`; used by feature_delivery, bug_repair, critical_integration, migration_execution.
-- `behavior_first_bdd` — Behavior-First BDD Engine: family `behavior_first`; used by product_creation, feature_delivery, ux_product_experience.
-- `discovery_research` — Discovery and Research Engine: family `discovery_first`; used by product_creation, research_validation, brownfield_discovery.
-- `security_first_threat_model` — Security-First Threat Model Engine: family `security_first`; used by security_remediation, release_promotion, critical_integration, agent_quality_change.
-- `design_first_product_experience` — Design-First Product Experience Engine: family `design_first`; used by ux_product_experience, product_creation, feature_delivery.
-- `legacy_diagnosis` — Legacy Diagnosis Engine: family `legacy_diagnosis`; used by brownfield_discovery, migration_execution, bug_repair.
-- `incident_first` — Incident-First Engine: family `incident_first`; used by incident_response, bug_repair, security_remediation.
+The factory has fourteen route classes. Exact detail lives in the registries, but the public idea is this: every work type gets different gates and proof. That prevents one generic agent from treating docs, mainnet, UI, release, and incidents as variations of the same task.
 
-A method label is not enough. The factory must bind the selected route to artifacts, gates, workers, and proof requirements. For example, test-first work needs test proof. Design-first work needs Product Experience proof. Security-first work needs threat modeling and security evidence.
+## 5. Product SOT is product truth, not a pretty document
 
-## 5. Planning creates bounded execution
+Product SOT is the reviewable product definition. It should state what is in scope, what is out, which users matter, which promises must be kept, what risks exist, and what evidence counts as acceptance.
 
-The Product Creation Plan and work units convert product truth into executable packets. A worker packet should tell a specialist what to do, what not to do, what evidence to return, and what authority it has.
+For whole-product work, the factory also needs Full Product SOT Scope Coverage. That prevents the first practical slice from silently becoming the whole product. Every important requirement must be planned, blocked with owner, out of scope with rationale, human-owned, or done with proof.
 
-This is where the factory avoids the classic failure: "agent, please build everything." The worker receives a bounded job instead of a vague mission.
+Without that coverage, workers can do a lot of work and still deliver a product that is too narrow.
 
-## 6. Hermes executes the runtime work
+## 6. Method connects intent to proof
 
-Hermes Kanban remains the runtime source of truth. Cards, dependencies, worker status, comments, workspaces, and transitions live there.
+The Method Contract records how the work will be done. It may choose a spec-first, test-first, behavior-first, discovery-first, security-first, design-first, legacy-diagnosis, or incident-first path.
 
-The factory can validate contracts and prepare packets, but execution authority comes from the runtime state. If the runtime says a card is blocked, the factory must respect that and either repair the blocker or deliver the correct human gate.
+The point is not the method name. The point is that the method changes evidence:
 
-## 7. Review is separate from execution
+- test-first needs tests and regression proof;
+- design-first needs Product Experience Plan, Product Face Packet, and surface proof;
+- security-first needs threat model, trust boundary, scan, and review;
+- discovery-first needs uncertainty turned into operational decision;
+- legacy-diagnosis needs baseline, rollback, and regression protection;
+- incident-first needs mitigation, status, cause, and learnback.
 
-A worker's `done` event is not automatically proof. The factory expects readback, verification, and independent review where required.
+A method that does not change artifact, gate, or proof is just a slogan.
 
-Executor and reviewer should be separate identities for material work. Review can pass, fail, or create repair work. A review that passes but is not reduced back into the original task is still an orchestration problem.
+
 
 ## Operator bridge modes
 
@@ -89,25 +77,54 @@ The bridge modes are `status_bridge`, `start_bridge`, `question_bridge`, `decisi
 
 The bridge separates `overkill-factory-gerente` as the operator-facing concierge from `factory-orchestrator` as the factory routing/runtime-control role. Durable Operator Inbox records preserve decisions, questions, and handoffs in the default Hermes store. Factory Mechanic remains the self-improvement owner for learnback and factory changes. The bridge cannot grant authority, invent approvals, close gates, or claim runtime completion without evidence.
 
-## 8. Human gates are explicit
+## 7. Capability packs prevent fake competence
 
-A human gate is not an excuse to stop. It is a real decision package. The operator should receive the artifact, the decision needed, the risks, the evidence, and the recommended choices.
+The factory should not pretend one generic agent covers every product. Web SaaS, CLI/TUI, cloud, agent runtime, Solana, native mobile, desktop, games, fintech, analytics, browser extensions, and hardware need different proof.
 
-Internal review-required blockers are factory-owned unless they require explicit operator authority.
+Capability packs say what is ready and what is still a template. Core packs such as web, CLI/TUI, cloud, agent-runtime, Solana AI Kit, onboarding, and public docs may proceed when route and gates match. Mobile, desktop, game, AI/ML, fintech, regulated domain, analytics, browser extension, and hardware packs need specialists, bindings, smoke, eval, and evidence before material execution.
 
-## 9. Receipt Five closes the loop
+That is an honesty boundary. Blocking for a missing pack is better than pretending expertise.
 
-Receipt Five is the evidence package for completion or blocking. It should answer:
+## 8. Work becomes small worker packets
 
-- what was requested;
-- what was built or decided;
-- what evidence proves it;
-- what was reviewed;
-- what remains blocked or risky;
-- what the next operational state is.
+A worker packet is a bounded task. It tells the worker what to do, what it receives, what to return, what evidence to attach, and what authority it does not have.
 
-Without that package, "done" is not a factory-grade claim.
+A good packet can be executed, reviewed, and retried. A bad packet says “build the product” and leaves the operator to guess whether it is good.
 
-## 10. Learnback improves the factory
+Important workers cover orchestration, source ledger, Product SOT, architecture, Product Face, builders, QA, security, review, release, handoff, evidence reconciliation, human gates, and skill/eval distillation. The name is not enough. Every worker needs a profile, Hermes binding, receipt field, evidence policy, and authority boundary.
 
-A finished run can expose better methods, missing skills, weak validators, or new failure patterns. Learnback turns those into reviewable improvements instead of silently changing the factory.
+## 9. Hermes is the floor, the factory is the contract
+
+Hermes Kanban remains the runtime source of truth. It stores cards, dependencies, status, workers, workspaces, comments, and transitions. The factory should not create a hidden second runtime.
+
+The factory prepares the contract: missing artifacts, blocking gates, required workers, acceptable evidence, and real human approvals. Hermes records live work.
+
+When the factory creates Hermes tasks, it should use native dependencies. If a phase depends on work units, those work units must be parents of the following phase. If mandatory work is discovered late, it must enter the graph before downstream work moves. Discovering required work after a phase is already done is a graph violation.
+
+## 10. No-idle is not a parallel dispatcher
+
+No-idle exists to detect dangerous silence. If work is running, it observes. If work is ready, Hermes dispatches. If the block is dependency_wait, it waits for the dependency. If the block is needs_input and a decision package exists, the manager calls the operator. If a package, readback, PDF, artifact, or internal repair is missing, the factory repairs instead of dumping the problem on the human.
+
+That rule matters. No-idle must not become mini-Hermes. It is a board-integrity auditor, not the normal source of authority.
+
+## 11. Product Face proves the face of the product
+
+A product with an interface needs product experience proof, not only backend or architecture. Product Face covers web visual UI, CLI/TUI, docs/onboarding, agentic interfaces, wallet UI, and other surface types.
+
+For web, proof may include screenshots, viewports, states, journeys, console, accessibility basics, overflow, and comparison with the Product Face Packet. For CLI/TUI, it needs transcript, help, install, error, and terminal behavior. For docs/onboarding, it needs first-success replay and reader criteria. For agentic interfaces, it needs user control, permissions, recovery, and boundaries.
+
+A screenshot does not prove the whole product. Product Face is one evidence layer, consumed together with SOT, method, QA, review, and Receipt Five.
+
+## 12. Human gates are packages, not loose questions
+
+A human gate enters only when the decision belongs to the operator: production, mainnet, funds, secrets, budget, authority, release, material risk, or explicit waiver.
+
+The gate must be artifact-first. The operator receives the artifact or a faithful projection, a one-screen summary, clear options, consequences, authorized scope, and what approval does not authorize. Raw JSON, local paths, or vague chat questions are not valid human gates.
+
+The human-facing voice is the manager. Worker, cron, Kanban event, and artifact dump may feed internal state, but they should not notify the operator directly.
+
+## 13. Honest closure
+
+A run ends in release, block, or learn.
+
+Release needs current evidence, readback, consumed review, Receipt Five, and satisfied gates. Block needs a clear reason, owner, and smallest safe next action. Learnback needs proposal, test, review, and promotion; the factory should not silently mutate itself because one run felt strange.

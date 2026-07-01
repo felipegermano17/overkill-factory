@@ -1,47 +1,36 @@
 # Overkill Factory
 
-Overkill Factory is a product factory for agentic work on top of Hermes.
+Overkill Factory is a product factory for agentic work. That sentence matters. It is not a chat prompt, not a TODO list, and not a wrapper around a coding agent. It is a way to turn an unclear product signal into controlled production: source, product definition, method, work packets, Hermes execution, review, evidence, release or block, then learning.
 
-It is not a chatbot, a SaaS wrapper, or a second Hermes. Hermes owns the runtime floor: boards, cards, dependencies, typed blocks, dispatch, worker execution, comments, logs, and state transitions. Overkill Factory owns the production method: intake, source truth, product definition, method selection, gates, worker authority, evidence, review, release decisions, and learnback.
+The current public kernel is version `3.0.2`. It exposes 26 compiled phases, 14 route classes, 8 method engines, 17 operating-system areas, 40 public workers, 244 JSON schemas, 156 JSON templates, and 97 test files. Those numbers are not decoration. They are here because the manual is tied to the executable repository, not to a sales story.
 
-The public kernel in this repository is version `3.0.2`. The executable surface currently contains 26 compiled phases, 14 route classes, 8 method engines, 17 operating-system areas, 40 public workers, 244 schemas, 156 templates, and 97 tests.
+## Why this exists
 
-## The shortest useful explanation
+Most agentic work fails in boring ways. The agent starts too soon. The brief is fuzzy. The wrong worker picks up the job. A reviewer says "looks good" without replaying the evidence. A human gate becomes a vague chat question. A run is marked done because a file exists, not because the requested product is actually usable.
 
-A request enters the factory. The factory does not immediately ask an agent to build. It first protects the source, understands the material, confirms the product truth, chooses the right method, checks risk and capability, turns the work into bounded units, dispatches specialist workers through Hermes, demands evidence, reviews the result, and only then releases, blocks, or learns.
+Overkill Factory exists to make those failures harder.
 
-```text
-source -> understanding -> product truth -> method -> plan -> work units
--> Hermes workers -> evidence -> review -> release or block -> learnback
-```
+The point is not to slow agents down. The point is to make speed trustworthy. Fast work is useful only when the factory knows what the work is, who is allowed to do it, what proof is required, and what happens when the proof is missing.
 
-The point is not to slow agents down. The point is to make speed trustworthy.
+## The simple picture
 
-## Who this documentation is for
+A request enters the factory. The factory first protects the source: what did the operator actually ask, what material exists, what is missing, and what cannot be assumed. Then it creates product truth, chooses a method, builds bounded work, sends the right workers through Hermes, checks the results, and either releases, blocks, or learns.
 
-Read this if you are:
+If that sounds like a lot, good. Product creation is a lot. The user experience should still feel simple: ask, see the state, receive clear decisions, and get proof when something is claimed as done.
 
-- an operator who wants to run product work through the factory;
-- a technical investor or partner trying to understand the system;
-- a non-technical reader who wants the idea without internal jargon;
-- an engineer who needs to inspect or contribute to the public kernel;
-- an agent that must continue work without relying on private chat memory.
+## Where to read first
 
-## Reading path
+Read these in order:
 
-1. **Manual** explains the product and mental model.
-2. **Operating Model** explains the factory in motion.
-3. **Lifecycle** explains every compiled phase.
-4. **Trust and Evidence** explains how the factory avoids fake progress.
-5. **Technical Model** explains the implementation.
-6. **Usage** gives the commands for a first local proof.
-7. **Reference** collects terms, commands, paths, and registries.
+1. [Manual](manual.md) for the human explanation.
+2. [Operating model](operating-model.md) for what happens during a run.
+3. [Lifecycle](lifecycle.md) for the phase-by-phase path.
+4. [Trust and evidence](trust-and-evidence.md) for how the factory fights false progress.
+5. [Usage](usage.md) for commands you can run now.
 
-Portuguese version: [Português](../pt-BR/index.md).
+Engineers can then read [Technical model](technical-model.md) and [Reference](reference.md). Nontechnical readers can stop after the manual and operating model and still understand what the project is.
 
 ## First local proof
-
-From a checkout of this repository:
 
 ```bash
 cd factory
@@ -49,4 +38,8 @@ python3 scripts/factoryctl.py doctor
 python3 scripts/factoryctl.py run minimal
 ```
 
-A passing local proof means the public kernel and example path are coherent. It does not mean a real operator-owned Hermes runtime has delivered a specific product. Real product delivery still requires Hermes runtime state, worker results, readback, review, Receipt Five, and any required human gate.
+A passing local proof means the public kernel is coherent. It does not prove that a private product run shipped, that a live Hermes runtime is configured, or that a human approved a risky decision. The manual keeps that boundary visible on purpose.
+
+## What changed in this documentation
+
+The old docs were useful to maintainers, but they read like a pile of internal departments. The current docs are a product manual. The old material is preserved under `factory/legacy-docs/` for history and compatibility. The public `docs/` tree is now the canonical explanation.

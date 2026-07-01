@@ -1,106 +1,114 @@
-# Modelo Técnico
+# Modelo técnico
 
-A Overkill Factory é implementada como pacote Python, CLI, biblioteca de contratos, superfície de adapter Hermes, registry público de workers e site de documentação.
+Esta página explica o modelo de implementação sem fingir que todo leitor quer morar dentro do código.
 
-Ela intencionalmente não substitui o Hermes.
+A versão curta é esta: Hermes controla estado de runtime. A Overkill Factory controla os contratos de produção em volta desse estado. O repositório guarda scripts, schemas, templates, registries, testes e documentação pública para tornar esse contrato verificável.
 
 ## Estrutura do repositório
 
-```text
-README.md              entrada pública em inglês
-README.pt-BR.md        entrada pública em português
-docs/                  documentação canônica e catálogos públicos
-factory/               implementação, contratos, testes, exemplos, docs legadas
-```
+O repositório público tem duas áreas principais:
 
-Dentro de `factory/`:
+- `docs/`: o manual público do produto e catálogos públicos.
+- `factory/`: a implementação, com scripts, schemas, templates, agentes, adapters, exemplos, fixtures, testes, skills e docs legadas.
 
-- `scripts/` contém `factoryctl.py` e validadores;
-- `schemas/` contém JSON schemas de contratos;
-- `templates/` contém templates e registries canônicos;
-- `agents/` contém registries públicos de workers, profiles, readiness e bindings;
-- `adapters/hermes/` contém integração com fronteiras do runtime Hermes;
-- `examples/` e `fixtures/` contêm exemplos públicos e fixtures de validação;
-- `tests/` protege comportamento e claims públicas;
-- `legacy-docs/` preserva documentação antiga não canônica.
+As docs técnicas antigas ficam em `factory/legacy-docs/`. Elas foram preservadas por histórico e compatibilidade, mas não são a explicação pública canônica.
 
-## Números do kernel público
+## A superfície executável
 
-A superfície executável atual inspecionada para esta documentação contém:
+`factoryctl` é a principal superfície de comando. Ele valida cards, cria gate reports, compila o workflow, imprime registries, prepara pacotes de worker e roda o caminho público de prova local.
 
-- 244 schemas;
-- 156 templates JSON;
-- 97 testes;
-- 40 workers públicos;
-- 14 classes de rota;
-- 8 method engines;
-- 17 áreas de operating system;
-- 26 fases compiladas de workflow.
+A documentação não deve correr na frente dessa superfície executável. Se a documentação afirma uma capacidade, essa afirmação precisa apontar para código, schema, teste, saída de comando ou decisão atual de produto.
 
-## `factoryctl`
+## Estado de runtime
 
-`factoryctl` é o helper público de controle. Ele valida contratos, cria artefatos locais de prova, compila planos de workflow, gera worker packets, checa artefatos JSON públicos e roda caminhos de smoke.
+O Hermes controla estado de runtime: cards Kanban, tarefas de worker, dependências, transições, comentários, workspaces, estados bloqueados e estados concluídos. A fábrica não deve recriar esse estado em texto ou num sidecar escondido.
 
-Comandos importantes:
+A fábrica adiciona disciplina em volta do runtime. Ela decide quais artefatos são obrigatórios, quais gates entram, que perfil de worker deve cuidar da tarefa, que evidência precisa voltar e que autoridade está proibida.
 
-```bash
-cd factory
-python3 scripts/factoryctl.py doctor
-python3 scripts/factoryctl.py run minimal
-python3 scripts/factoryctl.py compile-workflow --out .tmp/factory-workflow-compiled-plan.json
-python3 scripts/factoryctl.py validate-runtime-contracts
-python3 scripts/factoryctl.py route-registry
-python3 scripts/factoryctl.py operating-systems
-python3 scripts/factoryctl.py method-engines
-```
+## Contratos e schemas
 
-`factoryctl` pode provar coerência local de contratos. Ele não substitui prova de runtime Hermes.
+O repositório tem hoje 244 schemas JSON e 156 templates JSON. Essa é a espinha dorsal do sistema. Os schemas definem como um registro válido deve parecer. Os templates dão exemplos ou contratos-base. Os testes impedem esses contratos de mudarem em silêncio.
 
-## Fronteira de runtime
+Famílias importantes de contrato incluem planos de workflow, comandos da fábrica, eventos de execução, promotion packets, autoridade de worker, Product SOT, contratos de método, capability packs, gate reports, Receipt Five, gates humanos e provas de runtime.
 
-Hermes controla estado de runtime. Overkill Factory controla método, contratos e checks.
+## Rotas, métodos e sistemas operacionais
 
-Isso significa:
+O registro de rotas expõe 14 classes de rota. O registro de método expõe 8 motores de método. O registro de operating systems expõe 17 áreas da fábrica.
 
-- um JSON local não é um board real rodando;
-- um pacote gerado não é trabalho concluído;
-- um worker profile não é resultado de worker;
-- um smoke local passando não é release de produção;
-- um gate humano não pode ser falsificado por script.
+Classes de rota respondem: "que tipo de trabalho é este?" Motores de método respondem: "como este tipo de trabalho deve ser tratado?" Áreas operacionais respondem: "que parte da fábrica é dona desta capacidade?"
 
-## Registry de operating systems
+Isso permite que a fábrica se adapte sem ficar vaga. Ela consegue tratar criação de produto, bug, incidente, release, segurança, analytics, UX, migração e qualidade de agente sem fingir que tudo é a mesma tarefa.
 
-A fábrica agrupa áreas críticas em entradas de operating system:
+## Workers e perfis
 
-- **Deterministic Control Plane OS** (`deterministic_control_plane_os`): dono `factory-orchestrator`, status `active`. Own the reducer-first factory spine: phase graph, commands, events, decision outbox, replay and promotion boundaries.
-- **Product Truth and Research OS** (`product_truth_research_os`): dono `source-ledger-worker`, status `active`. Own deep product starts before Product SOT: sources, claims, conflicts, brownfield study, research decisions and operator understanding.
-- **Method OS** (`method_os`): dono `factory-orchestrator`, status `active`. Turn method routing into deterministic method engines rather than broad method-family labels.
-- **Product Architecture OS** (`product_architecture_os`): dono `product-architect`, status `active`. Own architecture candidates, trust boundaries, integration shape, data boundaries and technical decisions before decomposition.
-- **Product Experience, Design and Brand OS** (`product_experience_design_brand_os`): dono `product-face`, status `active`. Own UX, information architecture, brand/identity, design system, component proof, accessibility and visual regression for product surfaces.
-- **Work Unit and Execution Dispatch OS** (`work_unit_execution_dispatch_os`): dono `decomposition-planner`, status `active`. Own vertical work units, dispatch readiness, Hermes materialization plans, worker packets and execution ordering.
-- **Authority and Autonomy OS** (`authority_autonomy_os`): dono `factory-orchestrator`, status `active`. Decide when the factory proceeds, repairs, asks the operator, blocks or escalates without turning speed into unsafe YOLO.
-- **Hermes Worker Runtime OS** (`hermes_worker_runtime_os`): dono `factory-orchestrator`, status `blocked_pending_runtime_proof`. Own live worker operability: profile readiness, Hermes binding freshness, dispatch, no-idle, worker results and reconciliation.
-- **Evidence and Receipt OS** (`evidence_receipt_os`): dono `evidence-reconciler`, status `active`. Own proof tiers, evidence freshness, artifact readback, Receipt Five reconciliation and product-specific proof bundles.
-- **Capability Pack and Provider OS** (`capability_provider_os`): dono `factory-orchestrator`, status `active`. Own domain detection, capability pack activation, provider readiness, specialist acquisition and fail-closed pack execution.
-- **Agent and Profile Authority OS** (`agent_profile_authority_os`): dono `factory-orchestrator`, status `active`. Own worker identity, permissions, profile linting, binding readiness and the rule that agents execute contracts instead of deciding the line.
-- **Security OS** (`security_os`): dono `security-orchestrator`, status `active`. Own threat modeling, secrets, supply chain, privacy, runtime hardening, specialist security routing and risk evidence.
-- **Quality and Verification OS** (`quality_verification_os`): dono `qa-verification-worker`, status `active`. Own tests, QA plans, repair loops, visual verification, accessibility, product quality and independent evidence before done.
-- **Operator Experience OS** (`operator_experience_os`): dono `overkill-factory-gerente`, status `active`. Make one manager interface enough for Telegram-first operation: start, status, decisions, changes, briefings and proof.
-- **Release and Operations OS** (`release_operations_os`): dono `release-ops-worker`, status `active`. Own production readiness, release decision, rollback, monitoring, incident support and human R4 authority.
-- **Velocity, Cost and Throughput OS** (`velocity_cost_throughput_os`): dono `factory-orchestrator`, status `active`. Govern throughput, parallel lanes, retry budgets, token and time budgets, batching, dedupe and status cadence.
-- **Factory Learning OS** (`factory_learning_os`): dono `skill-eval-distiller`, status `hardened_existing`. Turn learnback, Hermes /learn drafts and repeated findings into inactive, reviewable, testable factory improvements.
+O registro público lista hoje 40 workers públicos. O nome do worker não basta. Um worker precisa de perfil, binding, expectativa de resultado, skill refs, política de evidência e limite de autoridade.
 
-Essas entradas não são categorias de marketing. Elas declaram dono, contratos, prova exigida e fronteiras de falha.
+Por isso o repositório tem registries de worker, perfis, bindings Hermes, readiness ledgers e validadores. Worker não deve ser personagem de prompt. Deve ser um papel operável com contrato.
 
-## Method engines
+## Referência gerada
 
-Method engines ligam uma rota a provas. Uma família de método não autoriza execução sozinha. A engine escolhida precisa produzir artefatos e gates corretos para o trabalho.
+A referência completa do kernel é produzida por `factory/scripts/generate_factory_reference_docs.py`. A saída gerada agora vive em `factory/legacy-docs/generated/`, porque o manual público precisa continuar legível. O arquivo gerado ainda é útil para maintainers e validadores.
 
-- `spec_first_sdd` — Spec-First SDD Engine: família `spec_first`; usado por product_creation, feature_delivery, critical_integration, migration_execution.
-- `test_first_tdd` — Test-First TDD Engine: família `test_first`; usado por feature_delivery, bug_repair, critical_integration, migration_execution.
-- `behavior_first_bdd` — Behavior-First BDD Engine: família `behavior_first`; usado por product_creation, feature_delivery, ux_product_experience.
-- `discovery_research` — Discovery and Research Engine: família `discovery_first`; usado por product_creation, research_validation, brownfield_discovery.
-- `security_first_threat_model` — Security-First Threat Model Engine: família `security_first`; usado por security_remediation, release_promotion, critical_integration, agent_quality_change.
-- `design_first_product_experience` — Design-First Product Experience Engine: família `design_first`; usado por ux_product_experience, product_creation, feature_delivery.
-- `legacy_diagnosis` — Legacy Diagnosis Engine: família `legacy_diagnosis`; usado por brownfield_discovery, migration_execution, bug_repair.
-- `incident_first` — Incident-First Engine: família `incident_first`; usado por incident_response, bug_repair, security_remediation.
+## Pilha de validação
+
+A implementação é guardada por validadores de JSON público, checks de public surface sync, promise-to-implementation, validação de perfis de worker, public safety scan, secret safety scan, build estrito do MkDocs e a suíte de testes Python.
+
+A documentação pública deve ser lida por humanos, mas continua presa a esses checks. É isso que impede o manual de virar uma história solta do produto.
+
+## Como um pedido vira estado
+
+A fábrica não confia num pedido só porque ele apareceu no chat. Primeiro ela registra a fonte. Depois transforma essa fonte em artefatos estruturados. Esses artefatos escolhem a rota, o método, os gates e os pacotes de worker. Só depois a execução de runtime deveria começar.
+
+Essa ordem é proposital. Se um worker começa a partir de uma instrução vaga, o sistema não tem uma forma estável de decidir se a resposta está certa. Se o pedido vira estado antes, cada passo depois consegue apontar para a mesma fonte. O worker ainda pode errar, mas a fábrica tem algo concreto para comparar.
+
+## O que deve ser gerado e o que deve ser escrito para gente
+
+Algumas coisas são melhores quando geradas a partir do código: catálogos completos de comando, cobertura de schemas, inventário de workers e tabelas grandes de referência. Escrever isso à mão, de cabeça, é o caminho mais curto para documentação velha.
+
+Outras coisas precisam ser escritas para gente: este manual, o modelo operacional, o modelo de confiança e o caminho de uso. Um operador novo não precisa receber uma referência gerada de mil linhas como primeira explicação. Ele precisa entender a história em linguagem simples e depois ver comandos exatos quando estiver pronto.
+
+O repositório atual mantém as duas camadas. O material gerado continua existindo para validação e manutenção. O manual público continua legível.
+
+## O que pode dar errado
+
+O modelo técnico é rígido porque as falhas são sutis. Um caminho pode existir, mas apontar para documentação legada. Um manifest público pode citar um arquivo que foi movido. Um perfil de worker pode parecer configurado enquanto o binding aponta para docs antigas. Uma prova local pode passar enquanto o Hermes vivo não foi checado. Uma claim pública pode ser verdadeira para o kernel e falsa para uma execução privada de produto.
+
+Os validadores existem para pegar essas divergências. Eles não substituem julgamento, mas removem muitas formas fáceis de enganar a nós mesmos.
+
+## Como mudar a fábrica com segurança
+
+Uma mudança segura normalmente mexe em três camadas ao mesmo tempo: a explicação humana, o contrato executável e os testes ou validadores. Se você muda só a doc, talvez melhore a comunicação sem mudar comportamento. Se muda só o código, a superfície pública pode mentir. Se muda só o teste, talvez esteja protegendo um modelo antigo.
+
+Para documentação pública, a regra mais segura é simples: escreva a partir do código atual e da saída real dos comandos, não de memória. Depois rode os validadores. Se eles reclamarem, trate isso como sinal de produto, não como incômodo.
+
+## Bindings Hermes e perfis vivos
+
+Um worker só é operável quando quatro camadas batem: papel no registry, perfil de agente, binding Hermes e worker packet específico do card. Nome de perfil sozinho não basta.
+
+O binding define skill refs, política de fila, schema de resultado, campo de recibo e política de caminho de evidência. Isso impede que uma persona bonita no prompt seja tratada como worker real sem contrato de runtime.
+
+A prontidão também tem fronteira. Um smoke antigo, um profile materializado localmente ou um ledger degradado não provam execução viva. Eles dizem que existe caminho de configuração. Para conclusão real, o card precisa de resultado atual de worker e evidência consumida pelo gate.
+
+## Phase engine e grafo Kanban
+
+A fábrica usa o phase engine para calcular a fronteira atual a partir de artefatos materializados. O phase declarado no card não vence a realidade. Se Product SOT, Method Contract, pacote de decisão ou readiness estão faltando, a fase posterior bloqueia.
+
+No Hermes, isso precisa virar grafo nativo: cards, dependências, typed blockers e work units ligados. A fábrica pode reconciliar e reparar, mas não deve manter uma lista paralela escondida. O objetivo é que o runtime mostre a verdade operacional.
+
+## Interface do operador
+
+A interface do operador é uma projeção. Telegram, Discord, cockpit e ponte CLI podem receber fonte, enviar status e entregar pacotes de decisão. Eles não substituem Hermes, Receipt Five ou worker results.
+
+A regra de produto é: o gerente fala com o humano; workers e eventos crus alimentam o estado interno. Um gate humano precisa de memo legível e artefato sob revisão, não dump de JSON nem caminho local.
+
+## Readback de artefato e anexos duráveis
+
+A integração com Hermes não deve aceitar “existe um arquivo” como conclusão. Para anexos e artefatos de runtime, a fábrica precisa de readback: linha ou blob existe, tamanho e hash batem, parse deu certo quando aplicável, safety checks passaram e a referência pode ser consumida depois.
+
+Referências como `artifact_readback` e `kanban-attachment` aparecem nessa fronteira. Elas existem para impedir que metadata, caminho local ou arquivo temporário sejam tratados como prova permanente.
+
+## SDLC Feedback Loop
+
+Trabalho material autônomo precisa manter o fio entre sinal, triage, escolha de modelo/perfil, execução, evidência e learnback. Esse fio é o SDLC Feedback Loop.
+
+Sem esse vínculo, uma falha vira lembrança de chat; uma escolha de modelo vira implícita; um learnback vira opinião sem alvo. Com o vínculo, a fábrica sabe de onde veio o sinal, por que escolheu aquele caminho, que prova voltou e que regra pode mudar depois.

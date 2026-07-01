@@ -1,302 +1,447 @@
-# Ciclo da Fábrica
+# Ciclo da fábrica
 
-O workflow compilado é a fonte factual desta página.
+O workflow compilado é a fonte factual desta página. Hoje ele contém `26` fases em `docs/factory-workflow.catalog.json`.
 
-Plano compilado atual: `26` fases a partir de `docs/factory-workflow.catalog.json`, gerado com:
+Esta página não deve ser lida como uma cachoeira rígida. Ela é um mapa do que a fábrica protege. Hermes, dependências, bloqueios, risco e evidência ainda decidem o que pode andar numa execução viva.
+
+A leitura prática é simples: cada fase responde uma pergunta, exige alguns artefatos, bloqueia atalhos perigosos e entrega ao operador uma visão mais clara do próximo passo.
 
 ```bash
 cd factory
-python3 scripts/factoryctl.py compile-workflow --out .tmp/docs-rewrite-workflow-plan.json
+python3 scripts/factoryctl.py compile-workflow --out .tmp/factory-workflow-compiled-plan.json
 ```
 
-A lista de fases é um modelo de ensino e uma superfície de contrato. A execução de runtime ainda é em grafo: dependências, gates, evidência, risco e estado Hermes decidem o que pode andar.
+## F0 — Pre-Start / Sealed Source Envelope
 
-## Referência de fases
+A fábrica separa conversa de execução. O material entra num envelope de fonte antes de virar card, para o primeiro resumo não destruir a intenção original.
 
-### F0 — Pre-Start / Sealed Source Envelope
+O que precisa existir: `factory_bridge_source_envelope`, `factory_bridge_start_request`.
 
-Objetivo: atravessar **Pre-Start / Sealed Source Envelope** sem permitir que um worker pule o estado da fábrica.
+Gates que seguram o avanço: `Start Boundary`.
 
-Artefatos exigidos: `factory_bridge_source_envelope`, `factory_bridge_start_request`.
+Workers normalmente envolvidos: `overkill-factory-gerente`, `factory-orchestrator`.
 
-Gates exigidos: Start Boundary.
+Atalhos que esta fase impede:
 
-Workers: `overkill-factory-gerente`, `factory-orchestrator`.
+- summarize or reinterpret source material in the bridge.
+- create Hermes board/card directly from bridge.
+- start without explicit runtime target policy.
 
-Atalhos bloqueados: summarize or reinterpret source material in the bridge, create Hermes board/card directly from bridge, start without explicit runtime target policy.
-### F1 — Intake
+O operador não deveria precisar ler o JSON dessa fase para entender a situação. A projeção humana precisa dizer o que já está claro, o que falta, quem é dono do próximo passo e qual prova destrava o avanço.
 
-Objetivo: atravessar **Intake** sem permitir que um worker pule o estado da fábrica.
+## F1 — Intake
 
-Artefatos exigidos: `operator_interface_profile`, `factory_start_conversation`, `universal_signal_intake`, `source_refs`, `source_resolution_packet`.
+Aqui o pedido vira sinal classificado. A interface do operador, a conversa inicial e a resolução da fonte impedem que a fábrica comece com um chute bonito.
 
-Gates exigidos: Source Gate.
+O que precisa existir: `operator_interface_profile`, `factory_start_conversation`, `universal_signal_intake`, `source_refs`, `source_resolution_packet`.
 
-Workers: `factory-orchestrator`.
+Gates que seguram o avanço: `Source Gate`.
 
-Atalhos bloqueados: route implementation before source resolution, create Product SOT from raw input, require the operator to poll for status.
-### F2 — Source Ledger
+Workers normalmente envolvidos: `factory-orchestrator`.
 
-Objetivo: atravessar **Source Ledger** sem permitir que um worker pule o estado da fábrica.
+Atalhos que esta fase impede:
 
-Artefatos exigidos: `source_refs`, `product_source_ledger`, `operator_understanding_confirmation`.
+- route implementation before source resolution.
+- create Product SOT from raw input.
+- require the operator to poll for status.
 
-Gates exigidos: Source Gate.
+O operador não deveria precisar ler o JSON dessa fase para entender a situação. A projeção humana precisa dizer o que já está claro, o que falta, quem é dono do próximo passo e qual prova destrava o avanço.
 
-Workers: `source-ledger-worker`.
+## F2 — Source Ledger
 
-Atalhos bloqueados: ask user to reconcile internal source bookkeeping, create outcome contract or Product SOT before understanding is confirmed.
-### F3 — Source Resolution
+O source ledger diz de onde veio cada afirmação. Fato, inferência, decisão, conflito e lacuna não podem virar uma massa só.
 
-Objetivo: atravessar **Source Resolution** sem permitir que um worker pule o estado da fábrica.
+O que precisa existir: `source_refs`, `product_source_ledger`, `operator_understanding_confirmation`.
 
-Artefatos exigidos: `discovery_brief`.
+Gates que seguram o avanço: `Source Gate`.
 
-Gates exigidos: Discovery Gate.
+Workers normalmente envolvidos: `source-ledger-worker`.
 
-Workers: `source-ledger-worker`, `product-sot-planner`.
+Atalhos que esta fase impede:
 
-Atalhos bloqueados: turn unresolved gaps into execution scope.
-### F4 — Product Outcome And Discovery
+- ask user to reconcile internal source bookkeeping.
+- create outcome contract or Product SOT before understanding is confirmed.
 
-Objetivo: atravessar **Product Outcome And Discovery** sem permitir que um worker pule o estado da fábrica.
+O operador não deveria precisar ler o JSON dessa fase para entender a situação. A projeção humana precisa dizer o que já está claro, o que falta, quem é dono do próximo passo e qual prova destrava o avanço.
 
-Artefatos exigidos: `operator_understanding_confirmation`, `operator_briefing_package`, `outcome_contract`, `discovery_brief`.
+## F3 — Source Resolution
 
-Gates exigidos: Outcome Gate, Discovery Gate.
+A fábrica transforma fonte em entendimento operacional. Se ainda falta descoberta, ela segura o avanço em vez de deixar o worker preencher buraco com imaginação.
 
-Workers: `product-sot-planner`.
+O que precisa existir: `discovery_brief`.
 
-Atalhos bloqueados: treat outcome candidate as approved Product SOT, draft Product SOT before operator understanding confirmation.
-### F5 — Product SOT
+Gates que seguram o avanço: `Discovery Gate`.
 
-Objetivo: atravessar **Product SOT** sem permitir que um worker pule o estado da fábrica.
+Workers normalmente envolvidos: `source-ledger-worker`, `product-sot-planner`.
 
-Artefatos exigidos: `product_sot`, `operator_briefing_package`, `full_product_sot_scope_coverage`, `factory_phase_lock`.
+Atalhos que esta fase impede:
 
-Gates exigidos: Product SOT Gate.
+- turn unresolved gaps into execution scope.
 
-Workers: `product-sot-planner`.
+O operador não deveria precisar ler o JSON dessa fase para entender a situação. A projeção humana precisa dizer o que já está claro, o que falta, quem é dono do próximo passo e qual prova destrava o avanço.
 
-Atalhos bloqueados: execute from paper instead of Product SOT, ask operator to approve Product SOT from a short chat summary only, start architecture, repo cleanup, human gate or worker packet while Product SOT owner package is missing.
-### F6 — Agentic Method Router
+## F4 — Product Outcome And Discovery
 
-Objetivo: atravessar **Agentic Method Router** sem permitir que um worker pule o estado da fábrica.
+O resultado esperado, o usuário, o problema e as hipóteses ficam explícitos. O operador precisa conseguir corrigir a direção antes de virar plano.
 
-Artefatos exigidos: `factory_phase_lock`, `method_contract`.
+O que precisa existir: `operator_understanding_confirmation`, `operator_briefing_package`, `outcome_contract`, `discovery_brief`.
 
-Gates exigidos: Method Gate.
+Gates que seguram o avanço: `Outcome Gate`, `Discovery Gate`.
 
-Workers: `factory-orchestrator`.
+Workers normalmente envolvidos: `product-sot-planner`.
 
-Atalhos bloqueados: ask user to choose internal method machinery, start architecture or repo cleanup before Method Contract.
-### F7 — Method Contract
+Atalhos que esta fase impede:
 
-Objetivo: atravessar **Method Contract** sem permitir que um worker pule o estado da fábrica.
+- treat outcome candidate as approved Product SOT.
+- draft Product SOT before operator understanding confirmation.
 
-Artefatos exigidos: `factory_phase_lock`, `method_contract`.
+O operador não deveria precisar ler o JSON dessa fase para entender a situação. A projeção humana precisa dizer o que já está claro, o que falta, quem é dono do próximo passo e qual prova destrava o avanço.
 
-Gates exigidos: Method Gate.
+## F5 — Product SOT
 
-Workers: `factory-orchestrator`.
+O Product SOT vira a verdade do produto. Ele protege escopo, não-escopo, critérios de aceitação e cobertura completa antes de execução material.
 
-Atalhos bloqueados: start implementation with undocumented process choices, materialize future-phase cards while active frontier is still product_sot or method_contract.
-### F8 — Pack And Product Experience Selection
+O que precisa existir: `product_sot`, `operator_briefing_package`, `full_product_sot_scope_coverage`, `factory_phase_lock`.
 
-Objetivo: atravessar **Pack And Product Experience Selection** sem permitir que um worker pule o estado da fábrica.
+Gates que seguram o avanço: `Product SOT Gate`.
 
-Artefatos exigidos: `capability_pack_contract`, `product_experience_plan`, `product_face_packet`, `project_design_system`, `professional_design_process`, `surface_evidence_profile`, `product_delivery_quality_profile`.
+Workers normalmente envolvidos: `product-sot-planner`.
 
-Gates exigidos: Pack Gate, Product Experience Gate, Surface Pack Gate.
+Atalhos que esta fase impede:
 
-Workers: `product-face`, `factory-orchestrator`.
+- execute from paper instead of Product SOT.
+- ask operator to approve Product SOT from a short chat summary only.
+- start architecture, repo cleanup, human gate or worker packet while Product SOT owner package is missing.
 
-Atalhos bloqueados: activate a pack without proof or coverage, start product-facing implementation before surface state coverage, treat generic UI proof as Product Experience proof, move to implementation with unnamed surface pack or proof profile.
-### F9 — Risk And Authority Gates
+O operador não deveria precisar ler o JSON dessa fase para entender a situação. A projeção humana precisa dizer o que já está claro, o que falta, quem é dono do próximo passo e qual prova destrava o avanço.
 
-Objetivo: atravessar **Risk And Authority Gates** sem permitir que um worker pule o estado da fábrica.
+## F6 — Agentic Method Router
 
-Artefatos exigidos: `access_capability`, `budget_contract`.
+A rota escolhe o tipo de caminho: produto, bug, release, incidente, segurança, UX, analytics, integração ou agente. A fábrica para de tratar tudo como tarefa genérica.
 
-Gates exigidos: Access Gate, Budget Gate, Human Gate when required.
+O que precisa existir: `factory_phase_lock`, `method_contract`.
 
-Workers: `human-gate-clerk`.
+Gates que seguram o avanço: `Method Gate`.
 
-Atalhos bloqueados: infer approval from silence, ask for planning-only continuation approval, ask for architecture or repo cleanup approval while downstream is frozen.
-### F10 — Security Architecture
+Workers normalmente envolvidos: `factory-orchestrator`.
 
-Objetivo: atravessar **Security Architecture** sem permitir que um worker pule o estado da fábrica.
+Atalhos que esta fase impede:
 
-Artefatos exigidos: `factory_phase_lock`, `security_architecture_plan`.
+- ask user to choose internal method machinery.
+- start architecture or repo cleanup before Method Contract.
 
-Gates exigidos: Security Architecture Gate.
+O operador não deveria precisar ler o JSON dessa fase para entender a situação. A projeção humana precisa dizer o que já está claro, o que falta, quem é dono do próximo passo e qual prova destrava o avanço.
 
-Workers: `security-orchestrator`.
+## F7 — Method Contract
 
-Atalhos bloqueados: build material risk before architecture, start security architecture while Product SOT or Method Contract is still missing.
-### F11 — Executable Plans
+O método registra como o trabalho será feito e provado. Não basta dizer TDD, security-first ou design-first; o contrato precisa mudar artefatos, gates e evidência.
 
-Objetivo: atravessar **Executable Plans** sem permitir que um worker pule o estado da fábrica.
+O que precisa existir: `factory_phase_lock`, `method_contract`.
 
-Artefatos exigidos: `software_development_plan`, `spec_graph`, `loop_plan`, `product_creation_plan`.
+Gates que seguram o avanço: `Method Gate`.
 
-Gates exigidos: Ready Gate.
+Workers normalmente envolvidos: `factory-orchestrator`.
 
-Workers: `decomposition-planner`.
+Atalhos que esta fase impede:
 
-Atalhos bloqueados: execute before plans, coverage review and stop criteria exist, mark decomposition review as passed from the planner that created the decomposition.
-### F12 — Autonomy Readiness
+- start implementation with undocumented process choices.
+- materialize future-phase cards while active frontier is still product_sot or method_contract.
 
-Objetivo: atravessar **Autonomy Readiness** sem permitir que um worker pule o estado da fábrica.
+O operador não deveria precisar ler o JSON dessa fase para entender a situação. A projeção humana precisa dizer o que já está claro, o que falta, quem é dono do próximo passo e qual prova destrava o avanço.
 
-Artefatos exigidos: `decomposition_coverage_review`, `product_implementation_readiness`, `autonomy_readiness_packet`.
+## F8 — Pack And Product Experience Selection
 
-Gates exigidos: Decomposition Coverage Gate, Access & Capability Gate.
+A fábrica confere se tem pacote de capacidade e prova de superfície para o tipo de produto. Web, CLI, docs, agente, Solana, mobile ou fintech não pedem a mesma prova.
 
-Workers: `independent-reviewer`, `factory-orchestrator`.
+O que precisa existir: `capability_pack_contract`, `product_experience_plan`, `product_face_packet`, `project_design_system`, `professional_design_process`, `surface_evidence_profile`, `product_delivery_quality_profile`.
 
-Atalhos bloqueados: start autonomous work with missing review, access or limits, let a single reviewer approve the complete decomposition alone, create Product Implementation Readiness from a failed or missing decomposition coverage review.
-### F13 — Ready Gate
+Gates que seguram o avanço: `Pack Gate`, `Product Experience Gate`, `Surface Pack Gate`.
 
-Objetivo: atravessar **Ready Gate** sem permitir que um worker pule o estado da fábrica.
+Workers normalmente envolvidos: `product-face`, `factory-orchestrator`.
 
-Artefatos exigidos: `gate_report`.
+Atalhos que esta fase impede:
 
-Gates exigidos: Ready Gate.
+- activate a pack without proof or coverage.
+- start product-facing implementation before surface state coverage.
+- treat generic UI proof as Product Experience proof.
+- move to implementation with unnamed surface pack or proof profile.
 
-Workers: `factory-orchestrator`.
+O operador não deveria precisar ler o JSON dessa fase para entender a situação. A projeção humana precisa dizer o que já está claro, o que falta, quem é dono do próximo passo e qual prova destrava o avanço.
 
-Atalhos bloqueados: dispatch blocked workers.
-### F15 — Runtime Execution
+## F9 — Risk And Authority Gates
 
-Objetivo: atravessar **Runtime Execution** sem permitir que um worker pule o estado da fábrica.
+Autoridade, acesso, orçamento e risco entram antes da execução sensível. Se a decisão pertence ao operador, a fábrica prepara pacote de decisão; se é reparo interno, não joga no humano.
 
-Artefatos exigidos: `worker_packets`.
+O que precisa existir: `access_capability`, `budget_contract`.
 
-Gates exigidos: Runtime Gate.
+Gates que seguram o avanço: `Access Gate`, `Budget Gate`, `Human Gate when required`.
 
-Workers: `implementation-worker`, `qa-verification-worker`.
+Workers normalmente envolvidos: `human-gate-clerk`.
 
-Atalhos bloqueados: spawn without route readiness.
-### F16 — Worker Results
+Atalhos que esta fase impede:
 
-Objetivo: atravessar **Worker Results** sem permitir que um worker pule o estado da fábrica.
+- infer approval from silence.
+- ask for planning-only continuation approval.
+- ask for architecture or repo cleanup approval while downstream is frozen.
 
-Artefatos exigidos: `worker_results`.
+O operador não deveria precisar ler o JSON dessa fase para entender a situação. A projeção humana precisa dizer o que já está claro, o que falta, quem é dono do próximo passo e qual prova destrava o avanço.
 
-Gates exigidos: Done Gate.
+## F10 — Security Architecture
 
-Workers: `evidence-reconciler`.
+Segurança entra como arquitetura, não como scan no fim. Trust boundary, segredo, chave, supply chain, privacidade, onchain e rollback precisam aparecer cedo quando importam.
 
-Atalhos bloqueados: treat packet existence as proof.
-### F17 — Verification
+O que precisa existir: `factory_phase_lock`, `security_architecture_plan`.
 
-Objetivo: atravessar **Verification** sem permitir que um worker pule o estado da fábrica.
+Gates que seguram o avanço: `Security Architecture Gate`.
 
-Artefatos exigidos: `verification_plan`, `verification_result`.
+Workers normalmente envolvidos: `security-orchestrator`.
 
-Gates exigidos: Verification Gate.
+Atalhos que esta fase impede:
 
-Workers: `qa-verification-worker`.
+- build material risk before architecture.
+- start security architecture while Product SOT or Method Contract is still missing.
 
-Atalhos bloqueados: claim done without command evidence.
-### F18 — Independent Review
+O operador não deveria precisar ler o JSON dessa fase para entender a situação. A projeção humana precisa dizer o que já está claro, o que falta, quem é dono do próximo passo e qual prova destrava o avanço.
 
-Objetivo: atravessar **Independent Review** sem permitir que um worker pule o estado da fábrica.
+## F11 — Executable Plans
 
-Artefatos exigidos: `review_result`.
+A arquitetura e os riscos viram plano de desenvolvimento. O objetivo é sair da ideia para unidades executáveis sem perder dependências e critérios de parada.
 
-Gates exigidos: Review Gate.
+O que precisa existir: `software_development_plan`, `spec_graph`, `loop_plan`, `product_creation_plan`.
 
-Workers: `independent-reviewer`.
+Gates que seguram o avanço: `Ready Gate`.
 
-Atalhos bloqueados: allow executor to self-approve.
-### F20 — Closure Summary
+Workers normalmente envolvidos: `decomposition-planner`.
 
-Objetivo: atravessar **Closure Summary** sem permitir que um worker pule o estado da fábrica.
+Atalhos que esta fase impede:
 
-Artefatos exigidos: `closure_summary`.
+- execute before plans, coverage review and stop criteria exist.
+- mark decomposition review as passed from the planner that created the decomposition.
 
-Gates exigidos: Closure Gate.
+O operador não deveria precisar ler o JSON dessa fase para entender a situação. A projeção humana precisa dizer o que já está claro, o que falta, quem é dono do próximo passo e qual prova destrava o avanço.
 
-Workers: `handoff-packer`.
+## F12 — Autonomy Readiness
 
-Atalhos bloqueados: hide unresolved blockers in prose.
-### F21 — Receipt Five
+O produto é quebrado em work units. Cada pedaço precisa de dono, reviewer, prova, dependência e regra de pronto; do contrário vira fila de agente solta.
 
-Objetivo: atravessar **Receipt Five** sem permitir que um worker pule o estado da fábrica.
+O que precisa existir: `decomposition_coverage_review`, `product_implementation_readiness`, `autonomy_readiness_packet`.
 
-Artefatos exigidos: `receipt_five`.
+Gates que seguram o avanço: `Decomposition Coverage Gate`, `Access & Capability Gate`.
 
-Gates exigidos: Done Gate.
+Workers normalmente envolvidos: `independent-reviewer`, `factory-orchestrator`.
 
-Workers: `evidence-reconciler`.
+Atalhos que esta fase impede:
 
-Atalhos bloqueados: mark done without Receipt Five.
-### F22 — Completion Audit
+- start autonomous work with missing review, access or limits.
+- let a single reviewer approve the complete decomposition alone.
+- create Product Implementation Readiness from a failed or missing decomposition coverage review.
 
-Objetivo: atravessar **Completion Audit** sem permitir que um worker pule o estado da fábrica.
+O operador não deveria precisar ler o JSON dessa fase para entender a situação. A projeção humana precisa dizer o que já está claro, o que falta, quem é dono do próximo passo e qual prova destrava o avanço.
 
-Artefatos exigidos: `completion_audit`.
+## F13 — Ready Gate
 
-Gates exigidos: Completion Audit.
+Antes de rodar, a fábrica checa prontidão de implementação: SOT, método, research, arquitetura, packs, acesso, workers e provas necessárias.
 
-Workers: `evidence-reconciler`.
+O que precisa existir: `gate_report`.
 
-Atalhos bloqueados: close skipped method or evidence requirements.
-### F23 — Production Operations
+Gates que seguram o avanço: `Ready Gate`.
 
-Objetivo: atravessar **Production Operations** sem permitir que um worker pule o estado da fábrica.
+Workers normalmente envolvidos: `factory-orchestrator`.
 
-Artefatos exigidos: `production_readiness_plan`.
+Atalhos que esta fase impede:
 
-Gates exigidos: Release Gate.
+- dispatch blocked workers.
 
-Workers: `release-ops-worker`.
+O operador não deveria precisar ler o JSON dessa fase para entender a situação. A projeção humana precisa dizer o que já está claro, o que falta, quem é dono do próximo passo e qual prova destrava o avanço.
 
-Atalhos bloqueados: release without owner, rollback or approval.
-### F24 — Release Or Block
+## F15 — Runtime Execution
 
-Objetivo: atravessar **Release Or Block** sem permitir que um worker pule o estado da fábrica.
+Workers executam escopos pequenos e devolvem resultado estruturado. O resultado precisa trazer evidência, limite de autoridade e próximo estado.
 
-Artefatos exigidos: `release_decision`.
+O que precisa existir: `worker_packets`.
 
-Gates exigidos: Release Gate, Human Gate when required.
+Gates que seguram o avanço: `Runtime Gate`.
 
-Workers: `release-ops-worker`, `human-gate-clerk`.
+Workers normalmente envolvidos: `implementation-worker`, `qa-verification-worker`.
 
-Atalhos bloqueados: promote without production-strict evidence.
-### F25 — Monitoring Support
+Atalhos que esta fase impede:
 
-Objetivo: atravessar **Monitoring Support** sem permitir que um worker pule o estado da fábrica.
+- spawn without route readiness.
 
-Artefatos exigidos: `incident_support_plan`.
+O operador não deveria precisar ler o JSON dessa fase para entender a situação. A projeção humana precisa dizer o que já está claro, o que falta, quem é dono do próximo passo e qual prova destrava o avanço.
 
-Gates exigidos: Support Gate.
+## F16 — Worker Results
 
-Workers: `release-ops-worker`.
+A fábrica roda verificação objetiva: testes, scans, screenshots, jornadas, logs, contratos ou provas remotas, conforme o tipo de trabalho.
 
-Atalhos bloqueados: ship without support owner when support is material.
-### F26 — Learnback
+O que precisa existir: `worker_results`.
 
-Objetivo: atravessar **Learnback** sem permitir que um worker pule o estado da fábrica.
+Gates que seguram o avanço: `Done Gate`.
 
-Artefatos exigidos: `factory_learning_proposal`.
+Workers normalmente envolvidos: `evidence-reconciler`.
 
-Gates exigidos: Learning Gate.
+Atalhos que esta fase impede:
 
-Workers: `skill-eval-distiller`.
+- treat packet existence as proof.
 
-Atalhos bloqueados: auto-activate critical factory changes.
-### F27 — Factory Maturity Audit
+O operador não deveria precisar ler o JSON dessa fase para entender a situação. A projeção humana precisa dizer o que já está claro, o que falta, quem é dono do próximo passo e qual prova destrava o avanço.
 
-Objetivo: atravessar **Factory Maturity Audit** sem permitir que um worker pule o estado da fábrica.
+## F17 — Verification
 
-Artefatos exigidos: `factory_maturity_scorecard`.
+Revisão independente consome o artefato real. Pass sem leitura, reviewer igual executor ou achado sem reparo são progresso falso.
 
-Gates exigidos: Maturity Gate.
+O que precisa existir: `verification_plan`, `verification_result`.
 
-Workers: `skill-eval-distiller`.
+Gates que seguram o avanço: `Verification Gate`.
 
-Atalhos bloqueados: commit raw study or private evidence.
+Workers normalmente envolvidos: `qa-verification-worker`.
 
+Atalhos que esta fase impede:
+
+- claim done without command evidence.
+
+O operador não deveria precisar ler o JSON dessa fase para entender a situação. A projeção humana precisa dizer o que já está claro, o que falta, quem é dono do próximo passo e qual prova destrava o avanço.
+
+## F18 — Independent Review
+
+Receipt Five reconcilia pedido, mudança, evidência, revisão e pendências. É a passagem entre “mexeu” e “provou”.
+
+O que precisa existir: `review_result`.
+
+Gates que seguram o avanço: `Review Gate`.
+
+Workers normalmente envolvidos: `independent-reviewer`.
+
+Atalhos que esta fase impede:
+
+- allow executor to self-approve.
+
+O operador não deveria precisar ler o JSON dessa fase para entender a situação. A projeção humana precisa dizer o que já está claro, o que falta, quem é dono do próximo passo e qual prova destrava o avanço.
+
+## F20 — Closure Summary
+
+Handoff guarda estado reproduzível para pausa, troca de operador ou retomada. Não é aprovação; é transferência honesta de contexto e evidência.
+
+O que precisa existir: `closure_summary`.
+
+Gates que seguram o avanço: `Closure Gate`.
+
+Workers normalmente envolvidos: `handoff-packer`.
+
+Atalhos que esta fase impede:
+
+- hide unresolved blockers in prose.
+
+O operador não deveria precisar ler o JSON dessa fase para entender a situação. A projeção humana precisa dizer o que já está claro, o que falta, quem é dono do próximo passo e qual prova destrava o avanço.
+
+## F21 — Receipt Five
+
+A auditoria de conclusão compara obrigações com provas entregues. Ela fecha quando bate e bloqueia quando falta algo.
+
+O que precisa existir: `receipt_five`.
+
+Gates que seguram o avanço: `Done Gate`.
+
+Workers normalmente envolvidos: `evidence-reconciler`.
+
+Atalhos que esta fase impede:
+
+- mark done without Receipt Five.
+
+O operador não deveria precisar ler o JSON dessa fase para entender a situação. A projeção humana precisa dizer o que já está claro, o que falta, quem é dono do próximo passo e qual prova destrava o avanço.
+
+## F22 — Completion Audit
+
+Operações de produção verificam dono, ambiente, monitoramento, rollback, incidentes e canal de release. Produto vivo precisa chão operacional.
+
+O que precisa existir: `completion_audit`.
+
+Gates que seguram o avanço: `Completion Audit`.
+
+Workers normalmente envolvidos: `evidence-reconciler`.
+
+Atalhos que esta fase impede:
+
+- close skipped method or evidence requirements.
+
+O operador não deveria precisar ler o JSON dessa fase para entender a situação. A projeção humana precisa dizer o que já está claro, o que falta, quem é dono do próximo passo e qual prova destrava o avanço.
+
+## F23 — Production Operations
+
+Release só acontece com promoção, evidência e autoridade. Se a prova não sustenta, a decisão correta é bloquear.
+
+O que precisa existir: `production_readiness_plan`.
+
+Gates que seguram o avanço: `Release Gate`.
+
+Workers normalmente envolvidos: `release-ops-worker`.
+
+Atalhos que esta fase impede:
+
+- release without owner, rollback or approval.
+
+O operador não deveria precisar ler o JSON dessa fase para entender a situação. A projeção humana precisa dizer o que já está claro, o que falta, quem é dono do próximo passo e qual prova destrava o avanço.
+
+## F24 — Release Or Block
+
+Depois da entrega, monitoramento e suporte mantêm o produto observável. Incidente não vira improviso; vira rota.
+
+O que precisa existir: `release_decision`.
+
+Gates que seguram o avanço: `Release Gate`, `Human Gate when required`.
+
+Workers normalmente envolvidos: `release-ops-worker`, `human-gate-clerk`.
+
+Atalhos que esta fase impede:
+
+- promote without production-strict evidence.
+
+O operador não deveria precisar ler o JSON dessa fase para entender a situação. A projeção humana precisa dizer o que já está claro, o que falta, quem é dono do próximo passo e qual prova destrava o avanço.
+
+## F25 — Monitoring Support
+
+Learnback transforma falhas repetidas em docs, testes, skills, gates ou issues. A fábrica aprende, mas não se altera em silêncio.
+
+O que precisa existir: `incident_support_plan`.
+
+Gates que seguram o avanço: `Support Gate`.
+
+Workers normalmente envolvidos: `release-ops-worker`.
+
+Atalhos que esta fase impede:
+
+- ship without support owner when support is material.
+
+O operador não deveria precisar ler o JSON dessa fase para entender a situação. A projeção humana precisa dizer o que já está claro, o que falta, quem é dono do próximo passo e qual prova destrava o avanço.
+
+## F26 — Learnback
+
+A auditoria de maturidade pergunta se o método escolhido foi bom o bastante. É a defesa contra uma fábrica que segue processo e mesmo assim escolhe processo fraco.
+
+O que precisa existir: `factory_learning_proposal`.
+
+Gates que seguram o avanço: `Learning Gate`.
+
+Workers normalmente envolvidos: `skill-eval-distiller`.
+
+Atalhos que esta fase impede:
+
+- auto-activate critical factory changes.
+
+O operador não deveria precisar ler o JSON dessa fase para entender a situação. A projeção humana precisa dizer o que já está claro, o que falta, quem é dono do próximo passo e qual prova destrava o avanço.
+
+## F27 — Factory Maturity Audit
+
+A auditoria final olha a própria fábrica: cobertura, gaps, confiabilidade, operadores, workers e regras que precisam evoluir.
+
+O que precisa existir: `factory_maturity_scorecard`.
+
+Gates que seguram o avanço: `Maturity Gate`.
+
+Workers normalmente envolvidos: `skill-eval-distiller`.
+
+Atalhos que esta fase impede:
+
+- commit raw study or private evidence.
+
+O operador não deveria precisar ler o JSON dessa fase para entender a situação. A projeção humana precisa dizer o que já está claro, o que falta, quem é dono do próximo passo e qual prova destrava o avanço.
