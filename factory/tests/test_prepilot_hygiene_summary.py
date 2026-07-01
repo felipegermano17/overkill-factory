@@ -24,7 +24,7 @@ class PrepilotHygieneSummaryTest(unittest.TestCase):
         self.assertFalse(any(path.startswith("validation/hygiene/") for path in tracked))
 
     def test_release_docs_tell_operators_not_to_commit_generated_outputs(self) -> None:
-        operations = (REPO_ROOT / "docs" / "en" / "10-local-validation.md").read_text(encoding="utf-8")
+        operations = (REPO_ROOT / "docs" / "en" / "03-local-validation.md").read_text(encoding="utf-8")
 
         self.assertIn(".tmp", operations)
         self.assertIn("must not be committed", operations)

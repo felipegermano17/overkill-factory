@@ -162,7 +162,7 @@
       "evidence_refs": [
         "templates/operator-interface-profile.json",
         "agents/hermes-profile-bindings.public.json",
-        "docs/en/03-how-a-request-moves.md"
+        "docs/en/02-factory-flow-and-hermes-architecture.md"
       ],
       "gap_or_upgrade": "Manager contract exists but needs stronger runtime UX duties and progress/gate packaging behavior.",
       "risk_if_missing": "Human is forced to talk to workers, poll boards or interpret internal factory noise.",
@@ -176,7 +176,7 @@
       "evidence_refs": [
         "templates/operator-interface-profile.json",
         "templates/operator-channel-pack.json",
-        "docs/en/03-how-a-request-moves.md"
+        "docs/en/02-factory-flow-and-hermes-architecture.md"
       ],
       "gap_or_upgrade": "Telegram exists but needs richer progress cards, attachment delivery, fallback and acknowledgement loops.",
       "risk_if_missing": "The current primary path remains useful but not delightful or confidently stateful.",
@@ -204,7 +204,7 @@
       "evidence_refs": [
         "templates/factory-status-snapshot.json",
         "templates/operator-notification-policy.json",
-        "docs/en/03-how-a-request-moves.md"
+        "docs/en/02-factory-flow-and-hermes-architecture.md"
       ],
       "gap_or_upgrade": "Status exists but the operator-facing progress projection must be elevated to product-grade UX.",
       "risk_if_missing": "User loses trust because execution feels silent or opaque.",
@@ -374,7 +374,7 @@
     "templates/operator-briefing-package.json",
     "templates/human-gate-record.json",
     "templates/approval-request.json",
-    "docs/en/03-how-a-request-moves.md",
+    "docs/en/02-factory-flow-and-hermes-architecture.md",
     "docs/control-tower/discord-control-tower-os.md"
   ],
   "acceptance": {

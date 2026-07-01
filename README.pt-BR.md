@@ -36,11 +36,9 @@ Em português claro:
 - [English documentation](docs/en/index.md)
 - [Mapa visual público](https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.3.html)
 
-Se você está chegando agora, leia `docs/pt-BR/01-comecar-aqui.md` e depois `docs/pt-BR/03-como-um-pedido-anda.md`.
+Se você está chegando agora, leia `docs/pt-BR/01-comecar-aqui.md` e depois o manual operacional denso em `docs/pt-BR/02-fluxo-da-fabrica-e-arquitetura-hermes.md`.
 
-Se você vai operar, leia `docs/pt-BR/04-experiencia-do-operador.md`, `docs/pt-BR/05-prova-e-recibos.md` e `docs/pt-BR/06-decisoes-humanas.md`.
-
-Se você vai manter o repo, leia `docs/pt-BR/10-validacao-local.md`, `docs/pt-BR/11-referencia-do-repositorio.md` e `docs/pt-BR/13-guia-de-manutencao.md`.
+Se você vai operar ou manter a fábrica, a mesma página densa é a referência principal para fluxo, encaixe Hermes, fases, workers, gates, evidência, decisões e limites de prova. Depois use `docs/pt-BR/03-validacao-local.md` e `docs/pt-BR/04-referencia-do-repositorio.md` para comandos e caminhos.
 
 ## Primeiro teste local
 
@@ -73,7 +71,7 @@ As docs públicas antigas foram preservadas em `factory/legacy-docs/` por compat
 
 ## Status público
 
-O status, as contagens e os limites de prova ficam em `docs/pt-BR/09-status-limites-e-prova.md`. O conjunto atual inclui 40 workers públicos. Números de fases, rotas, métodos, schemas, templates e testes devem ser lidos dos registries e validadores, não copiados manualmente para toda página.
+O status, as contagens e os limites de prova ficam em `docs/pt-BR/02-fluxo-da-fabrica-e-arquitetura-hermes.md`. O conjunto atual inclui 40 workers públicos. Números de fases, rotas, métodos, schemas, templates e testes devem ser lidos dos registries e validadores, não copiados manualmente para toda página.
 
 ## Contribuir sem quebrar a verdade pública
 

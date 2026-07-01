@@ -37,13 +37,13 @@
       "action_id": "rollback-release",
       "action_type": "rollback",
       "owner": "release-ops-worker",
-      "procedure_ref": "docs/en/10-local-validation.md",
+      "procedure_ref": "docs/en/03-local-validation.md",
       "validation_ref": "scripts/release_integration_preflight.py"
     }
   ],
   "evidence_refs": [
     "templates/incident-support-plan.json",
-    "docs/en/10-local-validation.md"
+    "docs/en/03-local-validation.md"
   ],
   "learnback_target": "factory_maturity_scorecard"
 }

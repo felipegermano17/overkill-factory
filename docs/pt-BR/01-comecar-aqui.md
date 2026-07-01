@@ -40,4 +40,4 @@ A promessa é outra: tornar erro, lacuna, risco e bloqueio visíveis cedo o bast
 
 ## Continue
 
-Leia [O problema do produto](02-o-problema-do-produto.md) se quiser entender por que agente bom não basta. Leia [Como um pedido anda](03-como-um-pedido-anda.md) se quiser ver o fluxo completo.
+Leia [O problema do produto](02-fluxo-da-fabrica-e-arquitetura-hermes.md) se quiser entender por que agente bom não basta. Leia [Como um pedido anda](02-fluxo-da-fabrica-e-arquitetura-hermes.md) se quiser ver o fluxo completo.

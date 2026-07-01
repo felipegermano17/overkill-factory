@@ -59,7 +59,7 @@
       "severity": "none",
       "blocks_autonomous_execution": false,
       "evidence_refs": [
-        "docs/en/10-local-validation.md"
+        "docs/en/03-local-validation.md"
       ],
       "smallest_safe_remediation": "Keep first-run instructions public-safe and current.",
       "remediation_target_ref": "not_required"
@@ -119,7 +119,7 @@
       "severity": "none",
       "blocks_autonomous_execution": false,
       "evidence_refs": [
-        "docs/en/05-evidence-and-receipts.md"
+        "docs/en/02-factory-flow-and-hermes-architecture.md"
       ],
       "smallest_safe_remediation": "Keep secret and supply-chain checks in the gate set.",
       "remediation_target_ref": "not_required"

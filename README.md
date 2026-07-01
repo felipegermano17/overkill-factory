@@ -36,11 +36,9 @@ Plainly:
 - [Documentação em português](docs/pt-BR/index.md)
 - [Public visual map](https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.3.html)
 
-If you are new, read `docs/en/01-start-here.md` and then `docs/en/03-how-a-request-moves.md`.
+If you are new, read `docs/en/01-start-here.md` and then the dense operating manual at `docs/en/02-factory-flow-and-hermes-architecture.md`.
 
-If you operate the factory, read `docs/en/04-operator-experience.md`, `docs/en/05-evidence-and-receipts.md`, and `docs/en/06-human-decisions.md`.
-
-If you maintain the repository, read `docs/en/10-local-validation.md`, `docs/en/11-repository-reference.md`, and `docs/en/13-maintainer-guide.md`.
+If you operate or maintain the factory, the same dense page is the primary reference for flow, Hermes integration, phases, workers, gates, evidence, decisions and proof boundaries. Then use `docs/en/03-local-validation.md` and `docs/en/04-repository-reference.md` for commands and file locations.
 
 ## First local proof
 
@@ -77,7 +75,7 @@ The old public docs were preserved under `factory/legacy-docs/` for historical c
 
 ## Public status
 
-Status, counts, and proof boundaries live in `docs/en/09-status-boundaries-and-proof.md`. The current public set includes 40 public workers. Counts for phases, routes, methods, schemas, templates, and tests should be read from registries and validators, not copied into every page.
+Status, counts, and proof boundaries live in `docs/en/02-factory-flow-and-hermes-architecture.md`. The current public set includes 40 public workers. Counts for phases, routes, methods, schemas, templates, and tests should be read from registries and validators, not copied into every page.
 
 ## Contributing without breaking public truth
 

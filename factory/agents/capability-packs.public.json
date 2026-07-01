@@ -144,7 +144,7 @@
       ],
       "local_smoke_path": "python scripts/factoryctl.py validate-card templates/vfinal-factory-card.json",
       "reference_sources": [
-        "docs/en/05-evidence-and-receipts.md",
+        "docs/en/02-factory-flow-and-hermes-architecture.md",
         "templates/product-delivery-quality-profile.json"
       ]
     },
@@ -818,7 +818,7 @@
       "local_smoke_path": "python scripts/quickstart_smoke.py",
       "reference_sources": [
         "README.md",
-        "docs/en/10-local-validation.md",
+        "docs/en/03-local-validation.md",
         "examples/minimal-hermes-project/card.md"
       ]
     },
@@ -868,7 +868,7 @@
       ],
       "local_smoke_path": "python scripts/validate_document_governance.py",
       "reference_sources": [
-        "docs/en/11-repository-reference.md",
+        "docs/en/04-repository-reference.md",
         "CONTRIBUTING.md",
         "examples/README.md"
       ]

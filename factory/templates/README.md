@@ -29,4 +29,4 @@ python3 -m unittest discover -s tests -p 'test_*.py' -q
 
 ## Public documentation link
 
-See `docs/en/11-repository-reference.md` for the canonical public explanation. Internal README files are maintainer guides; they are not the product manual and must not become a second source of truth.
+See `docs/en/04-repository-reference.md` for the canonical public explanation. Internal README files are maintainer guides; they are not the product manual and must not become a second source of truth.

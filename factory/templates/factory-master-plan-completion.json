@@ -59,7 +59,7 @@
           "templates/operator-interface-profile.json",
           "templates/operator-delivery-receipt.json",
           "templates/operator-briefing-package.json",
-          "docs/en/03-how-a-request-moves.md",
+          "docs/en/02-factory-flow-and-hermes-architecture.md",
           "scripts/factory_operator_progress_card.py",
           "scripts/factory_operator_delivery_receipt.py",
           "scripts/render_human_gate_pdf.py"
@@ -67,7 +67,7 @@
         "evidence_refs": [
           "schemas/factory-master-update-plan.schema.json",
           "schemas/factory-master-plan-completion.schema.json",
-          "docs/en/11-repository-reference.md",
+          "docs/en/04-repository-reference.md",
           "schemas/factory-master-plan-literal-dod.schema.json",
           "scripts/factory_master_plan_literal_dod_audit.py"
         ]
@@ -120,7 +120,7 @@
           "templates/operator-interface-profile.json",
           "templates/operator-delivery-receipt.json",
           "templates/operator-briefing-package.json",
-          "docs/en/03-how-a-request-moves.md"
+          "docs/en/02-factory-flow-and-hermes-architecture.md"
         ],
         "evidence_refs": [
           "schemas/factory-runtime-truth-spine.schema.json",
@@ -175,7 +175,7 @@
           "templates/operator-interface-profile.json",
           "templates/operator-delivery-receipt.json",
           "templates/operator-briefing-package.json",
-          "docs/en/03-how-a-request-moves.md"
+          "docs/en/02-factory-flow-and-hermes-architecture.md"
         ],
         "evidence_refs": [
           "schemas/factory-canonical-frontier-policy.schema.json",
@@ -227,11 +227,11 @@
           "templates/operator-interface-profile.json",
           "templates/operator-delivery-receipt.json",
           "templates/operator-briefing-package.json",
-          "docs/en/03-how-a-request-moves.md"
+          "docs/en/02-factory-flow-and-hermes-architecture.md"
         ],
         "evidence_refs": [
           "schemas/factory-manager-agent-freshness-policy.schema.json",
-          "docs/en/07-hermes-and-factory.md",
+          "docs/en/02-factory-flow-and-hermes-architecture.md",
           "scripts/factory_hermes_live_smoke.py"
         ]
       }
@@ -271,7 +271,7 @@
         ],
         "operator_refs": [
           "templates/human-gate-decision-package.json",
-          "docs/en/05-evidence-and-receipts.md",
+          "docs/en/02-factory-flow-and-hermes-architecture.md",
           "templates/operator-delivery-receipt.json"
         ],
         "evidence_refs": [
@@ -324,7 +324,7 @@
           "templates/operator-interface-profile.json",
           "templates/operator-delivery-receipt.json",
           "templates/operator-briefing-package.json",
-          "docs/en/03-how-a-request-moves.md"
+          "docs/en/02-factory-flow-and-hermes-architecture.md"
         ],
         "evidence_refs": [
           "schemas/receipt-five.schema.json",
@@ -373,7 +373,7 @@
           "templates/operator-interface-profile.json",
           "templates/operator-delivery-receipt.json",
           "templates/operator-briefing-package.json",
-          "docs/en/03-how-a-request-moves.md"
+          "docs/en/02-factory-flow-and-hermes-architecture.md"
         ],
         "evidence_refs": [
           "schemas/product-sot.schema.json",
@@ -420,7 +420,7 @@
           "templates/operator-interface-profile.json",
           "templates/operator-delivery-receipt.json",
           "templates/operator-briefing-package.json",
-          "docs/en/03-how-a-request-moves.md"
+          "docs/en/02-factory-flow-and-hermes-architecture.md"
         ],
         "evidence_refs": [
           "schemas/capability-acquisition-contract.schema.json",
@@ -475,7 +475,7 @@
         ],
         "evidence_refs": [
           "docs/public-surface.manifest.json",
-          "docs/en/11-repository-reference.md",
+          "docs/en/04-repository-reference.md",
           "pyproject.toml"
         ]
       }
@@ -550,7 +550,7 @@
           "templates/operator-interface-profile.json",
           "templates/operator-delivery-receipt.json",
           "templates/operator-briefing-package.json",
-          "docs/en/03-how-a-request-moves.md",
+          "docs/en/02-factory-flow-and-hermes-architecture.md",
           "scripts/factory_operator_progress_card.py",
           "scripts/factory_operator_delivery_receipt.py",
           "scripts/render_human_gate_pdf.py"

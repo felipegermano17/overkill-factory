@@ -1,10 +1,8 @@
-# Overkill Factory Documentation
+# Overkill Factory docs
 
-Canonical public documentation is available in two complete versions:
+Canonical public documentation is intentionally small now.
 
-- [English](en/index.md)
-- [Português](pt-BR/index.md)
+- English: `en/index.md`
+- Português: `pt-BR/index.md`
 
-The documentation is organized by reader questions: product, request flow, operator experience, evidence, human decisions, Hermes boundary, workers, status/proof, local validation, repository reference, glossary, and maintenance.
-
-The old documentation tree is preserved under `factory/legacy-docs/` for historical compatibility only. It is not canonical.
+The deep system explanation is not split across many conceptual pages anymore. Read the factory flow and Hermes architecture page when you need the real operating model.

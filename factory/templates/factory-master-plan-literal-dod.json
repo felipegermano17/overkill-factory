@@ -128,7 +128,7 @@
       "evidence_refs": [
         "templates/human-gate-decision-package.json",
         "scripts/render_human_gate_pdf.py",
-        "docs/en/05-evidence-and-receipts.md"
+        "docs/en/02-factory-flow-and-hermes-architecture.md"
       ],
       "command_refs": [
         "command:factoryctl human-gate-package"
@@ -258,7 +258,7 @@
         "README.md",
         "README.pt-BR.md",
         "docs/assets/public-map/overkill-factory-map-v1.0.3.html",
-        "docs/en/11-repository-reference.md"
+        "docs/en/04-repository-reference.md"
       ],
       "command_refs": [
         "command:python scripts/generate_factory_reference_docs.py --check"

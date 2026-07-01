@@ -16,10 +16,10 @@ The factory does not treat agents as loose personalities. A worker becomes opera
 | Read | File | Purpose |
 | --- | --- | --- |
 | 1 | `agents/worker-roster.md` | Human overview of the 40 public workers by ownership group. |
-| 2 | `docs/en/08-workers-and-work-units.md` | Worker packets, worker results and bounded work. |
-| 3 | `docs/en/11-repository-reference.md` | Stage and registry references. |
-| 4 | `docs/en/07-hermes-and-factory.md` | Hermes profile and runtime boundary. |
-| 5 | `docs/en/05-evidence-and-receipts.md` | Authority, evidence and anti-theater rules. |
+| 2 | `docs/en/02-factory-flow-and-hermes-architecture.md` | Worker packets, worker results and bounded work. |
+| 3 | `docs/en/04-repository-reference.md` | Stage and registry references. |
+| 4 | `docs/en/02-factory-flow-and-hermes-architecture.md` | Hermes profile and runtime boundary. |
+| 5 | `docs/en/02-factory-flow-and-hermes-architecture.md` | Authority, evidence and anti-theater rules. |
 | 6 | `agents/worker-registry.public.json` | Machine-readable worker registry. |
 | 7 | `agents/worker-profiles.public.json` | Public worker profiles. |
 | 8 | `agents/hermes-profile-bindings.public.json` | Hermes profile bindings. |

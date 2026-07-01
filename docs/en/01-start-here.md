@@ -40,4 +40,4 @@ The promise is different: make error, gap, risk, and blocker visible early enoug
 
 ## Continue
 
-Read [The product problem](02-product-problem.md) to understand why a good agent is not enough. Read [How a request moves](03-how-a-request-moves.md) to see the full flow.
+Read [The product problem](02-factory-flow-and-hermes-architecture.md) to understand why a good agent is not enough. Read [How a request moves](02-factory-flow-and-hermes-architecture.md) to see the full flow.

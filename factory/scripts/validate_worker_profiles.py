@@ -23,7 +23,7 @@ PROFILES_PATH = ROOT / "agents" / "worker-profiles.public.json"
 BINDINGS_PATH = ROOT / "agents" / "hermes-profile-bindings.public.json"
 PROFILE_ALIASES_PATH = ROOT / "agents" / "profile-compatibility-aliases.public.json"
 WORKFLOW_CATALOG_PATH = REPO_ROOT / "docs" / "factory-workflow.catalog.json"
-SECURITY_MATRIX_PATH = REPO_ROOT / "docs" / "en" / "05-evidence-and-receipts.md"
+SECURITY_MATRIX_PATH = REPO_ROOT / "docs" / "en" / "02-factory-flow-and-hermes-architecture.md"
 PROFILE_SMOKE_PATH = ROOT / ".tmp" / "factory-runs" / "hermes-live" / "factory12-agent-profile-smoke.json"
 PROFILE_READINESS_PATH = ROOT / "agents" / "worker-profile-readiness.public.json"
 PROFILE_READINESS_REF = "agents/worker-profile-readiness.public.json"
@@ -645,7 +645,7 @@ def validate(
             findings.append(f"{reviewer_id}: reviewer must not modify implementation artifacts")
 
     if not SECURITY_MATRIX_PATH.exists():
-        findings.append("docs/en/05-evidence-and-receipts.md is missing")
+        findings.append("docs/en/02-factory-flow-and-hermes-architecture.md is missing")
     else:
         matrix = SECURITY_MATRIX_PATH.read_text(encoding="utf-8").lower()
         for slug, label in SECURITY_DOMAINS.items():

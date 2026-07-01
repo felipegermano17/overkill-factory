@@ -5,7 +5,7 @@
   "lane_kind": "background_subagent_lane",
   "objective": "Run a Hermes background subagent lane as candidate research only, then reconcile it through a worker result before it can affect Receipt Five.",
   "read_scope": [
-    "docs/en/03-how-a-request-moves.md",
+    "docs/en/02-factory-flow-and-hermes-architecture.md",
     "scripts/factoryctl.py"
   ],
   "write_scope": [
@@ -17,7 +17,7 @@
   "base_ref": "main",
   "worktree_ref": "main",
   "input_refs": [
-    "docs/en/03-how-a-request-moves.md"
+    "docs/en/02-factory-flow-and-hermes-architecture.md"
   ],
   "intended_write_scope": [
     "none"
