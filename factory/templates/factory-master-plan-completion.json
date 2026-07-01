@@ -67,7 +67,7 @@
         "evidence_refs": [
           "schemas/factory-master-update-plan.schema.json",
           "schemas/factory-master-plan-completion.schema.json",
-          "docs/en/04-repository-reference.md",
+          "docs/en/03-validation-and-repository-reference.md",
           "schemas/factory-master-plan-literal-dod.schema.json",
           "scripts/factory_master_plan_literal_dod_audit.py"
         ]
@@ -475,7 +475,7 @@
         ],
         "evidence_refs": [
           "docs/public-surface.manifest.json",
-          "docs/en/04-repository-reference.md",
+          "docs/en/03-validation-and-repository-reference.md",
           "pyproject.toml"
         ]
       }

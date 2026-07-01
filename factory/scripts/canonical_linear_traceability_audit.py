@@ -411,7 +411,7 @@ def refs_autonomy_readiness() -> list[dict[str, str]]:
         ref("template", "templates/autonomy-readiness-packet.json", "autonomy readiness template"),
         ref("schema", "schemas/factory-card.schema.json", "autonomy_readiness_packet card field"),
         ref("profile_binding", "agents/hermes-profile-bindings.public.json", "runtime profile bindings"),
-        ref("documentation", "docs/en/04-repository-reference.md", "stage 17 agent ownership"),
+        ref("documentation", "docs/en/03-validation-and-repository-reference.md", "stage 17 agent ownership"),
         ref("test", "tests/test_materialize_hermes_profiles.py", "Hermes profile materialization regressions"),
     ]
 
@@ -438,9 +438,9 @@ def refs_learning() -> list[dict[str, str]]:
 
 def refs_docs_standard() -> list[dict[str, str]]:
     return [
-        ref("documentation", "docs/en/03-local-validation.md", "validation and release manual"),
-        ref("documentation", "docs/en/03-local-validation.md", "operator troubleshooting manual"),
-        ref("documentation", "docs/en/03-local-validation.md", "operator quickstart"),
+        ref("documentation", "docs/en/03-validation-and-repository-reference.md", "validation and release manual"),
+        ref("documentation", "docs/en/03-validation-and-repository-reference.md", "operator troubleshooting manual"),
+        ref("documentation", "docs/en/03-validation-and-repository-reference.md", "operator quickstart"),
         ref("script", "scripts/public_safety_scan.py", "public documentation safety scanner"),
         ref("test", "tests/test_open_source_docs.py", "public docs regressions"),
     ]
@@ -464,7 +464,7 @@ def refs_workers() -> list[dict[str, str]]:
         ref("worker_profile", "agents/worker-profiles.public.json", "worker profiles"),
         ref("profile_binding", "agents/hermes-profile-bindings.public.json", "Hermes profile bindings"),
         ref("documentation", "docs/en/02-factory-flow-and-hermes-architecture.md", "worker profiles manual"),
-        ref("documentation", "docs/en/04-repository-reference.md", "stage-to-agent map"),
+        ref("documentation", "docs/en/03-validation-and-repository-reference.md", "stage-to-agent map"),
         ref("test", "tests/test_worker_profiles.py", "worker profile regressions"),
         ref("test", "tests/test_factory_stage_agent_map.py", "stage map regressions"),
     ]

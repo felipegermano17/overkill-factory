@@ -282,13 +282,13 @@ def generated_text() -> str:
             "",
             "## CLI Surface",
             "",
-            "The generated reference checks the command surface by scanning `scripts/factoryctl.py`. Use `docs/en/04-repository-reference.md` for operator examples.",
+            "The generated reference checks the command surface by scanning `scripts/factoryctl.py`. Use `docs/en/03-validation-and-repository-reference.md` for operator examples.",
             "",
         ]
     )
     lines.extend(f"- `factoryctl {command}`" for command in commands[:80])
     if len(commands) > 80:
-        lines.append(f"- `+{len(commands) - 80} more factoryctl commands in docs/en/04-repository-reference.md`")
+        lines.append(f"- `+{len(commands) - 80} more factoryctl commands in docs/en/03-validation-and-repository-reference.md`")
 
     lines.extend(
         [

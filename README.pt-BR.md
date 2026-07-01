@@ -38,7 +38,7 @@ Em português claro:
 
 Se você está chegando agora, leia `docs/pt-BR/01-comecar-aqui.md` e depois o manual operacional denso em `docs/pt-BR/02-fluxo-da-fabrica-e-arquitetura-hermes.md`.
 
-Se você vai operar ou manter a fábrica, a mesma página densa é a referência principal para fluxo, encaixe Hermes, fases, workers, gates, evidência, decisões e limites de prova. Depois use `docs/pt-BR/03-validacao-local.md` e `docs/pt-BR/04-referencia-do-repositorio.md` para comandos e caminhos.
+Se você vai operar ou manter a fábrica, a mesma página densa é a referência principal para fluxo, encaixe Hermes, fases, workers, gates, evidência, decisões e limites de prova. Depois use `docs/pt-BR/03-validacao-e-referencia-do-repositorio.md` e `docs/pt-BR/03-validacao-e-referencia-do-repositorio.md` para comandos e caminhos.
 
 ## Primeiro teste local
 

@@ -266,7 +266,7 @@ def build_prepilot_master(paths: GatePaths, *, created_at: str | None = None) ->
             [
                 evidence("documentation", "README.md", "external operator entrypoint"),
                 evidence("documentation", "README.pt-BR.md", "Portuguese public entrypoint"),
-                evidence("documentation", "docs/en/03-local-validation.md", "release validation path"),
+                evidence("documentation", "docs/en/03-validation-and-repository-reference.md", "release validation path"),
             ],
             "Docs do not prove live runtime readiness.",
         ),
@@ -390,7 +390,7 @@ def build_prepilot_master(paths: GatePaths, *, created_at: str | None = None) ->
         "created_at": created_at or utc_now(),
         "result": result,
         "readiness_level": readiness_level,
-        "source_plan": "docs/en/03-local-validation.md",
+        "source_plan": "docs/en/03-validation-and-repository-reference.md",
         "coverage_rule": "All nine prepilot readiness tasks must be PASS or explicitly blocked before production readiness can be claimed.",
         "tasks": tasks,
         "limits": [

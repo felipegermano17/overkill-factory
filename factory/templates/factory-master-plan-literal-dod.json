@@ -258,7 +258,7 @@
         "README.md",
         "README.pt-BR.md",
         "docs/assets/public-map/overkill-factory-map-v1.0.3.html",
-        "docs/en/04-repository-reference.md"
+        "docs/en/03-validation-and-repository-reference.md"
       ],
       "command_refs": [
         "command:python scripts/generate_factory_reference_docs.py --check"

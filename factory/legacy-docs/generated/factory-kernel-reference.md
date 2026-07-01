@@ -38,7 +38,7 @@ Done without evidence is only a claim. Receipt Five, review, runtime state and p
 | Method engines | 8 | `templates/method-engine-registry.json` |
 | JSON schemas | 249 | `schemas/*.json` |
 | Templates | 166 | `templates/*` |
-| Public surfaces | 13 | `docs/public-surface.manifest.json` |
+| Public surfaces | 11 | `docs/public-surface.manifest.json` |
 
 ## Factory Phases
 
@@ -623,7 +623,7 @@ Templates are starter records paired with schemas. They are examples of valid sh
 
 ## CLI Surface
 
-The generated reference checks the command surface by scanning `scripts/factoryctl.py`. Use `docs/en/04-repository-reference.md` for operator examples.
+The generated reference checks the command surface by scanning `scripts/factoryctl.py`. Use `docs/en/03-validation-and-repository-reference.md` for operator examples.
 
 - `factoryctl capability-acquisition-run`
 - `factoryctl capability-pack`

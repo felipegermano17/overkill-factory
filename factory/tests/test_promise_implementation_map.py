@@ -45,8 +45,8 @@ class PromiseImplementationMapTests(unittest.TestCase):
 
     def test_cli_and_ci_include_promise_map_validator(self) -> None:
         workflow = (REPO_ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
-        usage = (REPO_ROOT / "docs" / "en" / "03-local-validation.md").read_text(encoding="utf-8")
-        usage_pt = (REPO_ROOT / "docs" / "pt-BR" / "03-validacao-local.md").read_text(encoding="utf-8")
+        usage = (REPO_ROOT / "docs" / "en" / "03-validation-and-repository-reference.md").read_text(encoding="utf-8")
+        usage_pt = (REPO_ROOT / "docs" / "pt-BR" / "03-validacao-e-referencia-do-repositorio.md").read_text(encoding="utf-8")
 
         command = "python3 scripts/validate_promise_implementation_map.py"
         self.assertIn("python scripts/validate_promise_implementation_map.py", workflow)

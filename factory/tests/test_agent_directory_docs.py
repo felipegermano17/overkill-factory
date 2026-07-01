@@ -18,7 +18,7 @@ class AgentDirectoryDocsTest(unittest.TestCase):
         required_refs = [
             "agents/worker-roster.md",
             "docs/en/02-factory-flow-and-hermes-architecture.md",
-            "docs/en/04-repository-reference.md",
+            "docs/en/03-validation-and-repository-reference.md",
             "docs/en/02-factory-flow-and-hermes-architecture.md",
             "docs/en/02-factory-flow-and-hermes-architecture.md",
             "agents/worker-registry.public.json",

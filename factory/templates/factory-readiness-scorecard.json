@@ -59,7 +59,7 @@
       "severity": "none",
       "blocks_autonomous_execution": false,
       "evidence_refs": [
-        "docs/en/03-local-validation.md"
+        "docs/en/03-validation-and-repository-reference.md"
       ],
       "smallest_safe_remediation": "Keep first-run instructions public-safe and current.",
       "remediation_target_ref": "not_required"

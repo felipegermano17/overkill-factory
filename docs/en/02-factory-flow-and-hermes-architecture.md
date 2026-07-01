@@ -1999,3 +1999,114 @@ When something looks wrong, inspect in this order:
 10. Receipt Five and closure summary.
 
 Do not debug from vibes. Debug from fields, gates, worker results and Hermes state.
+## Three end-to-end worked examples
+
+The examples below are illustrative. They are not claims that these exact runs happened in a live Hermes runtime. They show the mechanics a maintainer should expect to see when the Factory is working correctly.
+
+### Example 1: build the customer onboarding flow
+
+Raw request:
+
+```text
+Build the customer onboarding flow.
+```
+
+Source envelope: F0 seals the original request before interpretation. F1 records the interface and source refs. F2 separates facts from assumptions: the known request is onboarding, while user type, required screens, invite flow, billing, mobile coverage, and acceptance evidence may still be gaps.
+
+Product truth: F4/F5 must not turn the sentence into scope. A usable Product SOT states the user, goal, must-include items, out-of-scope items, risks, acceptance evidence and open gaps. For example: new workspace admin; goal is first successful workspace setup; must include account creation, workspace name, invite step, loading/empty/error/success states; billing is out of scope; evidence requires Product Face screenshots, journey test, backend workspace-state check and review.
+
+Route and method: F6 routes this as `product_creation` or product-facing feature delivery. F7 selects a method that changes proof, not a label. For visible product work, design-first or behavior-first proof is required. F8 activates Product Face and product experience evidence. F9 decides whether any authority gate is required. F10 is only material if security-sensitive surfaces are present.
+
+Work units and Hermes: F11 creates executable plans and decomposes work into bounded units: Product SOT completion, UI implementation, backend state, QA verification, Product Face review, independent review and closure. F12 checks autonomy readiness. F13 blocks dispatch until the graph is ready. F15 materializes worker packets in Hermes. Hermes owns the live cards, dependencies, comments, attachments and blocked/done transitions.
+
+Worker packets: implementation workers receive scoped packets; Product Face receives screenshots and acceptance criteria; QA receives named checks; reviewers receive evidence and SOT refs. A packet that says only “build onboarding” is invalid because it cannot prove scope, authority or completion.
+
+Results and proof: F16 ingests worker results. F17 verifies with named commands/journey checks and UI inspection. F18 requires independent review. Failed review creates repair work; it does not become a comment that everyone ignores.
+
+Receipt Five: F20/F21 state what was requested, what was built, which artifacts prove it, who reviewed it and what remains. If email-provider rate limits were not production-tested, the receipt says so. F22 compares promised work to delivered work. F23/F24 handle release only if production is in scope and human approval is packaged with evidence, rollback and risk.
+
+### Example 2: users cannot reset passwords after the latest release
+
+Raw request:
+
+```text
+Users cannot reset passwords after the latest release.
+```
+
+Source envelope and ledger: F0/F1/F2 preserve the exact report, attach source refs, and separate known facts from missing facts: affected users, environment, error message, release version, provider status, reproduction path and rollback risk.
+
+Product truth: F4/F5 produce a narrow Product SOT: restore password reset for affected users without changing unrelated auth flows. Out of scope may include redesigning login or replacing the email provider. Acceptance evidence must include failing reproduction before the fix and passing regression after the fix.
+
+Route and method: F6 routes this as bug repair. F7 should select test-first or legacy-diagnosis. That method changes the work: reproduce first, isolate regression, fix, run regression, inspect logs and attach evidence.
+
+Hermes execution: F11 decomposes into reproduction, root cause, fix, regression test, QA and review. F13 prevents worker dispatch if the reproduction packet lacks enough source. F15 sends bounded packets into Hermes. F16 requires worker results with artifact refs, not a claim that “it works.”
+
+Verification and review: F17 checks the failing test turned green and that the reset path maps to the Product SOT. F18 review checks whether the fix is scoped and whether it creates security or account-takeover risk.
+
+Closure: F21 Receipt Five records request, fix, reproduction evidence, regression evidence, reviewer outcome and remaining risk. If production rollback is needed, F23/F24 prepare the release/block decision. Local test proof is still not live delivery proof.
+
+### Example 3: promote version 1.2.0 to production
+
+Raw request:
+
+```text
+Promote version 1.2.0 to production.
+```
+
+Source and truth: F0/F1/F2 preserve the release request and source refs. F4/F5 define what version, target environment, release owner, included changes and out-of-scope changes are being promoted.
+
+Route and method: F6 routes this as release/promotion. F7 uses a release or production-operations method. F8 may require Product Face only if the release touches visible surfaces. F9 is material: production promotion is a human gate. F10 checks security architecture if sensitive surfaces are involved.
+
+Readiness: F11/F12/F13 require release plan, rollback plan, monitoring, support owner, required checks and evidence refs before dispatch. The Factory cannot ask “can I deploy?” without explaining what approval authorizes.
+
+Hermes and evidence: F15 uses Hermes for release work items and dependencies. F16/F17 collect build, tests, scans, migration dry-run, release notes, rollback evidence and health checks. F18 independent review checks the release packet.
+
+Human decision: the human-gate clerk prepares a decision packet: approve version 1.2.0 to production, with evidence, rollback, monitoring, risks and explicit limits. Approval does not authorize unrelated secrets, funds, mainnet signing or future releases.
+
+Release or block: F24 either records release with authority and evidence or blocks honestly with owner and next action. F25 ensures support/incident path exists. F26/F27 create learnback only if the run exposed a repeatable Factory/process gap.
+
+## Failure-pattern index
+
+### Summary becomes scope
+
+Symptom: a worker treats “build onboarding” as complete scope. Blocked by F2/F5. Repair action: rebuild source ledger and Product SOT before architecture or worker dispatch.
+
+### Product SOT is vague
+
+Symptom: SOT contains goals but no must-include, out-of-scope, risk or acceptance evidence. Blocked by F5. Repair action: create Product SOT coverage work and ask the operator only for decisions the Factory cannot infer safely.
+
+### Method is only a label
+
+Symptom: method says “test-first” but no failing reproduction or regression evidence exists. Blocked by F7/F17. Repair action: revise Method Contract so the method changes artifacts, gates and proof.
+
+### Worker packet is too broad
+
+Symptom: packet says “build it and make it good.” Blocked by F11/F13. Repair action: split into bounded units with inputs, forbidden actions, evidence fields and review path.
+
+### Hermes card moves without evidence
+
+Symptom: card is marked done but worker result or evidence refs are missing. Blocked by F16/F21/F22. Repair action: reopen/repair in Hermes and require readback before Receipt Five.
+
+### Worker self-approves
+
+Symptom: executor returns pass and no independent reviewer consumed the work. Blocked by F18. Repair action: route independent review; failed review creates repair work.
+
+### Review is not consumed
+
+Symptom: reviewer left findings but downstream closure ignores them. Blocked by F18/F22. Repair action: convert findings into repair, waiver package, or explicit blocked state.
+
+### Human gate asks for blind approval
+
+Symptom: operator sees “can I deploy?” without evidence, rollback, risk or scope. Blocked by F9/F24. Repair action: prepare a human decision packet with options and consequences.
+
+### Local test is claimed as live delivery
+
+Symptom: local validator output is presented as proof that a real private product shipped. Blocked by status/proof boundaries and public safety scan. Repair action: restate as local checkout coherence and require live Hermes/runtime evidence for delivery claims.
+
+### Receipt hides remaining risk
+
+Symptom: Receipt Five says done but omits skipped evidence, failed review, or open production risk. Blocked by F21/F22. Repair action: mark remaining risk explicitly and block release if the risk requires authority.
+
+### Learnback auto-activates unsafe process changes
+
+Symptom: a worker changes Factory rules after one run without approval. Blocked by F26/F27. Repair action: create factory learning proposal and maturity audit item; critical changes require explicit human approval.

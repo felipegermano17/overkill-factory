@@ -10,13 +10,11 @@
     "docs/en/index.md",
     "docs/en/01-start-here.md",
     "docs/en/02-factory-flow-and-hermes-architecture.md",
-    "docs/en/03-local-validation.md",
-    "docs/en/04-repository-reference.md",
+    "docs/en/03-validation-and-repository-reference.md",
     "docs/pt-BR/index.md",
     "docs/pt-BR/01-comecar-aqui.md",
     "docs/pt-BR/02-fluxo-da-fabrica-e-arquitetura-hermes.md",
-    "docs/pt-BR/03-validacao-local.md",
-    "docs/pt-BR/04-referencia-do-repositorio.md",
+    "docs/pt-BR/03-validacao-e-referencia-do-repositorio.md",
     "docs/factory-workflow.catalog.json",
     "docs/promise-implementation-map.public.json",
     "factory/scripts/factoryctl.py",
@@ -192,8 +190,8 @@
       ]
     },
     {
-      "surface_id": "en-local-validation",
-      "path": "docs/en/03-local-validation.md",
+      "surface_id": "en-validation-and-repository-reference",
+      "path": "docs/en/03-validation-and-repository-reference.md",
       "surface_type": "concept_doc",
       "authority_level": "supporting_explanation_not_source_of_truth",
       "source_refs": [
@@ -207,28 +205,11 @@
         "no_runtime_proof_claim"
       ],
       "required_phrases": [
-        "Local validation is not live Hermes E2E proof"
-      ]
-    },
-    {
-      "surface_id": "en-repository-reference",
-      "path": "docs/en/04-repository-reference.md",
-      "surface_type": "concept_doc",
-      "authority_level": "supporting_explanation_not_source_of_truth",
-      "source_refs": [
-        "factory/scripts/factoryctl.py",
-        "docs/factory-workflow.catalog.json",
-        "factory/templates/factory-route-registry.json"
-      ],
-      "claim_checks": [
-        "source_refs_exist",
-        "source_of_truth_disclaimer",
-        "no_runtime_proof_claim"
-      ],
-      "required_phrases": [
+        "Local validation is not live Hermes E2E proof",
         "Route classes",
         "product_creation"
-      ]
+      ],
+      "expected_links": []
     },
     {
       "surface_id": "pt-index",
@@ -292,8 +273,8 @@
       ]
     },
     {
-      "surface_id": "pt-local-validation",
-      "path": "docs/pt-BR/03-validacao-local.md",
+      "surface_id": "pt-validation-and-repository-reference",
+      "path": "docs/pt-BR/03-validacao-e-referencia-do-repositorio.md",
       "surface_type": "concept_doc",
       "authority_level": "supporting_explanation_not_source_of_truth",
       "source_refs": [
@@ -307,28 +288,11 @@
         "no_runtime_proof_claim"
       ],
       "required_phrases": [
-        "validação local não é prova E2E Hermes viva"
-      ]
-    },
-    {
-      "surface_id": "pt-repository-reference",
-      "path": "docs/pt-BR/04-referencia-do-repositorio.md",
-      "surface_type": "concept_doc",
-      "authority_level": "supporting_explanation_not_source_of_truth",
-      "source_refs": [
-        "factory/scripts/factoryctl.py",
-        "docs/factory-workflow.catalog.json",
-        "factory/templates/factory-route-registry.json"
-      ],
-      "claim_checks": [
-        "source_refs_exist",
-        "source_of_truth_disclaimer",
-        "no_runtime_proof_claim"
-      ],
-      "required_phrases": [
+        "validação local não é prova E2E Hermes viva",
         "Classes de rota",
         "product_creation"
-      ]
+      ],
+      "expected_links": []
     }
   ]
 }

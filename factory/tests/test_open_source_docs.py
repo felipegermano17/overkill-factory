@@ -19,15 +19,15 @@ def project_path(rel: str) -> Path:
 def read_text(rel: str) -> str:
     return project_path(rel).read_text(encoding="utf-8")
 
-EN_PAGES = {"index.md", "01-start-here.md", "02-factory-flow-and-hermes-architecture.md", "03-local-validation.md", "04-repository-reference.md"}
-PT_PAGES = {"index.md", "01-comecar-aqui.md", "02-fluxo-da-fabrica-e-arquitetura-hermes.md", "03-validacao-local.md", "04-referencia-do-repositorio.md"}
+EN_PAGES = {"index.md", "01-start-here.md", "02-factory-flow-and-hermes-architecture.md", "03-validation-and-repository-reference.md"}
+PT_PAGES = {"index.md", "01-comecar-aqui.md", "02-fluxo-da-fabrica-e-arquitetura-hermes.md", "03-validacao-e-referencia-do-repositorio.md"}
 REMOVED_SHALLOW_DOCS = {
     "02-product-problem.md", "03-how-a-request-moves.md", "04-operator-experience.md", "05-evidence-and-receipts.md",
     "06-human-decisions.md", "07-hermes-and-factory.md", "08-workers-and-work-units.md", "09-status-boundaries-and-proof.md",
-    "10-local-validation.md", "11-repository-reference.md", "12-glossary.md", "13-maintainer-guide.md",
+    "10-local-validation.md", "11-repository-reference.md", "03-local-validation.md", "04-repository-reference.md", "12-glossary.md", "13-maintainer-guide.md",
     "02-o-problema-do-produto.md", "03-como-um-pedido-anda.md", "04-experiencia-do-operador.md", "05-prova-e-recibos.md",
     "06-decisoes-humanas.md", "07-hermes-e-factory.md", "08-workers-e-unidades-de-trabalho.md", "09-status-limites-e-prova.md",
-    "10-validacao-local.md", "11-referencia-do-repositorio.md", "12-glossario.md", "13-guia-de-manutencao.md",
+    "10-validacao-local.md", "11-referencia-do-repositorio.md", "03-validacao-local.md", "04-referencia-do-repositorio.md", "12-glossario.md", "13-guia-de-manutencao.md",
 }
 OLD_CANONICAL_NAMES = {"manual.md", "operating-model.md", "lifecycle.md", "trust-and-evidence.md", "technical-model.md", "usage.md", "reference.md"}
 
@@ -91,15 +91,16 @@ class OpenSourceDocsTest(unittest.TestCase):
             "status_bridge", "start_bridge", "question_bridge", "decision_bridge", "change_bridge", "exception_bridge", "handoff_bridge", "learnback_forwarding",
             "not allowed to execute factory work", "local tests prove checkout coherence", "Do not claim public documentation is runtime proof",
             "product_creation", "Route classes", "F0 — Pre-Start / Sealed Source Envelope",
+            "Three end-to-end worked examples", "Build the customer onboarding flow", "Users cannot reset passwords", "Promote version 1.2.0", "Failure-pattern index",
         ]:
             self.assertIn(phrase, en)
-        for phrase in ["Hermes é a fonte de verdade viva do runtime", "Worker Packet", "Receipt Five", "Pedido ruim", "Pedido bom", "Prova fraca", "Prova boa", "produção, mainnet, fundos, segredos", "Teste local prova coerência do checkout", "Não diga que docs públicas provam runtime", "Classes de rota"]:
+        for phrase in ["Hermes é a fonte de verdade viva do runtime", "Worker Packet", "Receipt Five", "Pedido ruim", "Pedido bom", "Prova fraca", "Prova boa", "produção, mainnet, fundos, segredos", "Teste local prova coerência do checkout", "Não diga que docs públicas provam runtime", "Classes de rota", "Três exemplos ponta-a-ponta", "usuários não conseguem resetar senha", "Promover versão 1.2.0", "Índice de padrões de falha"]:
             self.assertIn(phrase, pt)
 
     def test_validation_and_reference_remain_practical(self) -> None:
-        en_validation = read_text("docs/en/03-local-validation.md")
-        pt_validation = read_text("docs/pt-BR/03-validacao-local.md")
-        reference = read_text("docs/en/04-repository-reference.md")
+        en_validation = read_text("docs/en/03-validation-and-repository-reference.md")
+        pt_validation = read_text("docs/pt-BR/03-validacao-e-referencia-do-repositorio.md")
+        reference = en_validation
         for text in [en_validation, pt_validation]:
             self.assertIn("python3 scripts/validate_public_surface_sync.py", text)
             self.assertIn("python3 scripts/validate_promise_implementation_map.py", text)

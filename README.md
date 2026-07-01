@@ -38,7 +38,7 @@ Plainly:
 
 If you are new, read `docs/en/01-start-here.md` and then the dense operating manual at `docs/en/02-factory-flow-and-hermes-architecture.md`.
 
-If you operate or maintain the factory, the same dense page is the primary reference for flow, Hermes integration, phases, workers, gates, evidence, decisions and proof boundaries. Then use `docs/en/03-local-validation.md` and `docs/en/04-repository-reference.md` for commands and file locations.
+If you operate or maintain the factory, the same dense page is the primary reference for flow, Hermes integration, phases, workers, gates, evidence, decisions and proof boundaries. Then use `docs/en/03-validation-and-repository-reference.md` and `docs/en/03-validation-and-repository-reference.md` for commands and file locations.
 
 ## First local proof
 

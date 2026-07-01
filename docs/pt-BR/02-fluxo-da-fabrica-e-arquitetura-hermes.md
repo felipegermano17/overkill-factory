@@ -1999,3 +1999,114 @@ Quando algo parecer errado, inspecione nesta ordem:
 10. Receipt Five e closure summary.
 
 Não debuge por vibe. Debuge por campos, gates, worker results e estado Hermes.
+## Três exemplos ponta-a-ponta
+
+Os exemplos abaixo são ilustrativos. Eles não afirmam que essas execuções aconteceram em um Hermes vivo. Eles mostram a mecânica que um mantenedor deve esperar quando a Factory está funcionando corretamente.
+
+### Exemplo 1: criar o fluxo de onboarding do cliente
+
+Pedido bruto:
+
+```text
+Criar o fluxo de onboarding do cliente.
+```
+
+Source envelope: F0 sela o pedido original antes de qualquer interpretação. F1 registra interface e source refs. F2 separa fato de suposição: o pedido conhecido é onboarding, mas tipo de usuário, telas obrigatórias, convite, billing, cobertura mobile e evidência de aceite ainda podem ser gaps.
+
+Verdade do produto: F4/F5 não podem transformar a frase em escopo. Um Product SOT utilizável declara usuário, objetivo, itens obrigatórios, fora de escopo, riscos, evidência de aceite e gaps abertos. Exemplo: admin novo de workspace; objetivo é chegar ao primeiro estado útil; precisa ter criação de conta, nome do workspace, convite, loading/empty/error/success; billing fica fora; evidência exige screenshots Product Face, teste de jornada, checagem do estado backend e review.
+
+Rota e método: F6 roteia como `product_creation` ou entrega de feature visível. F7 escolhe método que muda a prova, não só um rótulo. Para produto visível, prova design-first ou behavior-first é exigida. F8 ativa Product Face e evidência de experiência. F9 decide gate de autoridade. F10 só pesa se houver superfície sensível de segurança.
+
+Work units e Hermes: F11 cria planos executáveis e quebra trabalho em unidades limitadas: completar Product SOT, implementar UI, backend state, QA, Product Face review, review independente e fechamento. F12 checa readiness de autonomia. F13 bloqueia dispatch até o grafo estar pronto. F15 materializa Worker Packets no Hermes. O Hermes é dono de cards vivos, dependências, comentários, anexos e transições blocked/done.
+
+Worker packets: workers de implementação recebem packets com escopo; Product Face recebe screenshots e critérios; QA recebe checks nomeados; reviewers recebem evidência e refs do SOT. Um packet dizendo só “faz onboarding” é inválido porque não prova escopo, autoridade nem conclusão.
+
+Resultados e prova: F16 ingere Worker Results. F17 verifica com comandos/jornadas nomeadas e inspeção de UI. F18 exige review independente. Review falho cria reparo; não vira comentário ignorado.
+
+Receipt Five: F20/F21 dizem o que foi pedido, o que foi construído, quais artefatos provam, quem revisou e o que sobrou. Se rate limit de email não foi testado em produção, o recibo diz isso. F22 compara promessa e entrega. F23/F24 só tratam release se produção estiver no escopo e aprovação humana vier com evidência, rollback e risco.
+
+### Exemplo 2: usuários não conseguem resetar senha depois do último release
+
+Pedido bruto:
+
+```text
+Usuários não conseguem resetar senha depois do último release.
+```
+
+Source envelope e ledger: F0/F1/F2 preservam o relato exato, anexam source refs e separam fatos de lacunas: usuários afetados, ambiente, erro, versão, status do provider, caminho de reprodução e risco de rollback.
+
+Verdade do produto: F4/F5 criam Product SOT estreito: restaurar reset de senha para usuários afetados sem alterar fluxos de auth não relacionados. Fora de escopo pode incluir redesenhar login ou trocar provider. Evidência de aceite precisa incluir reprodução falhando antes e regressão passando depois.
+
+Rota e método: F6 roteia como bug repair. F7 deve escolher test-first ou legacy-diagnosis. Esse método muda o trabalho: reproduzir primeiro, isolar regressão, corrigir, rodar regressão, inspecionar logs e anexar evidência.
+
+Execução Hermes: F11 decompõe em reprodução, causa raiz, fix, regressão, QA e review. F13 impede dispatch se o packet de reprodução não tiver source suficiente. F15 manda packets limitados para o Hermes. F16 exige Worker Results com artifact refs, não frase “funciona”.
+
+Verificação e review: F17 checa que o teste falho ficou verde e que o reset mapeia para o Product SOT. F18 verifica se o fix está contido e se não cria risco de takeover de conta.
+
+Fechamento: F21 Receipt Five registra pedido, fix, evidência de reprodução, evidência de regressão, review e risco restante. Se rollback de produção for necessário, F23/F24 preparam decisão de release/bloqueio. Prova local ainda não é prova de entrega viva.
+
+### Exemplo 3: promover versão 1.2.0 para produção
+
+Pedido bruto:
+
+```text
+Promover versão 1.2.0 para produção.
+```
+
+Fonte e verdade: F0/F1/F2 preservam pedido e source refs. F4/F5 definem versão, ambiente alvo, dono do release, mudanças incluídas e fora de escopo.
+
+Rota e método: F6 roteia como release/promoção. F7 usa método de release ou production operations. F8 exige Product Face se houver superfície visível. F9 é material: promoção para produção é human gate. F10 checa arquitetura de segurança se houver superfície sensível.
+
+Readiness: F11/F12/F13 exigem plano de release, rollback, monitoramento, suporte, checks e evidence refs antes de dispatch. A Factory não pode perguntar “posso deployar?” sem explicar o que a aprovação autoriza.
+
+Hermes e evidência: F15 usa Hermes para itens de release e dependências. F16/F17 coletam build, testes, scans, dry-run de migração, release notes, rollback e health checks. F18 review independente checa o pacote.
+
+Decisão humana: human-gate clerk prepara pacote de decisão: aprovar versão 1.2.0 em produção, com evidência, rollback, monitoramento, riscos e limites explícitos. Aprovação não autoriza segredos, fundos, assinatura mainnet ou releases futuros.
+
+Release ou bloqueio: F24 registra release com autoridade e evidência ou bloqueia honestamente com dono e próxima ação. F25 garante suporte/incidente. F26/F27 criam learnback só se a execução expôs falha repetível da Factory/processo.
+
+## Índice de padrões de falha
+
+### Resumo vira escopo
+
+Sintoma: worker trata “criar onboarding” como escopo completo. Bloqueado por F2/F5. Reparo: refazer source ledger e Product SOT antes de arquitetura ou dispatch.
+
+### Product SOT vago
+
+Sintoma: SOT tem objetivo mas não tem must-include, fora de escopo, risco ou evidência de aceite. Bloqueado por F5. Reparo: criar trabalho de cobertura do Product SOT e perguntar ao operador só decisões que a Factory não consegue inferir com segurança.
+
+### Método é só rótulo
+
+Sintoma: método diz “test-first” mas não existe reprodução falha nem regressão. Bloqueado por F7/F17. Reparo: revisar Method Contract para mudar artefatos, gates e prova.
+
+### Worker packet amplo demais
+
+Sintoma: packet diz “faz isso e garante que está bom”. Bloqueado por F11/F13. Reparo: quebrar em unidades limitadas com inputs, ações proibidas, campos de evidência e caminho de review.
+
+### Card Hermes anda sem evidência
+
+Sintoma: card está done mas Worker Result ou evidence refs faltam. Bloqueado por F16/F21/F22. Reparo: reabrir/reparar no Hermes e exigir readback antes do Receipt Five.
+
+### Worker aprova o próprio trabalho
+
+Sintoma: executor retorna pass e nenhum reviewer independente consumiu o trabalho. Bloqueado por F18. Reparo: rotear review independente; review falho vira reparo.
+
+### Review não é consumido
+
+Sintoma: reviewer deixou findings mas o fechamento ignora. Bloqueado por F18/F22. Reparo: converter findings em reparo, waiver package ou estado bloqueado explícito.
+
+### Human gate pede aprovação cega
+
+Sintoma: operador vê “posso deployar?” sem evidência, rollback, risco ou escopo. Bloqueado por F9/F24. Reparo: preparar decision packet com opções e consequências.
+
+### Teste local é vendido como entrega viva
+
+Sintoma: output local vira prova de que produto privado real foi entregue. Bloqueado por limites de status/prova e public safety scan. Reparo: declarar como coerência local do checkout e exigir evidência live Hermes/runtime para entrega.
+
+### Receipt esconde risco restante
+
+Sintoma: Receipt Five diz done mas omite evidência pulada, review falho ou risco de produção. Bloqueado por F21/F22. Reparo: marcar risco explicitamente e bloquear release se o risco exigir autoridade.
+
+### Learnback autoativa mudança insegura
+
+Sintoma: worker muda regras da Factory depois de uma execução sem aprovação. Bloqueado por F26/F27. Reparo: criar factory learning proposal e item de maturity audit; mudanças críticas exigem aprovação humana explícita.

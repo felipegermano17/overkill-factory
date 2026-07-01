@@ -520,7 +520,7 @@
         "schemas/factory-completion-audit.schema.json"
       ],
       "source_of_truth_refs": [
-        "docs/en/03-local-validation.md",
+        "docs/en/03-validation-and-repository-reference.md",
         "docs/en/01-start-here.md"
       ],
       "enforcement_command_refs": [
@@ -550,7 +550,7 @@
         "contract pass proves production"
       ],
       "mapped_docs": [
-        "docs/en/03-local-validation.md",
+        "docs/en/03-validation-and-repository-reference.md",
         "docs/en/01-start-here.md"
       ],
       "completion_audit_blockers_owned": [
@@ -780,7 +780,7 @@
       ],
       "source_of_truth_refs": [
         "docs/en/02-factory-flow-and-hermes-architecture.md",
-        "docs/en/03-local-validation.md"
+        "docs/en/03-validation-and-repository-reference.md"
       ],
       "enforcement_command_refs": [
         "factoryctl gate-report",
@@ -810,7 +810,7 @@
       ],
       "mapped_docs": [
         "docs/en/02-factory-flow-and-hermes-architecture.md",
-        "docs/en/03-local-validation.md"
+        "docs/en/03-validation-and-repository-reference.md"
       ],
       "completion_audit_blockers_owned": [
         "production_product_face",
@@ -910,7 +910,7 @@
       ],
       "source_of_truth_refs": [
         "docs/en/02-factory-flow-and-hermes-architecture.md",
-        "docs/en/03-local-validation.md"
+        "docs/en/03-validation-and-repository-reference.md"
       ],
       "enforcement_command_refs": [
         "factoryctl gate-report",
@@ -941,7 +941,7 @@
       ],
       "mapped_docs": [
         "docs/en/02-factory-flow-and-hermes-architecture.md",
-        "docs/en/03-local-validation.md"
+        "docs/en/03-validation-and-repository-reference.md"
       ],
       "completion_audit_blockers_owned": [
         "production_release_human_gate",

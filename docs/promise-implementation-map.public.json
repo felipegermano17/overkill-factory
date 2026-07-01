@@ -19,7 +19,7 @@
         "README.md",
         "README.pt-BR.md",
         "docs/en/02-factory-flow-and-hermes-architecture.md",
-        "docs/en/04-repository-reference.md"
+        "docs/en/03-validation-and-repository-reference.md"
       ],
       "implementation_refs": [
         "docs/factory-workflow.catalog.json",
@@ -47,7 +47,7 @@
       "boundary": "This proves deterministic public control-plane contracts and regressions. A live product still requires current Hermes runtime state, worker results, Receipt Five, approvals and product-specific release evidence.",
       "boundary_refs": [
         "docs/en/02-factory-flow-and-hermes-architecture.md",
-        "docs/en/03-local-validation.md"
+        "docs/en/03-validation-and-repository-reference.md"
       ]
     },
     {
@@ -57,7 +57,7 @@
       "documentation_refs": [
         "README.md",
         "docs/en/02-factory-flow-and-hermes-architecture.md",
-        "docs/en/03-local-validation.md"
+        "docs/en/03-validation-and-repository-reference.md"
       ],
       "implementation_refs": [
         "factory/adapters/hermes/live_kanban_adapter.py",
@@ -74,7 +74,7 @@
       "boundary": "The public repo proves local contracts and public-safe runtime proof ingestion. A real product run still requires an operator-owned Hermes runtime and current Hermes evidence.",
       "boundary_refs": [
         "docs/en/02-factory-flow-and-hermes-architecture.md",
-        "docs/en/03-local-validation.md"
+        "docs/en/03-validation-and-repository-reference.md"
       ]
     },
     {
@@ -83,7 +83,7 @@
       "claim_level": "local_contract_proof",
       "documentation_refs": [
         "README.md",
-        "docs/en/03-local-validation.md"
+        "docs/en/03-validation-and-repository-reference.md"
       ],
       "implementation_refs": [
         "factory/scripts/factoryctl.py",
@@ -98,7 +98,7 @@
       ],
       "boundary": "The minimal path writes local public-safe artifacts. It does not mutate a live Hermes board and does not establish production readiness for a real product.",
       "boundary_refs": [
-        "docs/en/03-local-validation.md",
+        "docs/en/03-validation-and-repository-reference.md",
         "factory/examples/minimal-hermes-project/README.md"
       ]
     },
@@ -109,7 +109,7 @@
       "documentation_refs": [
         "README.md",
         "docs/en/02-factory-flow-and-hermes-architecture.md",
-        "docs/en/04-repository-reference.md"
+        "docs/en/03-validation-and-repository-reference.md"
       ],
       "implementation_refs": [
         "factory/scripts/factoryctl.py",
@@ -127,7 +127,7 @@
       "boundary": "Understanding confirmation is not execution approval. It gates Product SOT creation, while product execution still needs method, readiness, worker results and evidence.",
       "boundary_refs": [
         "docs/en/02-factory-flow-and-hermes-architecture.md",
-        "docs/en/04-repository-reference.md"
+        "docs/en/03-validation-and-repository-reference.md"
       ]
     },
     {
@@ -320,9 +320,9 @@
       "claim_level": "public_release_proof",
       "documentation_refs": [
         "README.md",
-        "docs/en/03-local-validation.md",
+        "docs/en/03-validation-and-repository-reference.md",
         "docs/en/02-factory-flow-and-hermes-architecture.md",
-        "docs/en/04-repository-reference.md"
+        "docs/en/03-validation-and-repository-reference.md"
       ],
       "implementation_refs": [
         "factory/scripts/release_integration_preflight.py",
@@ -344,7 +344,7 @@
       ],
       "boundary": "A public kernel release claim does not prove any product-specific production launch, mainnet launch, hosted service release or private runtime state.",
       "boundary_refs": [
-        "docs/en/03-local-validation.md",
+        "docs/en/03-validation-and-repository-reference.md",
         "docs/en/02-factory-flow-and-hermes-architecture.md"
       ]
     },

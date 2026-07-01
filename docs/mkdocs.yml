@@ -13,14 +13,12 @@ nav:
       - Overview: en/index.md
       - Start here: en/01-start-here.md
       - Factory flow and Hermes architecture: en/02-factory-flow-and-hermes-architecture.md
-      - Local validation: en/03-local-validation.md
-      - Repository reference: en/04-repository-reference.md
+      - Validation and repository reference: en/03-validation-and-repository-reference.md
   - Português:
       - Visão geral: pt-BR/index.md
       - Começar aqui: pt-BR/01-comecar-aqui.md
       - Fluxo da fábrica e arquitetura Hermes: pt-BR/02-fluxo-da-fabrica-e-arquitetura-hermes.md
-      - Validação local: pt-BR/03-validacao-local.md
-      - Referência do repositório: pt-BR/04-referencia-do-repositorio.md
+      - Validação e referência: pt-BR/03-validacao-e-referencia-do-repositorio.md
 
 markdown_extensions:
   - toc:
