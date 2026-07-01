@@ -79,6 +79,41 @@ NO_IDLE_OWNER_GATE_DELIVERY_MARKER = "factory_no_idle_owner_gate_delivery"
 NO_IDLE_DECLARED_ARTIFACT_REPAIR_SUPERSEDED_MARKER = "factory_no_idle_declared_artifact_repair_superseded"
 NO_IDLE_STALE_REMEDIATION_REPLACEMENT_LIMIT = 8
 NO_IDLE_RUNNING_RESULT_CLOSEOUT_TIMEOUT_SECONDS = 5 * 60
+REL007_REDUCER_COMPLETION_MARKER = "rel007_bounded_reducer_completion"
+REL007_REDUCER_DECISION = "REDUCE_CHILD_BLOCKERS_AS_BOUNDED_EVIDENCE_ONLY"
+REL007_BANKRUN_CHILD_ROLE = "bankrun_child"
+REL007_DEVNET_SPEC_CHILD_ROLE = "devnet_spec_child"
+REL007_BOUNDED_REDUCER_TARGETS = {
+    REL007_BANKRUN_CHILD_ROLE: {
+        "evidence_class": "bounded_bankrun_local_execution_blocker_evidence",
+        "evidence_verdict": "BLOCKED_LOCAL_FIXTURE_NOT_EXECUTABLE",
+        "summary": (
+            "REL-007 bounded Bankrun/local execution blocker evidence reduced by the "
+            "factory adapter; this is not a Bankrun PASS or release approval."
+        ),
+        "result": "REL-007 bounded Bankrun/local blocker evidence accepted for reducer dependency closeout only.",
+        "artifact_sha256s": {
+            "2b8504b52b3ee0894be8e9afd42075214f95112efa1165ca1722135276613f61",
+            "e78acb25dd9b4900268e4ff403ebbe5bbffffa280e8ccbe6d3b9d1a29bf57faa",
+            "9d8f1097543fe98f3ff23f2664a1b7acdd60baefab5653fa03fe15cce220bb97",
+            "14ba180b956cd727260907e77ab2ec7262a97586952955a1b34204a3cfa1e974",
+            "b3b1fb2098816f1b568dcc3b6a4da4f6529c4d1f049ec8a871ff8716a680f350",
+        },
+    },
+    REL007_DEVNET_SPEC_CHILD_ROLE: {
+        "evidence_class": "bounded_devnet_fixture_blocker_specification",
+        "evidence_verdict": "DEVNET_TRANSACTION_PROOF_BLOCKED_INPUTS_REQUIRED",
+        "summary": (
+            "REL-007 bounded DevNet fixture blocker specification reduced by the "
+            "factory adapter; this is not DevNet execution or release approval."
+        ),
+        "result": "REL-007 bounded DevNet fixture blocker specification accepted for reducer dependency closeout only.",
+        "artifact_sha256s": {
+            "56527dd37943489b3337c7cbb2adc2de5f7dcbec356057f276a3548182b69222",
+            "95f94cf1eee28ead9af287073101bbe4c1afd53664e75639956c61883354253e",
+        },
+    },
+}
 FACTORY_KANBAN_WORKFLOW_TEMPLATE_ID = "overkill-vfinal"
 FACTORY_KANBAN_DEFAULT_STEP_KEY = "F1-intake"
 FACTORY_RUN_GRAPH_RECORD_TYPE = "factory_run_graph"
@@ -605,6 +640,14 @@ def apply_native_workflow_state(
 
 def load_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as fh:
+        for chunk in iter(lambda: fh.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def load_factoryctl() -> Any:
@@ -6329,6 +6372,193 @@ def complete_task(
         raise RuntimeError(f"Hermes task {task_id} is not durably completed after complete command")
     if required_readback_markers and not history_contains_all_markers_anywhere(payload, required_readback_markers):
         raise RuntimeError(f"Hermes task {task_id} completion readback lacks required reconciliation markers")
+
+
+def validate_rel007_bounded_reducer_receipt(
+    *,
+    receipt: dict[str, Any],
+    receipt_path: Path,
+    expected_sha256: str | None = None,
+) -> dict[str, Any]:
+    if expected_sha256:
+        actual_sha256 = file_sha256(receipt_path)
+        if actual_sha256 != expected_sha256:
+            raise RuntimeError(
+                f"reducer receipt sha256 mismatch for {receipt_path}: expected {expected_sha256}, got {actual_sha256}"
+            )
+    root = receipt.get("orchestration_result")
+    if not isinstance(root, dict):
+        raise RuntimeError("reducer receipt missing orchestration_result object")
+    if str(root.get("decision") or "").strip() != REL007_REDUCER_DECISION:
+        raise RuntimeError("reducer receipt decision is not the bounded REL-007 reducer decision")
+    method_route = root.get("method_route") if isinstance(root.get("method_route"), dict) else {}
+    if method_route.get("human_gate_required_now") is not False or method_route.get("operator_input_required_now") is not False:
+        raise RuntimeError("reducer receipt still requires human/operator input; refuse autonomous materialization")
+    if method_route.get("same_task_reblock") is not False or method_route.get("producer_rerun") is not False:
+        raise RuntimeError("reducer receipt authorizes rerun/reblock semantics; refuse bounded completion repair")
+    guardrails = root.get("guardrails_preserved") if isinstance(root.get("guardrails_preserved"), dict) else {}
+    required_false_guardrails = {
+        "mainnet",
+        "devnet_transaction_execution",
+        "sendAndConfirmTransaction",
+        "real_funds",
+        "custody_or_signing_secrets",
+        "production_or_cloud_mutation",
+        "release_or_gate_approval",
+        "f17_f18_receipt_five_or_waiver",
+    }
+    bad_guardrails = sorted(name for name in required_false_guardrails if guardrails.get(name) is not False)
+    if bad_guardrails:
+        raise RuntimeError("reducer receipt does not preserve required false guardrails: " + ", ".join(bad_guardrails))
+    evidence_refs = root.get("evidence_refs") if isinstance(root.get("evidence_refs"), dict) else {}
+    reducer_receipt_role_task_refs(root)
+    verified_artifacts = evidence_refs.get("verified_artifacts")
+    if not isinstance(verified_artifacts, dict):
+        raise RuntimeError("reducer receipt missing verified artifact hashes")
+    verified_hashes = set(str(value) for value in verified_artifacts.values())
+    for role, target in REL007_BOUNDED_REDUCER_TARGETS.items():
+        missing_hashes = sorted(set(target["artifact_sha256s"]) - verified_hashes)
+        if missing_hashes:
+            raise RuntimeError(
+                f"reducer receipt artifact hash mismatch for role {role}: missing " + ", ".join(missing_hashes)
+            )
+    mutation_state = root.get("kanban_dependency_state") if isinstance(root.get("kanban_dependency_state"), dict) else {}
+    if mutation_state.get("repair_to_materialize") is None:
+        raise RuntimeError("reducer receipt lacks explicit kanban dependency repair intent")
+    return root
+
+
+def reducer_receipt_role_task_refs(reducer_root: dict[str, Any]) -> dict[str, str]:
+    evidence_refs = reducer_root.get("evidence_refs") if isinstance(reducer_root.get("evidence_refs"), dict) else {}
+    role_task_refs = {
+        REL007_BANKRUN_CHILD_ROLE: str(evidence_refs.get(REL007_BANKRUN_CHILD_ROLE) or "").strip(),
+        REL007_DEVNET_SPEC_CHILD_ROLE: str(evidence_refs.get(REL007_DEVNET_SPEC_CHILD_ROLE) or "").strip(),
+    }
+    missing_roles = sorted(role for role, task_ref in role_task_refs.items() if not task_ref)
+    if missing_roles:
+        raise RuntimeError("reducer receipt missing runtime task refs for roles: " + ", ".join(missing_roles))
+    return role_task_refs
+
+
+def rel007_reducer_completion_metadata(
+    *,
+    reducer_root: dict[str, Any],
+    reducer_receipt: Path,
+    target_role: str,
+    target_task_id: str,
+) -> dict[str, Any]:
+    target = REL007_BOUNDED_REDUCER_TARGETS[target_role]
+    return {
+        "marker": REL007_REDUCER_COMPLETION_MARKER,
+        "runtime_authority": "hermes_kanban",
+        "local_state_authority": False,
+        "reducer_task_ref": str(reducer_root.get("task_id") or ""),
+        "reducer_receipt_ref": str(reducer_receipt),
+        "target_task_ref": target_task_id,
+        "completion_scope": "bounded_evidence_dependency_closeout_only",
+        "target_role": target_role,
+        "evidence_class": target["evidence_class"],
+        "evidence_verdict": target["evidence_verdict"],
+        "artifact_sha256s": sorted(target["artifact_sha256s"]),
+        "guardrails_preserved": {
+            "bankrun_pass_approval": False,
+            "devnet_transaction_execution": False,
+            "mainnet": False,
+            "real_funds": False,
+            "custody_or_signing_secrets": False,
+            "production_or_cloud_mutation": False,
+            "release_or_gate_approval": False,
+            "f17_f18_receipt_five_or_waiver": False,
+        },
+        "blocked_reasons_preserved": reducer_root.get("blocked_reasons") or [],
+        "downstream_native_graph": reducer_root.get("downstream_native_graph") or [],
+        "native_dependency_promotion_policy": "allow_existing_parent_links_to_promote_after_bounded_child_completion",
+    }
+
+
+def materialize_reducer_completion(
+    args: argparse.Namespace,
+    runner: Runner = default_runner,
+) -> dict[str, Any]:
+    receipt = load_json(args.reducer_receipt)
+    reducer_root = validate_rel007_bounded_reducer_receipt(
+        receipt=receipt,
+        receipt_path=args.reducer_receipt,
+        expected_sha256=args.receipt_sha256,
+    )
+    role_task_refs = reducer_receipt_role_task_refs(reducer_root)
+    requested_target_ids = [str(item).strip() for item in (args.target_task or []) if str(item or "").strip()]
+    if requested_target_ids:
+        task_role_pairs = [(role, task_id) for role, task_id in role_task_refs.items() if task_id in requested_target_ids]
+        unsupported = sorted(set(requested_target_ids) - {task_id for _, task_id in task_role_pairs})
+        if unsupported:
+            raise RuntimeError("unsupported reducer-completion target task(s): " + ", ".join(unsupported))
+    else:
+        task_role_pairs = list(role_task_refs.items())
+
+    completed: dict[str, dict[str, Any]] = {}
+    readbacks: dict[str, dict[str, Any]] = {}
+    for target_role, task_id in task_role_pairs:
+        metadata = rel007_reducer_completion_metadata(
+            reducer_root=reducer_root,
+            reducer_receipt=args.reducer_receipt,
+            target_role=target_role,
+            target_task_id=task_id,
+        )
+        target = REL007_BOUNDED_REDUCER_TARGETS[target_role]
+        if args.dry_run:
+            readbacks[task_id] = show_task(hermes_bin=args.hermes_bin, board=args.board, task_id=task_id, runner=runner)
+            completed[task_id] = {
+                "planned": True,
+                "evidence_verdict": target["evidence_verdict"],
+                "artifact_sha256s": sorted(target["artifact_sha256s"]),
+            }
+            continue
+        complete_task(
+            hermes_bin=args.hermes_bin,
+            board=args.board,
+            task_id=task_id,
+            result=target["result"],
+            summary=target["summary"],
+            metadata=metadata,
+            required_readback_markers=[
+                REL007_REDUCER_COMPLETION_MARKER,
+                target["evidence_verdict"].lower(),
+                "bounded_evidence_dependency_closeout_only",
+            ],
+            runner=runner,
+        )
+        payload = show_task(hermes_bin=args.hermes_bin, board=args.board, task_id=task_id, runner=runner)
+        readbacks[task_id] = payload
+        completed[task_id] = {
+            "completed": True,
+            "status": task_readback_status(payload),
+            "evidence_verdict": target["evidence_verdict"],
+            "artifact_sha256s": sorted(target["artifact_sha256s"]),
+        }
+
+    envelope = {
+        "$schema": LIVE_ADAPTER_SCHEMA,
+        "mode": "materialize-reducer-completion",
+        "board": args.board,
+        "hook": {
+            "hook_type": "rel007_bounded_reducer_completion",
+            "marker": REL007_REDUCER_COMPLETION_MARKER,
+            "reducer_task_ref": str(reducer_root.get("task_id") or ""),
+            "reducer_receipt_ref": str(args.reducer_receipt),
+            "completed_task_ids": [task_id for _, task_id in task_role_pairs],
+            "native_dependency_graph": reducer_root.get("downstream_native_graph") or [],
+            "guardrails_preserved": True,
+        },
+        "dry_run": args.dry_run,
+        "reducer_completion_task_ids": {role: task_id for role, task_id in task_role_pairs},
+        "reducer_completion_results": completed,
+        "reducer_completion_readback_statuses": {task_id: task_readback_status(payload) for task_id, payload in readbacks.items()},
+    }
+    public_envelope = sanitize_public_refs(envelope)
+    if args.out:
+        write_json(args.out, public_envelope)
+    return public_envelope
 
 
 def record_live_binding(
@@ -13382,6 +13612,18 @@ def build_parser() -> argparse.ArgumentParser:
     p_close_release_readiness_review.add_argument("--dry-run", action="store_true")
     p_close_release_readiness_review.add_argument("--out", type=Path)
 
+    p_reducer_completion = sub.add_parser(
+        "materialize-reducer-completion",
+        help="Materialize the audited REL-007 bounded reducer completion repair for blocked child artifacts.",
+    )
+    p_reducer_completion.add_argument("--board", required=True)
+    p_reducer_completion.add_argument("--reducer-receipt", type=Path, required=True)
+    p_reducer_completion.add_argument("--receipt-sha256")
+    p_reducer_completion.add_argument("--target-task", action="append", default=[])
+    p_reducer_completion.add_argument("--hermes-bin", default="hermes")
+    p_reducer_completion.add_argument("--dry-run", action="store_true")
+    p_reducer_completion.add_argument("--out", type=Path)
+
     p_route = sub.add_parser(
         "collect-route-readiness",
         help="Collect the public-safe Hermes worker route readiness manifest from read-only Hermes state.",
@@ -13451,6 +13693,8 @@ def main() -> int:
             envelope = close_product_creation_run(args)
         elif args.command == "close-release-readiness-review":
             envelope = close_release_readiness_review(args)
+        elif args.command == "materialize-reducer-completion":
+            envelope = materialize_reducer_completion(args)
         elif args.command == "collect-route-readiness":
             envelope = collect_route_readiness(args)
         elif args.command == "enforce-done":
