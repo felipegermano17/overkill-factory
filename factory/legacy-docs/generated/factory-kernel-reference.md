@@ -36,8 +36,8 @@ Done without evidence is only a claim. Receipt Five, review, runtime state and p
 | Hermes profile bindings | 40 | `agents/hermes-profile-bindings.public.json` |
 | Operating systems | 17 | `templates/factory-operating-system-registry.json` |
 | Method engines | 8 | `templates/method-engine-registry.json` |
-| JSON schemas | 244 | `schemas/*.json` |
-| Templates | 161 | `templates/*` |
+| JSON schemas | 245 | `schemas/*.json` |
+| Templates | 162 | `templates/*` |
 | Public surfaces | 19 | `docs/public-surface.manifest.json` |
 
 ## Factory Phases
@@ -435,6 +435,7 @@ These are the public JSON schemas the factory exposes. They are not decoration; 
 - `schemas/visual-regression-proof.schema.json`
 - `schemas/work-unit-contract.schema.json`
 - `schemas/work-unit-dispatch-readiness.schema.json`
+- `schemas/worker-accountability-ledger.schema.json`
 - `schemas/worker-authority-contract.schema.json`
 - `schemas/worker-closure-summary.schema.json`
 - `schemas/worker-packet.schema.json`
@@ -609,6 +610,7 @@ Templates are starter records paired with schemas. They are examples of valid sh
 - `templates/visual-regression-proof.json`
 - `templates/work-unit-contract.json`
 - `templates/work-unit-dispatch-readiness.json`
+- `templates/worker-accountability-ledger.json`
 - `templates/worker-authority-contract.json`
 
 ## CLI Surface

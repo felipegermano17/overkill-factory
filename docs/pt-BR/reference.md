@@ -96,6 +96,8 @@ Worker não é personagem de prompt. Para ser operável, precisa de quatro camad
 
 O worker executa dentro da autoridade recebida. Ele não aprova gate, não inventa evidência, não toca produção, não mexe em chaves e não muda escopo fora do contrato.
 
+Accountability de worker é separada da identidade do worker. Saídas ruins repetidas, falhas, rework, artefatos rasos, reprovação em review ou loops de reparo entram em um `worker_accountability_ledger`. Esse ledger é public-safe e guarda apenas referências sanitizadas de evidência. As consequências de rota são determinísticas: observação, review independente obrigatório, rebaixamento para fila de review ou escalonamento para revisão de perfil. Ele não muta Hermes Kanban diretamente; o reducer da fábrica consome a consequência e Hermes continua sendo a autoridade de estado em runtime.
+
 ## Termos centrais
 
 Product SOT é a fonte de verdade do produto.
@@ -130,6 +132,8 @@ python3 scripts/factoryctl.py compile-workflow --out .tmp/factory-workflow-compi
 python3 scripts/factoryctl.py validate-card examples/minimal-hermes-project/card.md
 python3 scripts/factoryctl.py gate-report --card examples/minimal-hermes-project/card.md
 python3 scripts/factoryctl.py worker-packet --worker all --required-only --card examples/minimal-hermes-project/card.md --out .tmp/minimal-worker-packets
+python3 scripts/factoryctl.py build-worker-accountability-ledger .tmp/worker-accountability-events.json --out .tmp/worker-accountability-ledger.json
+python3 scripts/factoryctl.py validate-worker-accountability-ledger .tmp/worker-accountability-ledger.json
 python3 scripts/validate_public_json_artifacts.py
 python3 scripts/validate_public_surface_sync.py
 python3 scripts/validate_promise_implementation_map.py

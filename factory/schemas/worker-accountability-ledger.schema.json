@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/worker-accountability-ledger.schema.json",
+  "title": "Overkill Factory Worker Accountability Ledger",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "ledger_version",
+    "generated_at",
+    "scope",
+    "runtime_authority",
+    "local_state_authority",
+    "routing_authority",
+    "source_refs",
+    "consequence_policy",
+    "worker_accountability",
+    "routing_summary",
+    "limits"
+  ],
+  "properties": {
+    "$schema": { "const": "https://overkill-factory.dev/schemas/worker-accountability-ledger.schema.json" },
+    "record_type": { "const": "worker_accountability_ledger" },
+    "ledger_version": { "type": "string", "minLength": 3 },
+    "generated_at": { "type": "string", "minLength": 10 },
+    "scope": { "const": "public-safe-routing-consequence-ledger" },
+    "runtime_authority": { "const": "hermes_kanban" },
+    "local_state_authority": { "const": false },
+    "routing_authority": { "const": "factory_reducer" },
+    "source_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "consequence_policy": {
+      "type": "object",
+      "required": [
+        "watch_after_negative_events",
+        "mandatory_review_after_rework_or_shallow_events",
+        "demote_after_bad_output_failure_or_repair_loop_events",
+        "escalate_after_total_negative_events",
+        "positive_events_do_not_erase_negative_accountability_without_review"
+      ],
+      "properties": {
+        "watch_after_negative_events": { "type": "integer", "minimum": 1 },
+        "mandatory_review_after_rework_or_shallow_events": { "type": "integer", "minimum": 2 },
+        "demote_after_bad_output_failure_or_repair_loop_events": { "type": "integer", "minimum": 2 },
+        "escalate_after_total_negative_events": { "type": "integer", "minimum": 3 },
+        "positive_events_do_not_erase_negative_accountability_without_review": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "worker_accountability": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "worker_id",
+          "bad_output_count",
+          "failure_count",
+          "rework_count",
+          "shallow_artifact_count",
+          "review_fail_count",
+          "repair_loop_count",
+          "positive_signal_count",
+          "negative_total",
+          "event_refs",
+          "routing_consequence"
+        ],
+        "properties": {
+          "worker_id": { "type": "string", "minLength": 3 },
+          "bad_output_count": { "type": "integer", "minimum": 0 },
+          "failure_count": { "type": "integer", "minimum": 0 },
+          "rework_count": { "type": "integer", "minimum": 0 },
+          "shallow_artifact_count": { "type": "integer", "minimum": 0 },
+          "review_fail_count": { "type": "integer", "minimum": 0 },
+          "repair_loop_count": { "type": "integer", "minimum": 0 },
+          "positive_signal_count": { "type": "integer", "minimum": 0 },
+          "negative_total": { "type": "integer", "minimum": 0 },
+          "event_refs": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 }
+          },
+          "routing_consequence": {
+            "type": "object",
+            "required": [
+              "action",
+              "accountability_state",
+              "queue_class",
+              "allowed_actions",
+              "reason"
+            ],
+            "properties": {
+              "action": {
+                "enum": [
+                  "normal_route",
+                  "watch",
+                  "mandatory_independent_review",
+                  "demote_to_review_queue",
+                  "escalate_for_profile_review"
+                ]
+              },
+              "accountability_state": {
+                "enum": ["healthy", "watch", "review_required", "demoted", "escalated"]
+              },
+              "queue_class": { "type": "string", "minLength": 3 },
+              "required_reviewer": {
+                "type": ["string", "null"],
+                "minLength": 3
+              },
+              "allowed_actions": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "type": "string", "minLength": 3 }
+              },
+              "reason": { "type": "string", "minLength": 12 }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "routing_summary": {
+      "type": "object",
+      "required": ["strongest_action", "affected_workers", "routing_authority"],
+      "properties": {
+        "strongest_action": {
+          "enum": [
+            "normal_route",
+            "watch",
+            "mandatory_independent_review",
+            "demote_to_review_queue",
+            "escalate_for_profile_review"
+          ]
+        },
+        "affected_workers": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "routing_authority": { "const": "factory_reducer_consumes_this_ledger_hermes_kanban_executes_state" }
+      },
+      "additionalProperties": false
+    },
+    "limits": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 3 }
+    }
+  },
+  "additionalProperties": false
+}
