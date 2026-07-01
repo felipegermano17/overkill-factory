@@ -50,6 +50,33 @@
       "smoke_or_eval_ref": "tests/test_product_face_proof.py"
     },
     {
+      "provider_id": "pdf-renderer",
+      "provider_type": "external_tool",
+      "status": "available",
+      "capability_surfaces": [
+        "pdf",
+        "document",
+        "operator-artifact"
+      ],
+      "source_ref": "external:public:pdf-rendering-toolchain",
+      "authority_boundary": "PDF rendering can produce operator-readable artifacts; it cannot approve gates or replace review evidence.",
+      "smoke_or_eval_ref": "tests/test_operator_experience.py"
+    },
+    {
+      "provider_id": "video-artifact",
+      "provider_type": "external_tool",
+      "status": "available",
+      "capability_surfaces": [
+        "video",
+        "screen-recording",
+        "operator-artifact",
+        "media"
+      ],
+      "source_ref": "external:public:video-artifact-toolchain",
+      "authority_boundary": "Video tooling can package proof for the operator; it cannot make release, safety or product acceptance decisions.",
+      "smoke_or_eval_ref": "schemas/operator-delivery-receipt.schema.json"
+    },
+    {
       "provider_id": "solana-ai-kit",
       "provider_type": "reference_pack",
       "status": "active",

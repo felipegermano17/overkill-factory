@@ -81,11 +81,19 @@
     },
     "block_policy": {
       "type": "object",
-      "required": ["block_only_after_search", "block_requires_reason", "block_requires_smallest_safe_next_action"],
+      "required": [
+        "block_only_after_search",
+        "block_requires_reason",
+        "block_requires_smallest_safe_next_action",
+        "human_block_only_for_true_external_authority",
+        "factory_owns_capability_acquisition_until_external_authority"
+      ],
       "properties": {
         "block_only_after_search": { "const": true },
         "block_requires_reason": { "const": true },
-        "block_requires_smallest_safe_next_action": { "const": true }
+        "block_requires_smallest_safe_next_action": { "const": true },
+        "human_block_only_for_true_external_authority": { "const": true },
+        "factory_owns_capability_acquisition_until_external_authority": { "const": true }
       },
       "additionalProperties": false
     },

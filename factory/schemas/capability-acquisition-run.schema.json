@@ -10,11 +10,14 @@
     "created_at",
     "capability_gap",
     "contract_ref",
+    "acquisition_plan",
     "search_completed",
     "candidates",
     "activation_decision",
     "smoke_result",
     "eval_result",
+    "promotion_result",
+    "operator_block",
     "block_allowed",
     "evidence_refs"
   ],
@@ -27,6 +30,29 @@
     "created_at": { "type": "string", "minLength": 10 },
     "capability_gap": { "type": "string", "minLength": 3 },
     "contract_ref": { "type": "string", "minLength": 3 },
+    "acquisition_plan": {
+      "type": "object",
+      "required": ["ordered_steps", "factory_owned_until_external_authority"],
+      "properties": {
+        "ordered_steps": {
+          "type": "array",
+          "minItems": 5,
+          "items": {
+            "enum": [
+              "match_existing_core_ready_pack",
+              "match_existing_pack_template",
+              "search_reference_repositories_for_best_agent_or_skill",
+              "create_or_install_candidate_capability",
+              "run_smoke_and_eval",
+              "activate_pack_or_block_with_evidence"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "factory_owned_until_external_authority": { "const": true }
+      },
+      "additionalProperties": false
+    },
     "search_completed": { "type": "boolean" },
     "candidates": {
       "type": "array",
@@ -46,6 +72,53 @@
     "activation_decision": { "enum": ["activate", "block", "defer"] },
     "smoke_result": { "enum": ["PASS", "FAIL", "NOT_RUN"] },
     "eval_result": { "enum": ["PASS", "FAIL", "NOT_RUN"] },
+    "promotion_result": {
+      "type": "object",
+      "required": [
+        "promotion_decision",
+        "promoted_candidate_id",
+        "permission_class",
+        "profile_binding_ref",
+        "reviewer_ref",
+        "security_handoff_ref",
+        "next_action",
+        "external_authority_required"
+      ],
+      "properties": {
+        "promotion_decision": { "enum": ["promote", "hold_for_external_authority", "no_safe_candidate"] },
+        "promoted_candidate_id": { "type": "string" },
+        "permission_class": { "type": "string" },
+        "profile_binding_ref": { "type": "string" },
+        "reviewer_ref": { "type": "string" },
+        "security_handoff_ref": { "type": "string" },
+        "next_action": { "type": "string", "minLength": 10 },
+        "external_authority_required": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "operator_block": {
+      "type": "object",
+      "required": [
+        "allowed",
+        "reason_class",
+        "factory_owned_lane_completed",
+        "smallest_safe_next_action"
+      ],
+      "properties": {
+        "allowed": { "type": "boolean" },
+        "reason_class": {
+          "enum": [
+            "none",
+            "true_external_authority",
+            "unsafe_after_completed_search",
+            "no_safe_candidate_after_completed_search"
+          ]
+        },
+        "factory_owned_lane_completed": { "type": "boolean" },
+        "smallest_safe_next_action": { "type": "string", "minLength": 10 }
+      },
+      "additionalProperties": false
+    },
     "block_allowed": { "type": "boolean" },
     "evidence_refs": {
       "type": "array",

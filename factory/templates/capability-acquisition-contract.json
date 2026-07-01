@@ -37,7 +37,9 @@
   "block_policy": {
     "block_only_after_search": true,
     "block_requires_reason": true,
-    "block_requires_smallest_safe_next_action": true
+    "block_requires_smallest_safe_next_action": true,
+    "human_block_only_for_true_external_authority": true,
+    "factory_owns_capability_acquisition_until_external_authority": true
   },
   "forbidden_shortcuts": [
     "generic worker replaces a missing specialist without registry proof",

@@ -22997,6 +22997,15 @@ def validate_capability_acquisition_run(packet: dict[str, Any]) -> list[str]:
     errors = validate_node(schema, packet, "capability_acquisition_run", schemas=schemas, root_schema=schema)
     if packet.get("block_allowed") is True and packet.get("search_completed") is not True:
         errors.append("capability_acquisition_run cannot block before search_completed=true")
+    promotion_result = packet.get("promotion_result") if isinstance(packet.get("promotion_result"), dict) else {}
+    operator_block = packet.get("operator_block") if isinstance(packet.get("operator_block"), dict) else {}
+    if operator_block.get("allowed") is True:
+        if packet.get("search_completed") is not True:
+            errors.append("capability_acquisition_run operator_block cannot be allowed before search_completed=true")
+        if operator_block.get("reason_class") != "true_external_authority":
+            errors.append("capability_acquisition_run human/operator block is allowed only for true_external_authority")
+        if promotion_result.get("external_authority_required") is not True:
+            errors.append("capability_acquisition_run operator_block requires promotion_result.external_authority_required=true")
     if packet.get("activation_decision") == "activate":
         if packet.get("smoke_result") != "PASS":
             errors.append("capability_acquisition_run activation requires smoke_result PASS")
@@ -23009,8 +23018,16 @@ def validate_capability_acquisition_run(packet: dict[str, Any]) -> list[str]:
         ]
         if not selected:
             errors.append("capability_acquisition_run activation requires at least one selected candidate")
+        if promotion_result.get("promotion_decision") != "promote":
+            errors.append("capability_acquisition_run activation requires promotion_result.promotion_decision=promote")
+        if promotion_result.get("external_authority_required") is True:
+            errors.append("capability_acquisition_run activation cannot require external authority")
+        if operator_block.get("allowed") is True:
+            errors.append("capability_acquisition_run activation cannot allow an operator block")
     if packet.get("activation_decision") == "block" and packet.get("block_allowed") is not True:
         errors.append("capability_acquisition_run block decision requires block_allowed=true")
+    if packet.get("activation_decision") == "block" and promotion_result.get("promotion_decision") == "promote":
+        errors.append("capability_acquisition_run block decision cannot carry a promote result")
     return errors
 
 
@@ -23044,6 +23061,9 @@ def build_capability_acquisition_run(
 
     candidates: list[dict[str, str]] = []
     selected_found = False
+    selected_candidate_id = ""
+    selected_source_ref = ""
+    external_authority_required = False
 
     for provider in provider_registry.get("providers", []):
         if not isinstance(provider, dict):
@@ -23057,6 +23077,11 @@ def build_capability_acquisition_run(
         status = str(provider.get("status") or "").strip()
         selected = status in {"active", "available"}
         selected_found = selected_found or selected
+        if selected and not selected_candidate_id:
+            selected_candidate_id = provider_id
+            selected_source_ref = "agents/skill-provider-registry.public.json"
+        if status == "external_unmanaged":
+            external_authority_required = True
         candidates.append(
             {
                 "candidate_id": provider_id,
@@ -23079,6 +23104,9 @@ def build_capability_acquisition_run(
             status = str(pack.get("status") or "").strip()
             selected = status in CAPABILITY_READY_STATES
             selected_found = selected_found or selected
+            if selected and not selected_candidate_id:
+                selected_candidate_id = str(pack_id)
+                selected_source_ref = "agents/capability-packs.public.json"
             candidates.append(
                 {
                     "candidate_id": str(pack_id),
@@ -23114,6 +23142,57 @@ def build_capability_acquisition_run(
         )
 
     activation_decision = "activate" if selected_found else "block"
+    if selected_found:
+        promotion_result = {
+            "promotion_decision": "promote",
+            "promoted_candidate_id": selected_candidate_id,
+            "permission_class": "bounded-factory-capability",
+            "profile_binding_ref": f"{selected_source_ref}#{selected_candidate_id}",
+            "reviewer_ref": "agents/worker-registry.public.json#independent-reviewer",
+            "security_handoff_ref": "agents/worker-registry.public.json#agentic-ai-security-specialist",
+            "next_action": "Promote the selected candidate into bounded use only with smoke, eval, reviewer and binding evidence attached.",
+            "external_authority_required": False,
+        }
+        operator_block = {
+            "allowed": False,
+            "reason_class": "none",
+            "factory_owned_lane_completed": True,
+            "smallest_safe_next_action": "Use the promoted bounded candidate; no operator block is allowed for this acquisition run.",
+        }
+    elif external_authority_required:
+        promotion_result = {
+            "promotion_decision": "hold_for_external_authority",
+            "promoted_candidate_id": "",
+            "permission_class": "none",
+            "profile_binding_ref": "",
+            "reviewer_ref": "agents/worker-registry.public.json#independent-reviewer",
+            "security_handoff_ref": "agents/worker-registry.public.json#agentic-ai-security-specialist",
+            "next_action": "Request operator authority only after the capability registry, pack registry and reference search are exhausted.",
+            "external_authority_required": True,
+        }
+        operator_block = {
+            "allowed": True,
+            "reason_class": "true_external_authority",
+            "factory_owned_lane_completed": True,
+            "smallest_safe_next_action": "Ask the operator for the external authority required to continue capability acquisition.",
+        }
+    else:
+        promotion_result = {
+            "promotion_decision": "no_safe_candidate",
+            "promoted_candidate_id": "",
+            "permission_class": "none",
+            "profile_binding_ref": "",
+            "reviewer_ref": "agents/worker-registry.public.json#independent-reviewer",
+            "security_handoff_ref": "agents/worker-registry.public.json#agentic-ai-security-specialist",
+            "next_action": "Create or install the smallest safe capability candidate as a factory-owned follow-up before asking the operator to decide.",
+            "external_authority_required": False,
+        }
+        operator_block = {
+            "allowed": False,
+            "reason_class": "no_safe_candidate_after_completed_search",
+            "factory_owned_lane_completed": True,
+            "smallest_safe_next_action": "Create or install the smallest safe capability candidate under factory review instead of blocking on the operator.",
+        }
     return {
         "$schema": "https://overkill-factory.dev/schemas/capability-acquisition-run.schema.json",
         "record_type": "capability_acquisition_run",
@@ -23121,11 +23200,24 @@ def build_capability_acquisition_run(
         "created_at": created_at or utc_now(),
         "capability_gap": normalized_gap,
         "contract_ref": "templates/capability-acquisition-contract.json",
+        "acquisition_plan": {
+            "ordered_steps": [
+                "match_existing_core_ready_pack",
+                "match_existing_pack_template",
+                "search_reference_repositories_for_best_agent_or_skill",
+                "create_or_install_candidate_capability",
+                "run_smoke_and_eval",
+                "activate_pack_or_block_with_evidence",
+            ],
+            "factory_owned_until_external_authority": True,
+        },
         "search_completed": True,
         "candidates": candidates,
         "activation_decision": activation_decision,
         "smoke_result": "PASS" if selected_found else "NOT_RUN",
         "eval_result": "PASS" if selected_found else "NOT_RUN",
+        "promotion_result": promotion_result,
+        "operator_block": operator_block,
         "block_allowed": not selected_found,
         "evidence_refs": sorted(
             {

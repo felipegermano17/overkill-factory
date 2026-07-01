@@ -162,8 +162,58 @@ class V2RuntimeContractsTests(unittest.TestCase):
 
         self.assertEqual(packet["activation_decision"], "activate")
         self.assertFalse(packet["block_allowed"])
+        self.assertEqual(packet["promotion_result"]["promotion_decision"], "promote")
+        self.assertFalse(packet["operator_block"]["allowed"])
         self.assertIn("solana-ai-kit", {candidate["candidate_id"] for candidate in packet["candidates"]})
         self.assertEqual(factoryctl.validate_capability_acquisition_run(packet), [])
+
+    def test_capability_acquisition_run_covers_standard_missing_capability_surfaces(self) -> None:
+        cases = {
+            "browser": "frontend",
+            "pdf-renderer": "pdf",
+            "video-artifact": "video",
+            "solana-ai-kit": "solana-ai-kit",
+            "cloud-infra-security": "cloud",
+        }
+        for expected_candidate, surface in cases.items():
+            with self.subTest(surface=surface):
+                packet = factoryctl.build_capability_acquisition_run(
+                    capability_gap=surface,
+                    surfaces=[surface],
+                    reference_sources=["external:public:reference-search"],
+                    created_at="2026-06-26T00:00:00+00:00",
+                    run_id=f"capability-acquisition-{surface}",
+                )
+
+                self.assertEqual(packet["activation_decision"], "activate")
+                self.assertEqual(packet["promotion_result"]["promotion_decision"], "promote")
+                self.assertFalse(packet["operator_block"]["allowed"])
+                self.assertIn(expected_candidate, {candidate["candidate_id"] for candidate in packet["candidates"]})
+                self.assertEqual(factoryctl.validate_capability_acquisition_run(packet), [])
+
+    def test_capability_acquisition_run_operator_block_only_for_true_external_authority(self) -> None:
+        packet = factoryctl.build_capability_acquisition_run(
+            capability_gap="unavailable-specialist",
+            surfaces=["unknown-surface-for-negative-test"],
+            reference_sources=["external:public:reference-search"],
+            created_at="2026-06-26T00:00:00+00:00",
+            run_id="capability-acquisition-operator-block-negative-test",
+        )
+
+        self.assertEqual(packet["promotion_result"]["promotion_decision"], "no_safe_candidate")
+        self.assertFalse(packet["promotion_result"]["external_authority_required"])
+        self.assertFalse(packet["operator_block"]["allowed"])
+
+        packet["operator_block"]["allowed"] = True
+        packet["operator_block"]["reason_class"] = "no_safe_candidate_after_completed_search"
+        errors = factoryctl.validate_capability_acquisition_run(packet)
+
+        self.assertTrue(any("human/operator block is allowed only for true_external_authority" in error for error in errors), errors)
+
+        packet["operator_block"]["reason_class"] = "true_external_authority"
+        errors = factoryctl.validate_capability_acquisition_run(packet)
+
+        self.assertTrue(any("operator_block requires promotion_result.external_authority_required=true" in error for error in errors), errors)
 
     def test_capability_acquisition_run_blocks_only_after_completed_search(self) -> None:
         packet = factoryctl.build_capability_acquisition_run(

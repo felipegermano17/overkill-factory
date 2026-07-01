@@ -873,6 +873,59 @@
         "examples/README.md"
       ]
     },
+    "operator-artifact-media-pack": {
+      "pack_id": "operator-artifact-media-pack",
+      "status": "core_ready",
+      "plain_purpose": "Covers operator-readable PDF, video and media artifacts used for gates, status and proof delivery.",
+      "covers_surfaces": [
+        "pdf",
+        "video",
+        "media",
+        "operator-artifact",
+        "operator-briefing",
+        "screen-recording",
+        "presentation",
+        "document"
+      ],
+      "existing_workers": [
+        "docs-os-worker",
+        "product-face",
+        "qa-verification-worker",
+        "release-ops-worker"
+      ],
+      "missing_worker_templates": [],
+      "required_before_execution": true,
+      "activation_rule": "Available by default for non-secret operator artifacts after source/private refs are sanitized and delivery receipts are recorded.",
+      "evidence_required": [
+        "operator-readable artifact smoke",
+        "public/private boundary scan",
+        "delivery receipt or publication candidate proof"
+      ],
+      "structured_proofs_required": [
+        "operator.pdf-smoke",
+        "operator.video-smoke",
+        "operator.public-private-boundary",
+        "operator.delivery-receipt"
+      ],
+      "input_contract": [
+        "operator-facing content brief",
+        "artifact format request",
+        "public/private boundary classification",
+        "delivery target policy"
+      ],
+      "output_contract": [
+        "rendered PDF or video artifact ref",
+        "smoke/readback evidence",
+        "delivery receipt",
+        "boundary scan result"
+      ],
+      "local_smoke_path": "python scripts/factoryctl.py validate-operator-delivery-receipt templates/operator-delivery-receipt.json",
+      "reference_sources": [
+        "templates/operator-delivery-receipt.json",
+        "schemas/operator-delivery-receipt.schema.json",
+        "tests/test_operator_experience.py"
+      ]
+    },
     "hardware-iot-pack": {
       "pack_id": "hardware-iot-pack",
       "status": "blocked_until_installed",
