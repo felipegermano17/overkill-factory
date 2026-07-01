@@ -59,6 +59,10 @@ def default_root() -> Path:
         cwd / "examples" / "minimal-hermes-project" / "card.md"
     ).exists():
         return cwd
+    if (CODE_ROOT / "agents" / "hermes-profile-bindings.public.json").exists() and (
+        CODE_ROOT / "examples" / "minimal-hermes-project" / "card.md"
+    ).exists():
+        return CODE_ROOT
     installed_root = installed_asset_root()
     if installed_root is not None:
         return installed_root

@@ -5493,6 +5493,109 @@ def _phase_engine_any_materialized(
     )
 
 
+def _phase_repair_loop_phase_for_worker(worker_id: str) -> tuple[str, str, str]:
+    normalized = str(worker_id or "").strip()
+    if normalized in {"decomposition-planner", "supply-chain-gate"}:
+        return "ready_gate", "F12", "decomposition_coverage_review"
+    if normalized in {
+        "implementation-worker",
+        "frontend-builder",
+        "backend-api-builder",
+        "data-persistence-builder",
+        "solana-quasar-builder",
+        "solana-quasar-qa-engineer",
+        "wallet-transaction-builder",
+        "integration-builder",
+        "test-automation-builder",
+        "infra-devops-builder",
+        "agent-runtime-builder",
+    }:
+        return "execution", "F15", "worker_results"
+    if normalized in {"qa-verification-worker", "autoreview-gate"}:
+        return "verification", "F17", "qa_verification_plan"
+    if normalized in {"independent-reviewer", "handoff-packer"}:
+        return "review", "F18", "independent_review_result"
+    if normalized in {"release-ops-worker", "public-safety-gate"}:
+        return "release", "F23", "production_readiness_plan"
+    if normalized in {"security-orchestrator", "codex-security", "appsec-owasp-specialist", "agentic-ai-security-specialist", "cloud-infra-security-specialist", "crypto-key-management-specialist"}:
+        return "architecture", "F10", "architecture_packet"
+    if normalized == "product-sot-planner":
+        return "product_sot", "F5", "product_sot"
+    if normalized == "source-ledger-worker":
+        return "source_resolution", "F2", "product_source_ledger"
+    return "execution", "F15", "worker_results"
+
+
+_PHASE_REPAIR_LOOP_RESOLVED_STATUSES = {"pass", "passed", "resolved", "reconciled", "satisfied", "closed", "complete", "completed", "done"}
+
+
+def _phase_repair_loop_resolved(route: dict[str, Any]) -> bool:
+    for field in ("status", "reconciliation_status", "resolution_status", "repair_status"):
+        value = str(route.get(field) or "").strip().lower()
+        if value in _PHASE_REPAIR_LOOP_RESOLVED_STATUSES:
+            return True
+    reconciliation = route.get("reconciliation") if isinstance(route.get("reconciliation"), dict) else {}
+    result = str(reconciliation.get("result") or reconciliation.get("status") or "").strip().lower()
+    return result in _PHASE_REPAIR_LOOP_RESOLVED_STATUSES
+
+
+def active_factory_owned_repair_loop(card: dict[str, Any]) -> dict[str, Any] | None:
+    candidates: list[dict[str, Any]] = []
+    for field in ("active_recovery_routes", "recovery_routes"):
+        value = card.get(field)
+        if isinstance(value, list):
+            candidates.extend(item for item in value if isinstance(item, dict))
+    recovery_plan = card.get("factory_recovery_plan") if isinstance(card.get("factory_recovery_plan"), dict) else {}
+    plan_routes = recovery_plan.get("recovery_routes")
+    if isinstance(plan_routes, list):
+        candidates.extend(item for item in plan_routes if isinstance(item, dict))
+    single_loop = card.get("active_repair_loop") if isinstance(card.get("active_repair_loop"), dict) else None
+    if single_loop:
+        candidates.append(single_loop)
+
+    for route in candidates:
+        if _phase_repair_loop_resolved(route):
+            continue
+        if route.get("human_gate_required") is True:
+            continue
+        if route.get("factory_owned_repair_allowed") is False:
+            continue
+        blocker_type = str(route.get("blocker_type") or "").strip()
+        repair_owner = str(route.get("repair_owner_worker") or route.get("owner_worker") or "factory-orchestrator").strip()
+        frontier, phase_id, artifact = _phase_repair_loop_phase_for_worker(repair_owner)
+        explicit_phase = str(route.get("repair_phase_id") or route.get("reentry_phase_id") or "").strip().upper()
+        if explicit_phase and factory_phase_rank(explicit_phase) >= 0:
+            phase_id = explicit_phase
+            artifact = str(route.get("next_required_artifact") or artifact)
+            frontier = next(
+                (
+                    candidate_frontier
+                    for candidate_frontier, candidate_phase in FACTORY_PHASE_ENGINE_PHASE_BY_FRONTIER.items()
+                    if candidate_phase == phase_id
+                ),
+                frontier,
+            )
+        downstream = [
+            str(item).strip().upper()
+            for item in string_list(route.get("downstream_freeze_scope")) + string_list(route.get("blocks_downstream_phase_ids"))
+            if factory_phase_rank(str(item).strip().upper()) >= 0
+        ]
+        if not downstream:
+            downstream = [candidate for candidate in FACTORY_PRODUCT_PHASE_IDS if factory_phase_rank(candidate) > factory_phase_rank(phase_id)]
+        return {
+            "recovery_route_id": str(route.get("recovery_route_id") or route.get("route_id") or "active-repair-loop"),
+            "blocker_type": blocker_type or "dependency",
+            "repair_owner_worker": repair_owner,
+            "repair_phase_id": phase_id,
+            "repair_frontier": frontier,
+            "next_required_artifact": artifact,
+            "downstream_freeze_scope": downstream,
+            "reentry_gate_refs": string_list(route.get("reentry_gate_refs")) or ["fresh_review_required", str(route.get("unblock_authority_ref") or "reconciliation_pass")],
+            "fresh_review_required": route.get("fresh_review_required") is True,
+            "runtime_authority": "hermes_kanban",
+            "local_state_authority": False,
+        }
+    return None
 def _phase_engine_frontier_state(
     *,
     card: dict[str, Any],
@@ -5501,6 +5604,7 @@ def _phase_engine_frontier_state(
     next_required_artifact: str,
     reason: str,
     artifacts: dict[str, bool],
+    active_repair_loop: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     card_phase_id = str(card.get("phase") or "").strip() or "unknown"
     computed_rank = factory_phase_rank(phase_id)
@@ -5519,6 +5623,19 @@ def _phase_engine_frontier_state(
         and computed_frontier_rank >= factory_phase_engine_frontier_rank("method_contract")
     )
     allowed_workers = FACTORY_PHASE_ENGINE_WORKERS_BY_FRONTIER.get(frontier, ["factory-orchestrator"])
+    blocked_downstream_phase_ids = [
+        candidate
+        for candidate in FACTORY_PRODUCT_PHASE_IDS
+        if factory_phase_rank(candidate) > computed_rank
+    ]
+    if active_repair_loop:
+        repair_scope = [
+            str(item).strip().upper()
+            for item in string_list(active_repair_loop.get("downstream_freeze_scope"))
+            if factory_phase_rank(str(item).strip().upper()) >= 0
+        ]
+        if repair_scope:
+            blocked_downstream_phase_ids = repair_scope
     return {
         "$schema": "https://overkill-factory.dev/schemas/factory-phase-engine-state.schema.json",
         "record_type": "factory_phase_engine_state",
@@ -5530,11 +5647,7 @@ def _phase_engine_frontier_state(
         "computed_frontier": frontier,
         "next_required_artifact": next_required_artifact,
         "allowed_current_worker_ids": allowed_workers,
-        "blocked_downstream_phase_ids": [
-            candidate
-            for candidate in FACTORY_PRODUCT_PHASE_IDS
-            if factory_phase_rank(candidate) > computed_rank
-        ],
+        "blocked_downstream_phase_ids": blocked_downstream_phase_ids,
         "phase_mismatch": card_rank > computed_rank,
         "lock_phase_mismatch": bool(lock_phase_id and lock_phase_rank > computed_rank),
         "lock_frontier_mismatch": bool(
@@ -5543,6 +5656,7 @@ def _phase_engine_frontier_state(
         "human_gate_allowed": human_gate_allowed,
         "human_gate_reason": human_gate_reason,
         "human_gate_blocked_until_artifact": "" if human_gate_allowed else next_required_artifact,
+        "active_repair_loop": active_repair_loop,
         "artifacts": artifacts,
         "decision_basis": reason,
     }
@@ -5796,7 +5910,13 @@ def factory_phase_engine_state(
         "factory_maturity_scorecard": maturity_done,
     }
 
-    def state(frontier: str, phase_id: str, artifact: str, reason: str) -> dict[str, Any]:
+    def state(
+        frontier: str,
+        phase_id: str,
+        artifact: str,
+        reason: str,
+        active_repair_loop: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         return _phase_engine_frontier_state(
             card=card,
             frontier=frontier,
@@ -5804,6 +5924,17 @@ def factory_phase_engine_state(
             next_required_artifact=artifact,
             reason=reason,
             artifacts=artifacts,
+            active_repair_loop=active_repair_loop,
+        )
+
+    active_repair_loop = active_factory_owned_repair_loop(card)
+    if active_repair_loop:
+        return state(
+            str(active_repair_loop["repair_frontier"]),
+            str(active_repair_loop["repair_phase_id"]),
+            str(active_repair_loop["next_required_artifact"]),
+            f"unresolved factory-owned repair loop {active_repair_loop['recovery_route_id']} blocks downstream phases until re-entry gates reconcile",
+            active_repair_loop=active_repair_loop,
         )
 
     if not source_input and not product_sot:
@@ -19163,6 +19294,8 @@ def build_transition_plan(
 ) -> dict[str, Any]:
     card = normalize_transition_card(card)
     gate = gate_report_for_transition(card)
+    phase_engine = factory_phase_engine_state(card)
+    active_repair_loop = phase_engine.get("active_repair_loop") if isinstance(phase_engine, dict) else None
     normalized_to = to_status.strip().lower()
     blocked_reasons: list[str] = []
     worker_tasks = [
@@ -19205,6 +19338,13 @@ def build_transition_plan(
     if recovery_routes:
         attach_recovery_routes_to_tasks(worker_tasks, recovery_routes, card, source_path)
     downstream_authorizations = downstream_task_authorizations(graph_requirements, worker_tasks)
+    if isinstance(active_repair_loop, dict):
+        reason = (
+            "factory_phase_engine active repair loop "
+            f"{active_repair_loop.get('recovery_route_id')} blocks downstream transition until re-entry reconciliation"
+        )
+        if reason not in blocked_reasons:
+            blocked_reasons.append(reason)
 
     def append_unsatisfied_graph_requirement_blocks() -> None:
         for requirement in unsatisfied_graph_requirements:
@@ -19317,6 +19457,7 @@ def build_transition_plan(
         "transition_action": transition_action,
         "blocked_reasons": blocked_reasons,
         "gate_report": gate,
+        "phase_engine": phase_engine,
         "worker_tasks": worker_tasks,
         "graph_requirements": graph_requirements,
         "recovery_routes": recovery_routes,

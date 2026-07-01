@@ -702,6 +702,9 @@
     "duplicate_phase_ids_blocked": true,
     "unknown_next_phase_blocked": true,
     "human_gate_requires_decision_outbox": true,
-    "worker_materialization_requires_dispatch_readiness": true
+    "worker_materialization_requires_dispatch_readiness": true,
+    "lateral_repair_loops_block_downstream": true,
+    "reentry_gate_reconciliation_required": true,
+    "blind_linear_rail_forbidden": true
   }
 }
