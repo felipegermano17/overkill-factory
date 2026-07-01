@@ -73,11 +73,14 @@
     "required_fields": [
       "percent_complete",
       "done_since_last_update",
-      "currently_executing",
+      "doing_now",
       "remaining_work",
-      "blockers_or_waiting_on",
+      "blockers",
+      "risks",
+      "next_action",
+      "human_action_required",
       "next_human_gate_if_any",
-      "confidence_or_risk_note",
+      "evidence_basis",
       "estimated_next_update_window"
     ],
     "max_silent_minutes_when_running": 30,

@@ -5248,9 +5248,11 @@ def validate_human_gate_packet(
             errors.append(f"{at}.decision_package_delivery.question_after_material_delivery must be true")
         if not str(delivery.get("delivery_receipt_ref") or "").strip():
             errors.append(f"{at}.decision_package_delivery.delivery_receipt_ref is required")
-        attachment_order = set(_list_items(delivery.get("attachment_order")))
-        if not {"markdown_document", "pdf_document"}.issubset(attachment_order):
-            errors.append(f"{at}.decision_package_delivery.attachment_order must include markdown_document and pdf_document")
+        attachment_order = _list_items(delivery.get("attachment_order"))
+        if "pdf_document" not in attachment_order:
+            errors.append(f"{at}.decision_package_delivery.attachment_order must include pdf_document")
+        if attachment_order and attachment_order[0] != "pdf_document":
+            errors.append(f"{at}.decision_package_delivery.attachment_order must put pdf_document first")
 
     optional_assets = set(_list_items(packet.get("optional_explainer_assets")))
     if not optional_assets.intersection({"diagram", "video_explainer", "animation_html", "audio_explainer"}):
@@ -8903,6 +8905,7 @@ def validate_universal_signal_intake(intake: dict[str, Any]) -> list[str]:
 DEFAULT_ARTIFACT_REFS = {
     "operator_interface_profile": "templates/operator-interface-profile.json",
     "factory_start_conversation": "templates/factory-start-conversation.json",
+    "product_understanding_packet": "templates/product-understanding-packet.json",
     "source_ledger": "templates/reference-source-registry.json",
     "operator_understanding_confirmation": "templates/operator-understanding-confirmation.json",
     "operator_briefing_package": "templates/operator-briefing-package.json",
@@ -8933,6 +8936,7 @@ DEFAULT_ARTIFACT_REFS = {
 DEFAULT_ARTIFACT_OWNERS = {
     "operator_interface_profile": "factory-orchestrator",
     "factory_start_conversation": "factory-orchestrator",
+    "product_understanding_packet": "overkill-factory-gerente",
     "source_ledger": "source-ledger-worker",
     "operator_understanding_confirmation": "factory-orchestrator",
     "operator_briefing_package": "factory-orchestrator",
@@ -8967,6 +8971,7 @@ DEFAULT_ARTIFACT_OWNERS = {
 ARTIFACT_REQUIRED_BEFORE = {
     "operator_interface_profile": "intake",
     "factory_start_conversation": "intake",
+    "product_understanding_packet": "source_resolution",
     "source_ledger": "source_resolution",
     "operator_understanding_confirmation": "product_sot",
     "operator_briefing_package": "operator_decision",
@@ -10361,6 +10366,236 @@ def validate_factory_start_conversation(packet: dict[str, Any]) -> list[str]:
     return errors
 
 
+def _packet_list(values: list[str] | None, fallback: list[str]) -> list[str]:
+    cleaned = [str(value).strip() for value in (values or []) if str(value).strip()]
+    return cleaned or fallback
+
+
+def build_product_understanding_packet(
+    start_conversation: dict[str, Any],
+    *,
+    intent: str | None = None,
+    target_users: list[str] | None = None,
+    scope_in: list[str] | None = None,
+    scope_out_non_goals: list[str] | None = None,
+    ux_expectations: list[str] | None = None,
+    architecture_preview: list[str] | None = None,
+    access_and_capabilities: list[str] | None = None,
+    risk_boundaries: list[str] | None = None,
+    success_criteria: list[str] | None = None,
+    expected_deliverables: list[str] | None = None,
+    human_questions: list[str] | None = None,
+    deferred_decisions: list[str] | None = None,
+    confirmed: bool = False,
+    operator_response_ref: str | None = None,
+    created_at: str | None = None,
+    packet_id: str | None = None,
+) -> dict[str, Any]:
+    conversation_errors = validate_factory_start_conversation(start_conversation)
+    if conversation_errors:
+        raise ValueError("; ".join(conversation_errors))
+
+    source_ref = str(start_conversation.get("source_envelope_ref") or "external:operator-source-envelope")
+    conversation_ref = str(start_conversation.get("conversation_id") or "factory-start-conversation")
+    _ensure_public_ref(source_ref, "source_envelope_ref")
+    _ensure_public_ref(conversation_ref, "start_conversation_ref")
+    if operator_response_ref and not operator_response_ref.startswith("pending:"):
+        _ensure_public_ref(operator_response_ref, "operator_response_ref")
+
+    deferred = [decision for decision in _packet_list(deferred_decisions, []) if decision]
+    approved_or_deferred = bool(confirmed or deferred)
+    status = "confirmed" if confirmed else ("deferred_decision_ledger" if deferred else "pending_operator_confirmation")
+    response_ref = operator_response_ref or ("external:operator-product-understanding-confirmed" if confirmed else "pending:operator-reply")
+    packet_slug = packet_id or f"product-understanding-{slug_for_ref(conversation_ref)}"
+    default_intent = "Confirm product intent, scope, non-goals, user experience, architecture constraints, access needs, risks, success criteria and expected deliverables before material execution."
+    question_texts = _packet_list(
+        human_questions,
+        [
+            "Esse entendimento descreve o produto certo antes da fabrica continuar?",
+            "O que entra no primeiro ciclo e o que fica fora explicitamente?",
+            "Quais expectativas de experiencia do usuario nao podem ser quebradas?",
+            "Quais acessos, capacidades, provedores ou limites de risco precisam estar prontos antes de execucao material?",
+            "Como o operador vai reconhecer que a primeira entrega foi bem-sucedida?",
+        ],
+    )
+
+    return {
+        "$schema": "https://overkill-factory.dev/schemas/product-understanding-packet.schema.json",
+        "record_type": "product_understanding_packet",
+        "packet_id": packet_slug,
+        "created_at": created_at or utc_now(),
+        "factory_method_version": "OVERKILL_VFINAL",
+        "source_envelope_ref": source_ref,
+        "start_conversation_ref": conversation_ref,
+        "approval_state": {
+            "status": status,
+            "operator_response_ref": response_ref,
+            "packet_required_before_material_execution": True,
+            "understanding_confirmed_or_deferred": approved_or_deferred,
+            "free_text_chat_is_not_execution_approval": True,
+        },
+        "product_understanding": {
+            "intent": str(intent or default_intent).strip(),
+            "target_users": _packet_list(target_users, ["target product users confirmed by the operator or source material"]),
+            "scope_in": _packet_list(scope_in, ["bounded first product outcome to be turned into Product SOT after source resolution"]),
+            "scope_out_non_goals": _packet_list(scope_out_non_goals, ["implementation, deploy, credentials, funds, signing, destructive actions and release are not approved by this packet"]),
+            "ux_expectations": _packet_list(ux_expectations, ["operator-visible UX expectations must be stated before Product SOT and architecture"]),
+            "architecture_preview": _packet_list(architecture_preview, ["known architecture constraints, integrations and trust boundaries must be previewed before material execution"]),
+            "access_and_capabilities": _packet_list(access_and_capabilities, ["required access, providers, skills and capability gaps must be listed early or deferred explicitly"]),
+            "risk_boundaries": _packet_list(risk_boundaries, ["authority, access, budget, custody, destructive, Mainnet, deploy and release risks remain gated"]),
+            "success_criteria": _packet_list(success_criteria, ["success criteria must be explicit enough that later obvious/repeated questions are factory bugs"]),
+            "expected_deliverables": _packet_list(expected_deliverables, ["Product SOT, method route, architecture packet, readiness evidence and only then execution materials"]),
+        },
+        "grouped_human_questions": [
+            {
+                "question": question,
+                "why_it_matters": "Agrupar isso no inicio evita perguntas obvias espalhadas durante planejamento e execucao.",
+                "decision_scope": "product_understanding_before_material_execution",
+                "required_before": "material_execution" if index > 0 else "factory_start",
+                "blocked_if_unanswered": True,
+                "factory_can_continue_without_answer": False,
+            }
+            for index, question in enumerate(question_texts)
+        ],
+        "deferred_decision_ledger": [
+            {
+                "decision": decision,
+                "owner": "operator",
+                "deferred_until": "next matching gate before material execution",
+                "current_default": "not approved; factory may continue non-material planning only",
+            }
+            for decision in deferred
+        ],
+        "material_execution_boundary": {
+            "execution_allowed": False,
+            "material_execution_blocked_until_packet_confirmed_or_deferred": True,
+            "later_repeated_obvious_questions_are_factory_bugs": True,
+            "human_questions_grouped_before_execution": True,
+            "no_raw_private_evidence_embedded": True,
+            "no_gate_approval_from_chat_free_text": True,
+        },
+        "handoff": {
+            "next_artifact": "factory_bridge_start_request" if approved_or_deferred else "product_understanding_packet",
+            "next_worker": "overkill-factory-gerente",
+            "factory_owned_next_step": approved_or_deferred,
+            "user_decision_required": not approved_or_deferred,
+            "next_safe_action": (
+                "Create the deterministic factory bridge start request from the confirmed or explicitly deferred Product Understanding Packet."
+                if approved_or_deferred
+                else "Ask the operator to confirm, correct or explicitly defer the grouped Product Understanding Packet questions."
+            ),
+        },
+        "public_private_boundary": {
+            "public_safe_refs_only": True,
+            "raw_private_evidence_embedded": False,
+            "private_context_retained_outside_public_repo": True,
+            "operator_instance_may_hold_private_source": True,
+        },
+        "acceptance": {
+            "packet_created": True,
+            "approved_or_deferred_decision_ledger": approved_or_deferred,
+            "product_sot_created": False,
+            "execution_allowed": False,
+            "evidence_refs": [
+                source_ref,
+                conversation_ref,
+                "schemas/product-understanding-packet.schema.json",
+                "schemas/factory-start-conversation.schema.json",
+            ],
+        },
+    }
+
+
+def validate_product_understanding_packet(packet: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    schemas = bundled_schemas()
+    schema = schemas.get("product-understanding-packet.schema.json")
+    if not schema:
+        return ["product_understanding_packet schema is not bundled"]
+    errors.extend(validate_node(schema, packet, "product_understanding_packet", schemas=schemas, root_schema=schema))
+
+    for field in ("source_envelope_ref", "start_conversation_ref"):
+        value = str(packet.get(field) or "").strip()
+        if value:
+            _validate_public_ref(value, f"product_understanding_packet.{field}", errors)
+    state = packet.get("approval_state") if isinstance(packet.get("approval_state"), dict) else {}
+    status = str(state.get("status") or "").strip()
+    confirmed_or_deferred = state.get("understanding_confirmed_or_deferred") is True
+    response_ref = str(state.get("operator_response_ref") or "").strip()
+    if response_ref and not response_ref.startswith("pending:"):
+        _validate_public_ref(response_ref, "product_understanding_packet.approval_state.operator_response_ref", errors)
+    if state.get("packet_required_before_material_execution") is not True:
+        errors.append("product_understanding_packet must be required before material execution")
+    if state.get("free_text_chat_is_not_execution_approval") is not True:
+        errors.append("product_understanding_packet must not treat free text chat as execution approval")
+    if confirmed_or_deferred and status not in {"confirmed", "deferred_decision_ledger"}:
+        errors.append("product_understanding_packet confirmed/deferred state must use confirmed or deferred_decision_ledger status")
+    if not confirmed_or_deferred and status != "pending_operator_confirmation":
+        errors.append("product_understanding_packet pending state must use pending_operator_confirmation status")
+
+    understanding = packet.get("product_understanding") if isinstance(packet.get("product_understanding"), dict) else {}
+    for field in (
+        "intent",
+        "target_users",
+        "scope_in",
+        "scope_out_non_goals",
+        "ux_expectations",
+        "architecture_preview",
+        "access_and_capabilities",
+        "risk_boundaries",
+        "success_criteria",
+        "expected_deliverables",
+    ):
+        value = understanding.get(field)
+        if isinstance(value, list):
+            if not value:
+                errors.append(f"product_understanding_packet.product_understanding.{field} must not be empty")
+            for index, item in enumerate(value):
+                if not public_safe_text(item):
+                    errors.append(f"product_understanding_packet.product_understanding.{field}[{index}] must be public-safe")
+        elif not str(value or "").strip():
+            errors.append(f"product_understanding_packet.product_understanding.{field} is required")
+        elif not public_safe_text(value):
+            errors.append(f"product_understanding_packet.product_understanding.{field} must be public-safe")
+
+    questions = packet.get("grouped_human_questions") if isinstance(packet.get("grouped_human_questions"), list) else []
+    if not questions:
+        errors.append("product_understanding_packet must group human questions before execution")
+    for index, question in enumerate(questions):
+        if not isinstance(question, dict):
+            continue
+        if question.get("blocked_if_unanswered") is not True:
+            errors.append(f"product_understanding_packet.grouped_human_questions[{index}] must block if unanswered")
+        if question.get("factory_can_continue_without_answer") is not False:
+            errors.append(f"product_understanding_packet.grouped_human_questions[{index}] must not allow factory continuation without answer")
+        for field in ("question", "why_it_matters", "decision_scope"):
+            if not public_safe_text(question.get(field)):
+                errors.append(f"product_understanding_packet.grouped_human_questions[{index}].{field} must be public-safe")
+
+    boundary = packet.get("material_execution_boundary") if isinstance(packet.get("material_execution_boundary"), dict) else {}
+    for field in (
+        "material_execution_blocked_until_packet_confirmed_or_deferred",
+        "later_repeated_obvious_questions_are_factory_bugs",
+        "human_questions_grouped_before_execution",
+        "no_raw_private_evidence_embedded",
+        "no_gate_approval_from_chat_free_text",
+    ):
+        if boundary.get(field) is not True:
+            errors.append(f"product_understanding_packet.material_execution_boundary.{field} must be true")
+    if boundary.get("execution_allowed") is not False:
+        errors.append("product_understanding_packet execution_allowed must be false")
+    acceptance = packet.get("acceptance") if isinstance(packet.get("acceptance"), dict) else {}
+    if acceptance.get("approved_or_deferred_decision_ledger") is not confirmed_or_deferred:
+        errors.append("product_understanding_packet acceptance must match approval_state")
+    if acceptance.get("product_sot_created") is not False:
+        errors.append("product_understanding_packet must not create Product SOT")
+    if acceptance.get("execution_allowed") is not False:
+        errors.append("product_understanding_packet must not allow execution")
+    for index, ref in enumerate(_list_items(acceptance.get("evidence_refs"))):
+        _validate_public_ref(ref, f"product_understanding_packet.acceptance.evidence_refs[{index}]", errors)
+    return errors
+
+
 def build_operator_briefing_package(
     interface_profile: dict[str, Any],
     *,
@@ -10386,8 +10621,8 @@ def build_operator_briefing_package(
         {
             "kind": "markdown_document",
             "asset_ref": f"reports/{artifact_slug}/briefing.md",
-            "required_for_operator_decision": True,
-            "purpose": "deep readable source document",
+            "required_for_operator_decision": False,
+            "purpose": "internal evidence/source document, not primary human surface",
         },
         {
             "kind": "pdf_document",
@@ -10436,8 +10671,8 @@ def build_operator_briefing_package(
         "delivery_assets": assets,
         "interface_projection": {
             "short_caption": "Documento profundo preparado; leia o anexo antes de confirmar, corrigir ou rejeitar.",
-            "attachment_order": ["markdown_document", "pdf_document", "diagram", "video_explainer", "audio_explainer"],
-            "fallback_when_attachment_fails": "send markdown document and public-safe artifact refs, then retry PDF asynchronously",
+            "attachment_order": ["pdf_document", "video_explainer", "diagram", "audio_explainer", "markdown_document"],
+            "fallback_when_attachment_fails": "send concise PT-BR notice plus public-safe artifact refs, retry PDF/video asynchronously, and do not treat gate as delivered until receipt exists",
             "max_questions_after_delivery": 5,
         },
         "decision_boundary": {
@@ -10508,8 +10743,14 @@ def validate_operator_briefing_package(packet: dict[str, Any]) -> list[str]:
             for asset in assets
             if isinstance(asset, dict) and asset.get("required_for_operator_decision") is True
         }
-        if not {"markdown_document", "pdf_document"}.issubset(required_decision_assets):
-            errors.append("operator_briefing_package decisions require markdown and pdf assets")
+        if "pdf_document" not in required_decision_assets:
+            errors.append("operator_briefing_package decisions require a designed pdf_document primary asset")
+        if "markdown_document" in required_decision_assets:
+            errors.append("operator_briefing_package decisions must keep markdown_document as internal evidence, not a required primary surface")
+        projection = packet.get("interface_projection") if isinstance(packet.get("interface_projection"), dict) else {}
+        attachment_order = _list_items(projection.get("attachment_order"))
+        if attachment_order and attachment_order[0] != "pdf_document":
+            errors.append("operator_briefing_package attachment_order must be pdf_document first")
     depth = packet.get("briefing_depth") if isinstance(packet.get("briefing_depth"), dict) else {}
     if decision_required and depth.get("summary_only_forbidden_when_decision_required") is not True:
         errors.append("operator_briefing_package must forbid summary-only decision packages")
@@ -23928,6 +24169,16 @@ def command_validate_start_conversation(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_validate_product_understanding_packet(args: argparse.Namespace) -> int:
+    errors = validate_product_understanding_packet(load_json_like(args.path))
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    print("OK")
+    return 0
+
+
 def command_validate_briefing_package(args: argparse.Namespace) -> int:
     errors = validate_operator_briefing_package(load_json_like(args.path))
     if errors:
@@ -24254,6 +24505,39 @@ def command_start_conversation(args: argparse.Namespace) -> int:
         print(str(exc), file=sys.stderr)
         return 1
     errors = validate_factory_start_conversation(packet)
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    write_json(args.out, packet)
+    return 0
+
+
+def command_product_understanding_packet(args: argparse.Namespace) -> int:
+    try:
+        packet = build_product_understanding_packet(
+            load_json_like(args.start_conversation),
+            intent=args.intent,
+            target_users=args.target_user,
+            scope_in=args.scope,
+            scope_out_non_goals=args.non_goal,
+            ux_expectations=args.ux_expectation,
+            architecture_preview=args.architecture_preview,
+            access_and_capabilities=args.access_capability,
+            risk_boundaries=args.risk_boundary,
+            success_criteria=args.success_criterion,
+            expected_deliverables=args.expected_deliverable,
+            human_questions=args.human_question,
+            deferred_decisions=args.deferred_decision,
+            confirmed=args.confirmed,
+            operator_response_ref=args.operator_response_ref,
+            created_at=args.created_at,
+            packet_id=args.packet_id,
+        )
+    except ValueError as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+    errors = validate_product_understanding_packet(packet)
     if errors:
         for error in errors:
             print(error, file=sys.stderr)
@@ -25323,6 +25607,10 @@ def build_parser() -> argparse.ArgumentParser:
     validate_start_conversation_parser.add_argument("path", type=Path)
     validate_start_conversation_parser.set_defaults(func=command_validate_start_conversation)
 
+    validate_product_understanding_parser = sub.add_parser("validate-product-understanding-packet")
+    validate_product_understanding_parser.add_argument("path", type=Path)
+    validate_product_understanding_parser.set_defaults(func=command_validate_product_understanding_packet)
+
     validate_briefing_package_parser = sub.add_parser("validate-briefing-package")
     validate_briefing_package_parser.add_argument("path", type=Path)
     validate_briefing_package_parser.set_defaults(func=command_validate_briefing_package)
@@ -25478,6 +25766,30 @@ def build_parser() -> argparse.ArgumentParser:
     start_conversation_parser.add_argument("--conversation-id")
     start_conversation_parser.add_argument("--out", type=Path, required=True)
     start_conversation_parser.set_defaults(func=command_start_conversation)
+
+    product_understanding_parser = sub.add_parser(
+        "product-understanding-packet",
+        help="Build the gerente-led Product Understanding Packet before material execution is allowed.",
+    )
+    product_understanding_parser.add_argument("--start-conversation", type=Path, required=True)
+    product_understanding_parser.add_argument("--intent")
+    product_understanding_parser.add_argument("--target-user", action="append", default=[])
+    product_understanding_parser.add_argument("--scope", action="append", default=[])
+    product_understanding_parser.add_argument("--non-goal", action="append", default=[])
+    product_understanding_parser.add_argument("--ux-expectation", action="append", default=[])
+    product_understanding_parser.add_argument("--architecture-preview", action="append", default=[])
+    product_understanding_parser.add_argument("--access-capability", action="append", default=[])
+    product_understanding_parser.add_argument("--risk-boundary", action="append", default=[])
+    product_understanding_parser.add_argument("--success-criterion", action="append", default=[])
+    product_understanding_parser.add_argument("--expected-deliverable", action="append", default=[])
+    product_understanding_parser.add_argument("--human-question", action="append", default=[])
+    product_understanding_parser.add_argument("--deferred-decision", action="append", default=[])
+    product_understanding_parser.add_argument("--confirmed", action="store_true")
+    product_understanding_parser.add_argument("--operator-response-ref")
+    product_understanding_parser.add_argument("--created-at")
+    product_understanding_parser.add_argument("--packet-id")
+    product_understanding_parser.add_argument("--out", type=Path, required=True)
+    product_understanding_parser.set_defaults(func=command_product_understanding_packet)
 
     briefing_package_parser = sub.add_parser(
         "briefing-package",

@@ -1519,8 +1519,14 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
                 for asset in assets
                 if isinstance(asset, dict) and asset.get("required_for_operator_decision") is True
             }
-            if not {"markdown_document", "pdf_document"}.issubset(required_assets):
-                errors.append(f"{at}: decision briefings require markdown and pdf assets")
+            if "pdf_document" not in required_assets:
+                errors.append(f"{at}: decision briefings require a designed pdf_document primary asset")
+            if "markdown_document" in required_assets:
+                errors.append(f"{at}: markdown_document must remain internal evidence, not a required primary surface")
+            projection = data.get("interface_projection") if isinstance(data.get("interface_projection"), dict) else {}
+            order = projection.get("attachment_order") if isinstance(projection.get("attachment_order"), list) else []
+            if order and order[0] != "pdf_document":
+                errors.append(f"{at}: decision briefing attachment_order must be pdf_document first")
         boundary = data.get("decision_boundary") if isinstance(data.get("decision_boundary"), dict) else {}
         if boundary.get("briefing_is_not_source_of_truth") is not True:
             errors.append(f"{at}: briefing must not replace source of truth")

@@ -198,7 +198,7 @@ def solana_bank_r4_card(factoryctl: Any, *, phase: str) -> dict[str, Any]:
                     "push_required": True,
                     "summary_only_forbidden": True,
                     "material_before_question": True,
-                    "attachment_order": ["markdown_document", "pdf_document", "diagram", "video_explainer"],
+                    "attachment_order": ["pdf_document", "video_explainer", "diagram", "markdown_document"],
                     "delivery_receipt_ref": "reports/factory-battery-r4/human-gate/DELIVERY_RECEIPT.json",
                     "question_after_material_delivery": True,
                 },

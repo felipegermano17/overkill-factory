@@ -8,19 +8,27 @@
     "record_type",
     "delivery_id",
     "created_at",
+    "manager_profile",
     "operator_channel",
     "primary_language",
     "decision_id",
     "package_refs",
+    "primary_message",
+    "primary_artifact",
+    "internal_evidence_refs",
     "material_delivered_before_question",
     "receipt_status",
-    "question_ref"
+    "question_ref",
+    "raw_json_markdown_primary_surface",
+    "delivery_path",
+    "direct_worker_or_watchdog_to_human"
   ],
   "properties": {
     "$schema": { "const": "https://overkill-factory.dev/schemas/operator-delivery-receipt.schema.json" },
     "record_type": { "const": "operator_delivery_receipt" },
     "delivery_id": { "type": "string", "minLength": 3 },
     "created_at": { "type": "string", "minLength": 10 },
+    "manager_profile": { "const": "overkill-factory-gerente" },
     "operator_channel": { "enum": ["telegram", "discord", "cockpit", "cli", "api"] },
     "primary_language": { "enum": ["pt-BR", "en-US"] },
     "decision_id": { "type": "string", "minLength": 3 },
@@ -30,9 +38,56 @@
       "items": { "type": "string", "minLength": 3 },
       "uniqueItems": true
     },
+    "primary_message": { "type": "string", "minLength": 80 },
+    "primary_artifact": {
+      "type": "object",
+      "required": ["kind", "media_type", "asset_ref", "designed_artifact", "fallback_renderer"],
+      "properties": {
+        "kind": { "enum": ["pdf_document", "video_explainer"] },
+        "media_type": { "enum": ["application/pdf", "video/mp4"] },
+        "asset_ref": { "type": "string", "minLength": 3 },
+        "designed_artifact": { "const": true },
+        "fallback_renderer": { "const": false }
+      },
+      "additionalProperties": false
+    },
+    "optional_explainers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["kind", "media_type", "asset_ref", "required_for_operator_decision"],
+        "properties": {
+          "kind": { "const": "video_explainer" },
+          "media_type": { "const": "video/mp4" },
+          "asset_ref": { "type": "string", "minLength": 3 },
+          "required_for_operator_decision": { "type": "boolean" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "internal_evidence_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 3 },
+      "uniqueItems": true
+    },
     "material_delivered_before_question": { "const": true },
     "receipt_status": { "enum": ["delivered", "blocked", "retrying"] },
-    "question_ref": { "type": "string", "minLength": 3 }
+    "question_ref": { "type": "string", "minLength": 3 },
+    "raw_json_markdown_primary_surface": { "const": false },
+    "delivery_path": { "const": "gerente_to_human" },
+    "direct_worker_or_watchdog_to_human": { "const": false },
+    "result": { "enum": ["PASS", "FAIL"] },
+    "delivery_mode": { "type": "string", "minLength": 3 },
+    "raw_json_primary_surface": { "const": false },
+    "worker_direct_contact": { "const": false },
+    "receipt_scope": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 3 },
+      "uniqueItems": true
+    },
+    "readback_required": { "type": "boolean" },
+    "public_safe": { "const": true }
   },
   "additionalProperties": false
 }

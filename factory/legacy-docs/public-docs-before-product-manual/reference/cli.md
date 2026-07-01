@@ -247,7 +247,14 @@ notifications, attachment support and summary limits explicit, so the operator
 does not need to poll the bot for status. `start-conversation` is the
 conversational pre-start packet: the manager can ask open product-understanding
 questions and compile the confirmed conversation before a formal factory start
-request exists. It does not create Hermes boards or cards.
+request exists. It does not create Hermes boards or cards. `product-understanding-packet`
+is the gerente-led discovery OS output before material execution: it captures
+intent, scope, non-goals, UX expectations, architecture preview,
+access/capability needs, risk boundaries, success criteria, expected
+deliverables and grouped human questions. It must be confirmed or carry an
+explicit deferred decision ledger before deterministic factory start can proceed;
+it never approves Product SOT, implementation, deploy, credentials, funds, signing,
+release or other material execution by itself.
 
 `intake` builds a valid Universal Signal Intake from that registry without
 executing work. `source-resolution` turns a valid

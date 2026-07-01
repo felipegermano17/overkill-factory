@@ -154,6 +154,7 @@ class OperatorExperienceTest(unittest.TestCase):
             "run",
             "operator-interface",
             "start-conversation",
+            "product-understanding-packet",
             "briefing-package",
             "unblock-plan",
             "recovery-plan",
@@ -289,7 +290,100 @@ class OperatorExperienceTest(unittest.TestCase):
 
         self.assertTrue(any("at least 3 understanding questions" in error for error in errors), errors)
 
-    def test_briefing_package_requires_pdf_markdown_and_push_delivery_for_decisions(self) -> None:
+    def test_product_understanding_packet_groups_discovery_before_material_execution(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            interface = tmp / "operator-interface.json"
+            start = tmp / "start-pending.json"
+            packet = tmp / "product-understanding.json"
+            run_factoryctl("operator-interface", "--primary-interface", "telegram", "--out", str(interface))
+            run_factoryctl(
+                "start-conversation",
+                "--operator-interface",
+                str(interface),
+                "--source-envelope-ref",
+                "external:operator-source-envelope",
+                "--out",
+                str(start),
+            )
+            run_factoryctl(
+                "product-understanding-packet",
+                "--start-conversation",
+                str(start),
+                "--intent",
+                "Build a product outcome with clear owner intent before material execution.",
+                "--target-user",
+                "primary product user",
+                "--scope",
+                "first bounded product slice",
+                "--non-goal",
+                "no deploy or release authority",
+                "--ux-expectation",
+                "operator-readable user journey and visible states",
+                "--architecture-preview",
+                "architecture constraints previewed before implementation",
+                "--access-capability",
+                "required providers and missing access listed early",
+                "--risk-boundary",
+                "funds, signing, credentials and destructive changes remain gated",
+                "--success-criterion",
+                "operator can verify the first slice without repeated obvious questions",
+                "--expected-deliverable",
+                "Product SOT and architecture packet before execution cards",
+                "--deferred-decision",
+                "final architecture approval waits for the architecture gate",
+                "--out",
+                str(packet),
+            )
+            payload = json.loads(packet.read_text(encoding="utf-8"))
+
+        understanding = payload["product_understanding"]
+        self.assertEqual(payload["record_type"], "product_understanding_packet")
+        for field in [
+            "intent",
+            "target_users",
+            "scope_in",
+            "scope_out_non_goals",
+            "ux_expectations",
+            "architecture_preview",
+            "access_and_capabilities",
+            "risk_boundaries",
+            "success_criteria",
+            "expected_deliverables",
+        ]:
+            self.assertIn(field, understanding)
+        self.assertFalse(payload["material_execution_boundary"]["execution_allowed"])
+        self.assertTrue(payload["material_execution_boundary"]["human_questions_grouped_before_execution"])
+        self.assertTrue(payload["material_execution_boundary"]["later_repeated_obvious_questions_are_factory_bugs"])
+        self.assertTrue(payload["acceptance"]["approved_or_deferred_decision_ledger"])
+        self.assertEqual(payload["handoff"]["next_artifact"], "factory_bridge_start_request")
+
+    def test_product_understanding_packet_rejects_missing_required_discovery_sections(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            interface = tmp / "operator-interface.json"
+            start = tmp / "start-pending.json"
+            run_factoryctl("operator-interface", "--primary-interface", "telegram", "--out", str(interface))
+            run_factoryctl(
+                "start-conversation",
+                "--operator-interface",
+                str(interface),
+                "--source-envelope-ref",
+                "external:operator-source-envelope",
+                "--out",
+                str(start),
+            )
+            payload = factoryctl.build_product_understanding_packet(json.loads(start.read_text(encoding="utf-8")))
+
+        payload["product_understanding"]["success_criteria"] = []
+        payload["material_execution_boundary"]["later_repeated_obvious_questions_are_factory_bugs"] = False
+
+        errors = factoryctl.validate_product_understanding_packet(payload)
+
+        self.assertTrue(any("success_criteria" in error for error in errors), errors)
+        self.assertTrue(any("later_repeated_obvious_questions_are_factory_bugs" in error for error in errors), errors)
+
+    def test_briefing_package_requires_pdf_first_and_push_delivery_for_decisions(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             tmp = Path(tmpdir)
             interface = tmp / "operator-interface.json"
@@ -314,7 +408,12 @@ class OperatorExperienceTest(unittest.TestCase):
             for asset in payload["delivery_assets"]
             if asset["required_for_operator_decision"]
         }
-        self.assertTrue({"markdown_document", "pdf_document"}.issubset(required_assets))
+        markdown_assets = [asset for asset in payload["delivery_assets"] if asset["kind"] == "markdown_document"]
+        self.assertIn("pdf_document", required_assets)
+        self.assertNotIn("markdown_document", required_assets)
+        self.assertTrue(markdown_assets)
+        self.assertFalse(any(asset["required_for_operator_decision"] for asset in markdown_assets))
+        self.assertEqual(payload["interface_projection"]["attachment_order"][0], "pdf_document")
         self.assertTrue(payload["proactive_delivery"]["push_required"])
         self.assertFalse(payload["proactive_delivery"]["operator_polling_required"])
         self.assertFalse(payload["acceptance"]["summary_only"])

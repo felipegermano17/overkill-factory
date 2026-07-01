@@ -10,6 +10,9 @@
     "created_at",
     "human_gate_delivery_requires_receipt",
     "proactive_status_required",
+    "signal_routing",
+    "proactive_status_contract",
+    "artifact_delivery_policy",
     "channels",
     "forbidden_patterns"
   ],
@@ -20,6 +23,97 @@
     "created_at": { "type": "string", "minLength": 10 },
     "human_gate_delivery_requires_receipt": { "const": true },
     "proactive_status_required": { "const": true },
+    "signal_routing": {
+      "type": "object",
+      "required": [
+        "internal_signal_sources",
+        "route_to_manager_profile",
+        "manager_talks_to_human",
+        "direct_human_delivery_from_internal_signal",
+        "human_surface",
+        "raw_signal_payload_human_visible"
+      ],
+      "properties": {
+        "internal_signal_sources": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "enum": ["cron", "watchdog", "kanban_event", "worker_completion", "artifact_renderer"] },
+          "uniqueItems": true
+        },
+        "route_to_manager_profile": { "const": "overkill-factory-gerente" },
+        "manager_talks_to_human": { "const": true },
+        "direct_human_delivery_from_internal_signal": { "const": false },
+        "human_surface": { "const": "plain_pt_br_manager_message" },
+        "raw_signal_payload_human_visible": { "const": false }
+      },
+      "additionalProperties": false
+    },
+    "proactive_status_contract": {
+      "type": "object",
+      "required": [
+        "language",
+        "required_fields",
+        "percent_requires_runtime_basis",
+        "must_separate_factory_readiness_from_product_execution",
+        "forbidden_status_surfaces"
+      ],
+      "properties": {
+        "language": { "const": "pt-BR" },
+        "required_fields": {
+          "type": "array",
+          "contains": { "const": "percent_complete" },
+          "allOf": [
+            { "contains": { "const": "done_since_last_update" } },
+            { "contains": { "const": "doing_now" } },
+            { "contains": { "const": "remaining_work" } },
+            { "contains": { "const": "blockers" } },
+            { "contains": { "const": "risks" } },
+            { "contains": { "const": "next_action" } },
+            { "contains": { "const": "human_action_required" } },
+            { "contains": { "const": "evidence_basis" } }
+          ],
+          "items": { "type": "string", "minLength": 3 },
+          "uniqueItems": true
+        },
+        "percent_requires_runtime_basis": { "const": true },
+        "must_separate_factory_readiness_from_product_execution": { "const": true },
+        "forbidden_status_surfaces": {
+          "type": "array",
+          "minItems": 3,
+          "items": { "type": "string", "minLength": 3 },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "artifact_delivery_policy": {
+      "type": "object",
+      "required": [
+        "primary_human_artifacts",
+        "pdf_required_for_human_gate",
+        "video_required_when_complex_flow_or_risk",
+        "delivery_receipt_required",
+        "material_before_question_required",
+        "raw_json_markdown_allowed_only_as_internal_evidence",
+        "primary_raw_json_markdown_forbidden"
+      ],
+      "properties": {
+        "primary_human_artifacts": {
+          "type": "array",
+          "minItems": 1,
+          "contains": { "const": "pdf_document" },
+          "items": { "enum": ["pdf_document", "video_explainer"] },
+          "uniqueItems": true
+        },
+        "pdf_required_for_human_gate": { "const": true },
+        "video_required_when_complex_flow_or_risk": { "type": "boolean" },
+        "delivery_receipt_required": { "const": true },
+        "material_before_question_required": { "const": true },
+        "raw_json_markdown_allowed_only_as_internal_evidence": { "const": true },
+        "primary_raw_json_markdown_forbidden": { "const": true }
+      },
+      "additionalProperties": false
+    },
     "channels": {
       "type": "array",
       "minItems": 1,

@@ -5,6 +5,55 @@
   "created_at": "2026-06-26T00:00:00+00:00",
   "human_gate_delivery_requires_receipt": true,
   "proactive_status_required": true,
+  "signal_routing": {
+    "internal_signal_sources": [
+      "cron",
+      "watchdog",
+      "kanban_event",
+      "worker_completion",
+      "artifact_renderer"
+    ],
+    "route_to_manager_profile": "overkill-factory-gerente",
+    "manager_talks_to_human": true,
+    "direct_human_delivery_from_internal_signal": false,
+    "human_surface": "plain_pt_br_manager_message",
+    "raw_signal_payload_human_visible": false
+  },
+  "proactive_status_contract": {
+    "language": "pt-BR",
+    "required_fields": [
+      "percent_complete",
+      "done_since_last_update",
+      "doing_now",
+      "remaining_work",
+      "blockers",
+      "risks",
+      "next_action",
+      "human_action_required",
+      "next_update_window",
+      "evidence_basis"
+    ],
+    "percent_requires_runtime_basis": true,
+    "must_separate_factory_readiness_from_product_execution": true,
+    "forbidden_status_surfaces": [
+      "raw_kanban_json",
+      "raw_markdown_primary_surface",
+      "worker_log_dump",
+      "percent_without_basis"
+    ]
+  },
+  "artifact_delivery_policy": {
+    "primary_human_artifacts": [
+      "pdf_document",
+      "video_explainer"
+    ],
+    "pdf_required_for_human_gate": true,
+    "video_required_when_complex_flow_or_risk": false,
+    "delivery_receipt_required": true,
+    "material_before_question_required": true,
+    "raw_json_markdown_allowed_only_as_internal_evidence": true,
+    "primary_raw_json_markdown_forbidden": true
+  },
   "channels": [
     {
       "channel": "telegram",
@@ -16,6 +65,8 @@
   "forbidden_patterns": [
     "asking for approval before delivering the package",
     "English-only decision material on the default pt-BR operator path",
-    "watchdog-only notification without the decision packet"
+    "watchdog-only notification without the decision packet",
+    "cron or watchdog notifying the human directly",
+    "raw JSON or Markdown as the primary human surface"
   ]
 }

@@ -58,7 +58,7 @@
       "push_required": true,
       "summary_only_forbidden": true,
       "material_before_question": true,
-      "attachment_order": ["markdown_document", "pdf_document", "diagram", "video_explainer"],
+      "attachment_order": ["pdf_document", "video_explainer", "diagram", "markdown_document"],
       "delivery_receipt_ref": "reports/val-solana-quasar-r3/human-gate/DELIVERY_RECEIPT.json",
       "question_after_material_delivery": true
     }

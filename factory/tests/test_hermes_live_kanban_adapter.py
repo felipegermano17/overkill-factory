@@ -77,7 +77,7 @@ def human_gate_packet_fixture() -> dict:
             "evidence_index_json",
             "owner_review_markdown",
         ],
-        "optional_explainer_assets": ["diagram"],
+        "optional_explainer_assets": ["video_explainer", "diagram"],
         "decision_package_delivery": {
             "operator_interface": "telegram",
             "primary_language": "pt-BR",
@@ -85,8 +85,9 @@ def human_gate_packet_fixture() -> dict:
             "summary_only_forbidden": True,
             "material_before_question": True,
             "attachment_order": [
-                "markdown_document",
                 "pdf_document",
+                "video_explainer",
+                "markdown_document",
                 "approval_request_json",
                 "evidence_index_json",
                 "owner_review_markdown",
