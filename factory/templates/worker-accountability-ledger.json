@@ -1,0 +1,59 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-accountability-ledger.schema.json",
+  "record_type": "worker_accountability_ledger",
+  "ledger_version": "factory-15-p13-worker-accountability-v1",
+  "generated_at": "2026-07-01T00:00:00Z",
+  "scope": "public-safe-routing-consequence-ledger",
+  "runtime_authority": "hermes_kanban",
+  "local_state_authority": false,
+  "routing_authority": "factory_reducer",
+  "source_refs": [
+    "issues/595#point-13-worker-accountability"
+  ],
+  "consequence_policy": {
+    "watch_after_negative_events": 1,
+    "mandatory_review_after_rework_or_shallow_events": 2,
+    "demote_after_bad_output_failure_or_repair_loop_events": 2,
+    "escalate_after_total_negative_events": 5,
+    "positive_events_do_not_erase_negative_accountability_without_review": true
+  },
+  "worker_accountability": {
+    "product-face": {
+      "worker_id": "product-face",
+      "bad_output_count": 1,
+      "failure_count": 0,
+      "rework_count": 1,
+      "shallow_artifact_count": 2,
+      "review_fail_count": 0,
+      "repair_loop_count": 0,
+      "positive_signal_count": 0,
+      "negative_total": 4,
+      "event_refs": [
+        "external:sanitized/accountability/product-face-p13-sample"
+      ],
+      "routing_consequence": {
+        "action": "mandatory_independent_review",
+        "accountability_state": "review_required",
+        "queue_class": "review-before-consumption",
+        "required_reviewer": "independent-reviewer",
+        "allowed_actions": [
+          "route_output_to_independent_review",
+          "block_downstream_consumption_until_review_pass"
+        ],
+        "reason": "repeated rework/shallow output or review failure requires independent review"
+      }
+    }
+  },
+  "routing_summary": {
+    "strongest_action": "mandatory_independent_review",
+    "affected_workers": [
+      "product-face"
+    ],
+    "routing_authority": "factory_reducer_consumes_this_ledger_hermes_kanban_executes_state"
+  },
+  "limits": [
+    "Ledger refs must be public-safe sanitized refs, not raw Hermes task ids or private paths.",
+    "The ledger recommends routing consequences only; Hermes Kanban remains runtime state authority.",
+    "Demotion or escalation does not approve, reject, or waive a human/product/security gate."
+  ]
+}

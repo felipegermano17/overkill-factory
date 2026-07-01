@@ -437,6 +437,7 @@ These are the public JSON schemas the factory exposes. They are not decoration; 
 - `schemas/visual-regression-proof.schema.json`
 - `schemas/work-unit-contract.schema.json`
 - `schemas/work-unit-dispatch-readiness.schema.json`
+- `schemas/worker-accountability-ledger.schema.json`
 - `schemas/worker-authority-contract.schema.json`
 - `schemas/worker-closure-summary.schema.json`
 - `schemas/worker-packet.schema.json`
@@ -613,6 +614,7 @@ Templates are starter records paired with schemas. They are examples of valid sh
 - `templates/visual-regression-proof.json`
 - `templates/work-unit-contract.json`
 - `templates/work-unit-dispatch-readiness.json`
+- `templates/worker-accountability-ledger.json`
 - `templates/worker-authority-contract.json`
 
 ## CLI Surface

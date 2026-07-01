@@ -74,6 +74,11 @@ from factory_v2_kernel import (  # noqa: E402
     validate_factory_workflow_compiled_plan,
 )
 from validate_public_json_artifacts import load_schemas, validate_node  # noqa: E402
+from worker_accountability import (  # noqa: E402
+    build_accountability_ledger,
+    event_validation_errors,
+    validate_ledger as validate_worker_accountability_ledger,
+)
 
 
 def installed_asset_root() -> Path | None:
@@ -22791,6 +22796,26 @@ def command_validate_worker_authority_contract(args: argparse.Namespace) -> int:
     return _print_validation_result(validate_worker_authority_contract(load_json_like(args.path)))
 
 
+def command_build_worker_accountability_ledger(args: argparse.Namespace) -> int:
+    payload = load_json_like(args.events)
+    events = payload.get("events") if isinstance(payload, dict) else payload
+    if not isinstance(events, list):
+        return _print_validation_result(["worker-accountability events input must be a JSON array or object with events[]"])
+    event_errors = event_validation_errors(events)
+    if event_errors:
+        return _print_validation_result(event_errors)
+    ledger = build_accountability_ledger(events, source_refs=args.source_refs)
+    validation_errors = validate_worker_accountability_ledger(ledger)
+    if validation_errors:
+        return _print_validation_result(validation_errors)
+    write_json(args.out, ledger)
+    return 0
+
+
+def command_validate_worker_accountability_ledger(args: argparse.Namespace) -> int:
+    return _print_validation_result(validate_worker_accountability_ledger(load_json_like(args.path)))
+
+
 def validate_hermes_reducer_mutation_proof(packet: dict[str, Any]) -> list[str]:
     schemas = bundled_schemas()
     schema = schemas.get("hermes-reducer-mutation-proof.schema.json")
@@ -24352,6 +24377,19 @@ def build_parser() -> argparse.ArgumentParser:
     validate_worker_authority_parser = sub.add_parser("validate-worker-authority-contract")
     validate_worker_authority_parser.add_argument("path", type=Path)
     validate_worker_authority_parser.set_defaults(func=command_validate_worker_authority_contract)
+
+    build_worker_accountability_parser = sub.add_parser(
+        "build-worker-accountability-ledger",
+        help="Build public-safe worker accountability routing consequences from sanitized events.",
+    )
+    build_worker_accountability_parser.add_argument("events", type=Path)
+    build_worker_accountability_parser.add_argument("--source-ref", action="append", dest="source_refs")
+    build_worker_accountability_parser.add_argument("--out", type=Path)
+    build_worker_accountability_parser.set_defaults(func=command_build_worker_accountability_ledger)
+
+    validate_worker_accountability_parser = sub.add_parser("validate-worker-accountability-ledger")
+    validate_worker_accountability_parser.add_argument("path", type=Path)
+    validate_worker_accountability_parser.set_defaults(func=command_validate_worker_accountability_ledger)
 
     validate_hermes_reducer_parser = sub.add_parser("validate-hermes-reducer-mutation-proof")
     validate_hermes_reducer_parser.add_argument("path", type=Path)

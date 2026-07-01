@@ -96,6 +96,8 @@ A worker is not a prompt character. To be operable it needs four layers:
 
 The worker executes inside received authority. It does not approve gates, invent evidence, touch production, handle keys, or change scope outside the contract.
 
+Worker accountability is separate from worker identity. Repeated bad output, failures, rework, shallow artifacts, review failures, or repair loops are aggregated into a `worker_accountability_ledger`. That ledger is public-safe and only records sanitized evidence refs. Its routing consequences are deterministic: watch, mandatory independent review, demotion to review queue, or escalation for profile review. It does not mutate Hermes Kanban directly; the factory reducer consumes the consequence and Hermes remains the runtime state authority.
+
 ## Core terms
 
 Product SOT is product truth.
@@ -130,6 +132,8 @@ python3 scripts/factoryctl.py compile-workflow --out .tmp/factory-workflow-compi
 python3 scripts/factoryctl.py validate-card examples/minimal-hermes-project/card.md
 python3 scripts/factoryctl.py gate-report --card examples/minimal-hermes-project/card.md
 python3 scripts/factoryctl.py worker-packet --worker all --required-only --card examples/minimal-hermes-project/card.md --out .tmp/minimal-worker-packets
+python3 scripts/factoryctl.py build-worker-accountability-ledger .tmp/worker-accountability-events.json --out .tmp/worker-accountability-ledger.json
+python3 scripts/factoryctl.py validate-worker-accountability-ledger .tmp/worker-accountability-ledger.json
 python3 scripts/validate_public_json_artifacts.py
 python3 scripts/validate_public_surface_sync.py
 python3 scripts/validate_promise_implementation_map.py
