@@ -4783,9 +4783,11 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         fresh_tasks = [
             task
             for task in fake.tasks.values()
-            if task.get("title") == "Materialize canonical factory card for board" and task.get("status") == "ready"
+            if "stale-terminal replacement" in str(task.get("title") or "") and task.get("status") == "ready"
         ]
         self.assertEqual(len(fresh_tasks), 1)
+        fresh_body = adapter.parse_json_object(str(fresh_tasks[0].get("body") or "{}"))
+        self.assertTrue(fresh_body.get("stale_terminal_remediation_replacement"))
 
     def test_no_idle_creates_materialization_contract_repair_for_internal_missing_inputs(self) -> None:
         fake = FakeHermes()
@@ -6339,6 +6341,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
             and adapter.parse_json_object(str(task.get("body") or "{}")).get("stale_terminal_remediation_replacement") is True
         ]
         self.assertEqual(len(ready_replacements), 1)
+        self.assertIn("stale-terminal replacement", str(ready_replacements[0].get("title") or ""))
         replacement_body = adapter.parse_json_object(str(ready_replacements[0].get("body") or "{}"))
         self.assertEqual(
             replacement_body["runtime_lineage"]["lineage_type"],

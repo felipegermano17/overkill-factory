@@ -5506,10 +5506,17 @@ def create_deterministic_reconcile_task(
     if body is None:
         return None
     digest = idempotency_digest_fragment(contract_digest(body))
+    stale_refs = [str(ref).strip() for ref in (stale_remediation_task_refs or []) if str(ref).strip()]
+    base_title = str(contract.get("title") or "Materialize canonical factory card for board")
+    title = (
+        f"{base_title} stale-terminal replacement {len(stale_refs)}"
+        if stale_refs
+        else base_title
+    )
     return create_task(
         hermes_bin=hermes_bin,
         board=board,
-        title=str(contract.get("title") or "Factory deterministic reconcile"),
+        title=title,
         body=compact_json_argument(body),
         assignee=str(contract.get("assignee") or "factory-orchestrator"),
         idempotency_key=f"overkill:reconcile:{public_safe_slug(board, fallback='board')}:{digest}",
