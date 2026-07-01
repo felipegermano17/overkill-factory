@@ -574,6 +574,41 @@
             "local_state_authority": { "const": false }
           },
           "additionalProperties": true
+        },
+        "automatic_repair_loop": {
+          "type": "object",
+          "properties": {
+            "required": { "type": "boolean" },
+            "factory_owned_repair_allowed": { "type": "boolean" },
+            "runtime_authority": { "const": "hermes_kanban" },
+            "local_state_authority": { "const": false },
+            "route_ref": { "type": "string", "minLength": 3 },
+            "stage_order": {
+              "type": "array",
+              "items": { "enum": ["repair", "audit", "rerun", "reconcile"] }
+            },
+            "stages": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "stage": { "enum": ["repair", "audit", "rerun", "reconcile"] },
+                  "owner_worker": { "type": "string", "minLength": 3 },
+                  "command_or_route": { "type": "string", "minLength": 3 },
+                  "expected_output_ref": { "type": "string", "minLength": 3 },
+                  "exit_condition": { "type": "string", "minLength": 3 }
+                },
+                "additionalProperties": true
+              }
+            },
+            "post_repair_reconciliation_required": { "type": "boolean" },
+            "fresh_review_required": { "type": "boolean" },
+            "stop_classes": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 3 }
+            }
+          },
+          "additionalProperties": true
         }
       },
       "additionalProperties": true,

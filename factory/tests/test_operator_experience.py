@@ -95,6 +95,22 @@ def write_blocked_worker_result(tmp: Path, *, human_gate: bool = False) -> Path:
             "uses_native_kanban_primitives": True,
             "local_state_authority": False,
         },
+        "automatic_repair_loop": {
+            "required": not human_gate,
+            "factory_owned_repair_allowed": not human_gate,
+            "runtime_authority": "hermes_kanban",
+            "local_state_authority": False,
+            "route_ref": route_id,
+            "stage_order": ["repair", "audit", "rerun", "reconcile"],
+            "stages": [
+                {"stage": "repair", "owner_worker": worker_id, "expected_output_ref": "worker-result:fresh-repair"},
+                {"stage": "audit", "owner_worker": "independent-reviewer", "expected_output_ref": "worker-result:fresh-review-pass"},
+                {"stage": "rerun", "owner_worker": worker_id, "expected_output_ref": "worker-result:fresh-pass-or-waiver"},
+                {"stage": "reconcile", "owner_worker": "evidence-reconciler", "command_or_route": "reconcile-ready-work-units"},
+            ],
+            "post_repair_reconciliation_required": not human_gate,
+            "stop_classes": ["human_gate", "repeated_failed_recovery"],
+        },
         "downstream_freeze_scope": ["next worker", "done promotion"],
     }
     if human_gate:
@@ -382,6 +398,9 @@ class OperatorExperienceTest(unittest.TestCase):
         self.assertTrue(route["factory_owned_repair_allowed"])
         self.assertFalse(route["human_gate_required"])
         self.assertEqual(route["repair_owner_worker"], "handoff-packer")
+        self.assertTrue(route["automatic_repair_loop"]["required"])
+        self.assertEqual(route["automatic_repair_loop"]["stage_order"], ["repair", "audit", "rerun", "reconcile"])
+        self.assertEqual(route["automatic_repair_loop"]["stages"][-1]["command_or_route"], "reconcile-ready-work-units")
         self.assertIn("next worker", route["downstream_freeze_scope"])
         self.assertIn("factoryctl recovery-plan", payload["factory_next_action"]["command_refs"])
         self.assertIn("recovery route recovery:test-card:handoff-repair", payload["factory_next_action"]["action"])
@@ -404,6 +423,7 @@ class OperatorExperienceTest(unittest.TestCase):
         self.assertEqual(route["recovery_route_id"], "recovery:test-card:human-gate")
         self.assertFalse(route["factory_owned_repair_allowed"])
         self.assertTrue(route["human_gate_required"])
+        self.assertFalse(route["automatic_repair_loop"]["required"])
         self.assertIn("human gate record", route["operator_visible_next_action"])
         self.assertTrue(
             any(decision["decision_type"] == "authority_required" for decision in payload["user_decision_required"])

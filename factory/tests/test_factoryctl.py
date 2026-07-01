@@ -4189,6 +4189,14 @@ class FactoryCtlTest(unittest.TestCase):
         recovery = result["recovery_recommendation"]
         self.assertEqual(recovery["blocker_type"], "security")
         self.assertTrue(recovery["factory_owned_repair_allowed"])
+        loop = recovery["automatic_repair_loop"]
+        self.assertTrue(loop["required"])
+        self.assertEqual(loop["runtime_authority"], "hermes_kanban")
+        self.assertFalse(loop["local_state_authority"])
+        self.assertEqual(loop["stage_order"], ["repair", "audit", "rerun", "reconcile"])
+        self.assertEqual([stage["stage"] for stage in loop["stages"]], ["repair", "audit", "rerun", "reconcile"])
+        self.assertEqual(loop["stages"][-1]["command_or_route"], "reconcile-ready-work-units")
+        self.assertTrue(loop["post_repair_reconciliation_required"])
         self.assertEqual(recovery["hermes_runtime_boundary"]["runtime_authority"], "hermes_kanban")
         self.assertFalse(recovery["hermes_runtime_boundary"]["local_state_authority"])
         self.assertEqual(recovery["retry_policy"]["attempt_number"], 1)
@@ -4235,6 +4243,67 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertIn("recovery_recommendation.retry_policy.runtime_attempt_source must be hermes_task_history", errors)
         self.assertIn("recovery_recommendation.retry_policy must not claim local runtime state authority", errors)
 
+    def test_factory_owned_blocked_result_requires_automatic_repair_loop(self) -> None:
+        card = load_card("v35_valid_security_with_scan.md")
+        result = factoryctl.build_worker_result(
+            "codex-security",
+            card,
+            result="BLOCKED",
+            tool_or_profile="codex-security:security-scan",
+            executed_by="security-runner",
+            evidence_refs=["reports/security.md"],
+            blocking_findings=True,
+            findings_summary="Security finding blocks continuation.",
+            next_action="repair finding and rerun security scan",
+        )
+        bad = json.loads(json.dumps(result))
+        bad["recovery_recommendation"].pop("automatic_repair_loop")
+
+        errors = factoryctl.validate_worker_result_record(
+            bad,
+            expected_field="security_scan_result",
+            expected_worker_id="codex-security",
+            card=card,
+            evidence_root=ROOT,
+        )
+
+        self.assertIn(
+            "recovery_recommendation.automatic_repair_loop is required for factory-owned blocked recovery",
+            errors,
+        )
+
+    def test_factory_owned_recovery_loop_must_reconcile_after_rerun(self) -> None:
+        card = load_card("v35_valid_security_with_scan.md")
+        result = factoryctl.build_worker_result(
+            "codex-security",
+            card,
+            result="BLOCKED",
+            tool_or_profile="codex-security:security-scan",
+            executed_by="security-runner",
+            evidence_refs=["reports/security.md"],
+            blocking_findings=True,
+            findings_summary="Security finding blocks continuation.",
+            next_action="repair finding and rerun security scan",
+        )
+        bad = json.loads(json.dumps(result))
+        bad["recovery_recommendation"]["automatic_repair_loop"]["stage_order"] = ["repair", "rerun"]
+        bad["recovery_recommendation"]["automatic_repair_loop"]["stages"] = [
+            {"stage": "repair", "owner_worker": "codex-security"},
+            {"stage": "rerun", "owner_worker": "codex-security"},
+        ]
+
+        errors = factoryctl.validate_worker_result_record(
+            bad,
+            expected_field="security_scan_result",
+            expected_worker_id="codex-security",
+            card=card,
+            evidence_root=ROOT,
+        )
+
+        self.assertIn("recovery_recommendation.automatic_repair_loop.stage_order must be repair,audit,rerun,reconcile", errors)
+        self.assertIn("recovery_recommendation.automatic_repair_loop.stages must materialize repair,audit,rerun,reconcile", errors)
+        self.assertIn("recovery_recommendation.automatic_repair_loop.reconcile must route through reconcile-ready-work-units", errors)
+
     def test_human_gate_recovery_cannot_be_factory_owned_repair(self) -> None:
         card = load_card("v35_valid_onchain_auditor_scan.md")
         recovery = factoryctl.recovery_recommendation_for_worker(
@@ -4259,6 +4328,8 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertEqual(recovery["blocker_type"], "human_gate")
         self.assertTrue(recovery["human_gate_required"])
         self.assertFalse(recovery["factory_owned_repair_allowed"])
+        self.assertFalse(recovery["automatic_repair_loop"]["required"])
+        self.assertEqual(recovery["automatic_repair_loop"]["reason"], "human_gate_record_required")
         self.assertFalse(recovery["fresh_review_required"])
         self.assertEqual(recovery["unblock_authority_ref"], "human_gate_record")
 
@@ -4629,6 +4700,9 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertFalse(route["retry_policy"]["local_state_authority"])
         self.assertEqual(route["hermes_materialization"]["runtime_authority"], "hermes_kanban")
         self.assertFalse(route["hermes_materialization"]["local_state_authority"])
+        self.assertTrue(route["automatic_repair_loop"]["required"])
+        self.assertEqual(route["automatic_repair_loop"]["stage_order"], ["repair", "audit", "rerun", "reconcile"])
+        self.assertEqual(route["automatic_repair_loop"]["stages"][-1]["command_or_route"], "reconcile-ready-work-units")
         self.assertTrue(plan["hermes_runtime_boundary"]["no_shadow_scheduler"])
         self.assertTrue(plan["hermes_runtime_boundary"]["no_shadow_dispatcher"])
         self.assertTrue(plan["hermes_runtime_boundary"]["no_shadow_dependency_engine"])
@@ -4678,6 +4752,9 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertIn(requirement["requirement_id"], route["dependency_edge_patch"]["old_edges"])
         self.assertEqual(route["hermes_materialization"]["runtime_authority"], "hermes_kanban")
         self.assertFalse(route["hermes_materialization"]["local_state_authority"])
+        self.assertTrue(route["automatic_repair_loop"]["required"])
+        self.assertEqual(route["automatic_repair_loop"]["stage_order"], ["repair", "audit", "rerun", "reconcile"])
+        self.assertEqual(route["automatic_repair_loop"]["stages"][-1]["command_or_route"], "reconcile-ready-work-units")
 
     def test_recovery_plan_reads_blocked_review_from_receipt_metadata(self) -> None:
         card = load_card("v35_valid_onchain_auditor_scan.md")
