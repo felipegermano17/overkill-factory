@@ -31,6 +31,7 @@ SKIP_PARTS = {
     ".git",
     ".tmp",
     ".pytest_cache",
+    ".ruff_cache",
     ".venv",
     ".worktrees",
     "__pycache__",

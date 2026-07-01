@@ -115,12 +115,19 @@ class PublicSafetyScanTest(unittest.TestCase):
     def test_generated_local_build_metadata_is_not_scanned(self) -> None:
         self.assertFalse(public_safety_scan.is_text_rel("overkill_factory.egg-info/PKG-INFO"))
         self.assertFalse(public_safety_scan.is_text_rel(".tmp/quickstart-result.json"))
+        self.assertFalse(public_safety_scan.is_text_rel(".ruff_cache/0.15.10/cache-entry"))
         self.assertFalse(public_safety_scan.is_text_rel("site/index.html"))
         self.assertFalse(public_safety_scan.is_binary_asset_rel("site/webfonts/fa-solid-900.woff2"))
 
     def test_git_ref_scan_skips_public_safety_scanner_itself_from_any_repo_root(self) -> None:
         self.assertFalse(public_safety_scan.is_text_rel("scripts/public_safety_scan.py"))
         self.assertFalse(public_safety_scan.is_text_rel("factory/scripts/public_safety_scan.py"))
+
+    def test_scanner_exemption_does_not_hide_other_scripts(self) -> None:
+        findings = public_safety_scan.scan_text("factory/scripts/publish_example.py", f"private {PRIVATE_MARKER}")
+
+        self.assertTrue(findings)
+        self.assertIn("private_product_marker", findings[0])
 
     def test_worktree_scan_checks_all_sibling_files_and_skips_tmp(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
