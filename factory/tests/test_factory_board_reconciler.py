@@ -589,6 +589,38 @@ class FactoryBoardReconcilerTest(unittest.TestCase):
         self.assertFalse(plan["native_dispatch_required_next"])
         self.assertTrue(any("running" in item and "F4" in item and "F2" in item for item in plan["blocked_reasons"]))
 
+    def test_active_phase_ignores_unbound_non_factory_blocked_work(self) -> None:
+        snapshot = {
+            "rows": {
+                "running": [
+                    {
+                        "id": "task-f1-running",
+                        "status": "running",
+                        "title": "Repair factory materialization contracts",
+                        "current_step_key": "F1-intake",
+                        "created_by": "overkill-factory-no-idle",
+                    }
+                ],
+                "blocked": [
+                    {
+                        "id": "task-human-input",
+                        "status": "blocked",
+                        "title": "Define unrelated implementation contract",
+                        "assignee": "agent-runtime-builder",
+                        "created_by": "auto-decomposer",
+                        "body": "waiting for a non-factory input",
+                    }
+                ],
+            }
+        }
+
+        plan = factoryctl.build_board_reconcile_plan(snapshot, board="product-alpha")
+
+        self.assertEqual(factoryctl.validate_board_reconcile_plan(plan), [])
+        self.assertEqual(plan["plan_action"], "observe_running")
+        self.assertFalse(plan["native_dispatch_required_next"])
+        self.assertFalse(plan["blocked_reasons"])
+
     def test_phase_engine_runtime_strict_rejects_template_scaffold_artifacts(self) -> None:
         card = load_vfinal_card()
 

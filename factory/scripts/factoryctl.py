@@ -21418,6 +21418,8 @@ def board_reconcile_active_phase_blockers(rows: dict[str, list[dict[str, Any]]])
     blocked_items: list[tuple[dict[str, Any], str, int]] = []
     for task in rows.get("blocked", []):
         phase_id = structured_phase_id_from_task(task)
+        if not phase_id and not _looks_like_factory_runtime_task(task):
+            continue
         blocked_items.append((task, phase_id, factory_phase_rank(phase_id)))
 
     blockers: list[str] = []
