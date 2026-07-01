@@ -28,6 +28,62 @@ sys.modules["validate_public_json_artifacts_hermes_preflight"] = public_json_val
 VALIDATOR_SPEC.loader.exec_module(public_json_validator)
 
 
+def _write_json(path: Path, payload: dict) -> Path:
+    path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    return path
+
+
+def _write_valid_runtime_registry_fixture(root: Path) -> dict[str, Path]:
+    profile_readiness = _write_json(
+        root / "worker-profile-readiness.json",
+        {
+            "worker_readiness": {
+                "worker-a": {
+                    "profile_id": "worker-a.profile.v1",
+                    "hermes_profile_name": "worker-a",
+                }
+            }
+        },
+    )
+    bindings = _write_json(
+        root / "bindings.json",
+        {
+            "bindings": {
+                "worker-a": {
+                    "worker_id": "worker-a",
+                    "profile_id": "worker-a.profile.v1",
+                    "hermes_profile_name": "worker-a",
+                    "skill_refs": ["overkill-factory"],
+                    "result_schema": "schemas/worker-result.schema.json",
+                    "receipt_field": "agent_runtime_result",
+                }
+            }
+        },
+    )
+    providers = _write_json(
+        root / "providers.json",
+        {
+            "providers": [
+                {
+                    "provider_id": "overkill-factory",
+                    "status": "active",
+                    "capability_surfaces": ["factory", "runtime"],
+                }
+            ]
+        },
+    )
+    packs = _write_json(
+        root / "packs.json",
+        {"packs": {"runtime": {"covers_surfaces": ["runtime", "terminal", "agent", "profile", "adapter"]}}},
+    )
+    return {
+        "profile_readiness": profile_readiness,
+        "bindings": bindings,
+        "providers": providers,
+        "packs": packs,
+    }
+
+
 class HermesEnvironmentPreflightTest(unittest.TestCase):
     def test_ready_when_required_contracts_and_runtime_tools_resolve(self) -> None:
         report = factoryctl.build_hermes_environment_preflight_report(
@@ -132,6 +188,152 @@ class HermesEnvironmentPreflightTest(unittest.TestCase):
         credential_check = next(check for check in report["checks"] if check["id"] == "credentials_access_readiness")
         self.assertEqual(credential_check["status"], "PASS")
         self.assertEqual(report["human_input_requests"], [])
+
+
+    def test_unavailable_browser_and_terminal_tools_defer_to_acquisition_routes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            paths = _write_valid_runtime_registry_fixture(Path(tmp))
+
+            report = factoryctl.build_hermes_environment_preflight_report(
+                profile_readiness_path=paths["profile_readiness"],
+                profile_bindings_path=paths["bindings"],
+                skill_provider_registry_path=paths["providers"],
+                capability_packs_path=paths["packs"],
+                require=["browser"],
+                capability_overrides={"browser": False},
+                command_resolver=lambda _name: None,
+                created_at="2026-07-01T00:00:00+00:00",
+            )
+
+        checks = {check["id"]: check for check in report["checks"]}
+        self.assertEqual(report["status"], "READY_WITH_DEFERRED")
+        self.assertEqual(checks["terminal_file_web"]["status"], "DEFERRED")
+        self.assertEqual(checks["browser"]["status"], "DEFERRED")
+        self.assertFalse(checks["terminal_file_web"]["detail"]["git_command"])
+        routes = {route["capability_id"]: route for route in report["capability_acquisition_routes"]}
+        self.assertIn("terminal_file_web", routes)
+        self.assertIn("browser", routes)
+        self.assertEqual(routes["browser"]["next_action"], "capability-acquisition-run")
+        self.assertIn("capability-acquisition-run --capability-gap browser", routes["browser"]["command"])
+
+    def test_disabled_cron_gateway_and_computer_use_capabilities_warn_without_blocking(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            paths = _write_valid_runtime_registry_fixture(Path(tmp))
+
+            report = factoryctl.build_hermes_environment_preflight_report(
+                profile_readiness_path=paths["profile_readiness"],
+                profile_bindings_path=paths["bindings"],
+                skill_provider_registry_path=paths["providers"],
+                capability_packs_path=paths["packs"],
+                require=["cron", "gateway", "computer_use"],
+                capability_overrides={"cron": False, "gateway": False, "computer_use": False},
+                command_resolver=lambda name: f"/usr/bin/{name}" if name == "git" else None,
+                created_at="2026-07-01T00:00:00+00:00",
+            )
+
+        checks = {check["id"]: check for check in report["checks"]}
+        self.assertEqual(report["status"], "READY_WITH_DEFERRED")
+        for capability_id in ["cron", "gateway", "computer_use"]:
+            self.assertEqual(checks[capability_id]["status"], "DEFERRED")
+            self.assertTrue(checks[capability_id]["required"])
+            self.assertTrue(checks[capability_id]["detail"]["factory_acquirable"])
+            self.assertFalse(checks[capability_id]["detail"]["available"])
+        route_ids = {route["capability_id"] for route in report["capability_acquisition_routes"]}
+        self.assertTrue({"cron", "gateway", "computer_use"}.issubset(route_ids))
+        self.assertEqual(report["human_input_requests"], [])
+
+    def test_required_domain_provider_access_is_deferred_and_actionable(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            paths = _write_valid_runtime_registry_fixture(Path(tmp))
+
+            report = factoryctl.build_hermes_environment_preflight_report(
+                profile_readiness_path=paths["profile_readiness"],
+                profile_bindings_path=paths["bindings"],
+                skill_provider_registry_path=paths["providers"],
+                capability_packs_path=paths["packs"],
+                required_domain_providers=["cloud-infra-security"],
+                command_resolver=lambda name: f"/usr/bin/{name}" if name == "git" else None,
+                created_at="2026-07-01T00:00:00+00:00",
+            )
+
+        checks = {check["id"]: check for check in report["checks"]}
+        self.assertEqual(report["status"], "READY_WITH_DEFERRED")
+        self.assertEqual(checks["required_domain_provider_access"]["status"], "DEFERRED")
+        self.assertEqual(checks["required_domain_provider_access"]["detail"]["missing_domain_provider_count"], 1)
+        route = next(route for route in report["capability_acquisition_routes"] if route["capability_id"] == "domain_providers")
+        self.assertEqual(route["next_action"], "capability-acquisition-run")
+        self.assertIn("domain provider", route["reason"].lower())
+
+    def test_sensitive_credential_values_never_appear_in_report(self) -> None:
+        secret_credential = "sensitive-credential-value-must-not-appear"
+        secret_access = "sensitive-access-value-must-not-appear"
+
+        report = factoryctl.build_hermes_environment_preflight_report(
+            require=["credentials"],
+            credential_refs=[secret_credential],
+            access_refs=[secret_access],
+            command_resolver=lambda name: f"/usr/bin/{name}" if name == "git" else None,
+            created_at="2026-07-01T00:00:00+00:00",
+        )
+
+        report_text = json.dumps(report, sort_keys=True)
+        checks = {check["id"]: check for check in report["checks"]}
+        self.assertEqual(checks["credentials_access_readiness"]["status"], "PASS")
+        self.assertEqual(checks["credentials_access_readiness"]["detail"]["credential_ref_count"], 1)
+        self.assertEqual(checks["credentials_access_readiness"]["detail"]["access_ref_count"], 1)
+        self.assertFalse(checks["credentials_access_readiness"]["detail"]["secrets_inspected"])
+        self.assertFalse(report["public_safety"]["credential_values_published"])
+        self.assertNotIn(secret_credential, report_text)
+        self.assertNotIn(secret_access, report_text)
+
+    def test_command_exits_one_for_invalid_registry_and_preserves_remediation_shape(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            out = root / "preflight.json"
+            profile_readiness = _write_json(root / "worker-profile-readiness.json", {"worker_readiness": {}})
+            bindings = _write_json(root / "bindings.json", {"bindings": {"worker-a": "malformed-binding-entry"}})
+            providers = _write_json(root / "providers.json", {"providers": []})
+            packs = _write_json(root / "packs.json", {"packs": {}})
+
+            rc = factoryctl.command_hermes_environment_preflight(
+                Namespace(
+                    json=False,
+                    out=out,
+                    require=[],
+                    credential_ref=[],
+                    credential_env=[],
+                    secret_binding_ref=[],
+                    access_ref=[],
+                    required_access_scope=[],
+                    granted_access_scope=[],
+                    required_domain_provider=[],
+                    token_status_ref=[],
+                    hermes_home=None,
+                    profile_bindings=bindings,
+                    profile_readiness=profile_readiness,
+                    skill_provider_registry=providers,
+                    capability_packs=packs,
+                )
+            )
+
+            payload = json.loads(out.read_text(encoding="utf-8"))
+
+        self.assertEqual(rc, 1)
+        self.assertEqual(payload["status"], "BLOCKED_WITH_EXACT_HUMAN_INPUT")
+        self.assertEqual(payload["record_type"], "hermes_environment_preflight")
+        self.assertFalse(payload["public_safety"]["credential_values_published"])
+        checks = {check["id"]: check for check in payload["checks"]}
+        self.assertEqual(checks["profiles"]["status"], "FAIL")
+        self.assertEqual(checks["worker_bindings"]["status"], "FAIL")
+        self.assertEqual(
+            payload["human_input_requests"],
+            [
+                {
+                    "input_id": "preflight_contract_failure",
+                    "exact_request": "Repair failing public factory preflight contracts, then rerun factoryctl hermes-environment-preflight.",
+                }
+            ],
+        )
 
     def test_command_writes_json_and_summary(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
