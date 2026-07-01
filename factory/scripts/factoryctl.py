@@ -21625,12 +21625,33 @@ def board_reconcile_ready_dispatch_blockers(
     return sorted(set(blockers)), selected_repair_card, selected_repair_ref, selected_repair_action
 
 
+def _declared_artifact_readback_repair_target_fingerprints(done: list[dict[str, Any]]) -> set[str]:
+    fingerprints: set[str] = set()
+    for task in done:
+        for payload in _task_payload_objects(task):
+            candidates: list[dict[str, Any]] = []
+            if isinstance(payload.get("orchestration_result"), dict):
+                candidates.append(payload["orchestration_result"])
+            if isinstance(payload.get("repair_target"), dict):
+                candidates.append(payload["repair_target"])
+            candidates.append(payload)
+            for candidate in candidates:
+                output = str(candidate.get("required_output") or candidate.get("packet_type") or "").strip()
+                if output != "declared_artifact_readback_repair":
+                    continue
+                fingerprint = str(candidate.get("target_fingerprint") or "").strip()
+                if fingerprint:
+                    fingerprints.add(fingerprint)
+    return fingerprints
+
+
 def board_reconcile_missing_declared_artifact_blockers(
     rows: dict[str, list[dict[str, Any]]],
 ) -> tuple[list[str], dict[str, Any] | None]:
     blockers: list[str] = []
     selected_ref: dict[str, Any] | None = None
     done = rows.get("done", [])
+    repaired_fingerprints = _declared_artifact_readback_repair_target_fingerprints(done)
     architecture_review_keys = [
         _task_temporal_key(review_task, review_index)
         for review_index, review_task in enumerate(done)
@@ -21654,6 +21675,8 @@ def board_reconcile_missing_declared_artifact_blockers(
         target_fingerprint = hashlib.sha256(
             json.dumps(fingerprint_payload, sort_keys=True, default=str).encode("utf-8")
         ).hexdigest()
+        if target_fingerprint in repaired_fingerprints:
+            continue
         names = sorted(
             {
                 str(item.get("artifact_name") or "declared-artifact").strip()

@@ -652,6 +652,55 @@ class FactoryBoardReconcilerTest(unittest.TestCase):
         self.assertNotIn("skill(s) not allowed", serialized_plan)
         self.assertNotIn("old-done-repair", serialized_plan)
 
+    def test_declared_artifact_repair_for_same_fingerprint_stops_duplicate_repair_loop(self) -> None:
+        target = {
+            "id": "fixture-rel002",
+            "status": "done",
+            "title": "REL-002 non-production executable package/local smoke proof",
+            "assignee": "test-automation-builder",
+            "missing_declared_artifacts": [
+                {"artifact_name": "rel002_local_smoke_packet_fixture_rel002.json"},
+                {"artifact_name": "rel002_local_smoke_packet_fixture_rel002.md"},
+            ],
+        }
+        fingerprint_payload = {
+            "task_id": target["id"],
+            "title": target["title"],
+            "assignee": target["assignee"],
+            "missing_declared_artifacts": target["missing_declared_artifacts"],
+        }
+        target_fingerprint = factoryctl.hashlib.sha256(
+            json.dumps(fingerprint_payload, sort_keys=True, default=str).encode("utf-8")
+        ).hexdigest()
+        repair = {
+            "id": "repair-fixture",
+            "status": "done",
+            "title": "Repair missing declared artifacts for board",
+            "assignee": "factory-orchestrator",
+            "metadata": json.dumps(
+                {
+                    "orchestration_result": {
+                        "required_output": "declared_artifact_readback_repair",
+                        "target_task_ref": "fixture-rel002",
+                        "target_fingerprint": target_fingerprint,
+                        "missing_artifact_names": [
+                            "rel002_local_smoke_packet_fixture_rel002.json",
+                            "rel002_local_smoke_packet_fixture_rel002.md",
+                        ],
+                        "readback_verdict": "FAIL_DECLARED_ARTIFACTS_ABSENT",
+                        "status": "READBACK_REPAIR_MATERIALIZED__NO_GATE_APPROVED__TARGET_BYTES_ABSENT",
+                    }
+                }
+            ),
+        }
+
+        blockers, selected = factoryctl.board_reconcile_missing_declared_artifact_blockers(
+            {"done": [target, repair]}
+        )
+
+        self.assertEqual(blockers, [])
+        self.assertIsNone(selected)
+
     def test_phase_engine_runtime_strict_rejects_template_scaffold_artifacts(self) -> None:
         card = load_vfinal_card()
 
