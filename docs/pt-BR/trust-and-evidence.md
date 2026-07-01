@@ -1,60 +1,66 @@
 # Confiança e prova
 
-A pergunta certa é: "como eu sei que isso não é só um agente falando bonito?"
+A pergunta certa é: como eu sei que o agente não está só falando bonito?
 
 A resposta começa por uma verdade incômoda: processo parecendo vivo não é a mesma coisa que progresso.
 
-Um sistema pode ter cards andando, comentários novos, arquivos criados e mensagens confiantes. Ainda assim, o produto pode estar errado.
+Card andando, arquivo criado, teste verde e mensagem confiante podem coexistir com produto errado.
 
-## O que é teatro de progresso
+## Teatro de progresso
 
-Teatro de progresso é quando a aparência de trabalho substitui a entrega.
+Teatro de progresso é a aparência de trabalho substituindo a entrega.
 
 O worker diz "feito", mas não aponta evidência.
 
-O teste passa, mas não testa o risco.
+O teste passa, mas testa o caminho fácil.
 
-A tela existe, mas o fluxo quebra no segundo estado.
+A tela existe, mas quebra no erro.
 
 A revisão aprova, mas não leu o artefato.
 
 O humano aprova, mas não recebeu o material.
 
-O board se move, mas a dependência real ficou de fora.
+O board anda, mas a dependência real ficou fora do grafo.
 
-A fábrica foi criada para tratar isso como falha central, não como detalhe.
+A fábrica trata isso como falha central.
 
-## Prova precisa ter ligação com o pedido
+## Prova solta não resolve
 
-Evidência solta não basta.
+Prova solta não resolve. Ela precisa provar o pedido certo.
 
-Um log, uma screenshot, um diff, um teste, um arquivo ou um link só vale se estiver ligado ao que foi pedido.
+Se o pedido era onboarding, a prova precisa mostrar a jornada.
 
-Se o pedido era provar onboarding, a evidência precisa mostrar a jornada.
-
-Se era release, precisa mostrar prontidão, rollback e decisão.
+Se era release, precisa mostrar prontidão, rollback, dono e decisão.
 
 Se era segurança, precisa mostrar risco, fronteira, revisão e o que ficou aceito.
 
-Se era documentação, precisa mostrar que o leitor consegue entender e usar, não só que o Markdown compila.
+Se era documentação, precisa mostrar que o texto guia uma pessoa de verdade, não só que o Markdown compila.
 
-## Readback: a fábrica lê de volta
+Exemplo fraco:
 
-Readback é simples: a fábrica confere o que foi entregue.
+> Teste passou.
 
-Se um worker disse que criou um documento, a fábrica lê o documento.
+Exemplo bom:
 
-Se disse que anexou prova, a fábrica confere se a prova existe, abre, pode ser relida e não depende de um arquivo temporário.
+> O teste de regressão `test_onboarding_email_error` falhou antes da correção, passou depois e cobre exatamente o erro descrito no pedido.
 
-Se disse que rodou teste, a fábrica olha o teste e o resultado.
+## Readback: reler antes de acreditar
 
-Se disse que a interface está boa, a fábrica olha a superfície.
+Readback é a fábrica relendo o que o worker entregou.
 
-Sem readback, a fábrica fica confiando no próprio processo. E processo pode estar correto enquanto o produto está ruim.
+Se ele disse que criou um documento, a fábrica lê o documento.
 
-## Receipt Five: o recibo do pronto
+Se disse que anexou prova, a fábrica confere se a prova existe, abre, pode ser relida e não vaza segredo.
 
-Receipt Five é o recibo de conclusão.
+Se disse que rodou teste, a fábrica olha o comando e o resultado.
+
+Se disse que a interface ficou boa, a fábrica olha a superfície.
+
+Sem readback, o processo pode estar perfeito e a entrega pode estar ruim.
+
+## Recibo de conclusão
+
+No fim, você recebe um recibo de conclusão. Internamente ele pode aparecer como Receipt Five.
 
 Ele responde cinco perguntas:
 
@@ -64,68 +70,56 @@ Ele responde cinco perguntas:
 4. Quem revisou e o que a revisão disse?
 5. O que ainda falta, bloqueia ou fica como risco?
 
-Se uma resposta importante está vazia, o estado não é pronto.
+Se uma dessas respostas importantes está vazia, não está pronto.
 
-Pode ser "pronto para revisão". Pode ser "bloqueado". Pode ser "parcial". Pode ser "aguardando humano".
+Pode estar pronto para revisão. Pode estar bloqueado. Pode estar parcial. Pode estar aguardando humano. Mas pronto, não.
 
-Mas não é pronto.
+## Review não é carimbo
 
-## Revisão independente precisa ser consumida
+Review precisa mudar o estado do trabalho.
 
-A revisão não existe para enfeitar o processo.
+Se passou, destrava ou fecha o item certo. Se falhou, cria reparo. Se apontou risco, registra dono e consequência. Se pediu decisão, vira pacote humano.
 
-Ela precisa mudar o estado do trabalho.
+Reviewer e executor não deveriam ser a mesma identidade quando o risco é material.
 
-Se passou, destrava. Se falhou, cria reparo. Se encontrou risco, registra. Se pediu decisão, vira pacote humano. Se não foi consumida, não serviu.
+## Bloqueio honesto
 
-E quando o risco é material, o executor não deveria ser o juiz final do próprio trabalho.
+Bloqueio bom diz quatro coisas: o que falta, por que falta, quem é dono e qual é o menor próximo passo seguro.
 
-## Bloqueio precisa ser honesto
+Também diz se precisa do operador.
 
-Bloqueio bom é específico.
+Muita coisa não precisa. Falta de anexo, falta de readback, worker raso, prova quebrada, revisão não consumida. Isso é trabalho da fábrica.
 
-Ele diz o que falta, por que falta, quem é dono e qual é o menor próximo passo seguro.
+O operador entra quando há autoridade real: produção, mainnet, fundos, segredo, orçamento, release, waiver, risco residual.
 
-Também diz se precisa do humano ou não.
+## Gate humano tem que respeitar o humano
 
-Muita coisa não precisa do humano. Falta de readback, falta de anexo, falta de revisão, worker raso, artefato quebrado, prova insuficiente. Isso é trabalho da fábrica.
+Um gate humano não é "aprova aí?".
 
-O humano só deve ser chamado quando existe autoridade real a exercer.
+É um pacote de decisão.
 
-## Gate humano sem material é inválido
+A pessoa precisa receber o artefato ou uma projeção fiel, entender o que está aprovando, quais opções existem, o que cada opção autoriza e qual risco fica.
 
-Um gate humano não é "posso seguir?".
+JSON cru é evidência interna. Não é experiência de aprovação.
 
-É uma decisão com artefato.
+## Segurança não fica para o fim
 
-Se a fábrica pede aprovação de Product SOT, entrega o Product SOT. Se pede release, entrega o pacote de release. Se pede arquitetura, entrega a arquitetura. Se pede risco de segurança, entrega o risco, as opções e a consequência.
+Se o trabalho toca segredo, permissão, supply chain, produção, wallet, assinatura, Solana, fundos ou mainnet, segurança entra cedo.
 
-O operador precisa saber o que aprovar permite e o que aprovar não permite.
+Às vezes como arquitetura. Às vezes como scan. Às vezes como revisão. Às vezes como bloqueio. Às vezes como decisão humana.
 
-A pergunta pode ser curta. O material não pode ser ausente.
-
-## Segurança entra cedo
-
-Segurança não é maquiagem de fim de PR.
-
-Se o trabalho toca segredo, permissão, produção, supply chain, privacidade, wallet, assinatura, Solana, fundos ou mainnet, segurança entra no caminho desde cedo.
-
-Às vezes isso vira arquitetura. Às vezes vira scan. Às vezes vira revisão. Às vezes vira gate humano. Às vezes vira bloqueio.
-
-A fábrica não promete risco zero. Ela promete não esconder risco atrás de um "pass" genérico.
+A fábrica não promete risco zero. Promete não esconder risco atrás de um pass genérico.
 
 ## Prova local não é entrega viva
 
 Um comando local passando prova que o checkout está coerente.
 
-Um estado Hermes vivo prova que o trabalho existiu naquele runtime.
+Um Hermes vivo prova que o trabalho existiu naquele runtime.
 
 Um worker result prova que um worker devolveu algo naquele escopo.
 
 Um Receipt Five bem formado prova que a conclusão foi reconciliada.
 
-Essas coisas não são iguais.
+Essas coisas não são iguais. Smoke local não prova produto entregue. Arquivo existente não prova readback. Aprovação genérica não prova mainnet.
 
-Não dá para usar smoke local como prova de produto entregue. Não dá para usar arquivo existente como prova de readback. Não dá para usar aprovação genérica como autorização de mainnet. Publicação pública também precisa bloquear vazamento de caminhos privados, artefatos humanos, referências internas brutas e segredos.
-
-A fábrica precisa manter essa fronteira visível, mesmo quando seria mais conveniente fingir que está tudo pronto.
+A confiança vem dessa disciplina.

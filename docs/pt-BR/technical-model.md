@@ -1,6 +1,6 @@
 # Modelo técnico
 
-Esta página explica o modelo de implementação sem fingir que todo leitor quer morar dentro do código.
+O modelo técnico existe para quem precisa manter a fábrica sem transformar o manual público em mapa de código.
 
 A versão curta é esta: Hermes controla estado de runtime. A Overkill Factory controla os contratos de produção em volta desse estado. O repositório guarda scripts, schemas, templates, registries, testes e documentação pública para tornar esse contrato verificável.
 

@@ -1,146 +1,102 @@
 # Ciclo simples
 
-O workflow compilado é a fonte factual para a máquina. Ele tem fases, gates, workers e artefatos.
+A máquina tem um workflow detalhado. Você não precisa começar por ele.
 
-Mas a pessoa que está tentando entender a fábrica não deveria começar decorando fase.
-
-O ciclo humano é este:
+O workflow compilado é a fonte factual para a máquina. Para entender o produto, o mapa humano é mais simples:
 
 ```text
-pedido
--> fonte protegida
--> entendimento
--> verdade do produto
--> caminho escolhido
--> trabalho pequeno
--> execução no Hermes
--> prova
--> revisão
--> decisão humana, se houver
--> entrega, bloqueio ou aprendizado
+pedido -> fonte -> entendimento -> verdade do produto -> caminho -> trabalho pequeno -> Hermes -> prova -> revisão -> decisão humana -> entrega, bloqueio ou aprendizado
 ```
 
-## 1. Pedido
+## Pedido
 
-Tudo começa com um sinal.
+Tudo começa com um sinal: frase, bug, repo, documento, incidente, tela, release ou decisão.
 
-Pode ser uma frase, um bug, um repo, um documento, uma conversa, uma tela, um incidente, um pedido de release.
+Nesse momento a fábrica ainda não sabe o suficiente. Executar direto seria chute.
 
-A fábrica ainda não sabe se isso é produto, correção, operação, risco, pesquisa ou decisão. Então ela não deveria sair executando.
+## Fonte
 
-## 2. Fonte protegida
+A fonte é preservada antes do resumo.
 
-Antes de interpretar, a fábrica preserva a fonte.
+Isso protege o pedido original contra uma primeira interpretação ruim. Se a fonte longa vira resumo curto cedo demais, a fábrica pode construir em cima de um erro.
 
-Isso impede que a primeira versão resumida vire verdade oficial.
+O nome interno que aparece no workflow é `F0 — Pre-Start / Sealed Source Envelope`. Esses nomes existem para a máquina e para os testes, não para vender o produto. Leia como: selar a fonte antes de mexer nela.
 
-Se o operador mandou contexto longo, a fábrica não pode amputar o contexto e depois construir sobre o pedaço que sobrou.
-
-## 3. Entendimento
+## Entendimento
 
 A fábrica separa fato, inferência, decisão, conflito e lacuna.
 
-Aqui ela deve conseguir dizer em português claro: "sabemos isso, achamos aquilo, falta isto, este ponto conflita".
+A saída humana deveria ser clara: isto sabemos, isto parece provável, isto foi decidido, isto conflita, isto falta.
 
-Se essa leitura está fraca, o resto ainda não deveria andar.
+Se esse entendimento está fraco, avançar é aposta.
 
-## 4. Verdade do produto
+## Verdade do produto
 
-Agora o pedido vira definição.
+Agora a fábrica define o que será construído.
 
-Qual é o produto? Para quem? Que problema resolve? O que entra? O que fica fora? Que risco importa? Que prova conta?
+Qual produto? Para quem? Com que escopo? Fora de que escopo? Com que risco? Que prova encerra a discussão?
 
-A fábrica chama isso de Product SOT, mas a ideia é só esta: ninguém deveria construir antes de saber o que está construindo.
+O nome interno é Product SOT. A tradução útil é: verdade do produto.
 
-## 5. Caminho escolhido
+## Caminho
 
-A fábrica escolhe rota e método.
+Com a verdade do produto na mesa, a fábrica escolhe rota e método.
 
-Bug, release, incidente, segurança, interface, integração, docs, agente, Solana e produto novo não andam do mesmo jeito.
+Bug, release, incidente, segurança, interface, documentação, agente, integração e Solana não pedem a mesma prova.
 
 A rota escolhe a régua. O método escolhe como provar.
 
-## 6. Capacidade e autoridade
+## Trabalho pequeno
 
-Antes de mandar worker, a fábrica pergunta se tem capacidade e autoridade.
+O produto vira unidades executáveis.
 
-Tem worker certo? Tem acesso? Tem pack para essa superfície? Toca segredo? Toca produção? Toca mainnet? Toca fundos? Precisa de humano?
+Cada unidade precisa de entrada, saída, dono, dependência, prova, reviewer e regra de pronto.
 
-Se falta capacidade, bloqueia. Se precisa de decisão humana, prepara pacote. Se é problema interno, repara.
+Sem isso, o agente recebe uma intenção, não uma tarefa.
 
-## 7. Trabalho pequeno
+## Hermes
 
-O produto vira unidades menores.
+Hermes é o chão vivo da execução.
 
-Cada unidade precisa ter entrada, saída, dono, dependência, evidência, reviewer e regra de pronto.
+Cards, dependências, workers, comentários, anexos, bloqueios e transições precisam aparecer ali. A Factory não deve manter um estado paralelo escondido.
 
-Sem isso, não é trabalho. É desejo.
+## Prova
 
-## 8. Execução no Hermes
+Cada worker devolve evidência adequada ao tipo de trabalho.
 
-Hermes é onde o trabalho vivo aparece.
-
-Cards, dependências, workers, comentários, workspaces, anexos, bloqueios e transições precisam estar no runtime. A fábrica não deveria manter uma verdade paralela escondida.
-
-Se algo depende de outra coisa, a dependência precisa estar no grafo.
-
-## 9. Prova
-
-Cada worker devolve evidência.
-
-Para código, pode ser teste, diff, build, scan.
-
-Para interface, tela, jornada, estado, console, viewport.
-
-Para CLI, transcript, instalação, help, erro.
-
-Para release, prontidão, rollback, dono.
-
-Para docs, clareza, navegação, primeiro sucesso.
+Código pede teste, diff, build ou scan. Interface pede superfície. CLI pede transcript. Release pede prontidão e rollback. Docs pedem clareza e caminho de uso.
 
 A prova precisa bater com o pedido.
 
-## 10. Revisão
+## Revisão
 
 A revisão olha o artefato real.
 
-Ela passa, falha, pede reparo ou registra risco. Depois a fábrica precisa consumir esse resultado.
+Se passa, destrava. Se falha, cria reparo. Se encontra risco, registra dono e decisão. Se não muda nada, não foi consumida.
 
-Revisão que não muda nada é só comentário.
+## Decisão humana
 
-## 11. Decisão humana
+Algumas decisões pertencem ao operador: produção, mainnet, fundos, segredos, orçamento, release, waiver, risco residual.
 
-Algumas decisões pertencem ao operador.
+Nesses casos, a fábrica prepara pacote de decisão. O humano não aprova no escuro.
 
-Produção, mainnet, fundos, segredos, orçamento, risco residual, release, waiver.
+## Fechamento
 
-Nesses casos, a fábrica prepara um pacote de decisão. O humano aprova ou bloqueia sabendo exatamente o que está autorizando.
-
-## 12. Fechamento
-
-No fim, a fábrica não escolhe uma palavra bonita. Ela escolhe um estado honesto.
+No fim, a fábrica escolhe um estado honesto.
 
 Entregue, se há prova suficiente.
 
 Bloqueado, se falta algo material.
 
-Aprendizado, se a execução mostrou que a fábrica precisa mudar.
+Aprendizado, se a execução revelou que a própria fábrica precisa mudar.
 
-Esse é o ciclo. O resto são mecanismos para garantir que ele não vire teatro.
+Esse ciclo é simples de ler e difícil de cumprir. O valor da Factory está em cumprir mesmo quando seria mais fácil dizer "pronto".
 
-## Nomes internos que você pode encontrar
+## Para maintainers
 
-Se você abrir o workflow compilado, vai ver nomes como `F0 — Pre-Start / Sealed Source Envelope`. Não precisa gostar do nome nem ler isso como copy de produto. Esse nome existe para a máquina e para os testes: ele marca o momento em que a fábrica sela a fonte antes de qualquer interpretação.
-
-A regra de leitura é esta: quando aparecer um nome interno em inglês, traduza mentalmente para a proteção que ele oferece. `Sealed Source Envelope` quer dizer "não destrua a fonte original". `Product SOT` quer dizer "defina a verdade do produto". `Receipt Five` quer dizer "não chame de pronto sem recibo".
-
-## Como ver o workflow interno
-
-Para inspecionar a versão compilada usada pelos testes:
+O workflow compilado continua existindo para validação, testes e manutenção. Para inspecionar:
 
 ```bash
 cd factory
 python3 scripts/factoryctl.py compile-workflow --out .tmp/factory-workflow-compiled-plan.json
 ```
-
-Esse comando ajuda maintainers. Para entender o produto, o ciclo acima é o mapa certo.

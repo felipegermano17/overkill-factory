@@ -1,6 +1,6 @@
 # Uso
 
-Esta página é o caminho prático para um checkout local. Ela não finge que um checkout local é a mesma coisa que um runtime Hermes vivo, do operador. Primeiro ela dá uma prova segura. Depois mostra os checks que deveriam rodar antes de mexer em documentação pública ou em claims públicas.
+Aqui o objetivo é simples: provar que o checkout local está coerente sem fingir que isso equivale a uma execução viva no Hermes do operador. Primeiro vem uma prova segura. Depois vêm os checks que devem rodar antes de mexer em documentação pública ou em claims públicas.
 
 ## Requisitos
 
