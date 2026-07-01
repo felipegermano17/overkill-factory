@@ -36,8 +36,8 @@ Done without evidence is only a claim. Receipt Five, review, runtime state and p
 | Hermes profile bindings | 40 | `agents/hermes-profile-bindings.public.json` |
 | Operating systems | 17 | `templates/factory-operating-system-registry.json` |
 | Method engines | 8 | `templates/method-engine-registry.json` |
-| JSON schemas | 245 | `schemas/*.json` |
-| Templates | 162 | `templates/*` |
+| JSON schemas | 246 | `schemas/*.json` |
+| Templates | 163 | `templates/*` |
 | Public surfaces | 19 | `docs/public-surface.manifest.json` |
 
 ## Factory Phases
@@ -396,6 +396,7 @@ These are the public JSON schemas the factory exposes. They are not decoration; 
 - `schemas/readiness-truth-ledger.schema.json`
 - `schemas/ready-work-unit-hermes-materialization-plan.schema.json`
 - `schemas/ready-work-unit-packets.schema.json`
+- `schemas/real-effectiveness-proof.schema.json`
 - `schemas/reasoning-policy.schema.json`
 - `schemas/receipt-five.schema.json`
 - `schemas/reference-derived-negative-fixture.schema.json`
@@ -580,6 +581,7 @@ Templates are starter records paired with schemas. They are examples of valid sh
 - `templates/qa-verification-plan.json`
 - `templates/ready-work-unit-hermes-materialization-plan.json`
 - `templates/ready-work-unit-packets.json`
+- `templates/real-effectiveness-proof.json`
 - `templates/reasoning-policy.json`
 - `templates/receipt-five.json`
 - `templates/reference-quality-packet.json`

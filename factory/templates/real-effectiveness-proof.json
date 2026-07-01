@@ -1,0 +1,21 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/real-effectiveness-proof.schema.json",
+  "record_type": "real_effectiveness_proof",
+  "effect_type": "usable_artifact",
+  "claim": "Replace this with the concrete product/runtime effect, not the Kanban action performed.",
+  "operator_or_product_impact": "Explain what the operator can now decide/do or what product behavior/runtime is now repaired.",
+  "evidence_refs": [
+    "reports/example-artifact.md",
+    "reports/example-validation.json"
+  ],
+  "ritual_refs": [
+    "receipt_five",
+    "kanban_transition_event"
+  ],
+  "artifact_refs": [
+    "reports/example-artifact.md"
+  ],
+  "validation_refs": [
+    "python scripts/factoryctl.py validate-real-effectiveness reports/real-effectiveness-proof.json"
+  ]
+}
