@@ -263,7 +263,7 @@ def build_receipt(created_at: str | None = None) -> dict[str, Any]:
         "registration_checks": registration_checks,
         "evidence_refs": [
             "docs/control-tower/discord-control-tower-os.md",
-            "docs/en/operating-model.md",
+            "docs/en/03-how-a-request-moves.md",
         ],
         "created_at": timestamp,
     }

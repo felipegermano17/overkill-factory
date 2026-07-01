@@ -124,7 +124,7 @@
         "api",
         "web"
       ],
-      "source_ref": "docs/en/trust-and-evidence.md",
+      "source_ref": "docs/en/05-evidence-and-receipts.md",
       "authority_boundary": "AppSec checklist routes controls; residual risk acceptance stays outside the specialist.",
       "smoke_or_eval_ref": "schemas/security-route-contract.schema.json"
     },
@@ -137,7 +137,7 @@
         "tool-boundary",
         "memory"
       ],
-      "source_ref": "docs/en/trust-and-evidence.md",
+      "source_ref": "docs/en/05-evidence-and-receipts.md",
       "authority_boundary": "Agentic security reviews prompts/tools/memory; it cannot expand tool authority.",
       "smoke_or_eval_ref": "schemas/security-profile.schema.json"
     },

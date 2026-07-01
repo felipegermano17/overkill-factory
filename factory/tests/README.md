@@ -1,37 +1,32 @@
 # Tests
 
-Tests are the regression suite for the public path and contract behavior.
+This directory contains regressions protecting contracts and public docs.
 
-## What Belongs Here
+## What belongs here
 
-- Automated regression tests for schemas, scripts, adapters, docs and the public
-  quickstart.
-- Tests that make public onboarding, worker routing and safety rules durable.
-- Small fixtures required to reproduce contract behavior.
-- Domain-neutral fixtures that prove one behavior without depending on private
-  products, boards, paths, screenshots or runtime history.
+- Public-safe repository assets that are required to validate or operate the Overkill Factory kernel.
+- Source-controlled contracts, fixtures, helpers, or documentation that can be inspected by maintainers.
+- No generated runtime output unless a test explicitly requires a stable fixture.
 
-## What Does Not Belong Here
+## What does not belong here
 
-- Manual evidence archives, screenshots or generated proof outputs.
-- Tests that rely on private local paths, private boards or operator secrets.
-- Narrative validation history.
-- Generated worker packets, gate reports, scan summaries or Receipt Five output
-  committed as reusable proof instead of being created under `.tmp/` during the
-  test.
+- Private Hermes runtime evidence.
+- Operator secrets, local paths, keys, screenshots with private data, or generated worker packets.
+- Temporary outputs from `.tmp`.
+- Narrative product documentation that belongs under `docs/en` or `docs/pt-BR`.
 
-## Source Of Truth
+## Validation
 
-Tests encode the public behavior the repository promises. Passing tests are not
-production approval, but failing tests block publication.
-
-## How It Is Validated
-
-Run the full public test suite:
+After changing this directory, run the relevant local checks from `factory/`:
 
 ```bash
-python -m unittest discover -s tests -p "test_*.py" -q
-python scripts/quickstart_smoke.py
-python scripts/public_safety_scan.py
-python scripts/secret_safety_scan.py
+python3 scripts/validate_public_json_artifacts.py
+python3 scripts/validate_public_surface_sync.py
+python3 scripts/public_safety_scan.py
+python3 scripts/secret_safety_scan.py
+python3 -m unittest discover -s tests -p 'test_*.py' -q
 ```
+
+## Public documentation link
+
+See `docs/en/13-maintainer-guide.md` for the canonical public explanation. Internal README files are maintainer guides; they are not the product manual and must not become a second source of truth.

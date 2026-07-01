@@ -1,38 +1,32 @@
 # Examples
 
-Examples are small source examples and fixtures that teach or test the public
-factory path.
+This directory contains safe example cards and minimal projects.
 
-## What Belongs Here
+## What belongs here
 
-- Source examples that can be read, validated and rerun by a new operator.
-- Minimal cards, papers, expected flows and public-safe receipt examples.
-- Fixtures that support tests without storing generated proof archives.
-- Expected receipt files only when they are hand-authored public fixtures, not
-  copied output from a previous run.
+- Public-safe repository assets that are required to validate or operate the Overkill Factory kernel.
+- Source-controlled contracts, fixtures, helpers, or documentation that can be inspected by maintainers.
+- No generated runtime output unless a test explicitly requires a stable fixture.
 
-## What Does Not Belong Here
+## What does not belong here
 
-- Do not commit generated run output.
-- Generated worker packets and gate reports belong in `.tmp/`, not in this
-  directory.
-- Do not store old pilot evidence, private product material, screenshots,
-  raw logs or local workspace paths here.
-- Do not add fixture archives when a small domain-neutral fixture can prove the
-  same behavior.
+- Private Hermes runtime evidence.
+- Operator secrets, local paths, keys, screenshots with private data, or generated worker packets.
+- Temporary outputs from `.tmp`.
+- Narrative product documentation that belongs under `docs/en` or `docs/pt-BR`.
 
-## Source Of Truth
+## Validation
 
-`examples/minimal-hermes-project/` is the first public example. It is source
-material for quickstart validation, not a record of a past run.
-
-## How It Is Validated
-
-Run the quickstart and public example checks:
+After changing this directory, run the relevant local checks from `factory/`:
 
 ```bash
-python scripts/quickstart_smoke.py
-python scripts/factoryctl.py gate-report --card examples/minimal-hermes-project/card.md
-python scripts/factoryctl.py worker-packet --worker all --required-only --card examples/minimal-hermes-project/card.md --out .tmp/minimal-worker-packets
-python -m unittest tests.test_open_source_docs -q
+python3 scripts/validate_public_json_artifacts.py
+python3 scripts/validate_public_surface_sync.py
+python3 scripts/public_safety_scan.py
+python3 scripts/secret_safety_scan.py
+python3 -m unittest discover -s tests -p 'test_*.py' -q
 ```
+
+## Public documentation link
+
+See `docs/en/10-local-validation.md` for the canonical public explanation. Internal README files are maintainer guides; they are not the product manual and must not become a second source of truth.

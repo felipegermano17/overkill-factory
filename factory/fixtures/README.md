@@ -1,42 +1,32 @@
 # Fixtures
 
-Fixtures are minimal public-safe regression inputs. They are not historical
-evidence, runtime exports, proof archives or public product source trees.
+This directory contains public and negative test fixtures.
 
-## What Belongs Here
+## What belongs here
 
-- Small JSON or text fixtures required by automated tests.
-- Domain-neutral cases that prove one contract behavior without private data.
-- Public-safe negative fixtures that keep scanners and fail-closed behavior
-  honest.
-- Advanced product-shaped fixtures when strict production-lane validators need
-  realistic structure.
+- Public-safe repository assets that are required to validate or operate the Overkill Factory kernel.
+- Source-controlled contracts, fixtures, helpers, or documentation that can be inspected by maintainers.
+- No generated runtime output unless a test explicitly requires a stable fixture.
 
-## What Does Not Belong Here
+## What does not belong here
 
-- Generated worker packets, gate reports, receipts or run summaries.
-- Screenshots, private board exports, raw logs, local paths or old pilot proof.
-- Large fixture archives when a small case can prove the same rule.
-- Product source-of-truth trees, operator onboarding examples or private product
-  pipeline material.
+- Private Hermes runtime evidence.
+- Operator secrets, local paths, keys, screenshots with private data, or generated worker packets.
+- Temporary outputs from `.tmp`.
+- Narrative product documentation that belongs under `docs/en` or `docs/pt-BR`.
 
-## Source Of Truth
+## Validation
 
-Fixtures are supporting inputs. Schemas, scripts and tests decide whether the
-behavior is valid.
-
-Current fixture family:
-
-| Path | Purpose |
-| --- | --- |
-| `fixtures/product-validation/` | Advanced product-shaped validation fixtures for production/onchain lanes. Quasar/Solana appears here only as a regression target, not as the default public product path. |
-| `fixtures/status-snapshot-v0/` | Public-safe StatusSnapshot v0 cases for the local operator console fail-closed/read-only contract. |
-
-## How It Is Validated
+After changing this directory, run the relevant local checks from `factory/`:
 
 ```bash
-python scripts/status_snapshot/validate_status_snapshot_fixtures.py fixtures/status-snapshot-v0 --schema schemas/factory-status-snapshot.schema.json --require-cases FX01,FX02,FX03,FX04,FX05,FX06,FX07,FX08,FX09,FX10,FX11,FX12,FX13,FX14,FX15,FX16,FX17,FX18 --fail-closed
-python scripts/status_snapshot/validate_evidence_refs.py fixtures/status-snapshot-v0 --allow-public-urls --allow-relative-artifacts --deny-raw-private --deny-local-paths --deny-chat-ids --deny-secrets --json
-python scripts/status_snapshot/assert_fail_closed.py fixtures/status-snapshot-v0 --cases stale,missing,contradictory,private_unavailable,missing-gate
-python -m unittest tests.test_status_snapshot_v0 tests.test_status_snapshot_readonly_adapter tests.test_public_safety_scan -q
+python3 scripts/validate_public_json_artifacts.py
+python3 scripts/validate_public_surface_sync.py
+python3 scripts/public_safety_scan.py
+python3 scripts/secret_safety_scan.py
+python3 -m unittest discover -s tests -p 'test_*.py' -q
 ```
+
+## Public documentation link
+
+See `docs/en/10-local-validation.md` for the canonical public explanation. Internal README files are maintainer guides; they are not the product manual and must not become a second source of truth.

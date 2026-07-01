@@ -17,10 +17,10 @@ class AgentDirectoryDocsTest(unittest.TestCase):
         readme = read_text("agents/README.md")
         required_refs = [
             "agents/worker-roster.md",
-            "docs/en/technical-model.md",
-            "docs/en/reference.md",
-            "docs/en/technical-model.md",
-            "docs/en/trust-and-evidence.md",
+            "docs/en/07-hermes-and-factory.md",
+            "docs/en/11-repository-reference.md",
+            "docs/en/07-hermes-and-factory.md",
+            "docs/en/05-evidence-and-receipts.md",
             "agents/worker-registry.public.json",
             "agents/worker-profiles.public.json",
             "agents/hermes-profile-bindings.public.json",

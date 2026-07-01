@@ -1,101 +1,33 @@
 # Agent Layer
 
 This directory is the public contract surface for Overkill Factory workers.
-It is intentionally split into machine-readable contracts and human-readable
-guides.
 
-If you are reading this repository on GitHub, start here before opening the
-large JSON files.
-
-## What This Directory Is
-
-The agent layer answers four practical questions:
+It answers four practical questions:
 
 1. Which workers exist?
 2. When is each worker required?
 3. What can each worker do or refuse?
 4. Which evidence must exist before a card moves forward?
 
-The factory does not treat agents as loose personalities. A worker becomes
-operable only when its process role, profile, permission class, Hermes binding
-and packet route all exist.
-
-## What Belongs Here
-
-- Public worker registry files, public worker profiles, permission classes and
-  Hermes bindings.
-- Human entrypoint docs that explain how to read the full worker contract.
-- Schemas required to validate public worker contracts.
-
-## What Does Not Belong Here
-
-- Generated worker packets, run logs, Receipt Five evidence or old execution
-  output.
-- Private agent prompts, private Hermes profile material, local paths or board
-  links.
-- Hand-written partial mirrors of the worker registry.
-
-## Source Of Truth
-
-The machine-readable JSON files define worker operability. Human docs explain
-the contract, but the worker registry, profiles, permission classes and Hermes
-bindings are the source of truth.
-
-## How It Is Validated
-
-Run these checks after changing agent contracts or guides:
-
-```bash
-python scripts/validate_worker_profiles.py
-python scripts/validate_public_json_artifacts.py
-python scripts/public_safety_scan.py
-python scripts/secret_safety_scan.py
-python -m unittest tests.test_worker_profiles tests.test_worker_permission_classes tests.test_agent_directory_docs -q
-```
+The factory does not treat agents as loose personalities. A worker becomes operable only when its process role, profile, permission class, Hermes binding and packet route all exist.
 
 ## Read Order
 
 | Read | File | Purpose |
 | --- | --- | --- |
 | 1 | `agents/worker-roster.md` | Human overview of the 40 public workers by ownership group. |
-| 2 | `docs/en/technical-model.md` | Operator-facing guide for every worker role. |
-| 3 | `docs/en/reference.md` | Stage-by-stage map from the factory journey to real workers. |
-| 4 | `docs/en/technical-model.md` | Product-type coverage and pack activation rules. |
-| 5 | `docs/en/trust-and-evidence.md` | Human explanation of worker authority classes. |
+| 2 | `docs/en/08-workers-and-work-units.md` | Worker packets, worker results and bounded work. |
+| 3 | `docs/en/11-repository-reference.md` | Stage and registry references. |
+| 4 | `docs/en/07-hermes-and-factory.md` | Hermes profile and runtime boundary. |
+| 5 | `docs/en/05-evidence-and-receipts.md` | Authority, evidence and anti-theater rules. |
+| 6 | `agents/worker-registry.public.json` | Machine-readable worker registry. |
+| 7 | `agents/worker-profiles.public.json` | Public worker profiles. |
+| 8 | `agents/hermes-profile-bindings.public.json` | Hermes profile bindings. |
+| 9 | `agents/worker-permission-classes.public.json` | Worker permission classes. |
+| 10 | `agents/capability-packs.public.json` | Capability pack coverage. |
+| 11 | `scripts/factoryctl.py` | Packet generation and local CLI. |
 
-Open the JSON files after that, when you need exact contracts.
-
-## Machine-Readable Contracts
-
-| File | What It Controls |
-| --- | --- |
-| `agents/worker-registry.public.json` | Process role, phase, trigger, inputs, outputs, evidence, transition rules and veto conditions. |
-| `agents/worker-profiles.public.json` | Public agent identity, mission, operating rules, authority, refusal behavior, evidence and handoff contract. |
-| `agents/hermes-profile-bindings.public.json` | Hermes profile name, queue policy, skill refs, result schema, receipt field and adapter binding. |
-| `agents/worker-permission-classes.public.json` | Permission class and authority boundary for every worker. |
-| `agents/capability-packs.public.json` | Product-type coverage and whether a requested surface can execute. |
-| `agents/capability-pack-activation-ledger.public.json` | Current activation state and proof requirements for non-core capability packs. |
-| `agents/worker-contract.schema.json` | Schema for the worker contract shape. |
-
-These files are not narrative documentation. They are public-safe contracts
-used by scripts, tests and generated worker packets.
-
-## Human Guides
-
-| File | What It Explains |
-| --- | --- |
-| `agents/worker-roster.md` | The worker set in plain language. |
-| `docs/en/technical-model.md` | How public worker contracts map to live Hermes profile materialization. |
-| `docs/en/technical-model.md` | Expected Hermes profile shape. |
-| `docs/en/technical-model.md` | How Hermes, adapter hooks and worker packets fit together. |
-
-The human guides must never become the runtime source of truth. When a guide
-and a machine contract disagree, fix the mismatch and let the executable gate
-decide the card state.
-
-Do not add hand-written per-worker mirrors under this directory unless they are
-generated from the registry and cover the full worker set. A partial manual
-mirror makes GitHub easier to browse for a moment and harder to trust forever.
+Open JSON after reading the human guides.
 
 ## Worker Operability Rule
 
@@ -108,24 +40,11 @@ A worker is operable only when all of these layers exist:
 5. card-specific packet generated by `scripts/factoryctl.py`;
 6. tests or validation that prove the route can be used.
 
-Profile names alone are not enough. A worker without a packet route is only a
-description.
+Profile names alone are not enough. A worker without a packet route is only a description.
 
 ## Quality Bar
 
-Every public worker contract should make these things inspectable:
-
-- responsibility: what the worker owns;
-- entry point: when it enters the factory;
-- input contract: what it must receive;
-- output contract: what it must produce;
-- authority: what it may not do;
-- evidence: what proves it ran;
-- blocker: what stops the next transition;
-- handoff: what another worker can trust.
-
-If a worker cannot be explained in those terms, it is not ready to be treated
-as an executable factory role.
+Every public worker contract should make responsibility, entry point, input contract, output contract, authority, evidence, blocker and handoff inspectable.
 
 ## Anti-Theater Rules
 
@@ -136,11 +55,9 @@ as an executable factory role.
 - A Product Face screenshot is not full product experience proof.
 - A human-support worker cannot invent approval.
 - A Control Tower view cannot become the source of truth.
-- A generated evidence archive does not belong in this public directory.
+- Generated evidence archives do not belong in this public directory.
 
-## Validation Bundle
-
-Run these checks after changing agent contracts or guides:
+## Validation
 
 ```bash
 python scripts/validate_worker_profiles.py
@@ -149,3 +66,5 @@ python scripts/public_safety_scan.py
 python scripts/secret_safety_scan.py
 python -m unittest tests.test_worker_profiles tests.test_worker_permission_classes tests.test_agent_directory_docs -q
 ```
+
+Do not add hand-written per-worker mirrors under this directory unless they are generated from the registry and cover the full worker set. A partial manual mirror makes GitHub easier to browse for a moment and harder to trust forever.

@@ -51,8 +51,8 @@
         "README.md",
         "docs/assets/public-map/overkill-factory-map-v1.0.3.html",
         "docs/public-surface.manifest.json",
-        "docs/en/operating-model.md",
-        "docs/en/manual.md"
+        "docs/en/03-how-a-request-moves.md",
+        "docs/en/01-start-here.md"
       ]
     },
     {

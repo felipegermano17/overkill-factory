@@ -106,7 +106,7 @@ def build_audit(
             check(
                 "hermes_native_next_action",
                 "advance_phase" in _items(phase.get("allowed_commands")),
-                ["docs/en/technical-model.md", "templates/factory-workflow-compiled-plan.json"],
+                ["docs/en/07-hermes-and-factory.md", "templates/factory-workflow-compiled-plan.json"],
                 "Route the phase through Factory V2 commands/events instead of agent prose.",
             ),
             check(
@@ -145,7 +145,7 @@ def build_audit(
         check(
             "hermes_native_authority",
             policy_authority == "hermes_kanban",
-            ["templates/hermes-typed-block-policy.json", "docs/en/technical-model.md"],
+            ["templates/hermes-typed-block-policy.json", "docs/en/07-hermes-and-factory.md"],
             "Typed block policy must keep runtime_authority=hermes_kanban.",
         ),
         check(

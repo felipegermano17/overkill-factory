@@ -1,36 +1,32 @@
-# Adapters
+# Adapter Layer
 
-Adapters connect Overkill Factory contracts to a runtime. Hermes is the first
-supported adapter.
+This directory contains runtime integration adapters, especially Hermes hooks.
 
-## What Belongs Here
+## What belongs here
 
-- Runtime integrations that translate factory cards, gates, worker packets and
-  receipts into a real execution floor.
-- Hermes adapter code, transition hooks and runtime patch notes.
-- Small adapter fixtures that are required by tests.
+- Public-safe repository assets that are required to validate or operate the Overkill Factory kernel.
+- Source-controlled contracts, fixtures, helpers, or documentation that can be inspected by maintainers.
+- No generated runtime output unless a test explicitly requires a stable fixture.
 
-## What Does Not Belong Here
+## What does not belong here
 
-- Private runtime patches from a local workspace.
-- Historical proof, raw logs, screenshots or past pilot evidence.
-- Runtime-specific secrets, local paths, board URLs or operator credentials.
+- Private Hermes runtime evidence.
+- Operator secrets, local paths, keys, screenshots with private data, or generated worker packets.
+- Temporary outputs from `.tmp`.
+- Narrative product documentation that belongs under `docs/en` or `docs/pt-BR`.
 
-## Source Of Truth
+## Validation
 
-The factory contract remains in schemas, templates, tests and `factoryctl.py`.
-The adapter is the runtime bridge, not a second methodology.
-
-## How It Is Validated
-
-Run adapter and public-path checks after changes:
+After changing this directory, run the relevant local checks from `factory/`:
 
 ```bash
-python scripts/quickstart_smoke.py
-python -m unittest discover -s tests -p "test_*.py" -q
-python scripts/public_safety_scan.py
-python scripts/secret_safety_scan.py
+python3 scripts/validate_public_json_artifacts.py
+python3 scripts/validate_public_surface_sync.py
+python3 scripts/public_safety_scan.py
+python3 scripts/secret_safety_scan.py
+python3 -m unittest discover -s tests -p 'test_*.py' -q
 ```
 
-For Hermes-specific behavior, inspect `adapters/hermes/README.md` and validate
-the transition-hook tests before publishing.
+## Public documentation link
+
+See `docs/en/07-hermes-and-factory.md` for the canonical public explanation. Internal README files are maintainer guides; they are not the product manual and must not become a second source of truth.

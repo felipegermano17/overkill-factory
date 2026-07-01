@@ -36,7 +36,7 @@ class FactoryBridgeTest(unittest.TestCase):
                 severity="requires_user",
                 source="hermes_transition_hook",
                 summary="R3 owner decision is required before done.",
-                refs=["docs/en/manual.md"],
+                refs=["docs/en/01-start-here.md"],
                 requires_user=True,
                 payload={"gate_type": "R3"},
             )
@@ -47,7 +47,7 @@ class FactoryBridgeTest(unittest.TestCase):
                 severity="requires_user",
                 source="hermes_transition_hook",
                 summary="R3 owner decision is required before done.",
-                refs=["docs/en/manual.md"],
+                refs=["docs/en/01-start-here.md"],
                 requires_user=True,
                 payload={"gate_type": "R3"},
             )
@@ -271,7 +271,7 @@ class FactoryBridgeTest(unittest.TestCase):
                 severity="requires_user",
                 source="factoryctl",
                 summary="Release owner decision is required.",
-                refs=["docs/en/trust-and-evidence.md"],
+                refs=["docs/en/05-evidence-and-receipts.md"],
                 requires_user=True,
             )
             decision = bridge.build_decision_record(
@@ -326,7 +326,7 @@ class FactoryBridgeTest(unittest.TestCase):
         self.assertIn("invalid JSONL record", corrupt_context)
 
     def test_operator_bridge_architecture_documents_the_bridge_modes(self) -> None:
-        architecture = (REPO_ROOT / "docs" / "en" / "operating-model.md").read_text(encoding="utf-8")
+        architecture = (REPO_ROOT / "docs" / "en" / "04-operator-experience.md").read_text(encoding="utf-8")
 
         for expected in [
             "status_bridge",

@@ -104,9 +104,9 @@ class FactoryStageAgentMapTest(unittest.TestCase):
                 self.stage_map,
                 json.dumps(self.registry, sort_keys=True),
                 json.dumps(self.worker_profiles, sort_keys=True),
-                (REPO_ROOT / "docs" / "en" / "technical-model.md").read_text(encoding="utf-8"),
+                (REPO_ROOT / "docs" / "en" / "07-hermes-and-factory.md").read_text(encoding="utf-8"),
                 (ROOT / "agents" / "worker-roster.md").read_text(encoding="utf-8"),
-                (REPO_ROOT / "docs" / "en" / "operating-model.md").read_text(
+                (REPO_ROOT / "docs" / "en" / "03-how-a-request-moves.md").read_text(
                     encoding="utf-8"
                 ),
             ]

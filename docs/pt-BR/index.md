@@ -1,54 +1,29 @@
-# Overkill Factory
+# Documentação da Overkill Factory
 
-Sem a fábrica, você vira fiscal do agente.
+Esta documentação não é um arquivo técnico solto. Ela é o mapa público do produto: o que a fábrica faz, por que existe, como um pedido anda, o que o operador vê, que prova conta e onde termina a autoridade do repositório público.
 
-Você pede uma coisa importante. O agente responde rápido, abre arquivo, move card, talvez passe teste, talvez diga que terminou. Só que ainda sobra a pergunta: entregou mesmo o que eu pedi ou só produziu movimento?
+A Overkill Factory existe para uma situação simples de reconhecer: agentes parecem ocupados antes de provar entrega. A fábrica coloca produção controlada em volta deles.
 
-A Overkill Factory existe para tirar essa pergunta do improviso.
+## Escolha sua trilha
 
-Você faz um pedido. A fábrica guarda o contexto original, entende o que é fato e o que é palpite, divide o trabalho em partes pequenas, manda os agentes trabalharem no Hermes e só chama de pronto quando existe prova.
+### Quero entender o produto
 
-O objetivo é tornar a velocidade confiável. Em português direto: andar rápido sem obrigar você a conferir tudo na mão.
+Comece por [Começar aqui](01-comecar-aqui.md), depois leia [O problema do produto](02-o-problema-do-produto.md) e [Como um pedido anda](03-como-um-pedido-anda.md).
 
-## A ideia em uma frase
+### Quero operar
 
-A Overkill Factory é uma camada de produção para trabalho com agentes: ela transforma pedidos vagos em trabalho pequeno, rastreável e provado.
+Leia [Experiência do operador](04-experiencia-do-operador.md), [Prova e recibos](05-prova-e-recibos.md) e [Decisões humanas](06-decisoes-humanas.md).
 
-O agente pode executar. Ele não pode inventar escopo, esconder risco, aprovar a si mesmo ou dizer "pronto" sem evidência.
+### Quero entender Hermes, workers e limites
 
-## Um exemplo em 30 segundos
+Leia [Hermes e a Factory](07-hermes-e-factory.md), [Workers e unidades de trabalho](08-workers-e-unidades-de-trabalho.md) e [Status, limites e prova](09-status-limites-e-prova.md).
 
-Você escreve:
+### Quero validar ou contribuir
 
-> Quero lançar o onboarding novo amanhã.
+Leia [Validação local](10-validacao-local.md), [Referência do repositório](11-referencia-do-repositorio.md), [Glossário](12-glossario.md) e [Guia de manutenção](13-guia-de-manutencao.md).
 
-A fábrica não deveria responder "ok, fazendo".
+## O que esta documentação não faz
 
-Ela primeiro segura o pedido e devolve algo mais útil:
+Ela não prova que um produto privado foi entregue. Não prova que um Hermes vivo rodou um card real. Não prova aprovação humana em produção. Ela explica o contrato público e aponta quais provas seriam necessárias.
 
-> Entendi que você quer lançar o onboarding novo. Antes de executar, preciso confirmar o usuário do fluxo, o que conta como sucesso e se isso toca pagamento, carteira, dados sensíveis ou produção. Enquanto isso, já preservei a fonte, localizei o repo e vou preparar a definição do produto.
-
-Essa é a diferença. A fábrica não tira a decisão do humano. Ela impede que um agente gaste horas construindo a coisa errada.
-
-## Por onde ler
-
-Se você quer entender o produto, leia assim:
-
-1. [Manual](manual.md): por que a fábrica existe e o que ela tira das suas costas.
-2. [Como a fábrica trabalha](operating-model.md): o que acontece depois que você manda um pedido.
-3. [Confiança e prova](trust-and-evidence.md): como separar entrega real de teatro de progresso.
-4. [Ciclo simples](lifecycle.md): o mapa curto do começo ao fim.
-
-Se você vai operar ou manter o repo:
-
-- [Uso](usage.md): comandos locais e o que eles provam.
-- [Modelo técnico](technical-model.md): como Hermes, Factory, scripts, schemas e workers se encaixam.
-- [Referência](reference.md): nomes e caminhos quando você já sabe o que procurar.
-
-## O que esta documentação prova
-
-Ela prova o contrato público do repositório: workflow compilado, rotas, métodos, schemas, workers, exemplos, validadores e testes.
-
-Ela não prova que um produto privado foi entregue. Não prova que um Hermes vivo rodou um card real. Não prova aprovação humana em produção. Para isso, precisa de estado atual no Hermes, resultado de worker, evidência do produto, revisão consumida e autorização explícita quando houver risco.
-
-Essa fronteira não é fraqueza. É o que impede a fábrica de virar mais um agente falando bonito.
+A documentação, o mapa visual e um teste local podem provar coerência pública do repo. Entrega real exige runtime Hermes, worker results atuais, evidência específica, revisão consumida, Receipt Five e gate humano quando o risco pedir.

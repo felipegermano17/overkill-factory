@@ -27,24 +27,62 @@
     "limits"
   ],
   "properties": {
-    "$schema": { "const": "https://overkill-factory.dev/schemas/factory-help.schema.json" },
-    "record_type": { "const": "factory_help_next_action" },
-    "created_at": { "type": "string", "minLength": 1 },
-    "card_id": { "type": "string", "minLength": 1 },
-    "phase": { "type": "string", "minLength": 1 },
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/factory-help.schema.json"
+    },
+    "record_type": {
+      "const": "factory_help_next_action"
+    },
+    "created_at": {
+      "type": "string",
+      "minLength": 1
+    },
+    "card_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "phase": {
+      "type": "string",
+      "minLength": 1
+    },
     "workflow_phase": {
       "type": "object",
-      "required": ["phase_id", "phase_name", "operator_visible_summary"],
+      "required": [
+        "phase_id",
+        "phase_name",
+        "operator_visible_summary"
+      ],
       "properties": {
-        "phase_id": { "type": "string", "minLength": 1 },
-        "phase_name": { "type": "string", "minLength": 1 },
-        "operator_visible_summary": { "type": "string", "minLength": 1 }
+        "phase_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "phase_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "operator_visible_summary": {
+          "type": "string",
+          "minLength": 1
+        }
       },
       "additionalProperties": false
     },
-    "gate_status": { "type": "string", "minLength": 1 },
-    "truth_scope": { "enum": ["repo_only", "runtime_backed", "bounded_proof", "production_ready"] },
-    "phase_engine": { "$ref": "factory-phase-engine-state.schema.json" },
+    "gate_status": {
+      "type": "string",
+      "minLength": 1
+    },
+    "truth_scope": {
+      "enum": [
+        "repo_only",
+        "runtime_backed",
+        "bounded_proof",
+        "production_ready"
+      ]
+    },
+    "phase_engine": {
+      "$ref": "factory-phase-engine-state.schema.json"
+    },
     "phase_lock": {
       "type": "object",
       "required": [
@@ -64,31 +102,86 @@
         "operator_decision_required"
       ],
       "properties": {
-        "active_frontier": { "type": "string", "minLength": 1 },
-        "current_phase_id": { "type": "string" },
-        "card_phase_id": { "type": "string" },
-        "single_active_frontier": { "type": "boolean" },
-        "owner_surface_first": { "type": "boolean" },
-        "product_sot_review_packet_delivered": { "type": "boolean" },
-        "method_contract_materialized": { "type": "boolean" },
-        "ready_gate_materialized": { "type": "boolean" },
-        "downstream_freeze_active": { "type": "boolean" },
-        "downstream_surface_seen": { "type": "boolean" },
-        "frozen_phase_ids": { "type": "array", "items": { "type": "string" } },
-        "frozen_worker_ids": { "type": "array", "items": { "type": "string" } },
-        "next_required_artifact": { "type": "string", "minLength": 1 },
-        "operator_decision_required": { "type": "boolean" }
+        "active_frontier": {
+          "type": "string",
+          "minLength": 1
+        },
+        "current_phase_id": {
+          "type": "string"
+        },
+        "card_phase_id": {
+          "type": "string"
+        },
+        "single_active_frontier": {
+          "type": "boolean"
+        },
+        "owner_surface_first": {
+          "type": "boolean"
+        },
+        "product_sot_review_packet_delivered": {
+          "type": "boolean"
+        },
+        "method_contract_materialized": {
+          "type": "boolean"
+        },
+        "ready_gate_materialized": {
+          "type": "boolean"
+        },
+        "downstream_freeze_active": {
+          "type": "boolean"
+        },
+        "downstream_surface_seen": {
+          "type": "boolean"
+        },
+        "frozen_phase_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "frozen_worker_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "next_required_artifact": {
+          "type": "string",
+          "minLength": 1
+        },
+        "operator_decision_required": {
+          "type": "boolean"
+        }
       },
       "additionalProperties": false
     },
     "factory_next_action": {
       "type": "object",
-      "required": ["owner", "action", "why", "command_refs"],
+      "required": [
+        "owner",
+        "action",
+        "why",
+        "command_refs"
+      ],
       "properties": {
-        "owner": { "type": "string", "minLength": 1 },
-        "action": { "type": "string", "minLength": 1 },
-        "why": { "type": "string", "minLength": 1 },
-        "command_refs": { "type": "array", "items": { "type": "string" } }
+        "owner": {
+          "type": "string",
+          "minLength": 1
+        },
+        "action": {
+          "type": "string",
+          "minLength": 1
+        },
+        "why": {
+          "type": "string",
+          "minLength": 1
+        },
+        "command_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       },
       "additionalProperties": false
     },
@@ -109,28 +202,150 @@
           "operator_visible_next_action"
         ],
         "properties": {
-          "recovery_route_id": { "type": "string", "minLength": 1 },
-          "route_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
-          "blocker_type": { "type": "string", "minLength": 1 },
-          "factory_owned_repair_allowed": { "type": "boolean" },
-          "human_gate_required": { "type": "boolean" },
-          "repair_owner_worker": { "type": "string", "minLength": 1 },
-          "unblock_authority_ref": { "type": "string", "minLength": 1 },
+          "recovery_route_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "route_digest": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          },
+          "blocker_type": {
+            "type": "string",
+            "minLength": 1
+          },
+          "factory_owned_repair_allowed": {
+            "type": "boolean"
+          },
+          "human_gate_required": {
+            "type": "boolean"
+          },
+          "repair_owner_worker": {
+            "type": "string",
+            "minLength": 1
+          },
+          "unblock_authority_ref": {
+            "type": "string",
+            "minLength": 1
+          },
           "downstream_freeze_scope": {
             "type": "array",
-            "items": { "type": "string", "minLength": 1 }
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
           },
           "retry_state": {
             "type": "object",
-            "required": ["attempt_number", "max_attempts", "escalation_reason"],
+            "required": [
+              "attempt_number",
+              "max_attempts",
+              "escalation_reason"
+            ],
             "properties": {
-              "attempt_number": { "type": "integer", "minimum": 1 },
-              "max_attempts": { "type": "integer", "minimum": 1 },
-              "escalation_reason": { "type": "string" }
+              "attempt_number": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "max_attempts": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "escalation_reason": {
+                "type": "string"
+              }
             },
             "additionalProperties": false
           },
-          "operator_visible_next_action": { "type": "string", "minLength": 1 }
+          "operator_visible_next_action": {
+            "type": "string",
+            "minLength": 1
+          },
+          "automatic_repair_loop": {
+            "type": "object",
+            "required": [
+              "required",
+              "factory_owned_repair_allowed",
+              "runtime_authority",
+              "local_state_authority",
+              "route_ref",
+              "loop_id",
+              "stage_order",
+              "stages",
+              "native_primitives",
+              "retry_attempt_source",
+              "post_repair_reconciliation_required",
+              "fresh_review_required",
+              "no_idle_visible_marker",
+              "stop_classes"
+            ],
+            "properties": {
+              "required": {
+                "type": "boolean"
+              },
+              "factory_owned_repair_allowed": {
+                "type": "boolean"
+              },
+              "runtime_authority": {
+                "type": "string",
+                "minLength": 1
+              },
+              "local_state_authority": {
+                "type": "boolean"
+              },
+              "route_ref": {
+                "type": "string",
+                "minLength": 1
+              },
+              "loop_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "stage_order": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "stages": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              },
+              "native_primitives": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "retry_attempt_source": {
+                "type": "string",
+                "minLength": 1
+              },
+              "post_repair_reconciliation_required": {
+                "type": "boolean"
+              },
+              "fresh_review_required": {
+                "type": "boolean"
+              },
+              "no_idle_visible_marker": {
+                "type": "string",
+                "minLength": 1
+              },
+              "stop_classes": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "additionalProperties": false
+          }
         },
         "additionalProperties": false
       }
@@ -139,11 +354,24 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["owner", "action", "why_no_user_action"],
+        "required": [
+          "owner",
+          "action",
+          "why_no_user_action"
+        ],
         "properties": {
-          "owner": { "type": "string", "minLength": 1 },
-          "action": { "type": "string", "minLength": 1 },
-          "why_no_user_action": { "type": "string", "minLength": 1 }
+          "owner": {
+            "type": "string",
+            "minLength": 1
+          },
+          "action": {
+            "type": "string",
+            "minLength": 1
+          },
+          "why_no_user_action": {
+            "type": "string",
+            "minLength": 1
+          }
         },
         "additionalProperties": false
       }
@@ -152,48 +380,122 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["decision_type", "reason", "user_action", "factory_prepares"],
+        "required": [
+          "decision_type",
+          "reason",
+          "user_action",
+          "factory_prepares"
+        ],
         "properties": {
           "decision_type": {
-            "enum": ["product_intent_confirmation", "preference", "authority_required", "access_required", "risk_acceptance", "blocked"]
+            "enum": [
+              "product_intent_confirmation",
+              "preference",
+              "authority_required",
+              "access_required",
+              "risk_acceptance",
+              "blocked"
+            ]
           },
-          "reason": { "type": "string", "minLength": 1 },
-          "user_action": { "type": "string", "minLength": 1 },
-          "factory_prepares": { "type": "string", "minLength": 1 }
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          },
+          "user_action": {
+            "type": "string",
+            "minLength": 1
+          },
+          "factory_prepares": {
+            "type": "string",
+            "minLength": 1
+          }
         },
         "additionalProperties": false
       }
     },
-    "blocked_because": { "type": "array", "items": { "type": "string" } },
-    "blocked_actions": { "type": "array", "items": { "type": "string" } },
-    "evidence_needed": { "type": "array", "items": { "type": "string" } },
-    "required_workers": { "type": "array", "items": { "type": "string" } },
-    "blocked_workers": { "type": "array", "items": { "type": "string" } },
+    "blocked_because": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "blocked_actions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "evidence_needed": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "required_workers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "blocked_workers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "source_refs": {
       "type": "array",
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["claim", "ref"],
+        "required": [
+          "claim",
+          "ref"
+        ],
         "properties": {
-          "claim": { "type": "string", "minLength": 1 },
-          "ref": { "type": "string", "minLength": 1 }
+          "claim": {
+            "type": "string",
+            "minLength": 1
+          },
+          "ref": {
+            "type": "string",
+            "minLength": 1
+          }
         },
         "additionalProperties": false
       }
     },
     "public_private_boundary": {
       "type": "object",
-      "required": ["no_raw_logs", "no_private_paths", "no_private_ids", "projection_not_source_of_truth"],
+      "required": [
+        "no_raw_logs",
+        "no_private_paths",
+        "no_private_ids",
+        "projection_not_source_of_truth"
+      ],
       "properties": {
-        "no_raw_logs": { "type": "boolean" },
-        "no_private_paths": { "type": "boolean" },
-        "no_private_ids": { "type": "boolean" },
-        "projection_not_source_of_truth": { "type": "boolean" }
+        "no_raw_logs": {
+          "type": "boolean"
+        },
+        "no_private_paths": {
+          "type": "boolean"
+        },
+        "no_private_ids": {
+          "type": "boolean"
+        },
+        "projection_not_source_of_truth": {
+          "type": "boolean"
+        }
       },
       "additionalProperties": false
     },
-    "limits": { "type": "array", "minItems": 1, "items": { "type": "string" } }
+    "limits": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    }
   },
   "additionalProperties": false
 }

@@ -1,5 +1,5 @@
 site_name: Overkill Factory
-site_description: Product factory for Hermes-powered agentic work.
+site_description: Production system for Hermes-powered agentic work.
 repo_url: https://github.com/felipegermano17/overkill-factory
 docs_dir: .
 exclude_docs: |
@@ -11,19 +11,31 @@ nav:
   - Home: index.md
   - English:
       - Start: en/index.md
-      - Manual: en/manual.md
-      - Operating Model: en/operating-model.md
-      - Lifecycle: en/lifecycle.md
-      - Trust and Evidence: en/trust-and-evidence.md
-      - Technical Model: en/technical-model.md
-      - Usage: en/usage.md
-      - Reference: en/reference.md
+      - Start here: en/01-start-here.md
+      - The product problem: en/02-product-problem.md
+      - How a request moves: en/03-how-a-request-moves.md
+      - Operator experience: en/04-operator-experience.md
+      - Evidence and receipts: en/05-evidence-and-receipts.md
+      - Human decisions: en/06-human-decisions.md
+      - Hermes and the Factory: en/07-hermes-and-factory.md
+      - Workers and work units: en/08-workers-and-work-units.md
+      - Status, boundaries, and proof: en/09-status-boundaries-and-proof.md
+      - Local validation: en/10-local-validation.md
+      - Repository reference: en/11-repository-reference.md
+      - Glossary: en/12-glossary.md
+      - Maintainer guide: en/13-maintainer-guide.md
   - Português:
       - Início: pt-BR/index.md
-      - Manual: pt-BR/manual.md
-      - Como a fábrica trabalha: pt-BR/operating-model.md
-      - Confiança e prova: pt-BR/trust-and-evidence.md
-      - Ciclo simples: pt-BR/lifecycle.md
-      - Uso: pt-BR/usage.md
-      - Modelo técnico: pt-BR/technical-model.md
-      - Referência: pt-BR/reference.md
+      - Começar aqui: pt-BR/01-comecar-aqui.md
+      - O problema do produto: pt-BR/02-o-problema-do-produto.md
+      - Como um pedido anda: pt-BR/03-como-um-pedido-anda.md
+      - Experiência do operador: pt-BR/04-experiencia-do-operador.md
+      - Prova e recibos: pt-BR/05-prova-e-recibos.md
+      - Decisões humanas: pt-BR/06-decisoes-humanas.md
+      - Hermes e a Factory: pt-BR/07-hermes-e-factory.md
+      - Workers e unidades de trabalho: pt-BR/08-workers-e-unidades-de-trabalho.md
+      - Status, limites e prova: pt-BR/09-status-limites-e-prova.md
+      - Validação local: pt-BR/10-validacao-local.md
+      - Referência do repositório: pt-BR/11-referencia-do-repositorio.md
+      - Glossário: pt-BR/12-glossario.md
+      - Guia de manutenção: pt-BR/13-guia-de-manutencao.md
