@@ -1378,6 +1378,45 @@ def is_factory_materialization_contract_blocker(record: dict[str, Any]) -> bool:
     return not any(marker in text for marker in true_external_markers)
 
 
+def f16_release_readiness_readback_pass_after_routing(done: list[dict[str, Any]]) -> bool:
+    f16_producers: set[str] = set()
+    for item in done:
+        item_ref = task_record_id(item)
+        if not item_ref:
+            continue
+        text = task_record_text(item).lower()
+        body = task_body_json_object(item)
+        if (
+            "factory_f16_rerun_after_wu19_release_readiness_routing" in text
+            or "f16 rerun after" in text and "release/readiness routing" in text
+            or str(body.get("phase") or "").strip() == "F16" and "release_readiness" in text
+        ):
+            f16_producers.add(item_ref)
+    if not f16_producers:
+        return False
+    for item in done:
+        body = task_body_json_object(item)
+        producer = str(body.get("producer_task") or body.get("source_owner_task_ref") or "").strip()
+        text = task_record_text(item).lower()
+        if producer not in f16_producers and not any(ref in text for ref in f16_producers):
+            continue
+        if "pass_readback" in text and "f16 consolidated" in text:
+            return True
+        for run in item.get("runs") or []:
+            if not isinstance(run, dict):
+                continue
+            metadata = parse_json_object(run.get("metadata"))
+            if not isinstance(metadata, dict):
+                continue
+            review = metadata.get("independent_review_result") or metadata.get("independent_readback_review_result")
+            if not isinstance(review, dict):
+                continue
+            verdict = str(review.get("verdict") or review.get("result") or "").strip().upper()
+            if "PASS" in verdict and "READBACK" in verdict:
+                return True
+    return False
+
+
 def release_readiness_resolved_by_materialization_repair_refs(
     done: list[dict[str, Any]], blocked_refs: list[str]
 ) -> list[str]:
@@ -2954,6 +2993,27 @@ def classify_no_idle_state(rows: dict[str, list[dict[str, Any]]]) -> dict[str, A
         done,
         materialization_contract_refs,
     )
+    if materialization_contract_refs and f16_release_readiness_readback_pass_after_routing(done):
+        return {
+            "status": "blocked",
+            "classification": "release_readiness_blocked_after_f16_readback_pass",
+            "blocked": True,
+            "remediation_required": False,
+            "human_gate_required": owner_gate_delivery_receipt_exists_for_blockers(rows, materialization_contract_refs),
+            "operator_input_required": False,
+            "operator_input_task_refs": [],
+            "human_gate_task_refs": human_gate_refs,
+            "release_readiness_task_refs": materialization_contract_refs,
+            "remediation_reason": (
+                "A release/readiness repair already routed a fresh F16 rerun and independent readback PASS. "
+                "Remaining REL blockers are real authority/proof blockers, not another factory repair loop."
+            ),
+            "next_action": (
+                "do not create another WU-19 release/readiness repair; keep F17 blocked until a new concrete "
+                "proof source or explicit operator authority exists"
+            ),
+            "state": state,
+        }
     if release_readiness_resolved_refs:
         release_readiness_task_refs = sorted(
             ref
@@ -4765,6 +4825,25 @@ def suppress_missing_declared_artifacts_with_readback_pass(
             pass_artifact_classes_by_phase.setdefault(phase, set()).update(artifact_classes)
     if not pass_targets and not pass_artifact_classes_by_phase and not pass_artifact_classes_all:
         return rows
+    routing_packet_refs_superseded_by_f16_readback: set[str] = set()
+    for record in rows.get("done", []):
+        record_ref = task_record_id(record)
+        if not record_ref or (record_ref not in pass_targets and record_ref not in pass_owner_refs):
+            continue
+        body = task_body_json_object(record)
+        record_text = task_record_text(record).lower()
+        if str(body.get("phase") or "").strip() != "F16" and "f16" not in record_text:
+            continue
+        for key in ("current_release_readiness_packet", "release_readiness_packet", "routing_packet"):
+            raw_value = str(body.get(key) or "").strip()
+            if not raw_value:
+                continue
+            ref_match = re.search(r"\b(t_[A-Za-z0-9_]+)\b", raw_value)
+            routing_ref = ref_match.group(1) if ref_match else raw_value
+            if routing_ref:
+                routing_packet_refs_superseded_by_f16_readback.add(routing_ref)
+        for match in re.finditer(r"release_readiness_routing_packet_(t_[A-Za-z0-9_]+)\.(?:json|md)", task_record_text(record)):
+            routing_packet_refs_superseded_by_f16_readback.add(match.group(1))
     next_rows = dict(rows)
     done_rows: list[dict[str, Any]] = []
     for item in rows.get("done", []):
@@ -4808,6 +4887,10 @@ def suppress_missing_declared_artifacts_with_readback_pass(
             and bool(missing_classes & pass_artifact_classes_by_phase[item_body_phase])
         )
         global_artifact_pass_match = bool(missing_classes & pass_artifact_classes_all)
+        routing_packet_superseded_match = (
+            item_ref in routing_packet_refs_superseded_by_f16_readback
+            and any(str(name).startswith("release_readiness_routing_packet") for name in missing_names)
+        )
         if missing_artifacts and (
             item_ref in pass_targets
             or item_ref in pass_owner_refs
@@ -4816,6 +4899,7 @@ def suppress_missing_declared_artifacts_with_readback_pass(
             or artifact_pass_match
             or phase_pass_match
             or global_artifact_pass_match
+            or routing_packet_superseded_match
         ):
             item = dict(item)
             item["suppressed_missing_declared_artifacts"] = item.pop("missing_declared_artifacts")
