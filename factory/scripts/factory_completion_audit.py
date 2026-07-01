@@ -414,8 +414,8 @@ def public_worker_profile_layer_ready(runtime_proofs: list[dict[str, Any]] | Non
     return (
         exists("agents/worker-profiles.public.json")
         and exists("agents/hermes-profile-bindings.public.json")
-        and exists("docs/en/02-factory-flow-and-hermes-architecture.md")
-        and exists("docs/en/02-factory-flow-and-hermes-architecture.md")
+        and exists("docs/pt-BR/linha-de-producao.md")
+        and exists("docs/pt-BR/linha-de-producao.md")
     )
 
 
@@ -468,8 +468,8 @@ def build_requirements(
                 [
                     "agents/worker-profiles.public.json",
                     "agents/hermes-profile-bindings.public.json",
-                    "docs/en/02-factory-flow-and-hermes-architecture.md",
-                    "docs/en/02-factory-flow-and-hermes-architecture.md",
+                    "docs/pt-BR/linha-de-producao.md",
+                    "docs/pt-BR/linha-de-producao.md",
                     *(runtime_proof_refs or ["external:redacted-hermes-runtime-proof"]),
                 ],
                 "Workers must be executable Hermes profiles with identity, authority, tool policy, evidence, handoff and review contracts.",
@@ -478,8 +478,8 @@ def build_requirements(
     elif (
         exists("agents/worker-profiles.public.json")
         and exists("agents/hermes-profile-bindings.public.json")
-        and exists("docs/en/02-factory-flow-and-hermes-architecture.md")
-        and exists("docs/en/02-factory-flow-and-hermes-architecture.md")
+        and exists("docs/pt-BR/linha-de-producao.md")
+        and exists("docs/pt-BR/linha-de-producao.md")
         and exists(".tmp/factory-runs/agents/worker-profile-validation.md")
     ):
         requirements.append(
@@ -489,8 +489,8 @@ def build_requirements(
                 [
                     "agents/worker-profiles.public.json",
                     "agents/hermes-profile-bindings.public.json",
-                    "docs/en/02-factory-flow-and-hermes-architecture.md",
-                    "docs/en/02-factory-flow-and-hermes-architecture.md",
+                    "docs/pt-BR/linha-de-producao.md",
+                    "docs/pt-BR/linha-de-producao.md",
                     ".tmp/factory-runs/agents/worker-profile-validation.md",
                 ],
                 "Workers must be executable Hermes profiles with identity, authority, tool policy, evidence, handoff and review contracts.",

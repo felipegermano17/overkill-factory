@@ -1,8 +1,5 @@
-# Overkill Factory docs
+# Overkill Factory
 
-Canonical public documentation is intentionally small now.
+Esta página abre a documentação pública da Overkill Factory.
 
-- English: `en/index.md`
-- Português: `pt-BR/index.md`
-
-The deep system explanation is not split across many conceptual pages anymore. Read the factory flow and Hermes architecture page when you need the real operating model.
+- [Português](pt-BR/index.md)

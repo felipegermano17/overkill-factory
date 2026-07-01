@@ -18,7 +18,7 @@ A worker in this roster is not considered operable unless it has a profile,
 binding, packet route and validation coverage.
 
 For the full process map, see
-`docs/en/03-validation-and-repository-reference.md`. It maps each canonical factory stage
+`docs/pt-BR/uso.md`. It maps each canonical factory stage
 to a real registered worker, supporting workers, proof and blocker.
 
 The roster has 40 public-safe operators:
@@ -152,7 +152,7 @@ they get a machine-readable contract in `agents/worker-registry.public.json`.
 - Conceptual role names such as Method Router, Product Experience Router,
   Security Architect, Production Readiness, Access Capability and Factory
   Maturity Auditor are mapped to official workers in
-  `docs/en/03-validation-and-repository-reference.md`. They must not exist as loose Hermes
+  `docs/pt-BR/uso.md`. They must not exist as loose Hermes
   executor profiles unless promoted through registry, profile, binding,
   permission class, packet route and proof.
 

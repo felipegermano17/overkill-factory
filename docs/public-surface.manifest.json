@@ -1,20 +1,17 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/public-surface-manifest.schema.json",
   "record_type": "public_surface_manifest",
-  "manifest_version": "v5-deep-factory-flow",
+  "manifest_version": "v6-pt-br-internal-factory-docs",
   "created_at": "2026-07-01T00:00:00Z",
   "canonical_sources": [
     "README.md",
     "README.pt-BR.md",
     "docs/index.md",
-    "docs/en/index.md",
-    "docs/en/01-start-here.md",
-    "docs/en/02-factory-flow-and-hermes-architecture.md",
-    "docs/en/03-validation-and-repository-reference.md",
     "docs/pt-BR/index.md",
-    "docs/pt-BR/01-comecar-aqui.md",
-    "docs/pt-BR/02-fluxo-da-fabrica-e-arquitetura-hermes.md",
-    "docs/pt-BR/03-validacao-e-referencia-do-repositorio.md",
+    "docs/pt-BR/manual.md",
+    "docs/pt-BR/linha-de-producao.md",
+    "docs/pt-BR/uso.md",
+    "docs/pt-BR/para-mantenedores.md",
     "docs/factory-workflow.catalog.json",
     "docs/promise-implementation-map.public.json",
     "factory/scripts/factoryctl.py",
@@ -57,7 +54,7 @@
       "expected_stage_count": 33,
       "canonical_stage_count": 32,
       "conceptual_exceptions": [
-        "The visual map remains a conceptual supporting artifact; canonical documentation now lives in docs/en and docs/pt-BR."
+        "The visual map remains a conceptual supporting artifact; canonical public documentation lives in docs/pt-BR."
       ],
       "required_phrases": [
         "Universal Signal Intake",
@@ -96,27 +93,8 @@
       "surface_type": "root_readme",
       "authority_level": "supporting_explanation_not_source_of_truth",
       "source_refs": [
-        "docs/en/index.md",
-        "docs/en/02-factory-flow-and-hermes-architecture.md",
-        "docs/public-surface.manifest.json"
-      ],
-      "claim_checks": [
-        "source_refs_exist",
-        "source_of_truth_disclaimer",
-        "no_runtime_proof_claim"
-      ],
-      "required_phrases": [
-        "A passing local proof means the public kernel is coherent"
-      ]
-    },
-    {
-      "surface_id": "root-readme-pt-br",
-      "path": "README.pt-BR.md",
-      "surface_type": "root_readme",
-      "authority_level": "supporting_explanation_not_source_of_truth",
-      "source_refs": [
-        "README.md",
         "docs/pt-BR/index.md",
+        "docs/pt-BR/manual.md",
         "docs/public-surface.manifest.json"
       ],
       "claim_checks": [
@@ -125,91 +103,8 @@
         "no_runtime_proof_claim"
       ],
       "required_phrases": [
-        "Um teste local passando significa que o kernel público está coerente"
+        "Um teste local passando significa que o checkout e o kernel público estão coerentes"
       ]
-    },
-    {
-      "surface_id": "en-index",
-      "path": "docs/en/index.md",
-      "surface_type": "concept_doc",
-      "authority_level": "supporting_explanation_not_source_of_truth",
-      "source_refs": [
-        "factory/scripts/factoryctl.py",
-        "docs/factory-workflow.catalog.json",
-        "factory/templates/factory-route-registry.json"
-      ],
-      "claim_checks": [
-        "source_refs_exist",
-        "source_of_truth_disclaimer",
-        "no_runtime_proof_claim"
-      ],
-      "required_phrases": [
-        "real delivery requires live Hermes state"
-      ]
-    },
-    {
-      "surface_id": "en-start",
-      "path": "docs/en/01-start-here.md",
-      "surface_type": "concept_doc",
-      "authority_level": "supporting_explanation_not_source_of_truth",
-      "source_refs": [
-        "factory/scripts/factoryctl.py",
-        "docs/factory-workflow.catalog.json",
-        "factory/templates/factory-route-registry.json"
-      ],
-      "claim_checks": [
-        "source_refs_exist",
-        "source_of_truth_disclaimer",
-        "no_runtime_proof_claim"
-      ],
-      "required_phrases": [
-        "controlled production"
-      ]
-    },
-    {
-      "surface_id": "en-factory-flow-hermes",
-      "path": "docs/en/02-factory-flow-and-hermes-architecture.md",
-      "surface_type": "concept_doc",
-      "authority_level": "supporting_explanation_not_source_of_truth",
-      "source_refs": [
-        "factory/scripts/factoryctl.py",
-        "docs/factory-workflow.catalog.json",
-        "factory/templates/factory-route-registry.json"
-      ],
-      "claim_checks": [
-        "source_refs_exist",
-        "source_of_truth_disclaimer",
-        "no_runtime_proof_claim"
-      ],
-      "required_phrases": [
-        "Phase-by-phase operating manual",
-        "Hermes is the live runtime source of truth",
-        "Receipt Five",
-        "Worker Packet",
-        "production, mainnet, funds, secrets"
-      ]
-    },
-    {
-      "surface_id": "en-validation-and-repository-reference",
-      "path": "docs/en/03-validation-and-repository-reference.md",
-      "surface_type": "concept_doc",
-      "authority_level": "supporting_explanation_not_source_of_truth",
-      "source_refs": [
-        "factory/scripts/factoryctl.py",
-        "docs/factory-workflow.catalog.json",
-        "factory/templates/factory-route-registry.json"
-      ],
-      "claim_checks": [
-        "source_refs_exist",
-        "source_of_truth_disclaimer",
-        "no_runtime_proof_claim"
-      ],
-      "required_phrases": [
-        "Local validation is not live Hermes E2E proof",
-        "Route classes",
-        "product_creation"
-      ],
-      "expected_links": []
     },
     {
       "surface_id": "pt-index",
@@ -218,8 +113,7 @@
       "authority_level": "supporting_explanation_not_source_of_truth",
       "source_refs": [
         "factory/scripts/factoryctl.py",
-        "docs/factory-workflow.catalog.json",
-        "factory/templates/factory-route-registry.json"
+        "docs/factory-workflow.catalog.json"
       ],
       "claim_checks": [
         "source_refs_exist",
@@ -227,18 +121,18 @@
         "no_runtime_proof_claim"
       ],
       "required_phrases": [
-        "entrega real exige estado vivo no Hermes"
+        "pedido, fonte, entendimento, verdade do produto, rota, método"
       ]
     },
     {
-      "surface_id": "pt-start",
-      "path": "docs/pt-BR/01-comecar-aqui.md",
+      "surface_id": "pt-manual",
+      "path": "docs/pt-BR/manual.md",
       "surface_type": "concept_doc",
       "authority_level": "supporting_explanation_not_source_of_truth",
       "source_refs": [
         "factory/scripts/factoryctl.py",
-        "docs/factory-workflow.catalog.json",
-        "factory/templates/factory-route-registry.json"
+        "factory/agents/worker-registry.public.json",
+        "factory/agents/hermes-profile-bindings.public.json"
       ],
       "claim_checks": [
         "source_refs_exist",
@@ -246,41 +140,21 @@
         "no_runtime_proof_claim"
       ],
       "required_phrases": [
-        "produção controlada"
-      ]
-    },
-    {
-      "surface_id": "pt-factory-flow-hermes",
-      "path": "docs/pt-BR/02-fluxo-da-fabrica-e-arquitetura-hermes.md",
-      "surface_type": "concept_doc",
-      "authority_level": "supporting_explanation_not_source_of_truth",
-      "source_refs": [
-        "factory/scripts/factoryctl.py",
-        "docs/factory-workflow.catalog.json",
-        "factory/templates/factory-route-registry.json"
-      ],
-      "claim_checks": [
-        "source_refs_exist",
-        "source_of_truth_disclaimer",
-        "no_runtime_proof_claim"
-      ],
-      "required_phrases": [
-        "Manual operacional fase por fase",
-        "Hermes é a fonte de verdade viva do runtime",
+        "Hermes é o chão onde o trabalho fica visível",
+        "Product SOT",
         "Receipt Five",
-        "Worker Packet",
-        "produção, mainnet, fundos, segredos"
+        "Prova local mostra coerência local"
       ]
     },
     {
-      "surface_id": "pt-validation-and-repository-reference",
-      "path": "docs/pt-BR/03-validacao-e-referencia-do-repositorio.md",
+      "surface_id": "pt-linha-de-producao",
+      "path": "docs/pt-BR/linha-de-producao.md",
       "surface_type": "concept_doc",
       "authority_level": "supporting_explanation_not_source_of_truth",
       "source_refs": [
-        "factory/scripts/factoryctl.py",
         "docs/factory-workflow.catalog.json",
-        "factory/templates/factory-route-registry.json"
+        "factory/templates/factory-route-registry.json",
+        "factory/templates/method-engine-registry.json"
       ],
       "claim_checks": [
         "source_refs_exist",
@@ -288,11 +162,56 @@
         "no_runtime_proof_claim"
       ],
       "required_phrases": [
-        "validação local não é prova E2E Hermes viva",
-        "Classes de rota",
-        "product_creation"
+        "## Pedido",
+        "## Fonte",
+        "## Entendimento",
+        "## Verdade do produto",
+        "## Hermes",
+        "## Evidência",
+        "## Recibo"
+      ]
+    },
+    {
+      "surface_id": "pt-uso",
+      "path": "docs/pt-BR/uso.md",
+      "surface_type": "concept_doc",
+      "authority_level": "supporting_explanation_not_source_of_truth",
+      "source_refs": [
+        "factory/scripts/factoryctl.py",
+        "factory/examples/minimal-hermes-project/card.md"
       ],
-      "expected_links": []
+      "claim_checks": [
+        "source_refs_exist",
+        "source_of_truth_disclaimer",
+        "no_runtime_proof_claim"
+      ],
+      "required_phrases": [
+        "python3 scripts/factoryctl.py doctor",
+        "worker packet gerado",
+        "execução viva no Hermes"
+      ]
+    },
+    {
+      "surface_id": "pt-para-mantenedores",
+      "path": "docs/pt-BR/para-mantenedores.md",
+      "surface_type": "concept_doc",
+      "authority_level": "supporting_explanation_not_source_of_truth",
+      "source_refs": [
+        "factory/scripts/factoryctl.py",
+        "factory/schemas/",
+        "factory/templates/",
+        "factory/tests/"
+      ],
+      "claim_checks": [
+        "source_refs_exist",
+        "source_of_truth_disclaimer",
+        "no_runtime_proof_claim"
+      ],
+      "required_phrases": [
+        "explicação humana",
+        "contrato executável",
+        "teste, validador ou prova local"
+      ]
     }
   ]
 }

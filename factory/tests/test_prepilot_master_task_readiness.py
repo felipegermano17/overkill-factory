@@ -99,9 +99,10 @@ class PrepilotMasterTaskReadinessTest(unittest.TestCase):
         readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
         normalized = " ".join(readme.split())
 
-        self.assertIn("Narrative validation history", readme)
-        self.assertIn("do not belong in the public onboarding path", normalized)
+        self.assertIn("documentação antiga preservada como histórico", normalized)
+        self.assertIn("docs/pt-BR/linha-de-producao.md", readme)
         self.assertNotIn("docs/roadmap/", readme)
+        self.assertNotIn("docs/en/", readme)
 
 
 if __name__ == "__main__":

@@ -10,4 +10,4 @@ against the executable factory surface: `factory/scripts/`, `factory/schemas/`,
 `factory/templates/`, `factory/agents/`, `factory/tests/`, generated workflow
 catalogs, and real `factoryctl` output.
 
-The canonical public documentation now lives in `docs/en/` and `docs/pt-BR/`.
+The canonical public documentation now lives in `docs/pt-BR/`.

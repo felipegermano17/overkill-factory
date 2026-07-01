@@ -1,5 +1,5 @@
 site_name: Overkill Factory
-site_description: Public documentation for the Overkill Factory production contract on Hermes.
+site_description: Documentação pública da Overkill Factory.
 docs_dir: .
 site_dir: ../site
 strict: true
@@ -8,17 +8,13 @@ theme:
   name: mkdocs
 
 nav:
-  - Home: index.md
-  - English:
-      - Overview: en/index.md
-      - Start here: en/01-start-here.md
-      - Factory flow and Hermes architecture: en/02-factory-flow-and-hermes-architecture.md
-      - Validation and repository reference: en/03-validation-and-repository-reference.md
+  - Início: index.md
   - Português:
-      - Visão geral: pt-BR/index.md
-      - Começar aqui: pt-BR/01-comecar-aqui.md
-      - Fluxo da fábrica e arquitetura Hermes: pt-BR/02-fluxo-da-fabrica-e-arquitetura-hermes.md
-      - Validação e referência: pt-BR/03-validacao-e-referencia-do-repositorio.md
+      - Overkill Factory: pt-BR/index.md
+      - Manual: pt-BR/manual.md
+      - Linha de produção: pt-BR/linha-de-producao.md
+      - Uso: pt-BR/uso.md
+      - Para mantenedores: pt-BR/para-mantenedores.md
 
 markdown_extensions:
   - toc:

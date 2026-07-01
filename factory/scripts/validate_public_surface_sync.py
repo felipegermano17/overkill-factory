@@ -94,7 +94,7 @@ def stage_map_count(root: Path) -> int:
     `docs/` and into `factory/legacy-docs/`. The current visual map still
     represents the pre-rewrite stage-map artifact, so this validator reads the
     preserved legacy source when the old public path no longer exists. The
-    canonical product lifecycle for new docs lives in `docs/en/02-factory-flow-and-hermes-architecture.md` and
+    canonical product lifecycle for new docs lives in `docs/pt-BR/linha-de-producao.md` and
     is validated separately through the workflow compiler.
     """
     candidates = [

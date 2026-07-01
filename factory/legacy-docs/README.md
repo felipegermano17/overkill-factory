@@ -2,7 +2,7 @@
 
 This directory preserves old public documentation and generated historical references.
 
-It is not the canonical public documentation. Canonical docs now live under `docs/en/` and `docs/pt-BR/`.
+It is not the canonical public documentation. Canonical docs now live under `docs/pt-BR/`.
 
 Use legacy docs as historical evidence only:
 

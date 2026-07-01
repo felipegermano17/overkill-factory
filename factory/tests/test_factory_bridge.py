@@ -36,7 +36,7 @@ class FactoryBridgeTest(unittest.TestCase):
                 severity="requires_user",
                 source="hermes_transition_hook",
                 summary="R3 owner decision is required before done.",
-                refs=["docs/en/01-start-here.md"],
+                refs=["docs/pt-BR/manual.md"],
                 requires_user=True,
                 payload={"gate_type": "R3"},
             )
@@ -47,7 +47,7 @@ class FactoryBridgeTest(unittest.TestCase):
                 severity="requires_user",
                 source="hermes_transition_hook",
                 summary="R3 owner decision is required before done.",
-                refs=["docs/en/01-start-here.md"],
+                refs=["docs/pt-BR/manual.md"],
                 requires_user=True,
                 payload={"gate_type": "R3"},
             )
@@ -271,7 +271,7 @@ class FactoryBridgeTest(unittest.TestCase):
                 severity="requires_user",
                 source="factoryctl",
                 summary="Release owner decision is required.",
-                refs=["docs/en/02-factory-flow-and-hermes-architecture.md"],
+                refs=["docs/pt-BR/linha-de-producao.md"],
                 requires_user=True,
             )
             decision = bridge.build_decision_record(
@@ -326,29 +326,20 @@ class FactoryBridgeTest(unittest.TestCase):
         self.assertIn("invalid JSONL record", corrupt_context)
 
     def test_operator_bridge_architecture_documents_the_bridge_modes(self) -> None:
-        architecture = (REPO_ROOT / "docs" / "en" / "02-factory-flow-and-hermes-architecture.md").read_text(encoding="utf-8")
+        architecture = (REPO_ROOT / "docs" / "pt-BR" / "linha-de-producao.md").read_text(encoding="utf-8")
 
         for expected in [
-            "status_bridge",
-            "start_bridge",
-            "question_bridge",
-            "decision_bridge",
-            "change_bridge",
-            "exception_bridge",
-            "handoff_bridge",
-            "learnback_forwarding",
+            "Pedido", "Fonte", "Entendimento", "Verdade do produto", "Hermes", "Evidência", "Decisão", "Recibo"
         ]:
             with self.subTest(expected=expected):
                 self.assertIn(expected, architecture)
 
-        self.assertIn("not execute factory work", architecture)
-        self.assertIn("factory_bridge_start_request", architecture)
-        self.assertIn("overkill-factory-gerente", architecture)
-        self.assertIn("factory-orchestrator", architecture)
-        self.assertIn("Durable Operator Inbox", architecture)
-        self.assertIn("default Hermes store", architecture)
-        self.assertIn("Factory Mechanic remains the self-improvement owner", architecture)
-        self.assertIn("The bridge cannot", architecture)
+        self.assertIn("A fábrica não simula autoridade humana", architecture)
+        self.assertIn("No Hermes", architecture)
+        self.assertIn("card", architecture)
+        self.assertIn("worker", architecture)
+        self.assertIn("bloqueio", architecture)
+        self.assertIn("retomada", architecture)
         self.assertNotIn("Codex plugin", architecture)
         self.assertNotIn("Codex hooks", architecture)
 

@@ -32,10 +32,10 @@
         "pre-release",
         "post-release-learning"
       ],
-      "profile_manifest_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "profile_manifest_ref": "docs/pt-BR/linha-de-producao.md",
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
-      "skill_install_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "skill_install_ref": "docs/pt-BR/linha-de-producao.md",
       "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
       "v3_production_activation": {
         "runtime_authority": "hermes_kanban",
@@ -75,10 +75,10 @@
       "routing_moments": [
         "source-sot"
       ],
-      "profile_manifest_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "profile_manifest_ref": "docs/pt-BR/linha-de-producao.md",
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
-      "skill_install_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "skill_install_ref": "docs/pt-BR/linha-de-producao.md",
       "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
       "v3_production_activation": {
         "runtime_authority": "hermes_kanban",
@@ -115,10 +115,10 @@
       "routing_moments": [
         "source-sot"
       ],
-      "profile_manifest_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "profile_manifest_ref": "docs/pt-BR/linha-de-producao.md",
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
-      "skill_install_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "skill_install_ref": "docs/pt-BR/linha-de-producao.md",
       "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
       "v3_production_activation": {
         "runtime_authority": "hermes_kanban",
@@ -155,10 +155,10 @@
       "routing_moments": [
         "architecture-pre-decomposition"
       ],
-      "profile_manifest_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "profile_manifest_ref": "docs/pt-BR/linha-de-producao.md",
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
-      "skill_install_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "skill_install_ref": "docs/pt-BR/linha-de-producao.md",
       "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
       "v3_production_activation": {
         "runtime_authority": "hermes_kanban",
@@ -197,10 +197,10 @@
         "architecture-pre-decomposition",
         "verification"
       ],
-      "profile_manifest_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "profile_manifest_ref": "docs/pt-BR/linha-de-producao.md",
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
-      "skill_install_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "skill_install_ref": "docs/pt-BR/linha-de-producao.md",
       "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
       "v3_production_activation": {
         "runtime_authority": "hermes_kanban",
@@ -241,10 +241,10 @@
         "verification",
         "pre-release"
       ],
-      "profile_manifest_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "profile_manifest_ref": "docs/pt-BR/linha-de-producao.md",
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
-      "skill_install_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "skill_install_ref": "docs/pt-BR/linha-de-producao.md",
       "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
       "v3_production_activation": {
         "runtime_authority": "hermes_kanban",
@@ -284,10 +284,10 @@
         "verification",
         "pre-release"
       ],
-      "profile_manifest_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "profile_manifest_ref": "docs/pt-BR/linha-de-producao.md",
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
-      "skill_install_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "skill_install_ref": "docs/pt-BR/linha-de-producao.md",
       "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
       "v3_production_activation": {
         "runtime_authority": "hermes_kanban",
@@ -326,10 +326,10 @@
         "architecture-pre-decomposition",
         "verification"
       ],
-      "profile_manifest_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "profile_manifest_ref": "docs/pt-BR/linha-de-producao.md",
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
-      "skill_install_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "skill_install_ref": "docs/pt-BR/linha-de-producao.md",
       "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
       "v3_production_activation": {
         "runtime_authority": "hermes_kanban",
@@ -369,10 +369,10 @@
         "architecture-pre-decomposition",
         "verification"
       ],
-      "profile_manifest_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "profile_manifest_ref": "docs/pt-BR/linha-de-producao.md",
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
-      "skill_install_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "skill_install_ref": "docs/pt-BR/linha-de-producao.md",
       "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
       "v3_production_activation": {
         "runtime_authority": "hermes_kanban",
@@ -410,10 +410,10 @@
       "routing_moments": [
         "verification"
       ],
-      "profile_manifest_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "profile_manifest_ref": "docs/pt-BR/linha-de-producao.md",
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
-      "skill_install_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "skill_install_ref": "docs/pt-BR/linha-de-producao.md",
       "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
       "v3_production_activation": {
         "runtime_authority": "hermes_kanban",
@@ -451,10 +451,10 @@
       "routing_moments": [
         "verification"
       ],
-      "profile_manifest_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "profile_manifest_ref": "docs/pt-BR/linha-de-producao.md",
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
-      "skill_install_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "skill_install_ref": "docs/pt-BR/linha-de-producao.md",
       "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
       "v3_production_activation": {
         "runtime_authority": "hermes_kanban",
@@ -494,10 +494,10 @@
         "verification",
         "pre-release"
       ],
-      "profile_manifest_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "profile_manifest_ref": "docs/pt-BR/linha-de-producao.md",
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
-      "skill_install_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "skill_install_ref": "docs/pt-BR/linha-de-producao.md",
       "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
       "v3_production_activation": {
         "runtime_authority": "hermes_kanban",
@@ -535,10 +535,10 @@
       "routing_moments": [
         "verification"
       ],
-      "profile_manifest_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "profile_manifest_ref": "docs/pt-BR/linha-de-producao.md",
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
-      "skill_install_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "skill_install_ref": "docs/pt-BR/linha-de-producao.md",
       "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
       "v3_production_activation": {
         "runtime_authority": "hermes_kanban",
@@ -578,10 +578,10 @@
         "Receipt Five closure",
         "done promotion"
       ],
-      "profile_manifest_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "profile_manifest_ref": "docs/pt-BR/linha-de-producao.md",
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
-      "skill_install_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "skill_install_ref": "docs/pt-BR/linha-de-producao.md",
       "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
       "v3_production_activation": {
         "runtime_authority": "hermes_kanban",
@@ -622,10 +622,10 @@
         "architecture-pre-decomposition",
         "pre-release"
       ],
-      "profile_manifest_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "profile_manifest_ref": "docs/pt-BR/linha-de-producao.md",
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
-      "skill_install_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "skill_install_ref": "docs/pt-BR/linha-de-producao.md",
       "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
       "v3_production_activation": {
         "runtime_authority": "hermes_kanban",
@@ -663,10 +663,10 @@
       "routing_moments": [
         "security-scan-plan"
       ],
-      "profile_manifest_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "profile_manifest_ref": "docs/pt-BR/linha-de-producao.md",
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
-      "skill_install_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "skill_install_ref": "docs/pt-BR/linha-de-producao.md",
       "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
       "v3_production_activation": {
         "runtime_authority": "hermes_kanban",
@@ -705,10 +705,10 @@
         "security-scan-plan",
         "implementation"
       ],
-      "profile_manifest_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "profile_manifest_ref": "docs/pt-BR/linha-de-producao.md",
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
-      "skill_install_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "skill_install_ref": "docs/pt-BR/linha-de-producao.md",
       "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
       "v3_production_activation": {
         "runtime_authority": "hermes_kanban",
@@ -746,10 +746,10 @@
       "routing_moments": [
         "implementation"
       ],
-      "profile_manifest_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "profile_manifest_ref": "docs/pt-BR/linha-de-producao.md",
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
-      "skill_install_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "skill_install_ref": "docs/pt-BR/linha-de-producao.md",
       "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
       "v3_production_activation": {
         "runtime_authority": "hermes_kanban",
@@ -787,10 +787,10 @@
       "routing_moments": [
         "verification"
       ],
-      "profile_manifest_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "profile_manifest_ref": "docs/pt-BR/linha-de-producao.md",
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
-      "skill_install_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "skill_install_ref": "docs/pt-BR/linha-de-producao.md",
       "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
       "v3_production_activation": {
         "runtime_authority": "hermes_kanban",
@@ -831,10 +831,10 @@
         "verification",
         "pre-release"
       ],
-      "profile_manifest_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "profile_manifest_ref": "docs/pt-BR/linha-de-producao.md",
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
-      "skill_install_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "skill_install_ref": "docs/pt-BR/linha-de-producao.md",
       "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
       "v3_production_activation": {
         "runtime_authority": "hermes_kanban",
@@ -873,10 +873,10 @@
         "architecture-pre-decomposition",
         "pre-release"
       ],
-      "profile_manifest_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "profile_manifest_ref": "docs/pt-BR/linha-de-producao.md",
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
-      "skill_install_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "skill_install_ref": "docs/pt-BR/linha-de-producao.md",
       "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
       "v3_production_activation": {
         "runtime_authority": "hermes_kanban",
@@ -915,10 +915,10 @@
         "architecture-pre-decomposition",
         "pre-release"
       ],
-      "profile_manifest_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "profile_manifest_ref": "docs/pt-BR/linha-de-producao.md",
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
-      "skill_install_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "skill_install_ref": "docs/pt-BR/linha-de-producao.md",
       "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
       "v3_production_activation": {
         "runtime_authority": "hermes_kanban",
@@ -956,10 +956,10 @@
       "routing_moments": [
         "pre-release"
       ],
-      "profile_manifest_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "profile_manifest_ref": "docs/pt-BR/linha-de-producao.md",
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
-      "skill_install_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "skill_install_ref": "docs/pt-BR/linha-de-producao.md",
       "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
       "v3_production_activation": {
         "runtime_authority": "hermes_kanban",
@@ -999,10 +999,10 @@
         "source-sot",
         "post-release-learning"
       ],
-      "profile_manifest_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "profile_manifest_ref": "docs/pt-BR/linha-de-producao.md",
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
-      "skill_install_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "skill_install_ref": "docs/pt-BR/linha-de-producao.md",
       "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
       "v3_production_activation": {
         "runtime_authority": "hermes_kanban",
@@ -1040,10 +1040,10 @@
       "routing_moments": [
         "post-release-learning"
       ],
-      "profile_manifest_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "profile_manifest_ref": "docs/pt-BR/linha-de-producao.md",
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
-      "skill_install_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "skill_install_ref": "docs/pt-BR/linha-de-producao.md",
       "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
       "v3_production_activation": {
         "runtime_authority": "hermes_kanban",
@@ -1081,10 +1081,10 @@
       "routing_moments": [
         "pre-release"
       ],
-      "profile_manifest_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "profile_manifest_ref": "docs/pt-BR/linha-de-producao.md",
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
-      "skill_install_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "skill_install_ref": "docs/pt-BR/linha-de-producao.md",
       "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
       "v3_production_activation": {
         "runtime_authority": "hermes_kanban",
@@ -1125,10 +1125,10 @@
         "verification",
         "pre-release"
       ],
-      "profile_manifest_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "profile_manifest_ref": "docs/pt-BR/linha-de-producao.md",
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
-      "skill_install_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "skill_install_ref": "docs/pt-BR/linha-de-producao.md",
       "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
       "v3_production_activation": {
         "runtime_authority": "hermes_kanban",
@@ -1167,10 +1167,10 @@
         "architecture-pre-decomposition",
         "pre-release"
       ],
-      "profile_manifest_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "profile_manifest_ref": "docs/pt-BR/linha-de-producao.md",
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
-      "skill_install_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "skill_install_ref": "docs/pt-BR/linha-de-producao.md",
       "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
       "v3_production_activation": {
         "runtime_authority": "hermes_kanban",
@@ -1210,10 +1210,10 @@
         "implementation",
         "verification"
       ],
-      "profile_manifest_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "profile_manifest_ref": "docs/pt-BR/linha-de-producao.md",
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
-      "skill_install_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "skill_install_ref": "docs/pt-BR/linha-de-producao.md",
       "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
       "v3_production_activation": {
         "runtime_authority": "hermes_kanban",
@@ -1252,10 +1252,10 @@
         "implementation",
         "verification"
       ],
-      "profile_manifest_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "profile_manifest_ref": "docs/pt-BR/linha-de-producao.md",
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
-      "skill_install_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "skill_install_ref": "docs/pt-BR/linha-de-producao.md",
       "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
       "v3_production_activation": {
         "runtime_authority": "hermes_kanban",
@@ -1294,10 +1294,10 @@
         "implementation",
         "verification"
       ],
-      "profile_manifest_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "profile_manifest_ref": "docs/pt-BR/linha-de-producao.md",
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
-      "skill_install_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "skill_install_ref": "docs/pt-BR/linha-de-producao.md",
       "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
       "v3_production_activation": {
         "runtime_authority": "hermes_kanban",
@@ -1338,10 +1338,10 @@
         "implementation",
         "verification"
       ],
-      "profile_manifest_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "profile_manifest_ref": "docs/pt-BR/linha-de-producao.md",
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
-      "skill_install_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "skill_install_ref": "docs/pt-BR/linha-de-producao.md",
       "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
       "v3_production_activation": {
         "runtime_authority": "hermes_kanban",
@@ -1382,10 +1382,10 @@
         "implementation",
         "verification"
       ],
-      "profile_manifest_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "profile_manifest_ref": "docs/pt-BR/linha-de-producao.md",
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
-      "skill_install_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "skill_install_ref": "docs/pt-BR/linha-de-producao.md",
       "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
       "v3_production_activation": {
         "runtime_authority": "hermes_kanban",
@@ -1425,10 +1425,10 @@
         "implementation",
         "verification"
       ],
-      "profile_manifest_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "profile_manifest_ref": "docs/pt-BR/linha-de-producao.md",
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
-      "skill_install_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "skill_install_ref": "docs/pt-BR/linha-de-producao.md",
       "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
       "v3_production_activation": {
         "runtime_authority": "hermes_kanban",
@@ -1468,10 +1468,10 @@
         "implementation",
         "verification"
       ],
-      "profile_manifest_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "profile_manifest_ref": "docs/pt-BR/linha-de-producao.md",
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
-      "skill_install_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "skill_install_ref": "docs/pt-BR/linha-de-producao.md",
       "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
       "v3_production_activation": {
         "runtime_authority": "hermes_kanban",
@@ -1510,10 +1510,10 @@
         "implementation",
         "verification"
       ],
-      "profile_manifest_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "profile_manifest_ref": "docs/pt-BR/linha-de-producao.md",
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
-      "skill_install_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "skill_install_ref": "docs/pt-BR/linha-de-producao.md",
       "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
       "v3_production_activation": {
         "runtime_authority": "hermes_kanban",
@@ -1552,10 +1552,10 @@
         "implementation",
         "verification"
       ],
-      "profile_manifest_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "profile_manifest_ref": "docs/pt-BR/linha-de-producao.md",
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
-      "skill_install_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "skill_install_ref": "docs/pt-BR/linha-de-producao.md",
       "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
       "v3_production_activation": {
         "runtime_authority": "hermes_kanban",
@@ -1594,10 +1594,10 @@
         "implementation",
         "verification"
       ],
-      "profile_manifest_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "profile_manifest_ref": "docs/pt-BR/linha-de-producao.md",
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
-      "skill_install_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "skill_install_ref": "docs/pt-BR/linha-de-producao.md",
       "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
       "v3_production_activation": {
         "runtime_authority": "hermes_kanban",
@@ -1637,10 +1637,10 @@
         "operator-visibility",
         "pre-release"
       ],
-      "profile_manifest_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "profile_manifest_ref": "docs/pt-BR/linha-de-producao.md",
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
-      "skill_install_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "skill_install_ref": "docs/pt-BR/linha-de-producao.md",
       "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
       "v3_production_activation": {
         "runtime_authority": "hermes_kanban",
@@ -1681,10 +1681,10 @@
         "bridge-health",
         "pre-release"
       ],
-      "profile_manifest_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "profile_manifest_ref": "docs/pt-BR/linha-de-producao.md",
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
-      "skill_install_ref": "docs/en/02-factory-flow-and-hermes-architecture.md",
+      "skill_install_ref": "docs/pt-BR/linha-de-producao.md",
       "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md",
       "v3_production_activation": {
         "runtime_authority": "hermes_kanban",

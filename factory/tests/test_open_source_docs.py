@@ -19,93 +19,112 @@ def project_path(rel: str) -> Path:
 def read_text(rel: str) -> str:
     return project_path(rel).read_text(encoding="utf-8")
 
-EN_PAGES = {"index.md", "01-start-here.md", "02-factory-flow-and-hermes-architecture.md", "03-validation-and-repository-reference.md"}
-PT_PAGES = {"index.md", "01-comecar-aqui.md", "02-fluxo-da-fabrica-e-arquitetura-hermes.md", "03-validacao-e-referencia-do-repositorio.md"}
-REMOVED_SHALLOW_DOCS = {
-    "02-product-problem.md", "03-how-a-request-moves.md", "04-operator-experience.md", "05-evidence-and-receipts.md",
-    "06-human-decisions.md", "07-hermes-and-factory.md", "08-workers-and-work-units.md", "09-status-boundaries-and-proof.md",
-    "10-local-validation.md", "11-repository-reference.md", "03-local-validation.md", "04-repository-reference.md", "12-glossary.md", "13-maintainer-guide.md",
-    "02-o-problema-do-produto.md", "03-como-um-pedido-anda.md", "04-experiencia-do-operador.md", "05-prova-e-recibos.md",
-    "06-decisoes-humanas.md", "07-hermes-e-factory.md", "08-workers-e-unidades-de-trabalho.md", "09-status-limites-e-prova.md",
-    "10-validacao-local.md", "11-referencia-do-repositorio.md", "03-validacao-local.md", "04-referencia-do-repositorio.md", "12-glossario.md", "13-guia-de-manutencao.md",
+
+PT_PAGES = {"index.md", "manual.md", "linha-de-producao.md", "uso.md", "para-mantenedores.md"}
+OLD_CANONICAL_NAMES = {
+    "01-start-here.md", "02-factory-flow-and-hermes-architecture.md", "03-validation-and-repository-reference.md",
+    "01-comecar-aqui.md", "02-fluxo-da-fabrica-e-arquitetura-hermes.md", "03-validacao-e-referencia-do-repositorio.md",
+    "trust-and-evidence.md", "technical-model.md", "usage.md", "reference.md", "operating-model.md", "lifecycle.md",
 }
-OLD_CANONICAL_NAMES = {"manual.md", "operating-model.md", "lifecycle.md", "trust-and-evidence.md", "technical-model.md", "usage.md", "reference.md"}
+FORBIDDEN_COPY_PHRASES = [
+    "## O problema", "## A solução", "Por que isso importa", "Por que a fábrica é diferente",
+    "O que agentes soltos", "Benefícios", "futuro do trabalho", "garante qualidade",
+    "aumenta eficiência", "traz confiança", "orquestra agentes para garantir",
+]
+
 
 class OpenSourceDocsTest(unittest.TestCase):
-    def test_root_readmes_point_to_small_deep_docs(self) -> None:
-        readme = read_text("README.md")
-        readme_pt = read_text("README.pt-BR.md")
-        for text in [readme, readme_pt]:
-            self.assertIn("docs/en/index.md", text)
-            self.assertIn("docs/pt-BR/index.md", text)
-            self.assertIn("https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.3.html", text)
-            self.assertIn("factory/legacy-docs/", text)
-            self.assertIn("python3 scripts/factoryctl.py doctor", text)
-            self.assertIn("python3 scripts/factoryctl.py run minimal", text)
-        self.assertIn("docs/en/02-factory-flow-and-hermes-architecture.md", readme)
-        self.assertIn("docs/pt-BR/02-fluxo-da-fabrica-e-arquitetura-hermes.md", readme_pt)
-        self.assertIn("A passing local proof means the public kernel is coherent", readme)
-        self.assertIn("Um teste local passando significa que o kernel público está coerente", readme_pt)
-
-    def test_docs_tree_is_small_and_not_theatrical(self) -> None:
-        allowed_root_entries = {"assets", "en", "pt-BR", "index.md", "mkdocs.yml", "factory-workflow.catalog.json", "promise-implementation-map.public.json", "public-surface.manifest.json"}
+    def test_public_tree_matches_briefing(self) -> None:
+        allowed_root_entries = {"assets", "pt-BR", "index.md", "mkdocs.yml", "factory-workflow.catalog.json", "promise-implementation-map.public.json", "public-surface.manifest.json"}
         self.assertEqual({path.name for path in (ROOT / "docs").iterdir()}, allowed_root_entries)
-        self.assertEqual({p.name for p in (ROOT / "docs" / "en").glob("*.md")}, EN_PAGES)
         self.assertEqual({p.name for p in (ROOT / "docs" / "pt-BR").glob("*.md")}, PT_PAGES)
+        self.assertFalse((ROOT / "docs" / "en").exists())
         mkdocs = read_text("docs/mkdocs.yml")
-        for forbidden in OLD_CANONICAL_NAMES | REMOVED_SHALLOW_DOCS:
-            self.assertNotIn(f"en/{forbidden}", mkdocs)
-            self.assertNotIn(f"pt-BR/{forbidden}", mkdocs)
-        self.assertIn("en/02-factory-flow-and-hermes-architecture.md", mkdocs)
-        self.assertIn("pt-BR/02-fluxo-da-fabrica-e-arquitetura-hermes.md", mkdocs)
+        for page in PT_PAGES:
+            self.assertIn(f"pt-BR/{page}", mkdocs)
+        for old in OLD_CANONICAL_NAMES:
+            self.assertNotIn(old, mkdocs)
 
-    def test_legacy_docs_are_preserved_but_not_canonical(self) -> None:
-        legacy = CODE_ROOT / "legacy-docs" / "public-docs-before-product-manual"
-        self.assertTrue((legacy / "README.md").is_file())
-        self.assertIn("not the canonical public documentation", (legacy / "README.md").read_text(encoding="utf-8"))
-        self.assertIn("not the canonical public documentation", read_text("legacy-docs/README.md"))
+    def test_root_readmes_point_to_new_pt_br_docs(self) -> None:
+        for rel in ["README.md", "README.pt-BR.md"]:
+            text = read_text(rel)
+            for ref in ["docs/pt-BR/index.md", "docs/pt-BR/manual.md", "docs/pt-BR/linha-de-producao.md", "docs/pt-BR/uso.md", "docs/pt-BR/para-mantenedores.md"]:
+                self.assertIn(ref, text)
+            self.assertIn("Um teste local passando significa que o checkout e o kernel público estão coerentes", text)
+            self.assertIn("factory/legacy-docs/", text)
+            self.assertNotIn("docs/en/", text)
 
-    def test_dense_flow_doc_contains_real_factory_mechanics(self) -> None:
-        workflow = json.loads(read_text("docs/factory-workflow.catalog.json"))
-        workers = json.loads(read_text("agents/worker-registry.public.json"))
-        routes = json.loads(read_text("templates/factory-route-registry.json"))
-        methods = json.loads(read_text("templates/method-engine-registry.json"))
-        operating_systems = json.loads(read_text("templates/factory-operating-system-registry.json"))
-        en = read_text("docs/en/02-factory-flow-and-hermes-architecture.md")
-        pt = read_text("docs/pt-BR/02-fluxo-da-fabrica-e-arquitetura-hermes.md")
-        self.assertGreater(len(en.split()), 5000)
-        self.assertGreater(len(pt.split()), 5000)
-        for phase in workflow["phases"]:
-            self.assertIn(f"### {phase['phase_id']} — {phase['phase_name']}", en)
-            self.assertIn(f"### {phase['phase_id']} — {phase['phase_name']}", pt)
-            for required in ["Required artifacts", "Required gates", "Required workers", "Blocked actions", "Completion detection"]:
-                self.assertIn(required, en)
-        self.assertIn(f"{len(workflow['phases'])} compiled phases", en)
-        self.assertIn(f"{len(workers['workers'])} public workers", en)
-        self.assertIn(f"{len(routes['routes'])} route classes", en)
-        self.assertIn(f"{len(methods['engines'])} method engines", en)
-        self.assertIn(f"{len(operating_systems['entries'])} operating-system areas", en)
+    def test_docs_are_not_product_copy(self) -> None:
+        for path in (ROOT / "docs" / "pt-BR").glob("*.md"):
+            text = path.read_text(encoding="utf-8")
+            for phrase in FORBIDDEN_COPY_PHRASES:
+                self.assertNotIn(phrase, text, path.name)
+
+    def test_manual_contains_system_parts_and_boundaries(self) -> None:
+        manual = read_text("docs/pt-BR/manual.md")
+        self.assertGreater(len(manual.split()), 1800)
+        for heading in ["## Definição", "## Hermes", "## Papéis", "## Estado", "## Artefatos", "## Ciclo", "## Limites"]:
+            self.assertIn(heading, manual)
         for phrase in [
-            "Hermes is the live runtime source of truth", "Hermes profiles materialize worker roles", "Worker Packet", "Receipt Five",
-            "Bad request", "Good request", "Weak proof", "Strong proof", "production, mainnet, funds, secrets",
-            "status_bridge", "start_bridge", "question_bridge", "decision_bridge", "change_bridge", "exception_bridge", "handoff_bridge", "learnback_forwarding",
-            "not allowed to execute factory work", "local tests prove checkout coherence", "Do not claim public documentation is runtime proof",
-            "product_creation", "Route classes", "F0 — Pre-Start / Sealed Source Envelope",
-            "Three end-to-end worked examples", "Build the customer onboarding flow", "Users cannot reset passwords", "Promote version 1.2.0", "Failure-pattern index",
+            "Hermes é o chão onde o trabalho fica visível",
+            "cards, status, comentários, anexos, dependências, workers, bloqueios, transições",
+            "verdade do produto",
+            "Product SOT",
+            "worker packet",
+            "Receipt Five",
+            "Prova local mostra coerência local",
+            "Card criado mostra registro",
+            "Evidência anexada mostra material disponível",
+            "Decisão humana não deve ser simulada pela fábrica",
         ]:
-            self.assertIn(phrase, en)
-        for phrase in ["Hermes é a fonte de verdade viva do runtime", "Worker Packet", "Receipt Five", "Pedido ruim", "Pedido bom", "Prova fraca", "Prova boa", "produção, mainnet, fundos, segredos", "Teste local prova coerência do checkout", "Não diga que docs públicas provam runtime", "Classes de rota", "Três exemplos ponta-a-ponta", "usuários não conseguem resetar senha", "Promover versão 1.2.0", "Índice de padrões de falha"]:
-            self.assertIn(phrase, pt)
+            self.assertIn(phrase, manual)
 
-    def test_validation_and_reference_remain_practical(self) -> None:
-        en_validation = read_text("docs/en/03-validation-and-repository-reference.md")
-        pt_validation = read_text("docs/pt-BR/03-validacao-e-referencia-do-repositorio.md")
-        reference = en_validation
-        for text in [en_validation, pt_validation]:
-            self.assertIn("python3 scripts/validate_public_surface_sync.py", text)
-            self.assertIn("python3 scripts/validate_promise_implementation_map.py", text)
-        self.assertIn("product_creation", reference)
-        self.assertIn("Route classes", reference)
+    def test_linha_de_producao_shows_internal_mechanism(self) -> None:
+        doc = read_text("docs/pt-BR/linha-de-producao.md")
+        self.assertGreater(len(doc.split()), 4200)
+        headings = ["Pedido", "Fonte", "Entendimento", "Verdade do produto", "Rota", "Método", "Capacidade", "Trabalho", "Hermes", "Execução", "Evidência", "Revisão", "Decisão", "Recibo", "Fechamento"]
+        for h in headings:
+            self.assertIn(f"## {h}", doc)
+        for phrase in [
+            "entrada recebida e fonte a preservar",
+            "fatos, afirmações do pedido, decisões já tomadas, restrições, dependências, dúvidas, lacunas, conflitos, inferências",
+            "fonte lida e do entendimento registrado",
+            "rotas comuns incluem documentação, bug, feature, interface, CLI, integração, release, incidente, segurança, blockchain/Solana",
+            "worker disponível, permissão, acesso, segredo, ambiente, ferramenta, repositório",
+            "unidade de trabalho -> card Hermes -> resultado do worker -> revisão -> decisão/fechamento",
+            "A revisão consome o que o worker devolveu",
+            "A fábrica não simula autoridade humana",
+            "o que foi pedido, o que foi produzido, que evidência sustenta, quem revisou ou decidiu",
+            "entregue, bloqueado, parcial, reaberto, aprendido, arquivado e aguardando decisão",
+        ]:
+            self.assertIn(phrase, doc)
+
+    def test_uso_contains_commands_and_claim_boundaries(self) -> None:
+        uso = read_text("docs/pt-BR/uso.md")
+        for command in [
+            "python3 scripts/factoryctl.py doctor",
+            "python3 scripts/factoryctl.py run minimal",
+            "python3 scripts/factoryctl.py route-registry",
+            "python3 scripts/factoryctl.py method-engines",
+            "python3 scripts/factoryctl.py operating-systems",
+            "python3 scripts/factoryctl.py compile-workflow --out .tmp/factory-workflow-compiled-plan.json",
+            "python3 scripts/factoryctl.py validate-card examples/minimal-hermes-project/card.md",
+            "python3 scripts/factoryctl.py gate-report --card examples/minimal-hermes-project/card.md",
+            "python3 scripts/factoryctl.py worker-packet --worker all --required-only --card examples/minimal-hermes-project/card.md --out .tmp/minimal-worker-packets",
+        ]:
+            self.assertIn(command, uso)
+        for phrase in ["prova local", "contrato válido", "worker packet gerado", "execução viva no Hermes", "evidência consumida", "entrega fechada"]:
+            self.assertIn(phrase, uso)
+
+    def test_maintainer_doc_keeps_technical_details_out_of_main_path(self) -> None:
+        doc = read_text("docs/pt-BR/para-mantenedores.md")
+        for phrase in ["## Mapa", "## Documentação", "## Factory", "## Contratos", "## Comandos", "## Testes", "## Geração", "## Mudanças", "## Fronteiras"]:
+            self.assertIn(phrase, doc)
+        self.assertIn("explicação humana", doc)
+        self.assertIn("contrato executável", doc)
+        self.assertIn("teste, validador ou prova local", doc)
+        self.assertIn("Não crie `trust-and-evidence.md`", doc)
+        self.assertIn("Não crie `technical-model.md`", doc)
 
     def test_public_validators_and_docs_build_pass(self) -> None:
         commands = [
@@ -122,9 +141,10 @@ class OpenSourceDocsTest(unittest.TestCase):
 
     def test_package_metadata_matches_doc_surface(self) -> None:
         pyproject = read_text("pyproject.toml")
-        self.assertIn('"share/overkill-factory/docs/en"', pyproject)
+        self.assertNotIn('"share/overkill-factory/docs/en"', pyproject)
         self.assertIn('"share/overkill-factory/docs/pt-BR"', pyproject)
         self.assertIn('"share/overkill-factory/docs/assets/public-map"', pyproject)
+
 
 if __name__ == "__main__":
     unittest.main()
