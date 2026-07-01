@@ -1,44 +1,54 @@
 # Overkill Factory
 
-A Overkill Factory é uma resposta para um problema que aparece rápido quando começamos a usar agentes para trabalho sério.
+Sem a fábrica, você vira fiscal do agente.
 
-Você pede uma coisa importante. O agente entende uma parte, completa outra parte com palpite, faz bastante barulho, talvez abra arquivos, talvez passe testes, talvez diga que terminou. Só que, no fim, você ainda precisa perguntar: "isso entregou mesmo o produto que eu pedi?".
+Você pede uma coisa importante. O agente responde rápido, abre arquivo, move card, talvez passe teste, talvez diga que terminou. Só que ainda sobra a pergunta: entregou mesmo o que eu pedi ou só produziu movimento?
 
-A fábrica existe para tirar essa pergunta do improviso.
+A Overkill Factory existe para tirar essa pergunta do improviso.
 
-Ela pega um pedido e transforma em produção controlada: fonte preservada, verdade do produto, caminho escolhido, trabalho dividido, execução no Hermes, prova, revisão, decisão humana quando precisa e fechamento honesto.
+Você faz um pedido. A fábrica guarda o contexto original, entende o que é fato e o que é palpite, divide o trabalho em partes pequenas, manda os agentes trabalharem no Hermes e só chama de pronto quando existe prova.
 
-O objetivo é tornar a velocidade confiável. Não é fazer agente correr mais. É fazer cada avanço deixar rastro suficiente para alguém confiar, revisar ou bloquear.
+O objetivo é tornar a velocidade confiável. Em português direto: andar rápido sem obrigar você a conferir tudo na mão.
 
-## O que ler primeiro
+## A ideia em uma frase
 
-Se você está chegando agora, não comece pelo modelo técnico. Comece pela pergunta que você tem na cabeça.
+A Overkill Factory é uma camada de produção para trabalho com agentes: ela transforma pedidos vagos em trabalho pequeno, rastreável e provado.
 
-- [Manual](manual.md): "o que é essa fábrica e por que ela existe?"
-- [Como a fábrica trabalha](operating-model.md): "o que acontece depois que eu mando um pedido?"
-- [Confiança e prova](trust-and-evidence.md): "como eu sei que isso não é só teatro de agente?"
-- [Ciclo simples](lifecycle.md): "qual é o caminho do começo ao fim?"
+O agente pode executar. Ele não pode inventar escopo, esconder risco, aprovar a si mesmo ou dizer "pronto" sem evidência.
 
-Depois, se você for operar ou manter o repo:
+## Um exemplo em 30 segundos
 
-- [Uso](usage.md): comandos para provar o checkout local.
-- [Modelo técnico](technical-model.md): como Hermes, workers, schemas, adapters e validadores se encaixam.
-- [Referência](reference.md): nomes e caminhos para consulta rápida.
+Você escreve:
 
-## A versão curta
+> Quero lançar o onboarding novo amanhã.
 
-A fábrica não confia em frase bonita. Ela confia em fonte, escopo, método, trabalho pequeno e prova.
+A fábrica não deveria responder "ok, fazendo".
 
-Um pedido não deveria virar código antes de virar entendimento. Um release não deveria sair porque alguém escreveu "pass". Um gate humano não deveria ser uma pergunta vaga no chat. Um worker não deveria julgar o próprio trabalho. E um bloqueio interno da fábrica não deveria cair no colo do operador como se fosse decisão humana.
+Ela primeiro segura o pedido e devolve algo mais útil:
 
-Se a fábrica funciona, o operador não fica caçando evidência. Ele recebe estado claro, decisão clara e recibo claro.
+> Entendi que você quer lançar o onboarding novo. Antes de executar, preciso confirmar o usuário do fluxo, o que conta como sucesso e se isso toca pagamento, carteira, dados sensíveis ou produção. Enquanto isso, já preservei a fonte, localizei o repo e vou preparar a definição do produto.
+
+Essa é a diferença. A fábrica não tira a decisão do humano. Ela impede que um agente gaste horas construindo a coisa errada.
+
+## Por onde ler
+
+Se você quer entender o produto, leia assim:
+
+1. [Manual](manual.md): por que a fábrica existe e o que ela tira das suas costas.
+2. [Como a fábrica trabalha](operating-model.md): o que acontece depois que você manda um pedido.
+3. [Confiança e prova](trust-and-evidence.md): como separar entrega real de teatro de progresso.
+4. [Ciclo simples](lifecycle.md): o mapa curto do começo ao fim.
+
+Se você vai operar ou manter o repo:
+
+- [Uso](usage.md): comandos locais e o que eles provam.
+- [Modelo técnico](technical-model.md): como Hermes, Factory, scripts, schemas e workers se encaixam.
+- [Referência](reference.md): nomes e caminhos quando você já sabe o que procurar.
 
 ## O que esta documentação prova
 
-O kernel público atual está na versão `3.0.2`. Ele tem workflow compilado, rotas, métodos, schemas, workers, exemplos, validadores e testes.
+Ela prova o contrato público do repositório: workflow compilado, rotas, métodos, schemas, workers, exemplos, validadores e testes.
 
-Isso prova uma coisa específica: o repositório público tem um contrato verificável.
+Ela não prova que um produto privado foi entregue. Não prova que um Hermes vivo rodou um card real. Não prova aprovação humana em produção. Para isso, precisa de estado atual no Hermes, resultado de worker, evidência do produto, revisão consumida e autorização explícita quando houver risco.
 
-Não prova que uma execução privada terminou. Não prova que um produto vivo foi entregue. Não prova aprovação humana em produção. Para isso, precisa de estado real no Hermes, resultados atuais de workers, evidência do produto, revisão consumida e autorização explícita quando houver risco.
-
-Essa fronteira é parte do produto. A fábrica só vale se souber dizer o que sabe e o que ainda não sabe.
+Essa fronteira não é fraqueza. É o que impede a fábrica de virar mais um agente falando bonito.

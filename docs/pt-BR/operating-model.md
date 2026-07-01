@@ -1,163 +1,165 @@
 # Como a fábrica trabalha
 
-Vamos acompanhar um pedido como ele deveria andar.
+Veja o que acontece quando você manda um pedido.
 
-O operador manda: "quero transformar essa ideia em produto".
+O exemplo aqui é simples:
 
-A resposta errada é abrir uma tarefa gigante e deixar um agente tentar resolver. A resposta certa é a fábrica tratar o pedido como matéria-prima. Matéria-prima ainda não é produto.
+> Quero lançar o onboarding novo amanhã.
 
-## A entrada é só a porta
+A resposta errada é abrir uma tarefa gigante e deixar um agente tentar resolver. Um pedido ainda não é plano. Primeiro a fábrica entende o que você realmente quer construir.
 
-O pedido pode chegar por Telegram, Discord, cockpit, CLI ou outro canal. O canal não manda na fábrica. Ele só recebe o sinal.
+## O que entra
 
-A primeira responsabilidade é guardar a fonte. A mensagem original, o documento, o repo, o link, a conversa, a imagem, o bug, a decisão. Tudo isso precisa existir antes da interpretação.
+O pedido pode chegar por Telegram, Discord, cockpit, terminal, documento, repo, screenshot ou conversa antiga.
 
-Se a fábrica resume cedo demais, perde nuance. Se perde nuance, planeja errado. Se planeja errado, entrega algo convincente e inútil.
+A entrada é só a porta. Ela não decide o produto. Ela não aprova risco. Ela não substitui o Hermes.
 
-Por isso o começo é cuidadoso.
+A primeira obrigação é guardar a fonte: mensagem original, anexos, links, repo, documentos e contexto.
 
-## A fábrica separa o que sabe do que acha
+Se a fábrica resume cedo demais, pode cortar justamente a frase que explicaria uma decisão depois.
 
-Depois de guardar a fonte, a fábrica separa cinco coisas.
+## O que a fábrica responde primeiro
 
-Fato: veio da fonte.
+Uma boa primeira resposta não é "fazendo".
 
-Inferência: parece razoável, mas não foi dito literalmente.
+É algo como:
 
-Decisão: alguém com autoridade já decidiu.
+> Entendi que você quer lançar o onboarding novo. Antes de executar, preciso confirmar o usuário do fluxo, o que conta como sucesso e se isso toca pagamento, carteira, dados sensíveis ou produção. Já preservei a fonte e vou preparar a definição do produto.
 
-Conflito: duas fontes dizem coisas diferentes.
+Essa resposta já mostra três coisas: ela entendeu, não vai assumir no escuro e já sabe o próximo passo seguro.
 
-Lacuna: falta informação para seguir com segurança.
+## Separar fato de palpite
 
-Essa etapa parece pequena. Não é. Ela impede que um palpite vire requisito e que uma lacuna vire trabalho escondido.
+Depois ela separa o que veio da fonte do que seria palpite.
 
-O operador deveria receber uma leitura simples: "entendi isso, falta aquilo, isso aqui não vou assumir".
+Fato: você pediu onboarding novo.
 
-## A fábrica define o produto antes de planejar
+Inferência: talvez seja para usuário final, mas isso precisa de fonte.
 
-O próximo passo é criar a verdade do produto.
+Decisão: se você já aprovou Figma ou escopo em outro documento, isso entra como decisão.
 
-Não é um texto bonito para justificar a execução. É o contrato do que será construído.
+Conflito: se um doc fala em KYC e outro diz sem KYC, isso não pode ser escondido.
 
-Ele responde: qual é o produto, para quem, com que promessa, dentro de que limite, com que risco e com que prova de aceite.
+Lacuna: se ninguém sabe o que conta como sucesso, isso precisa ser resolvido.
 
-Se o pedido é pequeno, essa verdade pode ser curta. Se o pedido é grande, precisa cobrir o escopo inteiro. O importante é não deixar o worker decidir o produto no meio da execução.
+Sem essa separação, o agente pode trabalhar muito em cima de uma suposição.
 
-Quando o produto não está definido, qualquer entrega pode parecer certa.
+## Definir o produto
 
-## A rota escolhe a régua
+Agora a fábrica define o que será entregue.
 
-Com o produto definido, a fábrica escolhe a rota.
+Para o onboarding, ela precisa dizer: quem passa pelo fluxo, onde começa, onde termina, quais telas ou comandos existem, quais estados precisam aparecer, quais riscos importam e que prova fecha o trabalho.
 
-Rota é a resposta para: que tipo de trabalho é esse?
+Essa definição é a verdade do produto. Internamente pode aparecer como Product SOT.
 
-Bug, produto novo, release, incidente, segurança, UX, documentação, integração, migração, agente, Solana, operação viva. Cada um pede uma régua diferente.
+O nome importa menos que a função: impedir que cada worker invente uma versão diferente do produto.
 
-Se é bug, a fábrica precisa de reprodução e regressão.
+## Escolher a régua
 
-Se é release, precisa de prontidão, rollback e dono.
+Depois vem a rota.
 
-Se é interface, precisa de prova da experiência.
+Se o pedido é bug, a régua é reprodução e regressão.
 
-Se é segurança, precisa de fronteira, ameaça e revisão.
+Se é release, é prontidão, rollback, dono e monitoramento.
 
-Se é mainnet ou fundos, precisa de autoridade humana explícita.
+Se é interface, é jornada, estados e prova visual.
 
-A rota impede que tudo vire "manda um agente fazer".
+Se é segurança, é fronteira, ameaça, permissão, segredo e revisão.
 
-## O método diz como provar
+Se toca Solana, carteira, assinatura, fundos ou mainnet, o cuidado sobe.
 
-Depois da rota vem o método.
+A rota diz que tipo de trabalho é. O método diz como provar.
 
-Método bom não é slogan. Ele muda a prova.
+## Checar capacidade e autoridade
 
-Se o método é test-first, precisa ter teste que falha antes ou prova equivalente de regressão.
+Antes de mandar worker, a fábrica confere se tem capacidade e autoridade.
 
-Se é design-first, precisa de estados, jornada, superfície e evidência visual.
+Tem worker certo? Tem acesso? Tem pack para essa superfície? Precisa de especialista? Toca produção? Toca dinheiro? Precisa de decisão humana?
 
-Se é security-first, precisa de fronteira, scan, revisão e decisão sobre risco.
+Se falta capacidade, bloqueia.
 
-Se é incident-first, precisa de contenção, causa e aprendizado.
+Se falta decisão humana, prepara pacote.
 
-Se o método não muda artefato, gate ou evidência, ele não está fazendo nada.
+Se falta só reparo interno, como readback, anexo, revisão ou evidência, a fábrica trabalha. Não joga isso no operador.
 
-## A fábrica checa se tem capacidade
+## Quebrar em trabalho pequeno
 
-Nem todo tipo de produto está igualmente coberto.
+A fábrica então transforma o produto em unidades pequenas.
 
-Web, CLI, cloud, agentes, docs, onboarding e alguns caminhos Solana têm cobertura mais madura no kernel público. Outras áreas podem exigir pacote de capacidade antes: mobile nativo, desktop, game, fintech regulado, hardware, analytics avançado, extensão de navegador.
+Uma unidade boa tem entrada, saída, dono, dependência, prova, reviewer e regra de pronto.
 
-Isso não é fraqueza. É honestidade operacional.
+Uma unidade ruim diz: "construa o onboarding".
 
-Uma fábrica confiável não finge que sabe fazer tudo. Ela diz quando tem cobertura e quando precisa instalar, testar ou revisar um pack antes de execução material.
+Para o exemplo, as unidades poderiam ser:
 
-## O trabalho vira pacote pequeno
+- confirmar escopo e sucesso do onboarding;
+- implementar tela inicial e estados;
+- ligar API necessária;
+- testar jornada feliz e erro;
+- revisar risco;
+- anexar evidência visual;
+- preparar release ou bloqueio.
 
-Agora a fábrica quebra o produto em unidades de trabalho.
+Cada worker recebe só a parte dele e devolve prova.
 
-Uma unidade boa tem entrada, saída, dono, dependência, evidência, reviewer e regra de pronto.
-
-Uma unidade ruim diz "construir o produto".
-
-A diferença é enorme. Trabalho pequeno pode ser executado, cobrado e refeito. Trabalho gigante vira aposta.
-
-O worker recebe só a parte dele. Ele não ganha autoridade para mudar escopo, aprovar risco, tocar segredo, decidir release ou encerrar o card inteiro.
-
-## Hermes Kanban continua sendo a fonte de verdade
+## Onde o trabalho aparece
 
 Hermes Kanban continua sendo a fonte de verdade do runtime.
 
-Cards, dependências, status, workers, comentários, workspaces, anexos, bloqueios e transições precisam aparecer ali.
+O quadro do Hermes é onde o trabalho vivo aparece: cards, dependências, status, workers, workspaces, comentários, anexos, bloqueios e transições.
 
-A fábrica não pode manter um segundo estado escondido e depois tentar sincronizar no fim. Se uma unidade depende de outra, a dependência precisa estar no grafo. Se trabalho obrigatório aparece tarde, entra no grafo antes de a fase seguinte andar.
+A Factory não mantém um quadro secreto por fora. Ela cobra o contrato, mas a execução precisa estar visível no Hermes.
 
-Isso evita uma mentira comum: dizer que a fase terminou enquanto ainda existe trabalho obrigatório fora do quadro.
+## Quando o quadro parece parado
 
-## No-idle observa silêncio perigoso
+Quando o quadro parece parado, a fábrica precisa descobrir se é espera legítima ou travamento.
 
-No-idle não é outro Hermes.
+Se há dependência real, espera.
 
-Ele serve para perceber quando o board está parado de um jeito suspeito. Se há trabalho pronto, despacha. Se há dependência, espera. Se falta pacote de decisão humana, prepara. Se falta readback, artefato ou revisão, repara. Se não consegue reparar, falha de forma visível.
+Se há trabalho pronto, despacha.
 
-O que ele não pode fazer é inventar autoridade. Não aprova gate, não completa tarefa, não chama o humano por preguiça interna.
+Se falta decisão humana e o pacote está pronto, chama o operador.
 
-## Produto visível precisa ser visto
+Se falta readback, artefato, revisão ou evidência, repara.
 
-Quando o trabalho tem interface, a fábrica precisa provar a experiência.
+O guard de no-idle existe para isso. Ele não é outro Hermes e não inventa autoridade.
 
-Para web, isso pode envolver telas, viewports, console, overflow, estados vazios, loading, erro, acessibilidade básica e comparação com a promessa do produto.
+## Como a fábrica prova
 
-Para CLI, envolve instalação, help, comando real, saída, erro e comportamento no terminal.
+A prova muda conforme o trabalho.
 
-Para docs, envolve outra coisa: o texto realmente ajuda alguém a entender e chegar ao primeiro sucesso?
+Para web: screenshots, estados, console, viewport, erro, loading, overflow e jornada.
 
-Uma prova de backend não prova interface. Uma screenshot não prova jornada inteira. Cada superfície precisa de prova própria.
+Para CLI: instalação, help, comando real, saída e erro.
 
-## Revisão só vale quando muda estado
+Para release: prontidão, rollback, dono e decisão.
 
-Revisão que fica parada é decoração.
+Para docs: clareza, navegação e primeiro sucesso do leitor.
 
-Se passou, precisa destravar ou fechar a tarefa certa. Se falhou, precisa criar reparo. Se apontou risco, precisa registrar dono, consequência e decisão. Se o executor revisa a si mesmo num trabalho material, a fábrica está se enganando.
+Prova boa responde ao pedido. Prova ruim só mostra atividade.
 
-A revisão precisa voltar para o fluxo.
+## Como revisão vira avanço
 
-## Gate humano é pacote de decisão
+Review não é comentário decorativo.
 
-Quando a decisão é humana, a fábrica chama o humano.
+Se passa, destrava ou fecha o item certo.
 
-Mas chama direito.
+Se falha, cria reparo.
 
-Ela entrega o artefato ou uma projeção fiel. Explica a decisão. Mostra opções. Diz o que cada opção autoriza. Diz o que não autoriza. Mostra o risco e o próximo passo seguro.
+Se aponta risco, registra dono e consequência.
 
-O humano não deveria aprovar no escuro.
+Se pede decisão, vira pacote humano.
 
-## O fim tem três saídas
+Review que não muda estado não foi consumido.
 
-Entrega: há prova, revisão consumida, gates resolvidos e próximo estado claro.
+## Como termina
 
-Bloqueio: falta prova, acesso, autoridade, capacidade ou segurança. O bloqueio tem dono e menor próximo passo seguro.
+A execução termina em três estados honestos.
 
-Aprendizado: a execução revelou que a própria fábrica precisa melhorar. Isso pode virar teste, doc, skill, worker, gate, issue ou mudança de processo.
+Entregue: há prova, revisão consumida, gates resolvidos e próximo estado claro.
 
-A fábrica boa não força final feliz. Ela fecha quando pode, bloqueia quando deve e aprende quando descobriu algo real.
+Bloqueado: falta prova, acesso, autoridade, capacidade ou segurança. O bloqueio tem dono e menor próximo passo seguro.
+
+Aprendizado: a execução mostrou que a própria fábrica precisa mudar. Isso pode virar teste, doc, skill, worker, gate, issue ou mudança de processo.
+
+A fábrica boa não força final feliz. Ela diz a verdade operacional.

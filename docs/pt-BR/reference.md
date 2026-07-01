@@ -1,6 +1,6 @@
 # Referência
 
-Esta página reúne os fatos curtos que uma pessoa normalmente precisa depois do manual. Ela não tenta substituir os registries nem a referência gerada. Ela traduz os nomes mais importantes para uma pessoa que quer operar ou avaliar a fábrica.
+Esta página reúne os fatos curtos para quem já leu o manual e quer se localizar no repo. Não substitui os registries nem a referência gerada; traduz os nomes mais importantes para quem precisa operar ou avaliar a fábrica.
 
 ## Onde cada coisa mora
 
