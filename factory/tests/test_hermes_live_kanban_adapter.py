@@ -350,6 +350,13 @@ class FakeHermes:
         return subprocess.CompletedProcess(argv, 1, stdout="", stderr="unexpected command")
 
 
+class TimeoutRunsHermes(FakeHermes):
+    def __call__(self, argv: list[str]) -> subprocess.CompletedProcess[str]:
+        if len(argv) >= 5 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "runs":
+            raise subprocess.TimeoutExpired(argv, timeout=1)
+        return super().__call__(argv)
+
+
 class UnsafePromotionHermes(FakeHermes):
     def __call__(self, argv: list[str]) -> subprocess.CompletedProcess[str]:
         if len(argv) >= 5 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "show":
@@ -1084,6 +1091,22 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         assert_route_readiness_schema(self, result)
         self.assertEqual(result["result"], "BLOCKED")
         self.assertIn("credential_not_proven", result["checks"][0]["blocked_reasons"])
+
+    def test_no_idle_enrichment_survives_hung_runs_lookup(self) -> None:
+        fake = TimeoutRunsHermes()
+        fake.tasks["done-task"] = {
+            "id": "done-task",
+            "title": "Completed producer",
+            "status": "done",
+            "events": [],
+            "comments": [],
+        }
+        rows = {"done": [{"id": "done-task", "status": "done"}], "running": [], "todo": [], "blocked": [], "triage": []}
+
+        enriched = adapter.enrich_no_idle_rows(hermes_bin="hermes", board=TEST_BOARD, rows=rows, runner=fake)
+
+        self.assertEqual(enriched["done"][0]["id"], "done-task")
+        self.assertTrue(enriched["done"][0]["runs_unavailable"])
 
     def test_materialize_reducer_completion_completes_exact_bounded_rel007_children(self) -> None:
         fake = FakeHermes()
