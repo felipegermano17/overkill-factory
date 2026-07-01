@@ -1,205 +1,526 @@
 # Linha de produção
 
-## Pedido
-
-Se o pedido chega no meio de um trabalho já existente, a fábrica não abre um ciclo paralelo sem ligação. Ela verifica se o pedido altera uma unidade em andamento, se cria nova unidade, se muda a verdade do produto ou se exige decisão. Essa leitura evita que uma mensagem nova sobrescreva silenciosamente o estado do Hermes. O pedido pode virar comentário, alteração de escopo, bloqueio, pacote de decisão ou nova entrada de fonte.
-
-O pedido é a primeira entrada da fábrica. Ele pode chegar por mensagem, issue, call, documento, comentário, print, repositório ou card já existente. A fábrica registra o pedido como sinal inicial e mantém ligação com tudo que veio junto: anexos, links, prints, decisões anteriores, conversas ou arquivos.
-
-Nesse estado, o pedido ainda não é plano. A frase “arrumar o onboarding” não vira automaticamente uma lista de tarefas. Primeiro ela fica registrada como entrada recebida e fonte a preservar. Se o pedido inclui um link de Figma, esse link segue junto como fonte visual. Se inclui um print de erro, o print segue como evidência de estado observado. Se inclui uma conversa antiga, a conversa entra como contexto, mas não como decisão nova sem leitura.
-
-O pedido avança quando a fábrica consegue apontar de onde ele veio e que fonte precisa ser preservada. Se o pedido não tem fonte suficiente, ele não desaparece. Ele fica em estado de entrada incompleta, com a lacuna registrada. No Hermes, isso pode aparecer como card inicial, comentário ou bloqueio de intake. A retomada acontece quando a fonte faltante chega ou quando a fábrica registra que aquela lacuna não impede a próxima leitura.
-
-A saída do pedido é a ligação com a fonte. Essa ligação alimenta a etapa seguinte.
-
-## Fonte
-
-A fonte continua consultável depois que o trabalho começa. Um reviewer pode voltar à fonte para verificar se o resultado respondeu ao pedido. Um humano decisor pode voltar à fonte para entender a consequência de aprovar. Um mantenedor pode voltar à fonte quando o recibo declara pendência. A ligação não serve como decoração; ela sustenta leitura, revisão e fechamento.
-
-Fonte é o material preservado antes da interpretação. A fonte pode ser a mensagem original, documento, link, repositório, print, arquivo, conversa anterior, card anterior, decisão anterior ou anexo. A fábrica não começa reescrevendo a fonte como plano. Ela preserva o material, cria referência e deixa esse material consultável durante o ciclo.
-
-Quando a fonte entra, cada item mantém seu papel. Uma mensagem guarda intenção. Um documento guarda especificação recebida. Um link de Figma guarda desenho. Um print guarda estado observado. Um repositório guarda implementação atual. Um card anterior guarda histórico de trabalho. Uma decisão anterior guarda autoridade já registrada. Esses itens ficam ligados ao pedido para que entendimento, rota, método, revisão e recibo possam voltar à base quando necessário.
-
-A fonte muda estado quando deixa de ser apenas material solto e passa a ter referência dentro da fábrica. Essa referência pode aparecer em um registro de fonte, em comentário de card, em anexo, em link de artefato ou em campo de card Hermes. Se um item de fonte é privado, sensível ou transitório, o registro precisa indicar limite de uso em vez de publicar o conteúdo.
-
-A etapa bloqueia quando a fonte necessária não existe, não pode ser acessada, conflita com outra fonte ou depende de autoridade. O bloqueio registra o item faltante, quem pode liberar, qual parte do fluxo está parada e qual próxima ação destrava. Quando o material chega, o bloqueio é retomado sem perder a ligação com o pedido original.
-
-A saída da fonte é material preservado e referenciado. Esse material alimenta entendimento.
-
-## Entendimento
-
-Entendimento é a leitura estruturada da fonte. A fábrica lê o material preservado e separa fatos, afirmações do pedido, decisões já tomadas, restrições, dependências, dúvidas, lacunas, conflitos, inferências e itens fora de escopo.
-
-Uma frase como “lançar amanhã” entra como restrição de prazo, não como prova de prontidão. Um print de erro entra como estado observado, não como causa confirmada. Um comentário “o cliente aprovou” entra como afirmação, mas pode precisar de decisão registrada. Um documento antigo entra como contexto, mas pode estar superado por decisão posterior. Uma inferência feita pela fábrica precisa ficar marcada como inferência, não como fato.
-
-O resultado é um registro de entendimento. Esse registro mostra quais partes do pedido estão firmes, quais partes dependem de autoridade humana, quais partes dependem de acesso, quais conflitos precisam ser resolvidos e quais lacunas não podem alimentar trabalho executável. Ele também indica o que está fora de escopo para evitar que trabalho pequeno seja criado a partir de material solto.
-
-No Hermes, o entendimento aparece como atualização do card, comentário estruturado, anexo de leitura ou campo ligado à unidade inicial. Quando a fábrica encontra conflito, o card pode ficar bloqueado. Quando falta decisão, a fábrica prepara um pacote de decisão. Quando a lacuna é interna e resolvível, a fábrica cria próxima ação sem jogar trabalho de reconciliação para o operador.
-
-A etapa avança quando o registro de entendimento é suficiente para montar a verdade do produto. Ela bloqueia quando há conflito material, fonte ausente, acesso faltando ou autoridade necessária. A retomada acontece com nova fonte, decisão registrada, acesso concedido ou escopo reduzido de forma explícita.
-
-A saída do entendimento é uma leitura que alimenta a verdade do produto.
-
-## Verdade do produto
-
-Quando a verdade do produto muda, a fábrica precisa tratar isso como mudança de estado. Uma alteração de escopo pode invalidar rota, método, unidades já criadas ou evidência já coletada. O Hermes precisa mostrar o que foi mantido, o que foi reaberto e o que ficou fora. A mudança não deve ficar apenas em uma frase solta de conversa.
-
-A verdade do produto é a referência central do que será produzido. O nome interno pode ser `Product SOT`, mas o papel humano é simples: ela concentra o que a fábrica sabe sobre objetivo, destinatário, escopo, estado atual, estado desejado, restrições, riscos, dependências, prova e autoridade.
-
-Ela nasce a partir da fonte lida e do entendimento registrado. A fábrica pega afirmações firmes, decisões já tomadas, lacunas conhecidas e restrições visíveis e transforma isso em um artefato que pode orientar rota, método e trabalho. A verdade do produto não é resumo bonito. Ela precisa dizer quem recebe o resultado, o que entra no escopo, o que fica fora, qual estado atual existe, qual estado desejado deve aparecer, quais critérios de aceitação contam, que prova será necessária e quais decisões ainda estão pendentes.
-
-Se o pedido é “criar onboarding”, a verdade do produto precisa separar usuário, telas, estados, dados, convite, erro, loading, responsividade, prova de navegação e fronteiras como cobrança ou KYC fora do escopo. Se o pedido é “corrigir reset de senha”, ela precisa declarar comportamento atual, comportamento esperado, ambiente, usuário afetado, prova de reprodução, prova de correção e limite para não redesenhar autenticação inteira.
-
-No Hermes, a verdade do produto fica ligada ao card principal ou ao conjunto de cards. Ela vira referência para workers e reviewers. Um worker não deve inventar escopo fora dela. Um reviewer usa a verdade do produto para comparar resultado e evidência. Uma decisão humana usa essa verdade para entender o que está sendo autorizado.
-
-A etapa avança quando a verdade do produto tem escopo dentro, escopo fora, prova necessária e pendências visíveis. Ela bloqueia quando escopo é ambíguo, autoridade está faltando, riscos não têm dono ou critérios de aceitação não sustentam trabalho. A retomada acontece com ajuste de fonte, decisão humana, redução explícita de escopo ou complementação do registro.
-
-A saída da verdade do produto alimenta rota, método e trabalho.
-
-## Rota
-
-Rota é a classificação do tipo de trabalho. A rota é escolhida a partir da verdade do produto, não a partir de uma palavra solta no pedido. Um pedido pode parecer documentação, mas envolver release. Pode parecer bug, mas exigir segurança. Pode parecer interface, mas depender de integração. A rota registra qual caminho de produção a fábrica vai usar.
-
-rotas comuns incluem documentação, bug, feature, interface, CLI, integração, release, incidente, segurança, blockchain/Solana, dados, operação e manutenção. Cada rota muda o que precisa acontecer depois. Documentação exige leitura, navegação, clareza, primeiro sucesso do leitor e fronteira da claim. CLI exige instalação, comando, saída, erro e retorno. Interface exige telas, estados, interação, erro, loading e responsividade quando aplicável. Release exige readiness, rollback, dono, janela e decisão. Segurança exige escopo, risco, autoridade e cuidado com evidência sensível. Solana exige rede, carteira, assinatura, simulação, transação, fundos e autoridade humana quando aplicável.
-
-A rota fica registrada como parte do contrato de produção. No Hermes, ela pode aparecer no card, no comentário de planejamento, no campo de roteamento ou no artefato usado para criar unidades. A rota define quais métodos, workers, gates e provas entram no ciclo.
-
-A rota avança quando a classificação sustenta método e trabalho. Ela bloqueia quando a verdade do produto não permite distinguir tipo de trabalho, quando há risco sem classe, quando o trabalho mistura rotas incompatíveis ou quando uma autoridade humana precisa escolher entre caminhos com consequências diferentes. A retomada acontece quando a verdade do produto é refinada ou quando a decisão registra qual caminho será seguido.
-
-A saída da rota alimenta método e capacidade.
-
-## Método
-
-Método é a régua de execução para uma rota. Ele define os passos mínimos, que tipo de evidência conta, que revisão precisa existir, que decisão humana pode ser necessária, que trabalho pode ser automatizado, que check precisa rodar e que estado precisa existir antes de avanço.
-
-Para documentação, o método pode exigir navegação limpa, explicação humana, comando de validação, ausência de claim de runtime e revisão contra o briefing. Para CLI, pode exigir instalação, `doctor`, comando mínimo, saída observada, erro esperado e retorno. Para interface, pode exigir estados visuais, interação, console, screenshot e revisão de produto. Para release, pode exigir plano, rollback, janela, dono, health check, aprovação e monitoramento. Para segurança, pode exigir escopo sensível, tratamento de segredo, evidência privada ou pública e revisão especializada. Para Solana, pode exigir rede declarada, carteira, simulação, assinatura, transação, fundos, autoridade humana e recibo específico.
-
-Para trabalho de segurança, a matriz pública de perfis usa estes domínios internos como referência de capacidade: networking, linux-systems, web-security, ethical-hacking, security-tools, cloud-security, detection-monitoring, cryptography, security-operations, future-security, supply-chain e onchain-solana-quasar. Esses nomes não viram títulos do caminho principal; eles ajudam mantenedores e validadores a ligar rota, worker e método.
-
-O método transforma rota em regra prática. Ele não é só um rótulo. Se o método não muda evidência, revisão, gate ou estado, ele não está cumprindo seu papel. A fábrica usa o método para montar unidades pequenas, escolher workers, exigir proof e decidir quando um card pode avançar.
-
-No Hermes, o método aparece na forma de campos de card, worker packets, checks esperados, bloqueios e revisão. Um card de CLI sem saída de comando fica bloqueado por evidência. Um card de release sem rollback fica bloqueado por readiness. Um card de segurança sem escopo sensível pode voltar para entendimento ou método.
-
-A etapa avança quando a régua está clara para criar unidades executáveis. Ela bloqueia quando a rota não tem método aplicável, quando a prova exigida não existe, quando a decisão humana é necessária ou quando falta capacidade para executar o método. A retomada acontece com método ajustado, capacidade liberada, escopo reduzido ou decisão registrada.
-
-A saída do método alimenta capacidade e trabalho.
-
-## Capacidade
-
-Capacidade é a checagem das condições para executar. A fábrica verifica worker disponível, permissão, acesso, segredo, ambiente, ferramenta, repositório, especialista, janela de execução, autoridade humana e risco residual.
-
-Sem capacidade, a unidade não é executável. Se falta acesso ao repositório, o card fica bloqueado por acesso. Se falta segredo, a fábrica registra segredo necessário sem expor valor. Se falta ambiente, o bloqueio aponta ambiente e dono. Se falta especialista, o trabalho aguarda worker compatível. Se a ação envolve produção, fundos, mainnet, gasto ou risco residual, a capacidade inclui decisão humana.
-
-A ausência de capacidade vira estado operacional. Ela pode gerar bloqueio, pendência ou pacote de decisão. O bloqueio precisa dizer o que falta, quem pode liberar, qual unidade está parada e qual próximo estado será aplicado quando a capacidade existir. A fábrica não transforma falta de acesso em trabalho concluído, nem pede ao operador para resolver uma pendência sem contexto.
-
-No Hermes, capacidade aparece como bloqueio, dependência, comentário, anexo de decisão ou campo de card. Quando a capacidade é liberada, a unidade volta para a fila executável com a mesma ligação à fonte, à verdade do produto e ao método.
-
-A saída de capacidade é autorização operacional suficiente para quebrar ou executar trabalho.
-
-## Trabalho
-
-Uma unidade boa permite revisão objetiva. Se a saída esperada é "documentação atualizada", a unidade precisa dizer quais arquivos, que leitura o documento deve permitir, que comando valida navegação e que fronteira de claim precisa aparecer. Se a saída esperada é "bug corrigido", a unidade precisa dizer qual reprodução falha antes, qual evidência passa depois e qual risco precisa ser revisado.
-
-Trabalho é a quebra da verdade do produto em unidades pequenas. Uma unidade de trabalho não é “fazer a feature”. Ela é uma parte executável com entrada, saída esperada, dono, worker ou perfil de worker, dependência, evidência exigida, reviewer, regra de pronto, relação com card Hermes e estado de bloqueio ou avanço.
-
-A fábrica lê a verdade do produto e o método e cria unidades que podem ser executadas sem inventar escopo. Uma unidade pode ser “validar instalação local e registrar saída de comando”, “revisar telas de onboarding contra estados exigidos”, “reproduzir bug de reset de senha”, “gerar pacote de decisão de release” ou “comparar documentação contra briefing”. Cada unidade tem material de entrada e saída esperada.
-
-As dependências ficam explícitas. Uma revisão não começa antes de resultado e evidência. Um release não avança antes de readiness, rollback e decisão. Uma unidade bloqueada não some: ela fica no Hermes com motivo, dono e próxima ação.
-
-O trabalho aparece no Hermes como card ou atualização de card. O card liga a unidade à fonte, à verdade do produto, ao método, ao worker, à evidência e à revisão. Quando a unidade termina, o resultado retorna para esse mesmo ponto. Quando há reparo, a fábrica cria continuação ligada à unidade original em vez de fechar o ciclo como se nada tivesse acontecido.
-
-A saída do trabalho é uma fila executável, revisável e rastreável no Hermes.
-
-## Hermes
-
-Quando a fábrica retoma um fluxo, ela lê o Hermes antes de criar trabalho novo. O estado vivo mostra cards abertos, anexos existentes, workers que já responderam, revisões pendentes e bloqueios ainda válidos. Se essa leitura mostra evidência suficiente, a fábrica pode avançar. Se mostra lacuna, a próxima ação precisa apontar para a lacuna em vez de repetir trabalho às cegas.
-
-Hermes é o lugar onde a execução fica visível. A fábrica usa Hermes para criar ou atualizar cards, ligar cards à fonte e à verdade do produto, registrar dependências, atribuir workers, receber comentários, guardar anexos, registrar bloqueios, registrar revisão, mudar status, preparar decisão, fechar ou reabrir ciclo.
-
-Quando uma unidade é criada, ela pode virar card. O card carrega o estado da unidade. Se a unidade depende de outra, essa dependência fica registrada. Se um worker precisa agir, a atribuição aparece ali. Se falta acesso, o bloqueio aparece ali. Se o worker devolve resultado, o comentário, anexo ou campo de resultado aparece ali. Se a revisão consome evidência, a transição de estado aparece ali.
-
-Hermes não é só um quadro de tarefas. Ele é o chão operacional onde o estado vivo aparece. A Factory não deve esconder a execução em arquivos locais quando o ciclo exige estado vivo. Arquivos locais podem ser prova de coerência, contratos, relatórios ou preparação. Execução viva exige o card, o worker, o resultado e a evidência no fluxo do Hermes.
-
-A etapa Hermes bloqueia quando o card não existe, quando a dependência está aberta, quando o worker não recebeu pacote, quando o resultado não voltou ou quando a evidência não está ligada. A retomada acontece com criação de card, resolução de dependência, worker packet enviado, resultado retornado ou evidência anexada.
-
-A saída de Hermes é estado vivo para execução, evidência, revisão e decisão.
-
-## Execução
-
-Execução é trabalho feito por workers dentro dos limites da unidade. O worker recebe um pacote com contexto necessário, entrada, saída esperada, limite de autoridade, evidência exigida e campo de retorno. O pacote de worker prepara execução; ele não é execução por si só.
-
-Durante execução, o worker trabalha na unidade e não deve inventar escopo. Se a unidade pede reproduzir um bug, o worker reproduz e registra o resultado. Se a unidade pede alterar arquivo, o worker altera o arquivo e devolve diff ou referência. Se a unidade pede rodar comando, o worker devolve comando, saída e código de retorno. Se encontra bloqueio, devolve bloqueio com motivo e próxima ação em vez de declarar pronto.
-
-O resultado volta para Hermes ligado à unidade. Ele precisa carregar evidência suficiente para revisão. Uma frase “feito” não basta. O resultado precisa mostrar o que foi executado, onde, com que saída, qual artefato mudou ou qual material sustenta avanço.
-
-A execução avança quando resultado e evidência voltam ao ciclo. Ela bloqueia quando o worker não tem acesso, quando o pacote está amplo demais, quando a saída esperada é ambígua, quando a ferramenta falha ou quando a evidência exigida não pode ser produzida. A retomada acontece com pacote corrigido, acesso liberado, dependência resolvida ou nova unidade de reparo.
-
-A saída da execução alimenta evidência e revisão.
-
-## Evidência
-
-A evidência também precisa ter classe. Uma saída de comando pode ser pública. Um log com segredo precisa ser privado ou sanitizado. Um print de tela pode conter dado sensível. Uma transação onchain pode exigir rede, assinatura, carteira e autoridade. A fábrica registra essa classe para que o material possa ser consumido sem vazar informação e sem fingir que prova privada virou documento público.
-
-Evidência é material ligado à execução e à revisão. Ela pode ser saída de comando, log, screenshot, diff, arquivo alterado, teste rodado, relatório, comentário de revisão, decisão registrada, link para artefato, anexo, checklist consumido, prova de leitura, prova de rollback, prova de ambiente ou prova de transação quando aplicável.
-
-A evidência fica ligada assim:
+Documento operacional da Overkill Factory. Objetivo: mostrar o que existe, como a fábrica escolhe rota/método/capacidade e o que cada fase F0-F27 recebe, produz, bloqueia e entrega ao Hermes.
+
+Fontes públicas usadas aqui: `docs/factory-workflow.catalog.json`, `factory/templates/factory-route-registry.json`, `factory/templates/method-engine-registry.json` e `factory/agents/capability-packs.public.json`.
+
+## Fluxo resumido
+
+```text
+F0 fonte selada -> F1 entrada -> F2 ledger -> F3 resolução -> F4 outcome -> F5 Product SOT -> F6 rota -> F7 método -> F8 capacidade -> F9 autoridade -> F10 segurança -> F11 planos -> F12 readiness -> F13 ready gate -> F15 execução -> F16 resultados -> F17 verificação -> F18 revisão -> F20 fechamento -> F21 recibo -> F22 auditoria -> F23 produção -> F24 release/bloqueio -> F25 suporte -> F26 learnback -> F27 maturidade
+```
+
+## Como a decisão interna funciona
+
+- F6 escolhe rota comparando pedido entendido com `request_types`, `signal_types` e `scope_intents` do registry de rotas. Saída: `route_class` + `selected_method_family`.
+- F7 escolhe/monta método. O método precisa virar `method_contract` com artefatos, gates, workers e prova. Nome de método sem contrato não libera F11/F13.
+- F8 escolhe capacidade. Superfícies do trabalho são comparadas com packs. `core_ready` pode seguir com workers existentes; `pack_template` precisa ativação; `blocked_until_installed` bloqueia.
+- Hermes recebe o estado vivo: card, status, dependência, worker, comentário, anexo, resultado, revisão e transição. No Hermes, o avanço aparece como mudança de estado ligada a card e evidência. Arquivo local não substitui estado vivo.
+
+Termos humanos usados no fluxo: Pedido aparece em F0/F1; Entendimento aparece em F2/F3; Decisão aparece em F9/F24; Recibo aparece em F21. A fábrica não simula autoridade humana: quando uma fase exige decisão, ela prepara contexto, opções, risco, consequência e próximo estado, mas aguarda registro humano.
+
+Matriz pública de segurança usada por perfis: networking, linux-systems, web-security, ethical-hacking, security-tools, cloud-security, detection-monitoring, cryptography, security-operations, future-security, supply-chain, onchain-solana-quasar.
+
+## Rotas existentes
+
+| Rota | Entra quando | Método escolhido | Artefatos mínimos | Gates | Workers |
+|---|---|---|---|---|---|
+| `product_creation` | request=product_new; signal=product_paper, prd_or_architecture, mixed; scope=full_product | `spec_first` | `source_ledger`, `operator_understanding_confirmation`, `outcome_contract`, `product_sot`, `full_product_sot_scope_coverage`, `+4` | `Source Gate`, `Product SOT Gate`, `Ready Gate` | `factory-orchestrator`, `source-ledger-worker`, `product-sot-planner` |
+| `feature_delivery` | request=feature, slice; signal=feature_idea, customer_feedback, mixed; scope=child_slice | `behavior_first` | `source_ledger`, `outcome_contract`, `method_contract`, `spec_graph`, `qa_plan` | `Source Gate`, `Method Gate`, `Ready Gate` | `factory-orchestrator`, `decomposition-planner`, `qa-verification-worker` |
+| `bug_repair` | request=bug; signal=bug_report, monitoring_alert, customer_feedback; scope=bug | `test_first` | `source_ledger`, `bug_reproduction`, `diagnosis`, `regression_check`, `receipt_five` | `Reproduction Gate`, `Regression Gate`, `Receipt Gate` | `qa-verification-worker`, `test-automation-builder`, `evidence-reconciler` |
+| `incident_response` | request=incident; signal=incident, monitoring_alert; scope=incident | `incident_first` | `incident_support_plan`, `severity_model`, `mitigation_plan`, `evidence_record`, `learnback` | `Severity Gate`, `Mitigation Gate`, `Learnback Gate` | `detection-monitoring-worker`, `release-ops-worker`, `evidence-reconciler` |
+| `brownfield_discovery` | request=migration, refactor, integration; signal=existing_repository, refactor_request, integration_request, migration_request; scope=migration, integration | `legacy_diagnosis` | `source_ledger`, `brownfield_os_plan`, `legacy_system_map`, `baseline`, `regression_plan`, `+1` | `Brownfield Baseline Gate`, `Regression Gate`, `Rollback Gate` | `source-ledger-worker`, `product-architect`, `qa-verification-worker` |
+| `release_promotion` | request=release; signal=release_request; scope=release | `spec_first` | `production_readiness_plan`, `promotion_ladder`, `rollback_path`, `monitoring_signals` | `Production Readiness Gate`, `Rollback Gate`, `Release Gate` | `release-ops-worker`, `detection-monitoring-worker`, `evidence-reconciler` |
+| `research_validation` | request=feature, product_new, security, ux_ui, data_analytics, agent_skill; signal=research_request, external_research_signal, dependency_or_runtime_change, mixed; scope=child_slice, full_product | `research_first` | `specialist_research_plan`, `specialist_decision_packet`, `sdlc_feedback_loop` | `Source Quality Gate`, `Specialist Decision Gate`, `SOT Impact Gate` | `source-ledger-worker`, `product-architect`, `factory-orchestrator` |
+| `docs_onboarding` | request=doc; signal=documentation_request; scope=doc | `docs_first` | `user_docs_onboarding_plan`, `reader_success_path`, `docs_verification` | `Docs Utility Gate`, `First Run Gate` | `docs-os-worker`, `qa-verification-worker` |
+| `security_remediation` | request=security; signal=security_review_request, dependency_or_runtime_change; scope=child_slice | `security_first` | `security_architecture_plan`, `security_scan_packet`, `review_result` | `Security Architecture Gate`, `Security Review Gate` | `security-orchestrator`, `appsec-owasp-specialist`, `qa-verification-worker` |
+| `critical_integration` | request=integration; signal=integration_request, dependency_or_runtime_change; scope=integration | `spec_first` | `integration_contract`, `dependency_gate`, `contract_tests`, `fallback_plan` | `Dependency Gate`, `Contract Test Gate`, `Fallback Gate` | `product-architect`, `backend-api-builder`, `qa-verification-worker` |
+| `migration_execution` | request=migration; signal=migration_request, existing_repository; scope=migration | `legacy_diagnosis` | `brownfield_os_plan`, `legacy_system_map`, `migration_plan`, `regression_plan`, `rollback_plan` | `Migration Plan Gate`, `Regression Gate`, `Rollback Gate` | `product-architect`, `data-persistence-builder`, `qa-verification-worker` |
+| `ux_product_experience` | request=ux_ui, product_new, feature; signal=ux_ui_request, feature_idea, product_paper; scope=child_slice, full_product | `design_first` | `product_experience_plan`, `product_face_packet`, `project_design_system`, `professional_design_process`, `product_face_result` | `Product Experience Gate`, `Product Face Gate`, `Independent Design Review Gate` | `product-face`, `frontend-builder`, `qa-verification-worker` |
+| `analytics_data` | request=data_analytics, product_new, feature; signal=analytics_request, customer_feedback, prd_or_architecture; scope=child_slice, full_product | `analytics_first` | `data_metrics_plan`, `event_contract`, `dashboard_health_proof`, `privacy_limits` | `Data Contract Gate`, `Privacy Gate`, `Metrics Proof Gate` | `detection-monitoring-worker`, `data-persistence-builder`, `qa-verification-worker` |
+| `agent_quality_change` | request=agent_skill; signal=agent_skill_or_model_change, dependency_or_runtime_change; scope=child_slice | `agent_eval_first` | `agent_eval_plan`, `reasoning_policy`, `worker_profile_readiness`, `learnback` | `Agent Eval Gate`, `Worker Profile Readiness Gate`, `Learnback Gate` | `skill-eval-distiller`, `agent-runtime-builder`, `qa-verification-worker` |
+
+**Uso prático:** rota define pacote mínimo. Exemplo: `bug_repair` exige reprodução/regressão/recibo; `release_promotion` exige readiness/rollback/monitoramento; `docs_onboarding` exige plano de docs, caminho de sucesso do leitor e verificação de primeira execução.
+
+## Métodos existentes
+
+| Método | Família | Rotas | Artefatos que cria/exige | Gates | Prova que precisa aparecer | Não aceita |
+|---|---|---|---|---|---|---|
+| `spec_first_sdd` | `spec_first` | `product_creation`, `feature_delivery`, `critical_integration`, `migration_execution` | `method_contract`, `spec_graph`, `product_creation_plan`, `work_unit_contract` | `Ready Gate`, `Review Gate`, `Done Gate` | spec artifacts exist; tasks trace to Product SOT; Receipt Five cites spec evidence | method label without spec artifact; implementation before Product Creation Plan |
+| `test_first_tdd` | `test_first` | `feature_delivery`, `bug_repair`, `critical_integration`, `migration_execution` | `test_plan`, `regression_tests`, `verification_commands` | `Ready Gate`, `Review Gate`, `Done Gate` | failing or target test defined before implementation; tests pass after implementation; Receipt Five cites commands | test-first claimed without test artifact; manual check as only regression proof |
+| `behavior_first_bdd` | `behavior_first` | `product_creation`, `feature_delivery`, `ux_product_experience` | `scenario_matrix`, `acceptance_examples`, `operator_briefing_package` | `Ready Gate`, `Review Gate`, `Done Gate` | examples map to Product SOT; scenarios checked by QA or Product Face; Receipt Five cites scenario evidence | acceptance examples invented after execution; operator chat used as scenario proof |
+| `discovery_research` | `discovery_first` | `product_creation`, `research_validation`, `brownfield_discovery` | `source_resolution_packet`, `product_source_ledger`, `specialist_research_plan`, `operator_understanding_confirmation` | `Source Gate`, `Research Gate`, `Product SOT Gate` | source claims classified; conflicts resolved or blocked; operator understanding confirmed | raw paper becomes Product SOT; repo supplied but not studied |
+| `security_first_threat_model` | `security_first` | `security_remediation`, `release_promotion`, `critical_integration`, `agent_quality_change` | `security_architecture_plan`, `threat_model`, `secret_delivery_policy`, `supply_chain_result` | `Security Gate`, `Review Gate`, `Human R4 Gate` | security architecture exists before material implementation; scanner evidence attached; release risk owner recorded | security review replaces security architecture; placeholder secret delivery passes production |
+| `design_first_product_experience` | `design_first` | `ux_product_experience`, `product_creation`, `feature_delivery` | `professional_design_process`, `project_design_system`, `product_experience_plan`, `product_face_packet` | `Product Experience Gate`, `Product Face Gate`, `Review Gate` | DESIGN.md or design-system contract exists; Product Face result checks states; screenshots and accessibility evidence attached | visible product passes without screenshots; Product Face Packet treated as proof |
+| `legacy_diagnosis` | `legacy_diagnosis` | `brownfield_discovery`, `migration_execution`, `bug_repair` | `brownfield_os_plan`, `repo_archaeology_notes`, `risk_register` | `Source Gate`, `Migration Gate`, `Review Gate` | existing repo studied before SOT; legacy risk mapped; migration rollback identified | old repo treated as fresh product; legacy assumptions copied into Product SOT without source refs |
+| `incident_first` | `incident_first` | `incident_response`, `bug_repair`, `security_remediation` | `incident_support_plan`, `reproduction_evidence`, `rollback_or_mitigation_plan` | `Incident Gate`, `Verification Gate`, `Review Gate` | current impact classified; fix or mitigation verified; post-incident learnback captured | incident fixed only by chat status; mitigation accepted without verification |
+
+Famílias de rota sem engine dedicado neste registry: `agent_eval_first`, `analytics_first`, `docs_first`, `research_first`. Elas não podem virar execução por nome. F7 precisa registrar no `method_contract` qual artefato, gate, worker e prova substitui ou complementa o engine ausente.
+
+## Capacidades existentes
+
+| Capacidade | Estado | Superfícies cobertas | Workers | Evidência mínima | Regra operacional |
+|---|---|---|---|---|---|
+| `web-saas-core` | `core_ready` | `code`, `implementation`, `frontend`, `browser`, `component`, `screen`, `ux`, `product-face`, `responsive`, `mobile-web`, `+25` | `product-face`, `frontend-builder`, `backend-api-builder`, `data-persistence-builder`, `integration-builder`, `test-automation-builder`, `+4` | `factoryctl gate report`, `worker packets`, `Receipt Five` | Available by default for ordinary web/product software when no specialized template-only surface is present. |
+| `cli-tui-product-pack` | `core_ready` | `cli`, `tui`, `terminal`, `console`, `command_line`, `command-line` | `docs-os-worker`, `test-automation-builder`, `qa-verification-worker`, `release-ops-worker` | `install/run smoke`, `help output`, `golden transcript`, `error-state transcript`, `+2` | Available by default for CLI/TUI products after Product Face routes the surface to cli_tui and proof coverage is required through the delivery quality profile. |
+| `cloud-native-core` | `core_ready` | `infra`, `devops`, `deploy`, `ci`, `cd`, `cicd`, `runtime`, `environment`, `workflow`, `cloud`, `+11` | `infra-devops-builder`, `cloud-infra-security-specialist`, `supply-chain-gate`, `release-ops-worker`, `detection-monitoring-worker`, `remote-proof-runner` | `runtime contract`, `rollback proof`, `monitoring proof` | Available by default for non-secret cloud/runtime wiring; production authority still requires human and release gates. |
+| `agent-runtime-core` | `core_ready` | `agent`, `agents`, `agent design`, `llm`, `prompt`, `memory`, `tools`, `mcp`, `hermes`, `factory`, `+4` | `agent-runtime-builder`, `agentic-ai-security-specialist`, `memory-steward`, `skill-eval-distiller`, `qa-verification-worker`, `independent-reviewer` | `agent eval plan`, `permission class`, `security handoff`, `profile/binding refs` | Available by default after agent_eval_plan, permission class and reviewer separation exist. |
+| `solana-ai-kit-core` | `core_ready` | `solana`, `solana-quasar`, `quasar`, `anchor`, `pinocchio`, `onchain`, `program`, `instruction`, `pda`, `account-pda`, `+29` | `product-sot-planner`, `product-architect`, `decomposition-planner`, `product-face`, `implementation-worker`, `backend-api-builder`, `+10` | `Solana AI Kit usage receipt for each real PASS Solana-domain worker result`, `onchain work package`, `Auditor result`, `signer boundary`, `+1` | Available when Factory routing declares or infers a Solana-domain surface and Solana AI Kit is the pinned domain-brain provider; Factory gates, signer rules and human approvals still override provider guidance. |
+| `mobile-app-pack` | `pack_template` | `ios`, `android`, `react-native`, `expo`, `native-mobile`, `mobile-wallet`, `deep-linking`, `app-store`, `play-store` | `frontend-builder`, `product-face`, `qa-verification-worker`, `wallet-transaction-builder` | `mobile architecture packet`, `device/simulator smoke`, `mobile Product Face result` | Block material mobile execution until the pack is activated or explicitly waived with a human gate. |
+| `desktop-app-pack` | `pack_template` | `desktop`, `electron`, `tauri`, `macos`, `windows`, `linux-desktop`, `installer`, `auto-update` | `frontend-builder`, `product-face`, `infra-devops-builder`, `qa-verification-worker` | `desktop runtime decision`, `packaging proof`, `desktop QA proof` | Block desktop execution until the pack is activated for the selected runtime. |
+| `game-product-pack` | `pack_template` | `game`, `game-like`, `2d`, `3d`, `threejs`, `phaser`, `unity`, `unreal`, `gameplay`, `asset-pipeline`, `+2` | `product-face`, `frontend-builder`, `qa-verification-worker`, `test-automation-builder` | `game design packet`, `runtime choice`, `playable smoke`, `performance budget` | Block game execution until the game pack is activated for 2D, 3D, web, mobile or onchain game scope. |
+| `ai-ml-product-pack` | `pack_template` | `ai`, `ml`, `model`, `rag`, `embedding`, `embeddings`, `vector-search`, `fine-tuning`, `classifier`, `inference`, `+2` | `agent-runtime-builder`, `agentic-ai-security-specialist`, `data-persistence-builder`, `qa-verification-worker`, `skill-eval-distiller` | `model contract`, `eval plan`, `data policy`, `safety review` | Block AI/ML execution until model/data/eval contracts are activated. |
+| `fintech-payments-pack` | `pack_template` | `payment`, `payments`, `billing`, `subscription`, `ledger`, `reconciliation`, `fintech`, `fraud`, `kyc`, `aml`, `+1` | `backend-api-builder`, `data-persistence-builder`, `appsec-owasp-specialist`, `crypto-key-management-specialist`, `codex-security`, `human-gate-clerk` | `ledger model`, `risk matrix`, `security scan`, `human gate` | Block fintech/payment execution until the pack is activated and human/security gates exist. |
+| `regulated-domain-pack` | `pack_template` | `legal`, `medical`, `healthcare`, `insurance`, `education`, `compliance`, `privacy-regulated`, `regulated` | `product-sot-planner`, `product-architect`, `codex-security`, `human-gate-clerk`, `docs-os-worker` | `domain risk packet`, `compliance owner`, `human gate`, `scope boundaries` | Block regulated-domain execution until a domain compliance pack is created for the exact jurisdiction and product class. |
+| `data-analytics-pack` | `pack_template` | `analytics`, `bi`, `dashboard`, `metrics`, `etl`, `data-pipeline`, `warehouse`, `reporting` | `data-persistence-builder`, `backend-api-builder`, `detection-monitoring-worker`, `docs-os-worker` | `metric definitions`, `data quality checks`, `lineage note`, `dashboard proof` | Block analytics-heavy execution until metric/data contracts are activated. |
+| `browser-extension-pack` | `pack_template` | `browser-extension`, `chrome-extension`, `extension`, `manifest-v3`, `content-script` | `frontend-builder`, `agentic-ai-security-specialist`, `product-face`, `qa-verification-worker` | `permission review`, `browser smoke`, `packaging proof` | Block extension execution until extension-specific security and packaging proof exist. |
+| `operator-onboarding-pack` | `core_ready` | `onboarding`, `operator`, `fresh-install`, `walkthrough`, `hermes-install`, `adapter-install` | `docs-os-worker`, `qa-verification-worker`, `factory-orchestrator`, `public-safety-gate` | `fresh install commands`, `quickstart smoke`, `worker packet output under .tmp`, `public safety scan` | Available by default for public onboarding and operator walkthrough work that does not mutate a real Hermes runtime. |
+| `public-docs-knowledge-pack` | `core_ready` | `public-docs`, `docs`, `documentation`, `guide`, `manual`, `knowledge`, `example-gallery` | `docs-os-worker`, `public-safety-gate`, `qa-verification-worker`, `skill-eval-distiller` | `document governance validation`, `public safety scan`, `secret safety scan`, `focused doc tests` | Available by default for documentation and knowledge artifacts when generated evidence stays out of the public repo. |
+| `operator-artifact-media-pack` | `core_ready` | `pdf`, `video`, `media`, `operator-artifact`, `operator-briefing`, `screen-recording`, `presentation`, `document` | `docs-os-worker`, `product-face`, `qa-verification-worker`, `release-ops-worker` | `operator-readable artifact smoke`, `public/private boundary scan`, `delivery receipt or publication candidate proof` | Available by default for non-secret operator artifacts after source/private refs are sanitized and delivery receipts are recorded. |
+| `hardware-iot-pack` | `blocked_until_installed` | `hardware`, `iot`, `firmware`, `robotics`, `device`, `embedded` | `product-architect`, `security-orchestrator`, `human-gate-clerk` | `hardware safety packet`, `device test plan`, `domain expert review` | Always block until a dedicated hardware/IoT pack is installed for the exact product. |
+
+**Estados de capacidade:** `core_ready` = pronto para preparar execução com workers existentes; `pack_template` = domínio conhecido mas falta instalação/worker/eval/revisão; `blocked_until_installed` = bloqueio real até pack dedicado ou waiver humano.
+
+## Fases F0-F27
+
+## F0 — Fonte selada (`Pre-Start / Sealed Source Envelope`)
+
+**O que é:** Preserva o pedido e a fonte antes de qualquer execução da fábrica.
+
+- Entrada: operator intent or external signal exists before factory execution.
+- Artefatos: `factory_bridge_source_envelope`, `factory_bridge_start_request`.
+- Opcional: `factory_bridge_handoff`.
+- Gate: `Start Boundary`.
+- Workers: `overkill-factory-gerente`, `factory-orchestrator`.
+- Estado no Hermes: `card.factory_bridge_source_envelope_ref`, `card.factory_bridge_start_request_ref`, `run.board_binding`.
+- Avança quando: sealed source envelope exists; factory_bridge_start_request exists; board policy is explicit.
+- Bloqueia quando: summarize or reinterpret source material in the bridge; create Hermes board/card directly from bridge; start without explicit runtime target policy.
+- Pode fazer: seal source envelope; create start request; select new_project or existing_project explicitly.
+- Comandos: `factoryctl validate-factory-run`, `factoryctl validate-card`.
+- Contratos: `schemas/factory-bridge-source-envelope.schema.json`, `schemas/factory-bridge-start-request.schema.json`, `schemas/factory-run.schema.json`.
+
+## F1 — Entrada (`Intake`)
+
+**O que é:** Registra a entrada, escolhe a interface do operador e cria o primeiro pacote de leitura.
+
+- Entrada: user material or intent exists; primary operator interface is selected.
+- Artefatos: `operator_interface_profile`, `factory_start_conversation`, `universal_signal_intake`, `source_refs`, `source_resolution_packet`.
+- Opcional: `reference_quality_packet`.
+- Gate: `Source Gate`.
+- Workers: `factory-orchestrator`.
+- Estado no Hermes: `card.operator_interface_profile_ref`, `card.factory_start_conversation_ref`, `card.universal_signal_intake_ref`, `card.source_refs`, `card.source_resolution_packet_ref`.
+- Avança quando: operator_interface_profile exists; factory_start_conversation exists; universal_signal_intake exists; source_refs is non-empty; source_resolution_packet exists.
+- Bloqueia quando: route implementation before source resolution; create Product SOT from raw input; require the operator to poll for status.
+- Pode fazer: select operator interface; hold conversational start; classify intake; create universal signal intake; create source resolution packet.
+- Comandos: `factoryctl operator-interface`, `factoryctl start-conversation`, `factoryctl validate-signal-intake`, `factoryctl source-resolution`, `factoryctl validate-card`.
+- Contratos: `schemas/operator-interface-profile.schema.json`, `schemas/factory-start-conversation.schema.json`, `schemas/universal-signal-intake.schema.json`, `schemas/source-resolution-packet.schema.json`.
+
+## F2 — Ledger de fonte (`Source Ledger`)
+
+**O que é:** Separa fatos, afirmações, lacunas e conflitos em um registro rastreável.
+
+- Entrada: intake classified.
+- Artefatos: `source_refs`, `product_source_ledger`, `operator_understanding_confirmation`.
+- Opcional: `reference_source_registry`.
+- Gate: `Source Gate`.
+- Workers: `source-ledger-worker`.
+- Estado no Hermes: `card.source_refs`, `card.product_source_ledger_ref`, `card.operator_understanding_confirmation_ref`.
+- Avança quando: critical claims point to source refs; product source ledger exists; operator understanding confirmation is confirmed when Product SOT is required.
+- Bloqueia quando: ask user to reconcile internal source bookkeeping; create outcome contract or Product SOT before understanding is confirmed.
+- Pode fazer: record claims; materialize product source ledger; mark gaps and conflicts; ask concise operator understanding confirmation.
+- Comandos: `factoryctl source-ledger`, `factoryctl understanding-confirmation`, `factoryctl validate-source-ledger`, `factoryctl validate-understanding-confirmation`, `factoryctl gate-report`.
+- Contratos: `schemas/reference-source-registry.schema.json`, `schemas/product-source-ledger.schema.json`, `schemas/operator-understanding-confirmation.schema.json`.
+
+## F3 — Resolução de fonte (`Source Resolution`)
+
+**O que é:** Resolve lacunas ou transforma o que falta em bloqueio/decisão limitada.
+
+- Entrada: source ledger exists.
+- Artefatos: `discovery_brief`.
+- Opcional: `specialist_research_plan`.
+- Gate: `Discovery Gate`.
+- Workers: `source-ledger-worker`, `product-sot-planner`.
+- Estado no Hermes: `card.discovery_brief`.
+- Avança quando: open gaps are resolved, blocked or owner-assigned.
+- Bloqueia quando: turn unresolved gaps into execution scope.
+- Pode fazer: resolve conflicts; raise bounded human questions.
+- Comandos: `factoryctl help-next`.
+- Contratos: `schemas/discovery-brief.schema.json`.
+
+## F4 — Resultado do produto (`Product Outcome And Discovery`)
+
+**O que é:** Transforma entendimento confirmado em outcome antes do Product SOT.
+
+- Entrada: material outcome is known; operator understanding is confirmed when Product SOT is required.
+- Artefatos: `operator_understanding_confirmation`, `operator_briefing_package`, `outcome_contract`, `discovery_brief`.
+- Opcional: `reference_quality_packet`.
+- Gate: `Outcome Gate`, `Discovery Gate`.
+- Workers: `product-sot-planner`.
+- Estado no Hermes: `card.outcome_contract`, `card.discovery_brief`.
+- Avança quando: operator understanding confirmation exists when needed; operator briefing package exists for decision artifacts; outcome, user, problem and success signals exist.
+- Bloqueia quando: treat outcome candidate as approved Product SOT; draft Product SOT before operator understanding confirmation.
+- Pode fazer: draft Product SOT candidate.
+- Comandos: `factoryctl understanding-confirmation`, `factoryctl briefing-package`, `factoryctl outcome-contract`, `factoryctl validate-outcome-contract`, `factoryctl validate-card`.
+- Contratos: `schemas/operator-understanding-confirmation.schema.json`, `schemas/operator-briefing-package.schema.json`, `schemas/outcome-contract.schema.json`, `schemas/discovery-brief.schema.json`.
+
+## F5 — Verdade do produto (`Product SOT`)
+
+**O que é:** Cria ou atualiza o Product SOT, cobertura de escopo e lock de fase.
+
+- Entrada: outcome and discovery are resolved enough; operator understanding is confirmed when Product SOT is required.
+- Artefatos: `product_sot`, `operator_briefing_package`, `full_product_sot_scope_coverage`, `factory_phase_lock`.
+- Opcional: `user_facing_autonomy_contract`.
+- Gate: `Product SOT Gate`.
+- Workers: `product-sot-planner`.
+- Estado no Hermes: `card.product_sot`, `card.operator_briefing_package_ref`, `card.full_product_sot_scope_coverage`, `card.factory_phase_lock`.
+- Avança quando: product_sot exists and scope is explicit; operator briefing package includes markdown and PDF when a decision is needed; factory_phase_lock.owner_surface_first.product_sot_review_packet_delivered is true before downstream phases; product_sot.handoff.next_artifact points to full_product_sot_scope_coverage.
+- Bloqueia quando: execute from paper instead of Product SOT; ask operator to approve Product SOT from a short chat summary only; start architecture, repo cleanup, human gate or worker packet while Product SOT owner package is missing.
+- Pode fazer: create or update Product SOT; create Product SOT briefing package; create full Product SOT scope coverage; set factory_phase_lock active_frontier=product_sot until material is delivered; request bounded scope approval only after material is delivered.
+- Comandos: `factoryctl product-sot`, `factoryctl briefing-package`, `factoryctl validate-product-sot`, `factoryctl full-scope-coverage`, `factoryctl validate-full-scope-coverage`, `factoryctl help-next`.
+- Contratos: `schemas/product-sot.schema.json`, `schemas/operator-briefing-package.schema.json`, `schemas/full-product-sot-scope-coverage.schema.json`, `schemas/factory-phase-lock.schema.json`, `schemas/user-facing-autonomy-contract.schema.json`.
+
+## F6 — Roteador de método (`Agentic Method Router`)
+
+**O que é:** Escolhe a rota e a família de método a partir do Product SOT e do registry.
+
+- Entrada: owner-readable Product SOT review packet exists; Product SOT candidate exists; full Product SOT scope coverage exists.
+- Artefatos: `factory_phase_lock`, `method_contract`.
+- Opcional: `specialist_decision_packet`.
+- Gate: `Method Gate`.
+- Workers: `factory-orchestrator`.
+- Estado no Hermes: `card.method_contract`.
+- Avança quando: selected method, gates, workers and evidence are recorded; factory_phase_lock can advance only after method_contract is materialized.
+- Bloqueia quando: ask user to choose internal method machinery; start architecture or repo cleanup before Method Contract.
+- Pode fazer: select route and required methods; keep architecture and worker packets frozen until Method Contract is materialized.
+- Comandos: `factoryctl method-contract`, `factoryctl validate-method-contract`, `factoryctl gate-report`.
+- Contratos: `schemas/factory-phase-lock.schema.json`, `schemas/method-contract.schema.json`.
+
+## F7 — Contrato de método (`Method Contract`)
+
+**O que é:** Materializa método, gates, workers, artefatos e provas antes de planejar execução.
+
+- Entrada: method route chosen; owner-readable Product SOT review material exists.
+- Artefatos: `factory_phase_lock`, `method_contract`.
+- Opcional: `parallel_lane_contracts`.
+- Gate: `Method Gate`.
+- Workers: `factory-orchestrator`.
+- Estado no Hermes: `card.method_contract`.
+- Avança quando: required artifacts and workers are named.
+- Bloqueia quando: start implementation with undocumented process choices; materialize future-phase cards while active frontier is still product_sot or method_contract.
+- Pode fazer: record required plans, gates and workers.
+- Comandos: `factoryctl validate-card`.
+- Contratos: `schemas/factory-phase-lock.schema.json`, `schemas/method-contract.schema.json`.
+
+## F8 — Capacidade e superfície (`Pack And Product Experience Selection`)
+
+**O que é:** Escolhe capability packs, superfície de produto, design system e perfil de evidência.
+
+- Entrada: method contract exists.
+- Artefatos: `capability_pack_contract`, `product_experience_plan`, `product_face_packet`, `project_design_system`, `professional_design_process`, `surface_evidence_profile`, `product_delivery_quality_profile`.
+- Opcional: `product_pack`, `surface_pack`, `reference_quality_waiver`.
+- Gate: `Pack Gate`, `Product Experience Gate`, `Surface Pack Gate`.
+- Workers: `product-face`, `factory-orchestrator`.
+- Estado no Hermes: `card.product_experience_plan`, `card.product_face_packet`, `card.project_design_system`, `card.professional_design_process`, `card.product_delivery_quality_profile_ref`.
+- Avança quando: required surfaces are covered or blocked; product_experience_plan exists and names surface_pack; product_face_packet exists and names required states and proof; project_design_system exists and exports an AI-readable DESIGN.md contract; surface_evidence_profile or surface_evidence_profiles are declared; product_delivery_quality_profile_ref or product_delivery_quality_profile is declared; professional_design_process exists before product-facing implementation.
+- Bloqueia quando: activate a pack without proof or coverage; start product-facing implementation before surface state coverage; treat generic UI proof as Product Experience proof; move to implementation with unnamed surface pack or proof profile.
+- Pode fazer: match capability packs; mark missing capabilities; create Product Experience Plan; create Product Face Packet; create Project DESIGN.md contract; select surface evidence profile.
+- Comandos: `factoryctl help-next`, `factoryctl gate-report`, `factoryctl validate-card`.
+- Contratos: `schemas/capability-pack-contract.schema.json`, `schemas/product-experience-plan.schema.json`, `schemas/product-face-packet.schema.json`, `schemas/project-design-system.schema.json`, `schemas/professional-design-process.schema.json`, `schemas/product-delivery-quality-profile.schema.json`.
+
+## F9 — Autoridade e risco (`Risk And Authority Gates`)
+
+**O que é:** Registra acesso, orçamento e decisões humanas quando há risco/autoridade real.
+
+- Entrada: risk tier and surfaces are known; factory_phase_lock permits authority review for the current frontier.
+- Artefatos: `access_capability`, `budget_contract`.
+- Opcional: `privacy_compliance_plan`.
+- Gate: `Access Gate`, `Budget Gate`, `Human Gate when required`.
+- Workers: `human-gate-clerk`.
+- Estado no Hermes: `card.access_capability`, `card.budget_contract`.
+- Avança quando: required authority is granted, blocked or not needed.
+- Bloqueia quando: infer approval from silence; ask for planning-only continuation approval; ask for architecture or repo cleanup approval while downstream is frozen.
+- Pode fazer: prepare bounded approval requests only for real authority, access, risk, release, funds, secrets or irreversible action.
+- Comandos: `factoryctl human-gate-record`.
+- Contratos: `schemas/access-capability.schema.json`, `schemas/budget-contract.schema.json`.
+
+## F10 — Arquitetura de segurança (`Security Architecture`)
+
+**O que é:** Cria plano de segurança quando risco material existe antes de build.
+
+- Entrada: material security or privacy risk exists; Product SOT owner-review material exists; Method Contract exists; factory_phase_lock active_frontier is architecture or later.
+- Artefatos: `factory_phase_lock`, `security_architecture_plan`.
+- Opcional: `privacy_compliance_plan`.
+- Gate: `Security Architecture Gate`.
+- Workers: `security-orchestrator`.
+- Estado no Hermes: `card.security_architecture_plan`.
+- Avança quando: controls, threats and reviewers are named.
+- Bloqueia quando: build material risk before architecture; start security architecture while Product SOT or Method Contract is still missing.
+- Pode fazer: route specialist security planning.
+- Comandos: `factoryctl worker-packet`.
+- Contratos: `schemas/factory-phase-lock.schema.json`, `schemas/security-architecture-plan.schema.json`.
+
+## F11 — Planos executáveis (`Executable Plans`)
+
+**O que é:** Quebra o produto em planos, specs, work units, checks e rollback.
+
+- Entrada: method and required gates are known.
+- Artefatos: `software_development_plan`, `spec_graph`, `loop_plan`, `product_creation_plan`.
+- Opcional: `agent_eval_plan`.
+- Condicional: `data_metrics_plan`, `user_docs_onboarding_plan`.
+- Gate: `Ready Gate`.
+- Workers: `decomposition-planner`.
+- Estado no Hermes: `card.software_development_plan`, `card.spec_graph`, `card.loop_plan`, `card.product_creation_plan`.
+- Avança quando: work units, checks, reviewers, dependencies and rollback are named in Product Creation Plan; Product Creation Plan handoff points to decomposition_coverage_review; declared data, metrics, docs and onboarding plans pass strict schema-backed runtime validation.
+- Bloqueia quando: execute before plans, coverage review and stop criteria exist; mark decomposition review as passed from the planner that created the decomposition.
+- Pode fazer: create work units, verification plan and Product Creation Plan; handoff Product Creation Plan to Decomposition Coverage Review before readiness.
+- Comandos: `factoryctl product-creation-plan`, `factoryctl help-next`.
+- Contratos: `schemas/software-development-plan.schema.json`, `schemas/spec-graph.schema.json`, `schemas/loop-plan.schema.json`, `schemas/product-creation-plan.schema.json`, `schemas/data-metrics-plan.schema.json`, `schemas/user-docs-onboarding-plan.schema.json`.
+
+## F12 — Prontidão de autonomia (`Autonomy Readiness`)
+
+**O que é:** Verifica cobertura, acesso, ferramenta, ambiente e limites antes de dispatch.
+
+- Entrada: Product Creation Plan exists; Decomposition Coverage Review is PASS.
+- Artefatos: `decomposition_coverage_review`, `product_implementation_readiness`, `autonomy_readiness_packet`.
+- Opcional: `access_capability`.
+- Gate: `Decomposition Coverage Gate`, `Access & Capability Gate`.
+- Workers: `independent-reviewer`, `factory-orchestrator`.
+- Estado no Hermes: `card.decomposition_coverage_review`, `card.product_implementation_readiness`, `card.autonomy_readiness_packet`.
+- Avança quando: Decomposition Coverage Review exists and is PASS; every planned work-unit owner and reviewer signs the decomposition coverage matrix with evidence; Product Implementation Readiness references the PASS Decomposition Coverage Review; tools, accounts, environment and rollback are ready or blocked.
+- Bloqueia quando: start autonomous work with missing review, access or limits; let a single reviewer approve the complete decomposition alone; create Product Implementation Readiness from a failed or missing decomposition coverage review.
+- Pode fazer: run multi-operator decomposition coverage review from Product Creation Plan; create Product Implementation Readiness only after Decomposition Coverage Review is PASS; confirm tools, environment, limits and rollback.
+- Comandos: `factoryctl decomposition-coverage-review`, `factoryctl product-implementation-readiness`, `factoryctl gate-report`.
+- Contratos: `schemas/decomposition-coverage-review.schema.json`, `schemas/product-implementation-readiness.schema.json`, `schemas/autonomy-readiness-packet.schema.json`.
+
+## F13 — Ready Gate (`Ready Gate`)
+
+**O que é:** Decide se worker tasks podem ser criadas ou se o card continua bloqueado.
+
+- Entrada: Product Implementation Readiness exists and references a PASS Decomposition Coverage Review.
+- Artefatos: `gate_report`.
+- Opcional: `factory_help_next`.
+- Gate: `Ready Gate`.
+- Workers: `factory-orchestrator`.
+- Estado no Hermes: `factoryctl gate-report`.
+- Avança quando: gate_predicate_result is PASS; ready worker task materialization is allowed only for reviewed work units.
+- Bloqueia quando: dispatch blocked workers.
+- Pode fazer: create required worker tasks when gate passes.
+- Comandos: `factoryctl gate-report`, `factoryctl help-next`.
+- Contratos: `schemas/gate-report.schema.json`.
+
+## F15 — Execução runtime (`Runtime Execution`)
+
+**O que é:** Despacha worker packets para execução real no Hermes/runtime.
+
+- Entrada: Ready Gate passed.
+- Artefatos: `worker_packets`.
+- Opcional: `parallel_lane_contracts`.
+- Gate: `Runtime Gate`.
+- Workers: `implementation-worker`, `qa-verification-worker`.
+- Estado no Hermes: `.tmp/worker-packets`, `Hermes worker tasks`.
+- Avança quando: required worker tasks exist in runtime.
+- Bloqueia quando: spawn without route readiness.
+- Pode fazer: dispatch required worker packets.
+- Comandos: `factoryctl worker-packet`.
+- Contratos: `schemas/worker-packet.schema.json`.
+
+## F16 — Resultados de workers (`Worker Results`)
+
+**O que é:** Coleta worker results válidos; pacote gerado não conta como execução.
+
+- Entrada: worker packets were executed.
+- Artefatos: `worker_results`.
+- Opcional: `evidence_graph`.
+- Gate: `Done Gate`.
+- Workers: `evidence-reconciler`.
+- Estado no Hermes: `worker result artifacts`.
+- Avança quando: required workers returned valid records.
+- Bloqueia quando: treat packet existence as proof.
+- Pode fazer: collect worker result records.
+- Comandos: `factoryctl evidence-record`.
+- Contratos: `schemas/worker-result.schema.json`.
+
+## F17 — Verificação (`Verification`)
+
+**O que é:** Roda checks nomeados e registra resultado verificável.
+
+- Entrada: implementation or proof exists.
+- Artefatos: `verification_plan`, `verification_result`.
+- Opcional: `qa_verification_plan`, `product_face_result`.
+- Gate: `Verification Gate`.
+- Workers: `qa-verification-worker`.
+- Estado no Hermes: `card.verification_plan`, `receipt.verification_commands`.
+- Avança quando: verification commands and results are attached; product-facing work has product_face_result with usage_evidence_matrix before completion.
+- Bloqueia quando: claim done without command evidence.
+- Pode fazer: run named checks and record outputs.
+- Comandos: `factoryctl validate-completion`.
+- Contratos: `schemas/qa-verification-plan.schema.json`.
+
+## F18 — Revisão independente (`Independent Review`)
+
+**O que é:** Faz reviewer separado consumir resultado e evidência antes de aprovar.
+
+- Entrada: verification evidence exists.
+- Artefatos: `review_result`.
+- Opcional: `reviewer_selection_plan`.
+- Gate: `Review Gate`.
+- Workers: `independent-reviewer`.
+- Estado no Hermes: `worker result artifacts`.
+- Avança quando: reviewer is different from executor and result is attached.
+- Bloqueia quando: allow executor to self-approve.
+- Pode fazer: route independent review.
+- Comandos: `factoryctl worker-packet`.
+- Contratos: `schemas/reviewer-selection-plan.schema.json`.
+
+## F20 — Resumo de fechamento (`Closure Summary`)
+
+**O que é:** Empacota entrega, bloqueios, risco restante e próxima ação.
+
+- Entrada: workers, checks and review are complete or blocked.
+- Artefatos: `closure_summary`.
+- Opcional: `handoff_packet`.
+- Gate: `Closure Gate`.
+- Workers: `handoff-packer`.
+- Estado no Hermes: `card.closure_summary`.
+- Avança quando: closure result and next step are explicit.
+- Bloqueia quando: hide unresolved blockers in prose.
+- Pode fazer: summarize delivered work and remaining risk.
+- Comandos: `factoryctl status-snapshot`.
+- Contratos: `schemas/worker-closure-summary.schema.json`.
+
+## F21 — Receipt Five (`Receipt Five`)
+
+**O que é:** Reconcilia pedido, mudança, evidência, revisão e pendências em recibo final.
+
+- Entrada: closure summary is ready.
+- Artefatos: `receipt_five`.
+- Opcional: `evidence_graph`.
+- Gate: `Done Gate`.
+- Workers: `evidence-reconciler`.
+- Estado no Hermes: `card.receipt_five`, `receipt artifact`.
+- Avança quando: changed, artifacts, commands, review and next action exist; product-facing receipts include Product Face result evidence refs.
+- Bloqueia quando: mark done without Receipt Five.
+- Pode fazer: reconcile receipt with evidence.
+- Comandos: `factoryctl validate-completion`.
+- Contratos: `schemas/receipt-five.schema.json`.
+
+## F22 — Auditoria de conclusão (`Completion Audit`)
+
+**O que é:** Compara trabalho prometido e trabalho entregue sem inflar prova local.
+
+- Entrada: receipt exists.
+- Artefatos: `completion_audit`.
+- Opcional: `factory_completion_audit`.
+- Gate: `Completion Audit`.
+- Workers: `evidence-reconciler`.
+- Estado no Hermes: `card.completion_audit`.
+- Avança quando: audit result is PASS, BLOCKED or PENDING with reasons.
+- Bloqueia quando: close skipped method or evidence requirements.
+- Pode fazer: compare required work with delivered work.
+- Comandos: `factoryctl validate-completion`.
+- Contratos: `schemas/completion-audit.schema.json`.
+
+## F23 — Operação de produção (`Production Operations`)
+
+**O que é:** Prepara release, rollback, health check, monitoramento e dono.
+
+- Entrada: completion audit allows promotion.
+- Artefatos: `production_readiness_plan`.
+- Opcional: `incident_support_plan`.
+- Gate: `Release Gate`.
+- Workers: `release-ops-worker`.
+- Estado no Hermes: `card.production_readiness_plan`.
+- Avança quando: owner, rollback, health checks and approval rule exist.
+- Bloqueia quando: release without owner, rollback or approval.
+- Pode fazer: prepare release, rollback and monitoring.
+- Comandos: `factoryctl gate-report`.
+- Contratos: `schemas/production-readiness-plan.schema.json`.
+
+## F24 — Release ou bloqueio (`Release Or Block`)
+
+**O que é:** Registra decisão de promover ou bloquear com evidência e próximo passo.
+
+- Entrada: production operations plan exists.
+- Artefatos: `release_decision`.
+- Opcional: `blocker_economics`.
+- Gate: `Release Gate`, `Human Gate when required`.
+- Workers: `release-ops-worker`, `human-gate-clerk`.
+- Estado no Hermes: `release decision artifact`.
+- Avança quando: release or block has owner, evidence and next action.
+- Bloqueia quando: promote without production-strict evidence.
+- Pode fazer: release with authority or block with next action.
+- Comandos: `factoryctl help-next`.
+- Contratos: `schemas/gate-report.schema.json`.
+
+## F25 — Suporte e monitoramento (`Monitoring Support`)
+
+**O que é:** Define gatilhos de incidente, triagem, escalonamento e suporte.
+
+- Entrada: release or production block is decided.
+- Artefatos: `incident_support_plan`.
+- Opcional: `monitoring_notes`.
+- Gate: `Support Gate`.
+- Workers: `release-ops-worker`.
+- Estado no Hermes: `card.incident_support_plan`.
+- Avança quando: incident triggers, triage and escalation exist.
+- Bloqueia quando: ship without support owner when support is material.
+- Pode fazer: activate monitoring or support path.
+- Comandos: `factoryctl validate-card`.
+- Contratos: `schemas/incident-support-plan.schema.json`.
+
+## F26 — Learnback (`Learnback`)
+
+**O que é:** Transforma falha repetida em proposta sem autoativar mudança crítica.
+
+- Entrada: work closed, blocked or released.
+- Artefatos: `factory_learning_proposal`.
+- Opcional: `execution_learnback_record`.
+- Gate: `Learning Gate`.
+- Workers: `skill-eval-distiller`.
+- Estado no Hermes: `factory/templates/factory-learning-proposal.json`.
+- Avança quando: proposal is accepted, rejected or gated.
+- Bloqueia quando: auto-activate critical factory changes.
+- Pode fazer: convert repeated failure into proposal.
+- Comandos: `factoryctl validate-card`.
+- Contratos: `schemas/factory-learning-proposal.schema.json`.
+
+## F27 — Auditoria de maturidade (`Factory Maturity Audit`)
+
+**O que é:** Audita lacunas do processo e cria melhoria public-safe quando necessário.
+
+- Entrada: learnback exists or repeated blind spot is detected.
+- Artefatos: `factory_maturity_scorecard`.
+- Opcional: `owner_issue_intake_report`.
+- Gate: `Maturity Gate`.
+- Workers: `skill-eval-distiller`.
+- Estado no Hermes: `card.factory_maturity_scorecard`.
+- Avança quando: blind spots and actions are recorded.
+- Bloqueia quando: commit raw study or private evidence.
+- Pode fazer: open public-safe improvement issue.
+- Comandos: `factoryctl status-snapshot`.
+- Contratos: `schemas/factory-maturity-scorecard.schema.json`.
+
+## Bloqueios e retomada
+
+| Bloqueio | Fase comum | O que fica registrado | Como retoma |
+|---|---|---|---|
+| Fonte faltando | F0-F3 | item ausente, dono, decisão necessária, fonte parcial | anexar fonte, registrar lacuna aceita ou reduzir escopo |
+| Product SOT fraco | F4-F5 | campo fraco, cobertura ausente, owner package pendente | atualizar `product_sot`, `full_product_sot_scope_coverage` e lock |
+| Método nominal | F6-F7 | rota sem `method_contract`, engine ausente, prova não definida | materializar contrato ou bloquear rota |
+| Capacidade ausente | F8-F12 | pack template, worker faltante, permissão/eval/acesso ausente | ativar pack, instalar worker, registrar waiver ou reduzir escopo |
+| Autoridade pendente | F9/F24 | decisão, risco, consequência, próximo estado | decisão humana registrada; a fábrica não simula autoridade |
+| Execução sem prova | F15-F17 | worker packet existe, mas sem `worker_result` ou verificação | executar worker, anexar evidência, voltar para revisão |
+| Revisão inválida | F18 | reviewer igual ao executor ou evidência insuficiente | reviewer independente ou unidade de reparo |
+| Fechamento incompleto | F20-F22 | recibo/auditoria sem ligação com pedido, evidência, revisão e pendência | completar Receipt Five ou fechar como parcial/bloqueado |
+
+## Evidência consumida
 
 ```text
 unidade de trabalho -> card Hermes -> resultado do worker -> revisão -> decisão/fechamento
 ```
 
-Depois que o worker executa a unidade, o resultado volta para o card com evidência anexada ou referenciada. A revisão lê essa evidência. Se a unidade pedia comprovar instalação e execução de comando, a revisão procura o comando, a saída, o código de retorno e a mensagem exibida. Se a unidade pedia tela, a revisão procura screenshot, estado, erro, loading, interação e console quando aplicável. Se a unidade pedia release, a revisão procura build, testes, rollback, dono, janela, health check e decisão.
-
-Evidência solta não muda estado. Um arquivo existente não é evidência consumida. Um link sem leitura não fecha unidade. Um teste local mostra coerência local, não execução viva no Hermes. A evidência só altera a etapa quando fica ligada à unidade, é consumida por revisão e sustenta uma transição.
-
-A etapa bloqueia quando a evidência está ausente, incompleta, privada sem referência segura, fora de escopo, contraditória, sem ligação com o card ou insuficiente para o método. A retomada acontece com nova execução, novo anexo, leitura explícita, revisão complementar ou decisão humana quando a evidência sustenta risco residual.
-
-A saída da evidência alimenta revisão.
-
-## Revisão
-
-Revisão é leitura do resultado e da evidência. Ela não é opinião solta e não é carimbo automático. A revisão consome o que o worker devolveu, compara com a verdade do produto, com o método, com a regra de pronto e com a evidência ligada ao card.
-
-Os estados possíveis incluem aprovado, precisa reparo, bloqueado, decisão humana necessária, evidência insuficiente, fora de escopo, risco aceito, risco não aceito e reaberto. Cada estado precisa mudar algo no Hermes. Aprovado pode mover a unidade para próxima etapa. Reparo cria continuação ligada à unidade original. Bloqueado registra motivo e dono. Decisão humana prepara pacote. Evidência insuficiente devolve a unidade para execução ou anexação. Fora de escopo ajusta verdade do produto ou encerra aquele desvio.
-
-Se a unidade pedia comprovar instalação, a revisão procura saída do comando e código de retorno. Se falta saída, ela não fecha. Se a unidade pedia mudança de documentação, a revisão procura arquivo alterado, navegação atualizada, claim limitada e validação local. Se o texto virou copy de produto, a revisão devolve para reescrita. Se a unidade pedia release, a revisão procura readiness, rollback, decisão e monitoramento.
-
-A revisão avança quando evidência e resultado sustentam a regra de pronto. Ela bloqueia quando há lacuna, contradição, risco sem dono, decisão pendente ou método descumprido. A retomada acontece com reparo, nova evidência, decisão registrada ou reabertura do entendimento.
-
-A saída da revisão alimenta decisão, recibo ou nova execução.
-
-## Decisão
-
-Decisão é o ponto em que autoridade humana pode ser necessária. A fábrica não simula autoridade humana. Ela prepara o pacote de decisão e aguarda o registro da escolha.
-
-Casos comuns incluem produção, release, mainnet, fundos, segredos, gasto, mudança irreversível, risco residual, waiver, exceção de método, escopo ambíguo e conflito de prioridade. A fábrica reúne pedido, contexto, evidência, opções, risco, consequência, recomendação quando houver, limite do que já foi verificado e próximo estado após cada escolha.
-
-Um pacote de decisão não é uma pergunta solta. Ele mostra o que está sendo autorizado e o que não está. Se a decisão é release, o pacote mostra versão, ambiente, janela, rollback, health check, evidência, risco residual e consequência de aprovar ou rejeitar. Se a decisão envolve segredo, o pacote registra necessidade e limite sem expor o valor. Se envolve mainnet ou fundos, a decisão precisa declarar rede, carteira, assinatura, transação, valor, risco e autoridade.
-
-No Hermes, a decisão aparece como bloqueio aguardando humano, comentário estruturado, anexo de pacote, registro de aprovação ou registro de rejeição. Depois da escolha, o card muda para próximo estado autorizado: executar, bloquear, reparar, reduzir escopo, liberar release, arquivar ou reabrir.
-
-A saída da decisão alimenta execução, revisão, recibo ou bloqueio continuado.
-
-Quando a decisão rejeita avanço, a fábrica não apaga o trabalho anterior. Ela mantém a evidência já consumida, registra a razão da rejeição e cria uma continuação compatível com a escolha. Se a decisão aprova com limite, o limite acompanha a próxima unidade. Se a decisão pede novo escopo, a verdade do produto pode ser reaberta antes de qualquer worker continuar. Assim a autoridade humana muda estado sem virar autorização genérica para todo o restante do projeto.
-
-## Recibo
-
-O recibo final é o fechamento legível do ciclo. O nome interno pode ser `Receipt Five`. Ele registra cinco partes: o que foi pedido, o que foi produzido, que evidência sustenta, quem revisou ou decidiu e o que ficou pendente, bloqueado, fora de escopo ou como risco.
-
-O recibo liga pedido, verdade do produto, cards Hermes, evidência, revisão e decisão. Ele não deve esconder pendência em frase genérica. Se algo ficou fora de escopo, o recibo declara. Se algo está bloqueado, declara motivo e dono. Se há risco residual aceito, aponta a decisão. Se a evidência é local, declara limite local. Se houve execução viva no Hermes, aponta o estado e os registros correspondentes.
-
-O recibo avança quando consegue reconstruir o ciclo de forma legível. Ele bloqueia quando falta evidência, revisão, decisão, card, vínculo com a verdade do produto ou explicação de pendência. A retomada acontece com leitura de evidência, revisão complementar, decisão humana ou reparo de unidade.
-
-A saída do recibo alimenta fechamento.
-
-## Fechamento
-
-O fechamento também alimenta aprendizado. Se o ciclo bloqueou porque faltou acesso, a fábrica pode registrar que o próximo trabalho semelhante precisa checar acesso mais cedo. Se a revisão devolveu texto por falta de mecanismo, a regra de documentação pode ser reforçada. Esse aprendizado não ativa mudança crítica sozinho; ele vira proposta ou ajuste rastreável para mantenedores.
-
-Fechamento é a relação final entre pedido, produção, evidência, revisão e pendências. Ele não é apenas “terminou”. Os estados finais possíveis incluem entregue, bloqueado, parcial, reaberto, aprendido, arquivado e aguardando decisão.
-
-Entregue significa que o pedido foi produzido dentro da verdade do produto, com evidência consumida, revisão registrada e recibo final. Bloqueado significa que a fábrica sabe o que impede avanço e quem pode destravar. Parcial significa que uma parte foi produzida e outra ficou fora, pendente ou bloqueada. Reaberto significa que revisão, decisão ou nova fonte alterou o estado. Aprendido significa que a fábrica registrou melhoria de processo sem ativar mudança crítica sem aprovação. Arquivado significa que o ciclo foi encerrado com estado conhecido. Aguardando decisão significa que a próxima mudança depende de autoridade humana.
-
-No Hermes, fechamento precisa aparecer no card ou no conjunto de cards. O estado final precisa apontar para recibo, evidência, revisão e pendências. Se uma etapa futura precisa retomar, a retomada deve saber de onde partir: fonte, verdade do produto, card, worker, evidência, decisão ou recibo.
-
-A fábrica fecha um ciclo quando o estado final é claro, as ligações estão preservadas e a próxima pessoa consegue ler o caminho sem depender de memória de chat. Se a próxima ação existir, ela precisa estar ligada ao card ou ao recibo; se não existir, o arquivamento precisa dizer por que o ciclo não continua.
+- Evidência disponível: log, diff, screenshot, comando, relatório ou decisão existe, mas ainda não moveu estado.
+- Evidência consumida: gate, reviewer ou Receipt Five leu o material e mudou estado: avança, repara, bloqueia, reabre, aceita risco ou fecha.
+- Prova local mostra coerência local. Não mostra execução viva no Hermes.
+- Worker packet mostra preparação. Não mostra execução.
+- Card criado mostra registro. Não mostra conclusão.

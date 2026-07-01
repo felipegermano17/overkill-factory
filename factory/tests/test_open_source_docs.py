@@ -82,22 +82,47 @@ class OpenSourceDocsTest(unittest.TestCase):
     def test_linha_de_producao_shows_internal_mechanism(self) -> None:
         doc = read_text("docs/pt-BR/linha-de-producao.md")
         self.assertGreater(len(doc.split()), 4200)
-        headings = ["Pedido", "Fonte", "Entendimento", "Verdade do produto", "Rota", "Método", "Capacidade", "Trabalho", "Hermes", "Execução", "Evidência", "Revisão", "Decisão", "Recibo", "Fechamento"]
-        for h in headings:
-            self.assertIn(f"## {h}", doc)
         for phrase in [
-            "entrada recebida e fonte a preservar",
-            "fatos, afirmações do pedido, decisões já tomadas, restrições, dependências, dúvidas, lacunas, conflitos, inferências",
-            "fonte lida e do entendimento registrado",
-            "rotas comuns incluem documentação, bug, feature, interface, CLI, integração, release, incidente, segurança, blockchain/Solana",
-            "worker disponível, permissão, acesso, segredo, ambiente, ferramenta, repositório",
+            "## Rotas existentes",
+            "## Métodos existentes",
+            "## Capacidades existentes",
+            "## F0 — Fonte selada",
+            "## F6 — Roteador de método",
+            "## F7 — Contrato de método",
+            "## F8 — Capacidade e superfície",
+            "## F21 — Receipt Five",
             "unidade de trabalho -> card Hermes -> resultado do worker -> revisão -> decisão/fechamento",
-            "A revisão consome o que o worker devolveu",
-            "A fábrica não simula autoridade humana",
-            "o que foi pedido, o que foi produzido, que evidência sustenta, quem revisou ou decidiu",
-            "entregue, bloqueado, parcial, reaberto, aprendido, arquivado e aguardando decisão",
         ]:
             self.assertIn(phrase, doc)
+
+        expected_routes = [
+            "product_creation", "feature_delivery", "bug_repair", "incident_response",
+            "brownfield_discovery", "release_promotion", "research_validation",
+            "docs_onboarding", "security_remediation", "critical_integration",
+            "migration_execution", "ux_product_experience", "analytics_data",
+            "agent_quality_change",
+        ]
+        for route in expected_routes:
+            self.assertIn(f"`{route}`", doc)
+
+        expected_methods = [
+            "spec_first_sdd", "test_first_tdd", "behavior_first_bdd",
+            "discovery_research", "security_first_threat_model",
+            "design_first_product_experience", "legacy_diagnosis", "incident_first",
+        ]
+        for method in expected_methods:
+            self.assertIn(f"`{method}`", doc)
+
+        expected_packs = [
+            "web-saas-core", "cli-tui-product-pack", "cloud-native-core",
+            "agent-runtime-core", "solana-ai-kit-core", "public-docs-knowledge-pack",
+            "hardware-iot-pack",
+        ]
+        for pack in expected_packs:
+            self.assertIn(f"`{pack}`", doc)
+
+        for phase in ["F0", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12", "F13", "F15", "F16", "F17", "F18", "F20", "F21", "F22", "F23", "F24", "F25", "F26", "F27"]:
+            self.assertIn(f"## {phase} —", doc)
 
     def test_uso_contains_commands_and_claim_boundaries(self) -> None:
         uso = read_text("docs/pt-BR/uso.md")

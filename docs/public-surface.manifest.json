@@ -162,13 +162,15 @@
         "no_runtime_proof_claim"
       ],
       "required_phrases": [
-        "## Pedido",
-        "## Fonte",
-        "## Entendimento",
-        "## Verdade do produto",
-        "## Hermes",
-        "## Evidência",
-        "## Recibo"
+        "## Rotas existentes",
+        "## Métodos existentes",
+        "## Capacidades existentes",
+        "## F0 — Fonte selada",
+        "## F6 — Roteador de método",
+        "## F7 — Contrato de método",
+        "## F8 — Capacidade e superfície",
+        "## F21 — Receipt Five",
+        "unidade de trabalho -> card Hermes -> resultado do worker -> revisão -> decisão/fechamento"
       ]
     },
     {
