@@ -187,6 +187,99 @@ def validate_completion_readback(completion: Mapping[str, Any], root: str | Path
     return QualityResult("completion_readback", process_pass, readback_pass, quality_pass, findings)
 
 
+REAL_EFFECTIVENESS_TYPES = {
+    "product_progress",
+    "blocker_resolution",
+    "usable_artifact",
+    "human_delivery",
+    "executable_repair",
+}
+PROCESS_RITUAL_TYPES = {
+    "process_ritual",
+    "comment",
+    "receipt",
+    "done_transition",
+    "phase_advancement",
+    "status_update",
+    "board_motion",
+}
+PROCESS_RITUAL_MARKERS = (
+    "comment",
+    "receipt",
+    "done",
+    "phase",
+    "advance",
+    "advanced",
+    "transition",
+    "status",
+    "kanban",
+)
+EFFECTIVENESS_REQUIRED_FIELDS = {
+    "product_progress": ("product_delta_refs", "acceptance_refs"),
+    "blocker_resolution": ("blocker_refs", "resolution_refs"),
+    "usable_artifact": ("artifact_refs", "validation_refs"),
+    "human_delivery": ("delivery_refs", "recipient_or_channel"),
+    "executable_repair": ("repair_refs", "validation_refs"),
+}
+
+
+def _items(value: Any) -> list[str]:
+    if isinstance(value, str):
+        return [value.strip()] if value.strip() else []
+    if isinstance(value, (list, tuple, set)):
+        return [str(item).strip() for item in value if str(item).strip()]
+    return []
+
+
+def validate_real_effectiveness_proof(proof: Mapping[str, Any]) -> QualityResult:
+    """Validate that claimed progress changed the product/runtime, not just the board ritual.
+
+    The five allowed effects are deliberately concrete: product progress, blocker
+    resolution, usable artifact, human delivery, or executable repair. Comments,
+    Receipt Five entries, done labels, and phase moves are process evidence only;
+    by themselves they cannot satisfy real-effectiveness claims.
+    """
+    data = _as_mapping(proof)
+    findings: list[QualityFinding] = []
+    effect_type = str(data.get("effect_type") or data.get("real_effect_type") or "").strip()
+    claim = str(data.get("claim") or data.get("summary") or "").strip()
+    evidence_refs = _items(data.get("evidence_refs"))
+    ritual_refs = set(_items(data.get("ritual_refs")))
+
+    process_pass = _nonempty(data) and _nonempty(claim)
+    if data.get("record_type") not in {None, "real_effectiveness_proof"}:
+        findings.append(_finding("invalid_record_type", "Real effectiveness proof must use record_type=real_effectiveness_proof."))
+    if not claim:
+        findings.append(_finding("missing_claim", "Real effectiveness proof must state the concrete effect claim."))
+    if effect_type not in REAL_EFFECTIVENESS_TYPES:
+        findings.append(_finding(
+            "process_ritual_not_material_progress",
+            "Comments, receipts, done labels and phase advancement are process rituals, not material progress.",
+        ))
+    if effect_type in PROCESS_RITUAL_TYPES or any(marker in claim.lower() for marker in PROCESS_RITUAL_MARKERS):
+        material_refs = [ref for ref in evidence_refs if ref not in ritual_refs and not any(marker in ref.lower() for marker in PROCESS_RITUAL_MARKERS)]
+        if not material_refs:
+            findings.append(_finding(
+                "missing_material_evidence",
+                "Real effectiveness proof needs material evidence beyond comment/receipt/done/phase refs.",
+            ))
+    if not evidence_refs:
+        findings.append(_finding("missing_evidence_refs", "Real effectiveness proof must include evidence_refs."))
+    if effect_type in REAL_EFFECTIVENESS_TYPES:
+        for field in EFFECTIVENESS_REQUIRED_FIELDS[effect_type]:
+            if not _nonempty(data.get(field)):
+                findings.append(_finding("missing_" + field, f"{effect_type} proof must include {field}."))
+        if not _nonempty(data.get("operator_or_product_impact")):
+            findings.append(_finding(
+                "missing_operator_or_product_impact",
+                "Real effectiveness proof must explain the operator or product impact.",
+            ))
+
+    readback_pass = bool(evidence_refs) and not [f for f in findings if f.code == "missing_material_evidence"]
+    quality_pass = process_pass and readback_pass and not [f for f in findings if f.severity == "error"]
+    return QualityResult("real_effectiveness_proof", process_pass, readback_pass, quality_pass, findings)
+
+
 def can_promote(result: QualityResult | Iterable[QualityResult]) -> bool:
     if isinstance(result, QualityResult):
         results = [result]
@@ -236,12 +329,22 @@ def validate_artifact(artifact_type: str, path: Path, *, root: Path | None = Non
                 findings=[_finding("invalid_completion_payload", "Completion readback input must be a JSON object.")],
             )
         return validate_completion_readback(payload, root or path.parent)
+    if artifact_type == "real_effectiveness":
+        if not isinstance(payload, Mapping):
+            return QualityResult(
+                "real_effectiveness_proof",
+                process_pass=False,
+                readback_pass=False,
+                quality_pass=False,
+                findings=[_finding("invalid_real_effectiveness_payload", "Real effectiveness proof must be a JSON object.")],
+            )
+        return validate_real_effectiveness_proof(payload)
     raise ValueError(f"unsupported artifact_type: {artifact_type}")
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Validate Overkill Factory work-product quality floor.")
-    parser.add_argument("artifact_type", choices=["product_sot", "human_gate", "completion_readback"])
+    parser.add_argument("artifact_type", choices=["product_sot", "human_gate", "completion_readback", "real_effectiveness"])
     parser.add_argument("path", type=Path)
     parser.add_argument("--root", type=Path, help="Root directory for completion readback artifact paths")
     parser.add_argument("--json", action="store_true", help="Emit JSON result")

@@ -15796,6 +15796,75 @@ def product_face_result_required(card: dict[str, Any]) -> bool:
     )
 
 
+def validate_real_effectiveness_proof(proof: dict[str, Any], *, prefix: str = "real_effectiveness_proof") -> list[str]:
+    errors: list[str] = []
+    if not isinstance(proof, dict) or not proof:
+        return [f"{prefix} is required"]
+    schemas = bundled_schemas()
+    schema = schemas.get("real-effectiveness-proof.schema.json")
+    if schema:
+        errors.extend(validate_node(schema, proof, prefix, schemas=schemas, root_schema=schema))
+    allowed_effects = {
+        "product_progress": ("product_delta_refs", "acceptance_refs"),
+        "blocker_resolution": ("blocker_refs", "resolution_refs"),
+        "usable_artifact": ("artifact_refs", "validation_refs"),
+        "human_delivery": ("delivery_refs", "recipient_or_channel"),
+        "executable_repair": ("repair_refs", "validation_refs"),
+    }
+    process_ritual_effects = {
+        "process_ritual",
+        "comment",
+        "receipt",
+        "done_transition",
+        "phase_advancement",
+        "status_update",
+        "board_motion",
+    }
+    process_markers = (
+        "comment",
+        "receipt",
+        "done",
+        "phase",
+        "advance",
+        "advanced",
+        "transition",
+        "status",
+        "kanban",
+    )
+    if proof.get("record_type") not in {None, "real_effectiveness_proof"}:
+        errors.append(f"{prefix}.record_type must be real_effectiveness_proof")
+    effect_type = str(proof.get("effect_type") or proof.get("real_effect_type") or "").strip()
+    claim = str(proof.get("claim") or proof.get("summary") or "").strip()
+    evidence_refs = _list_items(proof.get("evidence_refs"))
+    ritual_refs = set(_list_items(proof.get("ritual_refs")))
+    if not claim:
+        errors.append(f"{prefix}.claim is required")
+    if effect_type not in allowed_effects:
+        errors.append(
+            f"{prefix}.effect_type must be product_progress, blocker_resolution, usable_artifact, human_delivery or executable_repair"
+        )
+    if not evidence_refs:
+        errors.append(f"{prefix}.evidence_refs must be a non-empty array")
+    ritual_claim = effect_type in process_ritual_effects or any(marker in claim.lower() for marker in process_markers)
+    if ritual_claim:
+        material_refs = [
+            ref
+            for ref in evidence_refs
+            if ref not in ritual_refs and not any(marker in ref.lower() for marker in process_markers)
+        ]
+        if not material_refs:
+            errors.append(f"{prefix} must include material evidence refs beyond process ritual refs")
+    if effect_type in allowed_effects:
+        for field in allowed_effects[effect_type]:
+            value = proof.get(field)
+            valid = _list_items(value) if isinstance(value, list) else _non_empty_text(value)
+            if not valid:
+                errors.append(f"{prefix}.{field} is required for {effect_type}")
+        if not _non_empty_text(proof.get("operator_or_product_impact")):
+            errors.append(f"{prefix}.operator_or_product_impact is required")
+    return errors
+
+
 def validate_receipt(data: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     receipt = data.get("receipt_five")
@@ -16022,9 +16091,19 @@ def validate_completion(
     from_status: str | None = None,
     to_status: str | None = None,
 ) -> list[str]:
+    card = card if isinstance(card, dict) else {}
+    metadata = metadata if isinstance(metadata, dict) else {}
     errors = validate_receipt(metadata)
     errors.extend(done_promotion_errors(metadata, card=card, from_status=from_status, to_status=to_status))
     receipt = metadata.get("receipt_five") if isinstance(metadata.get("receipt_five"), dict) else {}
+    if card.get("real_effectiveness_required") is True or metadata.get("real_effectiveness_required") is True:
+        proof = metadata.get("real_effectiveness_proof")
+        if not isinstance(proof, dict):
+            errors.append("real_effectiveness_proof is required for real-effectiveness done promotion")
+        else:
+            errors.extend(validate_real_effectiveness_proof(proof))
+    elif isinstance(metadata.get("real_effectiveness_proof"), dict):
+        errors.extend(validate_real_effectiveness_proof(metadata["real_effectiveness_proof"]))
     if receipt.get("reviewer_required") is True and str(receipt.get("reviewer_result") or "").strip().upper() != "PASS":
         errors.append("reviewer_result must be PASS when reviewer_required=true")
     if receipt.get("reviewer_required") is True and "independent_review_result" not in metadata:
@@ -22978,6 +23057,16 @@ def command_validate_receipt(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_validate_real_effectiveness(args: argparse.Namespace) -> int:
+    errors = validate_real_effectiveness_proof(load_json_like(args.path))
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    print("OK")
+    return 0
+
+
 def command_validate_completion(args: argparse.Namespace) -> int:
     errors = validate_completion(load_json_like(args.card), load_json_like(args.receipt))
     if errors:
@@ -24343,6 +24432,10 @@ def build_parser() -> argparse.ArgumentParser:
     validate_receipt_parser = sub.add_parser("validate-receipt")
     validate_receipt_parser.add_argument("path", type=Path)
     validate_receipt_parser.set_defaults(func=command_validate_receipt)
+
+    validate_real_effectiveness_parser = sub.add_parser("validate-real-effectiveness")
+    validate_real_effectiveness_parser.add_argument("path", type=Path)
+    validate_real_effectiveness_parser.set_defaults(func=command_validate_real_effectiveness)
 
     validate_completion_parser = sub.add_parser("validate-completion")
     validate_completion_parser.add_argument("--card", type=Path, required=True)

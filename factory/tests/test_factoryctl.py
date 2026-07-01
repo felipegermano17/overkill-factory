@@ -2429,6 +2429,64 @@ class FactoryCtlTest(unittest.TestCase):
 
         self.assertEqual(errors, [])
 
+    def test_real_effectiveness_validator_rejects_comment_done_receipt_phase_ritual(self) -> None:
+        proof = {
+            "record_type": "real_effectiveness_proof",
+            "effect_type": "process_ritual",
+            "claim": "Commented status, wrote a receipt, set done, and advanced the phase.",
+            "ritual_refs": ["comment:status", "receipt_five", "kanban_transition_event", "phase:F12"],
+            "evidence_refs": ["comment:status"],
+        }
+
+        errors = factoryctl.validate_real_effectiveness_proof(proof)
+
+        self.assertIn(
+            "real_effectiveness_proof.effect_type must be product_progress, blocker_resolution, usable_artifact, human_delivery or executable_repair",
+            errors,
+        )
+        self.assertIn("real_effectiveness_proof must include material evidence refs beyond process ritual refs", errors)
+
+    def test_completion_real_effectiveness_required_blocks_process_ritual_receipt(self) -> None:
+        card = {"card_id": "REAL-EFFECTIVENESS-001", "real_effectiveness_required": True}
+        receipt = {
+            "receipt_five": {
+                "changed": "commented, wrote Receipt Five, and marked done",
+                "artifact_paths": ["reports/status-comment.md"],
+                "verification_commands": ["python scripts/factoryctl.py validate-receipt receipt.json"],
+                "verification_result": "PASS",
+                "reviewer_required": False,
+                "next_action": "advance phase",
+            },
+            "kanban_transition_event": {
+                "from_status": "review",
+                "to_status": "done",
+                "actor": "factory-orchestrator",
+                "worker": "factory-orchestrator",
+                "receipt_refs": ["receipt_five"],
+                "artifact_refs": ["reports/status-comment.md"],
+                "allowed": True,
+            },
+            "receipt_five_reconciliation_result": {
+                "result": "PASS",
+                "valid": True,
+                "promotion_authority": {"result": "PASS"},
+            },
+            "real_effectiveness_proof": {
+                "record_type": "real_effectiveness_proof",
+                "effect_type": "process_ritual",
+                "claim": "Comment and done transition only.",
+                "ritual_refs": ["receipt_five", "kanban_transition_event"],
+                "evidence_refs": ["receipt_five"],
+            },
+        }
+
+        errors = factoryctl.validate_completion(card, receipt, from_status="review", to_status="done")
+
+        self.assertIn(
+            "real_effectiveness_proof.effect_type must be product_progress, blocker_resolution, usable_artifact, human_delivery or executable_repair",
+            errors,
+        )
+
     def test_product_face_completion_requires_visual_result(self) -> None:
         card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")
         card["product_face_result_required"] = True

@@ -103,6 +103,43 @@ def test_quality_firewall_refuses_process_pass_without_quality_pass():
     assert quality.can_promote(result) is False
 
 
+def test_real_effectiveness_refuses_comment_done_receipt_and_phase_rituals():
+    proof = {
+        "record_type": "real_effectiveness_proof",
+        "effect_type": "process_ritual",
+        "claim": "Posted a comment, wrote Receipt Five, marked the phase done, and advanced the card.",
+        "ritual_refs": ["comment:kanban-update", "receipt_five", "kanban_transition_event"],
+        "evidence_refs": ["comment:kanban-update"],
+    }
+
+    result = quality.validate_real_effectiveness_proof(proof)
+
+    assert result.process_pass is True
+    assert result.quality_pass is False
+    codes = {finding.code for finding in result.findings}
+    assert "process_ritual_not_material_progress" in codes
+    assert "missing_material_evidence" in codes
+
+
+def test_real_effectiveness_accepts_usable_artifact_with_validation():
+    proof = {
+        "record_type": "real_effectiveness_proof",
+        "effect_type": "usable_artifact",
+        "claim": "Generated the operator PDF decision package and validated it against the delivery profile.",
+        "artifact_refs": ["reports/operator-decision-package.pdf"],
+        "evidence_refs": ["reports/operator-decision-package.pdf", "reports/operator-decision-package.validation.json"],
+        "validation_refs": ["pytest factory/tests/test_operator_experience.py"],
+        "operator_or_product_impact": "Operator can make the Product SOT gate decision without opening raw Kanban or JSON.",
+    }
+
+    result = quality.validate_real_effectiveness_proof(proof)
+
+    assert result.process_pass is True
+    assert result.readback_pass is True
+    assert result.quality_pass is True
+    assert result.findings == []
+
+
 def test_completion_readback_fails_missing_claimed_artifact():
     with TemporaryDirectory() as tmp:
         root = Path(tmp)
