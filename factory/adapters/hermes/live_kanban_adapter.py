@@ -79,6 +79,7 @@ NO_IDLE_OWNER_GATE_DELIVERY_MARKER = "factory_no_idle_owner_gate_delivery"
 NO_IDLE_DECLARED_ARTIFACT_REPAIR_SUPERSEDED_MARKER = "factory_no_idle_declared_artifact_repair_superseded"
 NO_IDLE_STALE_REMEDIATION_REPLACEMENT_LIMIT = 8
 NO_IDLE_RUNNING_RESULT_CLOSEOUT_TIMEOUT_SECONDS = 5 * 60
+NO_IDLE_DONE_ENRICHMENT_LIMIT = int(os.environ.get("NO_IDLE_DONE_ENRICHMENT_LIMIT", "40"))
 REL007_REDUCER_COMPLETION_MARKER = "rel007_bounded_reducer_completion"
 REL007_REDUCER_DECISION = "REDUCE_CHILD_BLOCKERS_AS_BOUNDED_EVIDENCE_ONLY"
 REL007_BANKRUN_CHILD_ROLE = "bankrun_child"
@@ -537,6 +538,9 @@ WORKER_MATERIALIZATION_CONTRACT_FIELDS = (
 )
 
 
+HERMES_ADAPTER_SUBPROCESS_TIMEOUT_SECONDS = int(os.environ.get("HERMES_ADAPTER_SUBPROCESS_TIMEOUT_SECONDS", "45"))
+
+
 def default_runner(argv: list[str]) -> subprocess.CompletedProcess[str]:
     env = os.environ.copy()
     env.setdefault("HOME", str(Path.home()))
@@ -547,6 +551,7 @@ def default_runner(argv: list[str]) -> subprocess.CompletedProcess[str]:
         env=env,
         encoding="utf-8",
         errors="replace",
+        timeout=HERMES_ADAPTER_SUBPROCESS_TIMEOUT_SECONDS,
     )
 
 
@@ -2287,6 +2292,29 @@ def running_result_closeout_candidates(rows: dict[str, list[dict[str, Any]]]) ->
     ]
 
 
+def no_idle_record_timestamp(record: dict[str, Any], fallback: float = 0.0) -> float:
+    for key in ("completed_at", "updated_at", "created_at", "started_at", "last_heartbeat_at"):
+        parsed = parse_timestamp_seconds(record.get(key))
+        if parsed is not None:
+            return parsed
+    return fallback
+
+
+def limit_no_idle_done_enrichment_rows(rows: dict[str, list[dict[str, Any]]], *, limit: int = NO_IDLE_DONE_ENRICHMENT_LIMIT) -> dict[str, list[dict[str, Any]]]:
+    if limit <= 0:
+        return rows
+    done_rows = rows.get("done") or []
+    if len(done_rows) <= limit:
+        return rows
+    indexed = list(enumerate(done_rows))
+    indexed.sort(key=lambda pair: no_idle_record_timestamp(pair[1], fallback=float(pair[0])), reverse=True)
+    selected_indexes = {index for index, _ in indexed[:limit]}
+    next_rows = dict(rows)
+    next_rows["done"] = [item for index, item in enumerate(done_rows) if index in selected_indexes]
+    next_rows["done_omitted_from_enrichment"] = done_rows[: max(0, len(done_rows) - limit)]
+    return next_rows
+
+
 def enrich_no_idle_rows(
     *,
     hermes_bin: str,
@@ -2327,7 +2355,12 @@ def enrich_no_idle_rows(
             merged["comments"] = task_readback_comments(shown)[-3:]
             merged["events"] = task_readback_events(shown)[-5:]
             if status in {"running", "done"}:
-                runs = task_run_records(hermes_bin=hermes_bin, board=board, task_id=task_id, runner=runner)
+                try:
+                    runs = task_run_records(hermes_bin=hermes_bin, board=board, task_id=task_id, runner=runner)
+                except (RuntimeError, subprocess.TimeoutExpired) as exc:
+                    merged["runs_unavailable"] = True
+                    merged["runs_unavailable_reason"] = type(exc).__name__
+                    runs = []
                 if runs:
                     merged["runs"] = runs[-3:]
             if status == "done":
@@ -11831,6 +11864,7 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
         )
         for status in ("ready", "running", "todo", "blocked", "triage", "done")
     }
+    rows = limit_no_idle_done_enrichment_rows(rows)
     rows = enrich_no_idle_rows(hermes_bin=args.hermes_bin, board=args.board, rows=rows, runner=runner)
     rows = suppress_missing_declared_artifacts_with_readback_pass(rows)
     initial_reconcile_plan = build_board_reconcile_plan_from_rows(board=args.board, rows=rows)
