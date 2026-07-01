@@ -143,6 +143,18 @@ class FactoryV2KernelTests(unittest.TestCase):
         self.assertNotIn("F19", product_phase_ids)
         self.assertIn("human_gate_event", {event["event_id"] for event in graph["gate_events"]})
         self.assertIn("operator_projection", {projection["projection_id"] for projection in graph["projections"]})
+        adaptive = graph["adaptive_transition_policy"]
+        self.assertTrue(adaptive["lateral_repair_loops_required"])
+        edge_pairs = {(edge["from_phase_id"], edge["to_phase_id"]) for edge in adaptive["lateral_edges"]}
+        self.assertIn(("F18", "F15"), edge_pairs)
+
+    def test_phase_graph_rejects_blind_linear_rail_without_repair_edges(self) -> None:
+        graph = json.loads((ROOT / "templates" / "factory-phase-graph.json").read_text(encoding="utf-8"))
+        graph["adaptive_transition_policy"]["lateral_edges"] = []
+
+        errors = kernel.validate_factory_phase_graph(graph)
+
+        self.assertTrue(any("lateral_edges" in error for error in errors), errors)
 
     def test_phase_graph_rejects_legacy_gate_or_projection_as_product_phase(self) -> None:
         graph = json.loads((ROOT / "templates" / "factory-phase-graph.json").read_text(encoding="utf-8"))
@@ -299,6 +311,9 @@ class FactoryV2KernelTests(unittest.TestCase):
         self.assertEqual(plan["phases"][0]["phase_id"], "F0")
         self.assertEqual(plan["phases"][0]["next_phase_id"], "F1")
         self.assertIn("F27", {phase["phase_id"] for phase in plan["phases"]})
+        self.assertTrue(plan["compiler_guards"]["lateral_repair_loops_block_downstream"])
+        self.assertTrue(plan["compiler_guards"]["reentry_gate_reconciliation_required"])
+        self.assertTrue(plan["compiler_guards"]["blind_linear_rail_forbidden"])
 
     def test_v2_study_traceability_uses_bounded_truth_levels(self) -> None:
         packet = json.loads((ROOT / "templates" / "v2-study-traceability.json").read_text(encoding="utf-8"))

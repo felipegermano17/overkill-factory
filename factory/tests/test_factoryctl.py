@@ -4862,6 +4862,58 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertEqual(repair_task["packet"]["input_contract"]["recovery_routes"][0]["repair_owner_worker"], "handoff-packer")
         self.assertTrue(any("requires independent-reviewer PASS" in reason for reason in plan["blocked_reasons"]))
 
+    def test_phase_engine_routes_unresolved_factory_repair_loop_before_downstream(self) -> None:
+        card = load_card("v35_valid_product_face.md")
+        card["phase"] = "F18"
+        card["recovery_routes"] = [
+            {
+                "recovery_route_id": "recovery:blocked-review",
+                "blocker_type": "dependency",
+                "factory_owned_repair_allowed": True,
+                "human_gate_required": False,
+                "repair_owner_worker": "implementation-worker",
+                "fresh_review_required": True,
+                "unblock_authority_ref": "fresh_review_pass",
+                "downstream_freeze_scope": ["F18", "F20", "F21", "F22", "F23", "F24", "F25", "F26", "F27"],
+            }
+        ]
+
+        state = factoryctl.factory_phase_engine_state(card)
+
+        self.assertEqual(state["computed_phase_id"], "F15")
+        self.assertEqual(state["computed_frontier"], "execution")
+        self.assertEqual(state["active_repair_loop"]["recovery_route_id"], "recovery:blocked-review")
+        self.assertIn("F18", state["blocked_downstream_phase_ids"])
+        self.assertTrue(state["phase_mismatch"])
+
+    def test_transition_plan_blocks_downstream_when_repair_loop_is_active(self) -> None:
+        card = load_card("v35_valid_product_face.md")
+        card["phase"] = "F18"
+        card["recovery_routes"] = [
+            {
+                "recovery_route_id": "recovery:blocked-review",
+                "blocker_type": "dependency",
+                "factory_owned_repair_allowed": True,
+                "human_gate_required": False,
+                "repair_owner_worker": "implementation-worker",
+                "fresh_review_required": True,
+                "unblock_authority_ref": "fresh_review_pass",
+                "downstream_freeze_scope": ["F18", "F20", "F21", "F22", "F23", "F24", "F25", "F26", "F27"],
+            }
+        ]
+
+        plan = factoryctl.build_transition_plan(
+            card,
+            ROOT / "examples" / "cards" / "v35_valid_product_face.md",
+            from_status="review",
+            to_status="done",
+            receipt={"kanban_transition_event": {"allowed": True, "from_status": "review", "to_status": "done"}},
+        )
+
+        self.assertEqual(plan["transition_action"], "block_transition")
+        self.assertEqual(plan["phase_engine"]["active_repair_loop"]["recovery_route_id"], "recovery:blocked-review")
+        self.assertTrue(any("active repair loop recovery:blocked-review" in reason for reason in plan["blocked_reasons"]), plan["blocked_reasons"])
+
     def test_hermes_schemas_allow_before_ready_block_action(self) -> None:
         action = "block_and_create_before_ready_tasks"
         transition_plan_schema = json.loads((ROOT / "schemas" / "hermes-transition-plan.schema.json").read_text(encoding="utf-8"))

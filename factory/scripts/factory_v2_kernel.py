@@ -266,6 +266,9 @@ def compile_workflow_catalog(
             "unknown_next_phase_blocked": True,
             "human_gate_requires_decision_outbox": True,
             "worker_materialization_requires_dispatch_readiness": True,
+            "lateral_repair_loops_block_downstream": True,
+            "reentry_gate_reconciliation_required": True,
+            "blind_linear_rail_forbidden": True,
         },
     }
 
@@ -280,6 +283,15 @@ def validate_factory_workflow_compiled_plan(plan: dict[str, Any], at: str = "fac
     if duplicate_phase_ids:
         errors.append(f"{at}.phases: duplicate phase ids {', '.join(str(item) for item in duplicate_phase_ids)}")
     known_phase_ids = {phase_id for phase_id in phase_ids if isinstance(phase_id, str)}
+    guard_value = plan.get("compiler_guards")
+    guards = guard_value if isinstance(guard_value, dict) else {}
+    for guard in (
+        "lateral_repair_loops_block_downstream",
+        "reentry_gate_reconciliation_required",
+        "blind_linear_rail_forbidden",
+    ):
+        if guards.get(guard) is not True:
+            errors.append(f"{at}.compiler_guards.{guard}: must be true")
     for index, phase in enumerate(phases):
         phase_at = f"{at}.phases[{index}]"
         expected_index = index + 1
@@ -335,9 +347,46 @@ def validate_factory_phase_graph(graph: dict[str, Any], at: str = "factory_phase
         "projection_is_not_phase",
         "legacy_suffix_phase_ids_forbidden",
         "single_active_product_phase_required",
+        "adaptive_transition_policy_required",
+        "blind_linear_rail_forbidden",
     ):
         if policy.get(field) is not True:
             errors.append(f"{at}.taxonomy_policy.{field}: must be true")
+    adaptive_value = graph.get("adaptive_transition_policy")
+    adaptive = adaptive_value if isinstance(adaptive_value, dict) else {}
+    gates = [gate for gate in _as_list(adaptive.get("reentry_gates")) if isinstance(gate, dict)]
+    gate_ids = {str(gate.get("gate_id") or "") for gate in gates}
+    lateral_edges = [edge for edge in _as_list(adaptive.get("lateral_edges")) if isinstance(edge, dict)]
+    if not lateral_edges:
+        errors.append(f"{at}.adaptive_transition_policy.lateral_edges: at least one lateral/re-entry repair edge is required")
+    if not gates:
+        errors.append(f"{at}.adaptive_transition_policy.reentry_gates: at least one re-entry gate is required")
+    has_non_forward_repair_edge = False
+    for index, edge in enumerate(lateral_edges):
+        edge_at = f"{at}.adaptive_transition_policy.lateral_edges[{index}]"
+        from_phase = str(edge.get("from_phase_id") or "")
+        to_phase = str(edge.get("to_phase_id") or "")
+        if from_phase not in product_phase_id_set:
+            errors.append(f"{edge_at}.from_phase_id: unknown product phase {from_phase}")
+        if to_phase not in product_phase_id_set:
+            errors.append(f"{edge_at}.to_phase_id: unknown product phase {to_phase}")
+        if from_phase in product_phase_id_set and to_phase in product_phase_id_set:
+            if product_phase_ids.index(to_phase) <= product_phase_ids.index(from_phase):
+                has_non_forward_repair_edge = True
+        for gate_ref in _as_list(edge.get("reentry_gate_refs")):
+            if str(gate_ref) not in gate_ids:
+                errors.append(f"{edge_at}.reentry_gate_refs: unknown gate {gate_ref}")
+        blocked = [str(item) for item in _as_list(edge.get("blocks_downstream_phase_ids"))]
+        unknown_blocked = sorted({phase_id for phase_id in blocked if phase_id not in product_phase_id_set})
+        if unknown_blocked:
+            errors.append(f"{edge_at}.blocks_downstream_phase_ids: unknown product phases {', '.join(unknown_blocked)}")
+        if blocked and from_phase in product_phase_id_set:
+            from_index = product_phase_ids.index(from_phase)
+            earlier_blocked = [phase_id for phase_id in blocked if phase_id in product_phase_id_set and product_phase_ids.index(phase_id) < from_index]
+            if earlier_blocked:
+                errors.append(f"{edge_at}.blocks_downstream_phase_ids: must not block phases before edge source {from_phase}")
+    if not has_non_forward_repair_edge:
+        errors.append(f"{at}.adaptive_transition_policy.lateral_edges: must include a non-forward repair/re-entry edge")
     return errors
 
 
