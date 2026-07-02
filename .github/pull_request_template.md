@@ -8,6 +8,8 @@ python factory/scripts/quickstart_smoke.py
 python -m unittest discover -s tests -p "test_*.py" -q
 python factory/scripts/validate_document_governance.py
 python factory/scripts/validate_public_json_artifacts.py
+python factory/scripts/validate_public_surface_sync.py
+python factory/scripts/validate_promise_implementation_map.py
 python factory/scripts/secret_safety_scan.py
 python factory/scripts/public_safety_scan.py
 ```

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import re
 import unittest
 from pathlib import Path
 
@@ -10,13 +9,10 @@ ROOT = Path(__file__).resolve().parents[1]
 REPO_ROOT = ROOT.parent
 
 
-class FactoryStageAgentMapTest(unittest.TestCase):
+class FactoryWorkflowCatalogTest(unittest.TestCase):
     def setUp(self) -> None:
         self.registry = json.loads(
             (ROOT / "agents" / "worker-registry.public.json").read_text(encoding="utf-8")
-        )
-        self.stage_map = (ROOT / "legacy-docs" / "public-docs-before-product-manual" / "agents" / "factory-stage-agent-map.md").read_text(
-            encoding="utf-8"
         )
         self.workflow_catalog = json.loads(
             (REPO_ROOT / "docs" / "factory-workflow.catalog.json").read_text(encoding="utf-8")
@@ -25,44 +21,43 @@ class FactoryStageAgentMapTest(unittest.TestCase):
             (ROOT / "agents" / "worker-profiles.public.json").read_text(encoding="utf-8")
         )
 
-    def test_stage_map_names_every_canonical_stage(self) -> None:
-        for stage_number in range(1, 33):
-            with self.subTest(stage=stage_number):
-                self.assertRegex(self.stage_map, rf"\|\s*{stage_number}\.")
+    def test_workflow_catalog_names_every_public_phase(self) -> None:
+        phases = self.workflow_catalog["phases"]
+        phase_ids = [phase["phase_id"] for phase in phases]
 
-    def test_stage_map_worker_refs_are_registered_or_explicitly_non_worker_roles(self) -> None:
+        self.assertEqual(len(phases), 26)
+        self.assertEqual(phase_ids[0], "F0")
+        self.assertEqual(phase_ids[-1], "F27")
+        self.assertEqual(len(phase_ids), len(set(phase_ids)))
+        for phase in phases:
+            with self.subTest(phase=phase["phase_id"]):
+                self.assertTrue(phase["phase_name"])
+
+    def test_workflow_worker_refs_are_registered(self) -> None:
         registered = {worker["worker_id"] for worker in self.registry["workers"]}
-        allowed_non_workers = {
-            "Factory Concierge",
-            "factory-critic",
-            "overkill-factory-gerente",
-        }
-        worker_refs = {
-            ref
-            for ref in re.findall(r"`([^`]+)`", self.stage_map)
-            if "/" not in ref and "." not in ref
-        }
+        allowed_runtime_roles = {"overkill-factory-gerente"}
+        for phase in self.workflow_catalog["phases"]:
+            for worker_id in phase.get("required_workers", []):
+                if worker_id in allowed_runtime_roles:
+                    continue
+                with self.subTest(phase=phase["phase_id"], worker=worker_id):
+                    self.assertIn(worker_id, registered)
 
-        for ref in sorted(worker_refs):
-            if ref in allowed_non_workers:
-                continue
-            with self.subTest(ref=ref):
-                self.assertIn(ref, registered)
-
-    def test_key_stage_owners_are_not_left_generic(self) -> None:
+    def test_key_phase_owners_are_not_left_generic(self) -> None:
+        phases = {row["phase_id"]: row for row in self.workflow_catalog["phases"]}
         required_pairs = {
-            "6. Agentic Method Router": "`factory-orchestrator`",
-            "8. Product Pack & Surface Pack": "`factory-orchestrator`",
-            "13. Data, Metrics & Analytics Plan": "`detection-monitoring-worker`",
-            "14. Agent Quality & Evals Plan": "`skill-eval-distiller`",
-            "27. Completion Audit": "`evidence-reconciler`",
-            "32. Factory Maturity Audit": "`skill-eval-distiller`",
+            "F6": "factory-orchestrator",
+            "F8": "product-face",
+            "F10": "security-orchestrator",
+            "F17": "qa-verification-worker",
+            "F18": "independent-reviewer",
+            "F21": "evidence-reconciler",
+            "F27": "skill-eval-distiller",
         }
 
-        for stage, worker in required_pairs.items():
-            with self.subTest(stage=stage):
-                line = next(line for line in self.stage_map.splitlines() if stage in line)
-                self.assertIn(worker, line)
+        for phase_id, worker_id in required_pairs.items():
+            with self.subTest(phase=phase_id):
+                self.assertIn(worker_id, phases[phase_id].get("required_workers", []))
 
     def test_product_experience_is_first_class_catalog_gate(self) -> None:
         phases = {row["phase_id"]: row for row in self.workflow_catalog["phases"]}
@@ -101,14 +96,12 @@ class FactoryStageAgentMapTest(unittest.TestCase):
     def test_agent_contract_language_does_not_grant_free_route_authority(self) -> None:
         checked_text = "\n".join(
             [
-                self.stage_map,
+                json.dumps(self.workflow_catalog, sort_keys=True),
                 json.dumps(self.registry, sort_keys=True),
                 json.dumps(self.worker_profiles, sort_keys=True),
-                (REPO_ROOT / "docs" / "en" / "technical-model.md").read_text(encoding="utf-8"),
+                (REPO_ROOT / "docs" / "en" / "technical-reference.md").read_text(encoding="utf-8"),
                 (ROOT / "agents" / "worker-roster.md").read_text(encoding="utf-8"),
-                (REPO_ROOT / "docs" / "en" / "operating-model.md").read_text(
-                    encoding="utf-8"
-                ),
+                (REPO_ROOT / "docs" / "en" / "factory-manual.md").read_text(encoding="utf-8"),
             ]
         )
         forbidden_phrases = [

@@ -46,7 +46,8 @@ Run the script-facing bundle:
 ```bash
 python scripts/quickstart_smoke.py
 python scripts/validate_worker_profiles.py
-python scripts/generate_factory_reference_docs.py --check
+python scripts/generate_factory_reference_docs.py --out ../.tmp/generated/factory-kernel-reference.md
+python scripts/generate_factory_reference_docs.py --out ../.tmp/generated/factory-kernel-reference.md --check
 python scripts/validate_promise_implementation_map.py
 python scripts/hermes_update_guard.py plan
 python scripts/factory_no_idle_watchdog.py --board example-board

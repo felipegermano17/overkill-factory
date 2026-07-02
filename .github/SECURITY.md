@@ -26,6 +26,7 @@ factoryctl doctor
 python factory/scripts/secret_safety_scan.py
 python factory/scripts/public_safety_scan.py
 python factory/scripts/validate_public_json_artifacts.py
+python factory/scripts/validate_public_surface_sync.py
 python factory/scripts/supply_chain_proof.py --check --no-write
 ```
 

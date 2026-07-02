@@ -280,7 +280,7 @@ def refs_packs() -> list[dict[str, str]]:
     return [
         ref("schema", "schemas/capability-pack-contract.schema.json", "product/surface capability contract"),
         ref("worker_registry", "agents/capability-packs.public.json", "public capability pack registry"),
-        ref("documentation", "docs/en/technical-model.md", "capability pack operator manual"),
+        ref("documentation", "docs/en/technical-reference.md", "capability pack operator manual"),
         ref("script", "scripts/factoryctl.py", "capability coverage blocker"),
         ref("test", "tests/test_capability_packs.py", "capability pack regressions"),
     ]
@@ -328,7 +328,7 @@ def refs_security() -> list[dict[str, str]]:
     return [
         ref("schema", "schemas/security-architecture-plan.schema.json", "security architecture plan"),
         ref("template", "templates/security-architecture-plan.json", "security architecture template"),
-        ref("documentation", "docs/en/trust-and-evidence.md", "security specialist matrix"),
+        ref("documentation", "docs/en/factory-manual.md", "security specialist matrix"),
         ref("worker_registry", "agents/worker-registry.public.json", "security specialist workers"),
         ref("script", "scripts/factoryctl.py", "security and human gate blockers"),
         ref("test", "tests/test_factoryctl.py", "security gate regressions"),
@@ -340,7 +340,7 @@ def refs_authority() -> list[dict[str, str]]:
         ref("schema", "schemas/human-gate-record.schema.json", "human gate record"),
         ref("template", "templates/human-gate-record.json", "human gate template"),
         ref("schema", "schemas/approval-request.schema.json", "approval request contract"),
-        ref("documentation", "docs/en/trust-and-evidence.md", "permission and authority model"),
+        ref("documentation", "docs/en/factory-manual.md", "permission and authority model"),
         ref("script", "scripts/factoryctl.py", "identity separation and approval evidence blockers"),
         ref("test", "tests/test_factoryctl.py", "human approval and self-review regressions"),
     ]
@@ -374,7 +374,7 @@ def refs_runtime() -> list[dict[str, str]]:
         ref("runtime_adapter", "adapters/hermes/live_kanban_adapter.py", "Hermes live adapter"),
         ref("runtime_adapter", "adapters/hermes/transition_hook.py", "Hermes transition hook"),
         ref("documentation", "adapters/hermes/README.md", "Hermes adapter manual"),
-        ref("documentation", "docs/en/technical-model.md", "Hermes integration architecture"),
+        ref("documentation", "docs/en/technical-reference.md", "Hermes integration architecture"),
         ref("test", "tests/test_hermes_live_kanban_adapter.py", "Hermes adapter regressions"),
         ref("test", "tests/test_hermes_transition_hook.py", "transition hook regressions"),
     ]
@@ -411,7 +411,7 @@ def refs_autonomy_readiness() -> list[dict[str, str]]:
         ref("template", "templates/autonomy-readiness-packet.json", "autonomy readiness template"),
         ref("schema", "schemas/factory-card.schema.json", "autonomy_readiness_packet card field"),
         ref("profile_binding", "agents/hermes-profile-bindings.public.json", "runtime profile bindings"),
-        ref("documentation", "docs/en/reference.md", "stage 17 agent ownership"),
+        ref("documentation", "docs/en/technical-reference.md", "stage 17 agent ownership"),
         ref("test", "tests/test_materialize_hermes_profiles.py", "Hermes profile materialization regressions"),
     ]
 
@@ -419,8 +419,8 @@ def refs_autonomy_readiness() -> list[dict[str, str]]:
 def refs_closure_summary() -> list[dict[str, str]]:
     return [
         ref("schema", "schemas/worker-closure-summary.schema.json", "closure summary contract"),
-        ref("documentation", "docs/en/technical-model.md", "closure summary operating rule"),
-        ref("documentation", "docs/en/technical-model.md", "evidence-reconciler closure duties"),
+        ref("documentation", "docs/en/technical-reference.md", "closure summary operating rule"),
+        ref("documentation", "docs/en/technical-reference.md", "evidence-reconciler closure duties"),
         ref("schema", "schemas/worker-closure-summary.schema.json", "closure summary schema"),
         ref("validation_artifact", ".tmp/factory-runs/canonical-stage-coverage/canonical-stage-implementation-coverage.json", "stage 25 closure summary coverage"),
     ]
@@ -438,9 +438,9 @@ def refs_learning() -> list[dict[str, str]]:
 
 def refs_docs_standard() -> list[dict[str, str]]:
     return [
-        ref("documentation", "docs/en/usage.md", "validation and release manual"),
-        ref("documentation", "docs/en/usage.md", "operator troubleshooting manual"),
-        ref("documentation", "docs/en/usage.md", "operator quickstart"),
+        ref("documentation", "docs/en/technical-reference.md", "validation and release manual"),
+        ref("documentation", "docs/en/technical-reference.md", "operator troubleshooting manual"),
+        ref("documentation", "docs/en/technical-reference.md", "operator quickstart"),
         ref("script", "scripts/public_safety_scan.py", "public documentation safety scanner"),
         ref("test", "tests/test_open_source_docs.py", "public docs regressions"),
     ]
@@ -463,8 +463,8 @@ def refs_workers() -> list[dict[str, str]]:
         ref("worker_registry", "agents/worker-registry.public.json", "worker registry"),
         ref("worker_profile", "agents/worker-profiles.public.json", "worker profiles"),
         ref("profile_binding", "agents/hermes-profile-bindings.public.json", "Hermes profile bindings"),
-        ref("documentation", "docs/en/technical-model.md", "worker profiles manual"),
-        ref("documentation", "docs/en/reference.md", "stage-to-agent map"),
+        ref("documentation", "docs/en/technical-reference.md", "worker profiles manual"),
+        ref("documentation", "docs/en/technical-reference.md", "stage-to-agent map"),
         ref("test", "tests/test_worker_profiles.py", "worker profile regressions"),
         ref("test", "tests/test_factory_stage_agent_map.py", "stage map regressions"),
     ]
@@ -495,8 +495,8 @@ def refs_release() -> list[dict[str, str]]:
 
 def refs_factory_flow() -> list[dict[str, str]]:
     return [
-        ref("documentation", "docs/en/operating-model.md", "factory flow explanation"),
-        ref("documentation", "docs/en/operating-model.md", "execution flow guide"),
+        ref("documentation", "docs/en/factory-manual.md", "factory flow explanation"),
+        ref("documentation", "docs/en/factory-manual.md", "execution flow guide"),
         ref("agent_manual", "skills/codex/overkill-factory/SKILL.md", "operator skill spine"),
         ref("validation_artifact", ".tmp/factory-runs/canonical-stage-coverage/canonical-stage-implementation-coverage.json", "32-stage coverage record"),
     ]

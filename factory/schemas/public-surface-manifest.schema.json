@@ -107,7 +107,6 @@
             "type": "object",
             "properties": {
               "workflow_catalog_ref": { "type": "string", "minLength": 3 },
-              "stage_agent_map_ref": { "type": "string", "minLength": 3 },
               "required_workflow_phase_ids": {
                 "type": "array",
                 "items": { "type": "string", "minLength": 2 }

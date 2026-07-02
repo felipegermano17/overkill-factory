@@ -1,174 +1,1439 @@
-<!doctype html>
-<html lang="pt-BR">
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Overkill Factory V3 — mapa público</title>
-<script type="application/json" id="overkill-public-surface-metadata">{
-  "surface_id": "visual-map-v1.0.3-html",
-  "manifest_ref": "docs/public-surface.manifest.json",
-  "authority_level": "conceptual_supporting_surface",
-  "source_refs": [
-    "agents/worker-registry.public.json",
-    "agents/worker-profiles.public.json",
-    "agents/hermes-profile-bindings.public.json",
-    "docs/agents/factory-stage-agent-map.md",
-    "docs/factory-workflow.catalog.json",
-    "docs/concepts/factory-flow.md",
-    "docs/operations/validation-and-release.md",
-    "templates/universal-signal-intake.json",
-    "templates/product-creation-plan.json",
-    "templates/decomposition-coverage-review.json",
-    "templates/product-implementation-readiness.json",
-    "templates/professional-design-process.json",
-    "templates/product-delivery-quality-profile.json",
-    "scripts/factoryctl.py"
-  ],
-  "claim_checks": [
-    "metadata",
-    "source_refs_exist",
-    "worker_count",
-    "stage_count",
-    "map_fidelity",
-    "risk_tiers",
-    "source_of_truth_disclaimer",
-    "no_runtime_proof_claim"
-  ]
-}</script>
-<style>
-:root { --bg:#080808; --panel:#151515; --panel2:#202020; --ink:#f8f4ea; --body:#d8d1c3; --muted:#9b958b; --line:#34302a; --green:#73d6a2; --blue:#7ab7ff; --gold:#e0b75e; --red:#ff8a7a; }
-* { box-sizing:border-box; } body { margin:0; background:var(--bg); color:var(--body); font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; }
-main { max-width:1180px; margin:0 auto; padding:28px 18px 48px; }
-.hero { border:1px solid var(--line); border-radius:24px; padding:28px; background:linear-gradient(135deg,#171717,#101010); }
-h1 { margin:0 0 10px; color:var(--ink); font-size:clamp(32px,6vw,72px); line-height:.95; letter-spacing:-.04em; }
-h2 { color:var(--ink); margin:34px 0 12px; font-size:28px; } h3 { color:var(--ink); margin:0 0 8px; }
-.badges { display:flex; gap:8px; flex-wrap:wrap; margin:18px 0 0; } .badge { border:1px solid var(--line); border-radius:999px; padding:7px 10px; color:var(--ink); background:#111; font-size:13px; }
-.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:12px; } .lane,.rule,.stage { border:1px solid var(--line); border-radius:18px; background:var(--panel); padding:16px; }
-.flow { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:10px; } .stage b { color:var(--green); display:block; font-size:13px; } .stage span { color:var(--ink); display:block; font-weight:700; } .stage small { color:var(--muted); display:block; margin-top:6px; }
-.callout { border-left:4px solid var(--gold); background:#15130c; padding:14px 16px; border-radius:12px; }
-.no { border-left-color:var(--red); background:#1b1010; }
-.truth { border-left-color:var(--green); background:#0e1812; }
-code { color:var(--green); } a { color:var(--blue); }
-.hidden-coverage { position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="generator" content="archify 2.6.0">
+  <title>Overkill Factory Production Line Diagram</title>
+  <script type="application/json" id="overkill-public-surface-metadata">
+    {
+      "surface_id": "visual-map-v1.0.3-html",
+      "surface_type": "conceptual_visual_map",
+      "renderer": "archify",
+      "archify_version": "2.6.0",
+      "expectedCount": 40,
+      "workflow_phase_count": 26,
+      "source_refs": [
+        "docs/factory-workflow.catalog.json",
+        "factory/agents/worker-registry.public.json",
+        "factory/templates/factory-route-registry.json",
+        "factory/templates/method-engine-registry.json"
+      ],
+      "runtime_boundary": "supporting explanation only; Hermes runtime state and Receipt Five prove live delivery"
+    }
+  </script>
+  <script>
+    // Resolve the theme before first paint so light-preference users don't
+    // see a dark flash. The toolbar script below re-applies with UI state.
+    (function () {
+      try {
+        var theme = null;
+        try {
+          var param = new URLSearchParams(window.location.search).get('theme');
+          if (param === 'light' || param === 'dark') theme = param;
+        } catch (_) {}
+        if (!theme) {
+          try { theme = localStorage.getItem('archify-theme'); } catch (_) {}
+        }
+        if (theme !== 'light' && theme !== 'dark') {
+          theme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+        }
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (_) {}
+    })();
+  </script>
+  <!-- Async font load: a blackholed network must not block first paint.
+       The body font stack falls back to system monospace until it lands. -->
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+        rel="stylesheet" media="print" onload="this.media='all'">
+  <noscript>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  </noscript>
+  <style>
+    /* ==========================================================
+       THEME VARIABLES — switch by toggling [data-theme] on <html>
+       ========================================================== */
+    :root,
+    [data-theme="dark"] {
+      --bg: #020617;
+      --grid: #1e293b;
+      --text: #ffffff;
+      --text-muted: #94a3b8;
+      --text-dim: #475569;
+      /* UI chrome (menu hints, footer) needs more contrast than SVG .t-dim accents */
+      --text-faint: #7d8da1;
+
+      --panel: rgba(15, 23, 42, 0.5);
+      --panel-border: #1e293b;
+      --lane-fill: rgba(15, 23, 42, 0.22);
+      --lane-stroke: #334155;
+
+      --arrow: #64748b;
+      --arrow-emphasis: #34d399;
+
+      /* Opaque mask color used behind semi-transparent component fills
+         so the arrows drawn underneath are properly hidden. */
+      --mask: #0f172a;
+
+      --frontend-fill:    rgba(8, 51, 68, 0.4);
+      --frontend-stroke:  #22d3ee;
+      --backend-fill:     rgba(6, 78, 59, 0.4);
+      --backend-stroke:   #34d399;
+      --database-fill:    rgba(76, 29, 149, 0.4);
+      --database-stroke:  #a78bfa;
+      --cloud-fill:       rgba(120, 53, 15, 0.3);
+      --cloud-stroke:     #fbbf24;
+      --security-fill:    rgba(136, 19, 55, 0.4);
+      --security-stroke:  #fb7185;
+      --messagebus-fill:  rgba(251, 146, 60, 0.3);
+      --messagebus-stroke:#fb923c;
+      --external-fill:    rgba(30, 41, 59, 0.5);
+      --external-stroke:  #94a3b8;
+
+      --toolbar-bg:       rgba(15, 23, 42, 0.8);
+      --toolbar-border:   #334155;
+      --toolbar-text:     #e2e8f0;
+      --toolbar-hover:    rgba(15, 23, 42, 0.95);
+      --toolbar-menu-bg:  #0f172a;
+    }
+
+    [data-theme="light"] {
+      --bg: #f8fafc;
+      --grid: #e2e8f0;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --text-dim: #94a3b8;
+      --text-faint: #64748b;
+
+      --panel: #ffffff;
+      --panel-border: #e2e8f0;
+      --lane-fill: rgba(248, 250, 252, 0.65);
+      --lane-stroke: #cbd5e1;
+
+      --arrow: #94a3b8;
+      --arrow-emphasis: #059669;
+
+      --mask: #ffffff;
+
+      --frontend-fill:    rgba(34, 211, 238, 0.15);
+      --frontend-stroke:  #0891b2;
+      --backend-fill:     rgba(52, 211, 153, 0.18);
+      --backend-stroke:   #059669;
+      --database-fill:    rgba(167, 139, 250, 0.2);
+      --database-stroke:  #7c3aed;
+      --cloud-fill:       rgba(251, 191, 36, 0.18);
+      --cloud-stroke:     #d97706;
+      --security-fill:    rgba(251, 113, 133, 0.15);
+      --security-stroke:  #e11d48;
+      --messagebus-fill:  rgba(251, 146, 60, 0.15);
+      --messagebus-stroke:#ea580c;
+      --external-fill:    rgba(148, 163, 184, 0.18);
+      --external-stroke:  #64748b;
+
+      --toolbar-bg:       rgba(255, 255, 255, 0.92);
+      --toolbar-border:   #cbd5e1;
+      --toolbar-text:     #334155;
+      --toolbar-hover:    #ffffff;
+      --toolbar-menu-bg:  #ffffff;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', 'Noto Sans Mono CJK SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', monospace;
+      background: var(--bg);
+      min-height: 100vh;
+      padding: 2rem;
+      color: var(--text);
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    .container { max-width: 1200px; margin: 0 auto; }
+
+    .header { margin-bottom: 2rem; }
+
+    .header-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .pulse-dot {
+      width: 12px;
+      height: 12px;
+      background: var(--frontend-stroke);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      margin-left: 1.75rem;
+    }
+
+    .diagram-container {
+      background: var(--panel);
+      border-radius: 1rem;
+      border: 1px solid var(--panel-border);
+      padding: 1.5rem;
+      overflow-x: auto;
+    }
+
+    svg {
+      width: 100%;
+      min-width: min(900px, 100%);
+      display: block;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    .card {
+      background: var(--panel);
+      border-radius: 0.75rem;
+      border: 1px solid var(--panel-border);
+      padding: 1.25rem;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .card-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .card-dot.cyan     { background: var(--frontend-stroke); }
+    .card-dot.emerald  { background: var(--backend-stroke); }
+    .card-dot.violet   { background: var(--database-stroke); }
+    .card-dot.amber    { background: var(--cloud-stroke); }
+    .card-dot.rose     { background: var(--security-stroke); }
+    .card-dot.orange   { background: var(--messagebus-stroke); }
+    .card-dot.slate    { background: var(--external-stroke); }
+
+    .card h3 { font-size: 0.875rem; font-weight: 600; color: var(--text); }
+
+    .card ul {
+      list-style: none;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+    }
+
+    .card li { margin-bottom: 0.375rem; }
+
+    .footer {
+      text-align: center;
+      margin-top: 1.5rem;
+      color: var(--text-faint);
+      font-size: 0.75rem;
+    }
+
+    .explain {
+      margin-top: 2rem;
+      display: grid;
+      gap: 1rem;
+    }
+
+    .explain-section {
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 0.75rem;
+      padding: 1.25rem;
+    }
+
+    .explain-section h2 {
+      color: var(--text);
+      font-size: 1rem;
+      line-height: 1.35;
+      margin-bottom: 0.75rem;
+    }
+
+    .explain-section p,
+    .explain-section li {
+      color: var(--text-muted);
+      font-size: 0.8125rem;
+      line-height: 1.65;
+    }
+
+    .explain-section p + p,
+    .explain-section ul + p,
+    .explain-section ol + p {
+      margin-top: 0.75rem;
+    }
+
+    .explain-section ul,
+    .explain-section ol {
+      margin-left: 1.15rem;
+      display: grid;
+      gap: 0.45rem;
+    }
+
+    .phase-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 0.55rem;
+      margin-top: 0.75rem;
+    }
+
+    .phase-pill {
+      border: 1px solid var(--panel-border);
+      border-radius: 0.5rem;
+      padding: 0.65rem;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      line-height: 1.45;
+      background: color-mix(in srgb, var(--panel) 86%, var(--bg));
+    }
+
+    .phase-pill strong {
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    .fact-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 0.6rem;
+      margin-top: 0.75rem;
+    }
+
+    .fact {
+      border: 1px solid var(--panel-border);
+      border-radius: 0.5rem;
+      padding: 0.75rem;
+    }
+
+    .fact b {
+      display: block;
+      color: var(--text);
+      font-size: 1.15rem;
+      margin-bottom: 0.25rem;
+    }
+
+    /* ==========================================================
+       Print stylesheet — hide interactive controls, force light,
+       drop the grid so the diagram doesn't waste ink, use landscape
+       so wide diagrams fit, pack summary cards into 2 columns to
+       avoid an orphan card on a trailing page.
+       ========================================================== */
+    @page { size: landscape; margin: 1.5cm; }
+
+    @media print {
+      /* Force the FULL light palette — including component fills/strokes and
+         lane/arrow colors — so printing from dark theme doesn't put neon
+         strokes and translucent dark fills on white paper. */
+      :root, [data-theme="dark"], [data-theme="light"] {
+        --bg: #ffffff;
+        --grid: transparent;
+        --panel: #ffffff;
+        --panel-border: #e2e8f0;
+        --text: #0f172a;
+        --text-muted: #475569;
+        --text-dim: #94a3b8;
+        --text-faint: #64748b;
+        --mask: #ffffff;
+        --lane-fill: rgba(248, 250, 252, 0.65);
+        --lane-stroke: #cbd5e1;
+        --arrow: #94a3b8;
+        --arrow-emphasis: #059669;
+        --frontend-fill:    rgba(34, 211, 238, 0.15);
+        --frontend-stroke:  #0891b2;
+        --backend-fill:     rgba(52, 211, 153, 0.18);
+        --backend-stroke:   #059669;
+        --database-fill:    rgba(167, 139, 250, 0.2);
+        --database-stroke:  #7c3aed;
+        --cloud-fill:       rgba(251, 191, 36, 0.18);
+        --cloud-stroke:     #d97706;
+        --security-fill:    rgba(251, 113, 133, 0.15);
+        --security-stroke:  #e11d48;
+        --messagebus-fill:  rgba(251, 146, 60, 0.15);
+        --messagebus-stroke:#ea580c;
+        --external-fill:    rgba(148, 163, 184, 0.18);
+        --external-stroke:  #64748b;
+      }
+      body { background: #ffffff !important; padding: 0; }
+      .container { max-width: none; }
+      .toolbar, .archify-toast, .no-print { display: none !important; }
+      .diagram-container, .card { box-shadow: none; border-color: #e2e8f0; }
+      .cards { grid-template-columns: 1fr 1fr; }
+      /* Ensure elements break sensibly across pages */
+      .card { break-inside: avoid; page-break-inside: avoid; }
+      .diagram-container { break-inside: avoid; page-break-inside: avoid; }
+      h1, .subtitle { color: #0f172a; }
+    }
+
+    /* ==========================================================
+       TOOLBAR (theme toggle + export menu)
+       ========================================================== */
+    .toolbar {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      display: flex;
+      gap: 0.5rem;
+      z-index: 100;
+    }
+    .toolbar button {
+      background: var(--toolbar-bg);
+      color: var(--toolbar-text);
+      border: 1px solid var(--toolbar-border);
+      padding: 0.5rem 0.875rem;
+      border-radius: 0.5rem;
+      font-family: inherit;
+      font-size: 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      transition: background 0.15s, border-color 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+    }
+    .toolbar button:hover {
+      background: var(--toolbar-hover);
+      border-color: var(--arrow);
+    }
+    .toolbar button:focus-visible {
+      outline: 2px solid var(--frontend-stroke);
+      outline-offset: 2px;
+    }
+    .toolbar .export-wrap { position: relative; }
+    .toolbar .export-menu {
+      position: absolute;
+      top: calc(100% + 0.375rem);
+      right: 0;
+      background: var(--toolbar-menu-bg);
+      border: 1px solid var(--toolbar-border);
+      border-radius: 0.5rem;
+      padding: 0.375rem;
+      min-width: 160px;
+      display: none;
+      flex-direction: column;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+    }
+    .toolbar .export-menu.open { display: flex; }
+    .toolbar .export-menu button {
+      background: transparent;
+      border: 0;
+      justify-content: space-between;
+      width: 100%;
+      text-align: left;
+      padding: 0.5rem 0.75rem;
+    }
+    .toolbar .export-menu button:hover {
+      background: var(--toolbar-hover);
+    }
+    .toolbar .export-menu .hint {
+      color: var(--text-faint);
+      font-size: 0.625rem;
+    }
+    .toolbar .export-menu hr {
+      border: 0;
+      border-top: 1px solid var(--toolbar-border);
+      margin: 0.25rem 0.375rem;
+      opacity: 0.5;
+    }
+
+    /* Toast — brief feedback for actions like "copied" */
+    .archify-toast {
+      position: fixed;
+      top: 1rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(-8px);
+      background: var(--toolbar-menu-bg);
+      color: var(--text);
+      border: 1px solid var(--toolbar-border);
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      font-family: inherit;
+      font-size: 0.75rem;
+      opacity: 0;
+      transition: opacity 0.2s, transform 0.2s;
+      z-index: 200;
+      pointer-events: none;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+    }
+    .archify-toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @media (max-width: 720px) {
+      body { padding: 1rem; }
+      .toolbar {
+        position: static;
+        justify-content: flex-end;
+        margin-bottom: 1rem;
+      }
+      .header { margin-bottom: 1.25rem; }
+      .header-row {
+        gap: 0.75rem;
+        align-items: flex-start;
+      }
+      h1 {
+        font-size: 1.25rem;
+        line-height: 1.25;
+      }
+      .subtitle {
+        margin-left: 0;
+        font-size: 0.8125rem;
+        line-height: 1.55;
+      }
+      .diagram-container {
+        padding: 0.75rem;
+        border-radius: 0.75rem;
+      }
+      .cards {
+        grid-template-columns: 1fr;
+        margin-top: 1rem;
+      }
+    }
+
+    /* ==========================================================
+       SVG SEMANTIC CLASSES — use these instead of inline fill/stroke
+       ========================================================== */
+    .c-grid       { stroke: var(--grid); fill: none; }
+    .c-mask       { fill: var(--mask); stroke: none; }
+
+    .c-frontend   { fill: var(--frontend-fill);   stroke: var(--frontend-stroke); }
+    .c-backend    { fill: var(--backend-fill);    stroke: var(--backend-stroke); }
+    .c-database   { fill: var(--database-fill);   stroke: var(--database-stroke); }
+    .c-cloud      { fill: var(--cloud-fill);      stroke: var(--cloud-stroke); }
+    .c-security   { fill: var(--security-fill);   stroke: var(--security-stroke); }
+    .c-messagebus { fill: var(--messagebus-fill); stroke: var(--messagebus-stroke); }
+    .c-external   { fill: var(--external-fill);   stroke: var(--external-stroke); }
+
+    /* Text helpers */
+    .t-primary { fill: var(--text); }
+    .t-muted   { fill: var(--text-muted); }
+    .t-dim     { fill: var(--text-dim); }
+    .t-frontend   { fill: var(--frontend-stroke); }
+    .t-backend    { fill: var(--backend-stroke); }
+    .t-database   { fill: var(--database-stroke); }
+    .t-cloud      { fill: var(--cloud-stroke); }
+    .t-security   { fill: var(--security-stroke); }
+    .t-messagebus { fill: var(--messagebus-stroke); }
+    .t-external   { fill: var(--external-stroke); }
+
+    /* Arrows */
+    .a-default   { stroke: var(--arrow); fill: none; }
+    .a-emphasis  { stroke: var(--arrow-emphasis); fill: none; }
+    .a-security  { stroke: var(--security-stroke); fill: none; stroke-dasharray: 5,5; }
+    .a-dashed    { stroke: var(--database-stroke); fill: none; stroke-dasharray: 4,4; }
+
+    /* Arrowhead markers reference these */
+    .m-default   { fill: var(--arrow); }
+    .m-emphasis  { fill: var(--arrow-emphasis); }
+    .m-security  { fill: var(--security-stroke); }
+    .m-dashed    { fill: var(--database-stroke); }
+
+    /* Dashed boundary variants */
+    .c-security-group { fill: transparent; stroke: var(--security-stroke); stroke-dasharray: 4,4; }
+    .c-region         { fill: rgba(251, 191, 36, 0.05); stroke: var(--cloud-stroke); stroke-dasharray: 8,4; }
+    .c-lane           { fill: var(--lane-fill); stroke: var(--lane-stroke); stroke-dasharray: 6,6; }
+  </style>
 </head>
 <body>
-<main>
-<section class="hero">
-<p class="badge">Mapa público visual · Factory V3 · v3.0.2</p>
-<h1>Uma fábrica para trabalho de produto feito por agentes.</h1>
-<p><strong>Em português simples:</strong> você traz uma ideia. A fábrica entende, escolhe o caminho seguro, cria trabalho para especialistas, exige prova e só chama de pronto quando Hermes, contratos e evidências concordam.</p>
-<div class="badges"><span class="badge">Hermes segue como fonte da verdade</span><span class="badge">Mapa != Prova</span><span class="badge">R0-R4</span><span class="badge">40 workers públicos</span></div>
-</section>
+  <!-- Toolbar: theme toggle + export menu (present on every generated diagram)
+       Keyboard: T toggles theme, E opens export menu (when no input focused) -->
+  <div class="toolbar" role="toolbar" aria-label="Diagram actions">
+    <button id="btn-theme" type="button"
+            title="Toggle theme (T)"
+            aria-label="Toggle color theme"
+            aria-pressed="false">
+      <span id="theme-icon" aria-hidden="true">&#9790;</span>
+      <span id="theme-label">Dark</span>
+    </button>
+    <div class="export-wrap">
+      <button id="btn-export" type="button"
+              title="Export diagram (E)"
+              aria-label="Export diagram"
+              aria-haspopup="menu"
+              aria-expanded="false"
+              aria-controls="export-menu">
+        Export <span aria-hidden="true">&#9662;</span>
+      </button>
+      <div class="export-menu" id="export-menu" role="menu" aria-label="Export">
+        <button data-action="copy"  type="button" role="menuitem" tabindex="-1">Copy to clipboard <span class="hint">PNG</span></button>
+        <hr role="separator">
+        <button data-format="png"   type="button" role="menuitem" tabindex="-1">Download PNG</button>
+        <button data-format="jpeg"  type="button" role="menuitem" tabindex="-1">Download JPEG</button>
+        <button data-format="webp"  type="button" role="menuitem" tabindex="-1">Download WebP</button>
+        <hr role="separator">
+        <button data-format="svg"   type="button" role="menuitem" tabindex="-1">Download SVG <span class="hint">vector</span></button>
+      </div>
+    </div>
+  </div>
 
-<h2>O que mudou na V3</h2>
-<div class="grid">
-<section class="rule truth"><h3>Não é mais uma esteira reta</h3><p>O fluxo tem fases, mas a rota pode ramificar: discovery, segurança, Product Face, capability acquisition, repair, human gate ou release. O contrato decide; o agente não inventa o caminho.</p></section>
-<section class="rule"><h3>Hermes roda o chão de fábrica</h3><p>Cards, dependências, typed blocks, dispatch, worker execution, comentários e logs ficam no Hermes Kanban.</p></section>
-<section class="rule"><h3>Overkill Factory define o método</h3><p>A fábrica cuida de schemas, gates, workers, autoridade, Product SOT, Method Contract, Receipt Five, release checks e learnback.</p></section>
-<section class="rule"><h3>Done exige prova</h3><p>Worker packet não é execução. Resultado de agente não é release. Demo não é produto. Done exige evidência específica e Receipt Five.</p></section>
-</div>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="header-row">
+        <div class="pulse-dot"></div>
+        <h1>Overkill Factory Production Line</h1>
+      </div>
+      <p class="subtitle">Raw intent becomes a verified product outcome through Hermes, contracts, workers, evidence, human gates, and Receipt Five</p>
+    </div>
 
-<h2>Como funciona para uma pessoa não técnica</h2>
-<div class="grid"><section class="lane"><h3>1. Entrada</h3><p>Você fala com o gerente. Pode ser Telegram, CLI ou outro canal do operador. A fábrica não começa codando.</p></section>
-<section class="lane"><h3>2. Entendimento</h3><p>A fábrica separa fonte, suposição e decisão. Se faltar algo importante, ela pergunta antes.</p></section>
-<section class="lane"><h3>3. Roteamento</h3><p>O caminho não é mais uma esteira reta. O contrato escolhe trilho, gates, especialistas, dependências e reparos.</p></section>
-<section class="lane"><h3>4. Execução Hermes</h3><p>Hermes Kanban é o chão de fábrica: cards, workers, bloqueios, dependências, comentários, logs e estado real.</p></section>
-<section class="lane"><h3>5. Prova</h3><p>Nada vira done só porque um agente disse. Precisa evidência, teste, revisão, readback e Receipt Five.</p></section>
-<section class="lane"><h3>6. Learnback</h3><p>Quando algo ensina a fábrica, vira proposta revisável. Não muda regra em silêncio.</p></section></div>
+    <!-- Main Diagram -->
+    <div class="diagram-container">
+      <svg viewBox="0 0 1040 860" role="img" aria-label="Overkill Factory Production Line — Raw intent becomes a verified product outcome through Hermes, contracts, workers, evidence, human gates, and Receipt Five (workflow diagram)">
+        <!-- Definitions -->
+        <defs>
+          <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" class="m-default" />
+          </marker>
+          <marker id="arrowhead-emphasis" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" class="m-emphasis" />
+          </marker>
+          <marker id="arrowhead-security" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" class="m-security" />
+          </marker>
+          <marker id="arrowhead-dashed" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" class="m-dashed" />
+          </marker>
+          <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" class="c-grid" stroke-width="0.5"/>
+          </pattern>
+        </defs>
 
-<h2>Mapa simples da produção</h2>
-<p>Você não precisa decorar isto. A ideia é mostrar que cada etapa tem dono, saída esperada e gate. Se algo falha, a fábrica volta para o reparo certo em vez de pedir aprovação humana à toa.</p>
-<div class="flow"><article class="stage"><b>01</b><span>Universal Signal Intake</span><small>Tipo de sinal</small></article>
-<article class="stage"><b>02</b><span>Source Ledger</span><small>evidência, próxima ação, bloqueio ou avanço</small></article>
-<article class="stage"><b>03</b><span>Source Resolution</span><small>Specialist Research Decision</small></article>
-<article class="stage"><b>04</b><span>Resultado e Descoberta</span><small>evidência, próxima ação, bloqueio ou avanço</small></article>
-<article class="stage"><b>05</b><span>Product SOT</span><small>full Product SOT scope coverage</small></article>
-<article class="stage"><b>06</b><span>Roteador de Método</span><small>evidência, próxima ação, bloqueio ou avanço</small></article>
-<article class="stage"><b>07</b><span>Contrato de Método</span><small>evidência, próxima ação, bloqueio ou avanço</small></article>
-<article class="stage"><b>08</b><span>Product e Surface Packs</span><small>evidência, próxima ação, bloqueio ou avanço</small></article>
-<article class="stage"><b>09</b><span>Arquitetura de Segurança</span><small>evidência, próxima ação, bloqueio ou avanço</small></article>
-<article class="stage"><b>10</b><span>Product Creation Plan</span><small>Product Creation Plan, Work units</small></article>
-<article class="stage"><b>11</b><span>Product Experience Gate</span><small>professional_design_process, surface_evidence_profile, product_delivery_quality_profile</small></article>
-<article class="stage"><b>12</b><span>Dados e Evals</span><small>evidência, próxima ação, bloqueio ou avanço</small></article>
-<article class="stage"><b>13</b><span>Grafo de Especificação</span><small>evidência, próxima ação, bloqueio ou avanço</small></article>
-<article class="stage"><b>14</b><span>Gates de Risco</span><small>evidência, próxima ação, bloqueio ou avanço</small></article>
-<article class="stage"><b>15</b><span>Plano de Loops</span><small>evidência, próxima ação, bloqueio ou avanço</small></article>
-<article class="stage"><b>16</b><span>Prontidão de Autonomia</span><small>evidência, próxima ação, bloqueio ou avanço</small></article>
-<article class="stage"><b>17</b><span>Product Implementation Readiness</span><small>evidência, próxima ação, bloqueio ou avanço</small></article>
-<article class="stage"><b>18</b><span>Projeção da Control Tower</span><small>evidência, próxima ação, bloqueio ou avanço</small></article>
-<article class="stage"><b>19</b><span>Gate Humano</span><small>evidência, próxima ação, bloqueio ou avanço</small></article>
-<article class="stage"><b>20</b><span>Runtime Hermes</span><small>evidência, próxima ação, bloqueio ou avanço</small></article>
-<article class="stage"><b>21</b><span>Resultado do Agente</span><small>evidência, próxima ação, bloqueio ou avanço</small></article>
-<article class="stage"><b>22</b><span>Verificação</span><small>evidência, próxima ação, bloqueio ou avanço</small></article>
-<article class="stage"><b>23</b><span>Revisão Independente</span><small>evidência, próxima ação, bloqueio ou avanço</small></article>
-<article class="stage"><b>24</b><span>Resumo de Fechamento</span><small>evidência, próxima ação, bloqueio ou avanço</small></article>
-<article class="stage"><b>25</b><span>Receipt Five</span><small>evidência, próxima ação, bloqueio ou avanço</small></article>
-<article class="stage"><b>26</b><span>Factory v1 Completion Gate</span><small>v1 blocker, vNext ou not planned</small></article>
-<article class="stage"><b>27</b><span>Operação de Produção</span><small>evidência, próxima ação, bloqueio ou avanço</small></article>
-<article class="stage"><b>28</b><span>Release ou Bloqueio</span><small>evidência, próxima ação, bloqueio ou avanço</small></article>
-<article class="stage"><b>29</b><span>Monitoramento e Suporte</span><small>evidência, próxima ação, bloqueio ou avanço</small></article>
-<article class="stage"><b>30</b><span>Learnback</span><small>evidência, próxima ação, bloqueio ou avanço</small></article>
-<article class="stage"><b>31</b><span>Auditoria de Maturidade</span><small>evidência, próxima ação, bloqueio ou avanço</small></article>
-<article class="stage"><b>32</b><span>Mapa != Prova</span><small>evidência, próxima ação, bloqueio ou avanço</small></article>
-<article class="stage"><b>33</b><span>Rigor R4</span><small>evidência, próxima ação, bloqueio ou avanço</small></article></div>
+        <!-- Background Grid -->
+        <rect width="100%" height="100%" fill="url(#grid)" />
 
-<h2>Regras que importam</h2>
-<div class="grid">
-<section class="rule"><h3>Fonte de verdade</h3><p>Hermes Kanban + resultados dos workers + Receipt Five. Este mapa ajuda a entender; ele não prova runtime e não é fonte de verdade.</p></section>
-<section class="rule"><h3>Human gate é exceção</h3><p>O operador só decide quando há risco real: produção, release, fundos, secrets, mainnet, privacidade, autoridade R3/R4 ou mudança de escopo.</p></section>
-<section class="rule"><h3>Produto visível tem régua própria</h3><p>Product Experience Plan, Product Face Packet, DESIGN.md, screenshots, UX proof, acessibilidade e performance note.</p></section>
-<section class="rule"><h3>Solana/onchain</h3><p>Solana AI Kit é obrigatório para domínio Solana. Mainnet, fundos e signing exigem autoridade explícita.</p></section>
-</div>
+        <!-- Swimlanes -->
+        <rect x="40" y="52" width="640" height="104" rx="10" class="c-lane" stroke-width="1"/>
+        <text x="54" y="74" class="t-dim" font-size="10" font-weight="600">01 / Human Operator</text>
 
-<h2>Primeiro caminho para testar</h2>
-<div class="callout"><p><code>factoryctl doctor</code><br><code>factoryctl run minimal</code><br><code>factoryctl v3-production-activation-check</code><br><code>factoryctl literal-dod-audit</code></p><p>O audit literal separa suporte local de prova externa. Se Telegram live ainda não foi verificado, ele mostra <code>PARTIAL_EXTERNAL</code> em vez de fingir 100%.</p></div>
+        <rect x="40" y="176" width="640" height="104" rx="10" class="c-lane" stroke-width="1"/>
+        <text x="54" y="198" class="t-dim" font-size="10" font-weight="600">02 / Manager + Intake</text>
 
-<h2>Limite honesto</h2>
-<div class="callout no"><p>Este mapa não é runtime evidence, not runtime evidence, not a source of truth. Ele não prova que um produto específico está pronto. Produto pronto precisa de fonte real, execução, evidência, revisão e release readiness próprio.</p></div>
+        <rect x="40" y="300" width="640" height="104" rx="10" class="c-lane" stroke-width="1"/>
+        <text x="54" y="322" class="t-dim" font-size="10" font-weight="600">03 / Factory Control Plane</text>
 
-<div class="hidden-coverage">
-expectedCount: 40
-Universal Signal Intake; full Product SOT scope coverage; Specialist Research Decision; Product Creation Plan; Product Experience Gate; Product Implementation Readiness; Factory v1 Completion Gate; v1 blocker; vNext ou not planned; Mapa != Prova; Hermes segue como fonte da verdade; não provam entrega; uma ideia entra por um lado; a fábrica entende, escolhe o trilho seguro; Hermes, contratos e evidências concordam; professional_design_process; surface_evidence_profile; product_delivery_quality_profile; R0 R1 R2 R3 R4; Pre-Start / Sealed Source Envelope | factory_bridge_source_envelope | factory_bridge_start_request | factory_bridge_handoff | Start Boundary | overkill-factory-gerente | factory-orchestrator | Intake | operator_interface_profile | factory_start_conversation | universal_signal_intake | source_refs | source_resolution_packet | reference_quality_packet | Source Gate | Source Ledger | product_source_ledger | operator_understanding_confirmation | reference_source_registry | source-ledger-worker | Source Resolution | discovery_brief | specialist_research_plan | Discovery Gate | product-sot-planner | Product Outcome And Discovery | operator_briefing_package | outcome_contract | Outcome Gate | Product SOT | product_sot | full_product_sot_scope_coverage | factory_phase_lock | user_facing_autonomy_contract | Product SOT Gate | Agentic Method Router | method_contract | specialist_decision_packet | Method Gate | Method Contract | parallel_lane_contracts | Pack And Product Experience Selection | capability_pack_contract | product_experience_plan | product_face_packet | project_design_system | professional_design_process | surface_evidence_profile | product_delivery_quality_profile | product_pack | surface_pack | reference_quality_waiver | Pack Gate | Product Experience Gate | Surface Pack Gate | product-face | Risk And Authority Gates | access_capability | budget_contract | privacy_compliance_plan | Access Gate | Budget Gate | Human Gate when required | human-gate-clerk | Security Architecture | security_architecture_plan | Security Architecture Gate | security-orchestrator | Executable Plans | software_development_plan | spec_graph | loop_plan | product_creation_plan | agent_eval_plan | Ready Gate | decomposition-planner | Autonomy Readiness | decomposition_coverage_review | product_implementation_readiness | autonomy_readiness_packet | Decomposition Coverage Gate | Access &amp; Capability Gate | independent-reviewer | gate_report | factory_help_next | Runtime Execution | worker_packets | Runtime Gate | implementation-worker | qa-verification-worker | Worker Results | worker_results | evidence_graph | Done Gate | evidence-reconciler | Verification | verification_plan | verification_result | qa_verification_plan | product_face_result | Verification Gate | Independent Review | review_result | reviewer_selection_plan | Review Gate | Closure Summary | closure_summary | handoff_packet | Closure Gate | handoff-packer | Receipt Five | receipt_five | Completion Audit | completion_audit | factory_completion_audit | Production Operations | production_readiness_plan | incident_support_plan | Release Gate | release-ops-worker | Release Or Block | release_decision | blocker_economics | Monitoring Support | monitoring_notes | Support Gate | Learnback | factory_learning_proposal | execution_learnback_record | Learning Gate | skill-eval-distiller | Factory Maturity Audit | factory_maturity_scorecard | owner_issue_intake_report | Maturity Gate | Universal Signal Intake | full Product SOT scope coverage | Specialist Research Decision | Product Creation Plan | Product Implementation Readiness | Factory v1 Completion Gate | v1 blocker | Mapa != Prova | Hermes segue como fonte da verdade | não provam entrega | uma ideia entra por um lado | a fábrica entende, escolhe o trilho seguro | Hermes, contratos e evidências concordam | R0 | R1 | R2 | R3 | R4 | Factory V3 | runtime truth spine | canonical frontier | Product Face Result | Solana AI Kit | no-idle | manager/agent freshness
-</div>
-<script>
-const WORKERS = { expectedCount: 40 };
-const STAGES = [
-  { id: "intake", n: "01", title: "Universal Signal Intake", output: ["Tipo de sinal"] },
-  { id: "ledger", n: "02", title: "Source Ledger", output: ["evidência", "próxima ação", "bloqueio ou avanço"] },
-  { id: "resolution", n: "03", title: "Source Resolution", output: ["Specialist Research Decision"] },
-  { id: "outcome", n: "04", title: "Resultado e Descoberta", output: ["evidência", "próxima ação", "bloqueio ou avanço"] },
-  { id: "sot", n: "05", title: "Product SOT", output: ["full Product SOT scope coverage"] },
-  { id: "router", n: "06", title: "Roteador de Método", output: ["evidência", "próxima ação", "bloqueio ou avanço"] },
-  { id: "contract", n: "07", title: "Contrato de Método", output: ["evidência", "próxima ação", "bloqueio ou avanço"] },
-  { id: "packs", n: "08", title: "Product e Surface Packs", output: ["evidência", "próxima ação", "bloqueio ou avanço"] },
-  { id: "securityplan", n: "09", title: "Arquitetura de Segurança", output: ["evidência", "próxima ação", "bloqueio ou avanço"] },
-  { id: "devplan", n: "10", title: "Product Creation Plan", output: ["Product Creation Plan", "Work units"] },
-  { id: "experience", n: "11", title: "Product Experience Gate", output: ["professional_design_process", "surface_evidence_profile", "product_delivery_quality_profile"] },
-  { id: "dataeval", n: "12", title: "Dados e Evals", output: ["evidência", "próxima ação", "bloqueio ou avanço"] },
-  { id: "specgraph", n: "13", title: "Grafo de Especificação", output: ["evidência", "próxima ação", "bloqueio ou avanço"] },
-  { id: "riskgates", n: "14", title: "Gates de Risco", output: ["evidência", "próxima ação", "bloqueio ou avanço"] },
-  { id: "loop", n: "15", title: "Plano de Loops", output: ["evidência", "próxima ação", "bloqueio ou avanço"] },
-  { id: "autonomy", n: "16", title: "Prontidão de Autonomia", output: ["evidência", "próxima ação", "bloqueio ou avanço"] },
-  { id: "ready", n: "17", title: "Product Implementation Readiness", output: ["evidência", "próxima ação", "bloqueio ou avanço"] },
-  { id: "controltower", n: "18", title: "Projeção da Control Tower", output: ["evidência", "próxima ação", "bloqueio ou avanço"] },
-  { id: "humangate", n: "19", title: "Gate Humano", output: ["evidência", "próxima ação", "bloqueio ou avanço"] },
-  { id: "runtime", n: "20", title: "Runtime Hermes", output: ["evidência", "próxima ação", "bloqueio ou avanço"] },
-  { id: "workerresult", n: "21", title: "Resultado do Agente", output: ["evidência", "próxima ação", "bloqueio ou avanço"] },
-  { id: "verification", n: "22", title: "Verificação", output: ["evidência", "próxima ação", "bloqueio ou avanço"] },
-  { id: "review", n: "23", title: "Revisão Independente", output: ["evidência", "próxima ação", "bloqueio ou avanço"] },
-  { id: "closure", n: "24", title: "Resumo de Fechamento", output: ["evidência", "próxima ação", "bloqueio ou avanço"] },
-  { id: "receipt", n: "25", title: "Receipt Five", output: ["evidência", "próxima ação", "bloqueio ou avanço"] },
-  { id: "completion", n: "26", title: "Factory v1 Completion Gate", output: ["v1 blocker", "vNext ou not planned"] },
-  { id: "prodops", n: "27", title: "Operação de Produção", output: ["evidência", "próxima ação", "bloqueio ou avanço"] },
-  { id: "release", n: "28", title: "Release ou Bloqueio", output: ["evidência", "próxima ação", "bloqueio ou avanço"] },
-  { id: "monitoring", n: "29", title: "Monitoramento e Suporte", output: ["evidência", "próxima ação", "bloqueio ou avanço"] },
-  { id: "learnback", n: "30", title: "Learnback", output: ["evidência", "próxima ação", "bloqueio ou avanço"] },
-  { id: "maturity", n: "31", title: "Auditoria de Maturidade", output: ["evidência", "próxima ação", "bloqueio ou avanço"] },
-  { id: "readiness", n: "32", title: "Mapa != Prova", output: ["evidência", "próxima ação", "bloqueio ou avanço"] },
-  { id: "r4", n: "33", title: "Rigor R4", output: ["evidência", "próxima ação", "bloqueio ou avanço"] }
-];
-</script>
-</main>
+        <rect x="40" y="424" width="640" height="104" rx="10" class="c-lane" stroke-width="1"/>
+        <text x="54" y="446" class="t-dim" font-size="10" font-weight="600">04 / Hermes Runtime</text>
+
+        <rect x="40" y="548" width="640" height="104" rx="10" class="c-lane" stroke-width="1"/>
+        <text x="54" y="570" class="t-dim" font-size="10" font-weight="600">05 / Evidence + Release</text>
+
+        <!-- Edge paths -->
+        <path d="M 134 119 L 134 166 L 174 166 L 174 243" class="a-emphasis" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+        <path d="M 266 243 L 384 243" class="a-default" stroke-width="1.4" marker-end="url(#arrowhead)"/>
+        <path d="M 430 277 L 430 290 L 220 290 L 220 333" class="a-emphasis" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+        <path d="M 266 367 L 384 367" class="a-default" stroke-width="1.4" marker-end="url(#arrowhead)"/>
+        <path d="M 476 367 L 579 367" class="a-default" stroke-width="1.4" marker-end="url(#arrowhead)"/>
+        <path d="M 625 401 L 625 414 L 300 414 L 300 457" class="a-emphasis" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+        <path d="M 346 491 L 454 491" class="a-default" stroke-width="1.4" marker-end="url(#arrowhead)"/>
+        <path d="M 500 525 L 500 538 L 220 538 L 220 581" class="a-emphasis" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+        <path d="M 266 615 L 384 615" class="a-default" stroke-width="1.4" marker-end="url(#arrowhead)"/>
+        <path d="M 476 615 L 579 615" class="a-default" stroke-width="1.4" marker-end="url(#arrowhead)"/>
+        <path d="M 430 333 L 430 57 L 625 57 L 625 153" class="a-security" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
+        <path d="M 625 153 L 625 228 L 625 228 L 625 333" class="a-security" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
+        <path d="M 220 581 L 220 305 L 625 305 L 625 401" class="a-dashed" stroke-width="1.4" marker-end="url(#arrowhead-dashed)"/>
+
+        <!-- Nodes -->
+        <rect x="42" y="85" width="92" height="68" rx="6" class="c-mask"/>
+        <rect x="42" y="85" width="92" height="68" rx="6" class="c-external" stroke-width="1.5"/>
+        <text x="88" y="106" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Raw Intent</text>
+        <text x="88" y="123" class="t-muted" font-size="8" text-anchor="middle">message / TXT / repo</text>
+        <text x="88" y="141" class="t-external" font-size="7" text-anchor="middle">F0</text>
+
+        <rect x="579" y="85" width="92" height="68" rx="6" class="c-mask"/>
+        <rect x="579" y="85" width="92" height="68" rx="6" class="c-security" stroke-width="1.5"/>
+        <text x="625" y="106" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Gate</text>
+        <text x="625" y="123" class="t-muted" font-size="8" text-anchor="middle">authority only</text>
+        <text x="625" y="141" class="t-security" font-size="7" text-anchor="middle">risk</text>
+
+        <rect x="174" y="209" width="92" height="68" rx="6" class="c-mask"/>
+        <rect x="174" y="209" width="92" height="68" rx="6" class="c-frontend" stroke-width="1.5"/>
+        <text x="220" y="230" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Gerente</text>
+        <text x="220" y="247" class="t-muted" font-size="8" text-anchor="middle">human bridge</text>
+        <text x="220" y="265" class="t-frontend" font-size="7" text-anchor="middle">Telegram / Discord</text>
+
+        <rect x="384" y="209" width="92" height="68" rx="6" class="c-mask"/>
+        <rect x="384" y="209" width="92" height="68" rx="6" class="c-backend" stroke-width="1.5"/>
+        <text x="430" y="230" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Understand</text>
+        <text x="430" y="247" class="t-muted" font-size="8" text-anchor="middle">facts / gaps / conflicts</text>
+        <text x="430" y="265" class="t-backend" font-size="7" text-anchor="middle">F1-F4</text>
+
+        <rect x="174" y="333" width="92" height="68" rx="6" class="c-mask"/>
+        <rect x="174" y="333" width="92" height="68" rx="6" class="c-database" stroke-width="1.5"/>
+        <text x="220" y="354" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">SOT</text>
+        <text x="220" y="371" class="t-muted" font-size="8" text-anchor="middle">official truth</text>
+        <text x="220" y="389" class="t-database" font-size="7" text-anchor="middle">F5</text>
+
+        <rect x="384" y="333" width="92" height="68" rx="6" class="c-mask"/>
+        <rect x="384" y="333" width="92" height="68" rx="6" class="c-backend" stroke-width="1.5"/>
+        <text x="430" y="354" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Method</text>
+        <text x="430" y="371" class="t-muted" font-size="8" text-anchor="middle">risk-sized process</text>
+        <text x="430" y="389" class="t-backend" font-size="7" text-anchor="middle">F6-F10</text>
+
+        <rect x="579" y="333" width="92" height="68" rx="6" class="c-mask"/>
+        <rect x="579" y="333" width="92" height="68" rx="6" class="c-backend" stroke-width="1.5"/>
+        <text x="625" y="354" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Plan</text>
+        <text x="625" y="371" class="t-muted" font-size="8" text-anchor="middle">work units + gates</text>
+        <text x="625" y="389" class="t-backend" font-size="7" text-anchor="middle">F11-F13</text>
+
+        <rect x="254" y="457" width="92" height="68" rx="6" class="c-mask"/>
+        <rect x="254" y="457" width="92" height="68" rx="6" class="c-messagebus" stroke-width="1.5"/>
+        <text x="300" y="478" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Kanban</text>
+        <text x="300" y="495" class="t-muted" font-size="8" text-anchor="middle">runtime truth</text>
+        <text x="300" y="513" class="t-messagebus" font-size="7" text-anchor="middle">live</text>
+
+        <rect x="454" y="457" width="92" height="68" rx="6" class="c-mask"/>
+        <rect x="454" y="457" width="92" height="68" rx="6" class="c-backend" stroke-width="1.5"/>
+        <text x="500" y="478" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Workers</text>
+        <text x="500" y="495" class="t-muted" font-size="8" text-anchor="middle">40 public roles</text>
+        <text x="500" y="513" class="t-backend" font-size="7" text-anchor="middle">F15-F16</text>
+
+        <rect x="174" y="581" width="92" height="68" rx="6" class="c-mask"/>
+        <rect x="174" y="581" width="92" height="68" rx="6" class="c-security" stroke-width="1.5"/>
+        <text x="220" y="602" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Review</text>
+        <text x="220" y="619" class="t-muted" font-size="8" text-anchor="middle">readback + QA</text>
+        <text x="220" y="637" class="t-security" font-size="7" text-anchor="middle">F17-F18</text>
+
+        <rect x="384" y="581" width="92" height="68" rx="6" class="c-mask"/>
+        <rect x="384" y="581" width="92" height="68" rx="6" class="c-database" stroke-width="1.5"/>
+        <text x="430" y="602" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Receipt</text>
+        <text x="430" y="619" class="t-muted" font-size="8" text-anchor="middle">proof + final state</text>
+        <text x="430" y="637" class="t-database" font-size="7" text-anchor="middle">F21</text>
+
+        <rect x="579" y="581" width="92" height="68" rx="6" class="c-mask"/>
+        <rect x="579" y="581" width="92" height="68" rx="6" class="c-cloud" stroke-width="1.5"/>
+        <text x="625" y="602" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Release</text>
+        <text x="625" y="619" class="t-muted" font-size="8" text-anchor="middle">or honest block</text>
+        <text x="625" y="637" class="t-cloud" font-size="7" text-anchor="middle">F24-F27</text>
+
+        <!-- Edge labels -->
+
+
+
+
+
+
+
+
+
+
+        <rect x="608.2" y="154" width="163.6" height="14" rx="3" class="c-mask"/>
+        <text x="690" y="164" class="t-security" font-size="8" text-anchor="middle">money / prod / mainnet / secrets</text>
+        <rect x="845.8" y="300" width="96.39999999999999" height="14" rx="3" class="c-mask"/>
+        <text x="894" y="310" class="t-security" font-size="8" text-anchor="middle">explicit authority</text>
+        <rect x="488.6" y="566" width="62.8" height="14" rx="3" class="c-mask"/>
+        <text x="520" y="576" class="t-database" font-size="8" text-anchor="middle">repair loop</text>
+
+        <!-- Legend -->
+        <text x="175" y="676" class="t-primary" font-size="10" font-weight="600">Legend</text>
+        <rect x="175" y="688" width="14" height="9" rx="2" class="c-frontend" stroke-width="1"/>
+        <text x="195" y="696" class="t-muted" font-size="7">User UI</text>
+        <rect x="260" y="688" width="14" height="9" rx="2" class="c-backend" stroke-width="1"/>
+        <text x="280" y="696" class="t-muted" font-size="7">Agent logic</text>
+        <rect x="370" y="688" width="14" height="9" rx="2" class="c-security" stroke-width="1"/>
+        <text x="390" y="696" class="t-muted" font-size="7">Policy</text>
+        <rect x="455" y="688" width="14" height="9" rx="2" class="c-messagebus" stroke-width="1"/>
+        <text x="475" y="696" class="t-muted" font-size="7">Tool action</text>
+        <rect x="565" y="688" width="14" height="9" rx="2" class="c-database" stroke-width="1"/>
+        <text x="585" y="696" class="t-muted" font-size="7">Context / trace</text>
+      </svg>
+    </div>
+
+    <!-- Info Cards -->
+    <div class="cards">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-dot cyan"></div>
+          <h3>What the Factory Controls</h3>
+        </div>
+        <ul>
+          <li>&bull; Universal Signal Intake, source ledger, source resolution, Product Understanding Packet, Outcome Contract, full Product SOT scope coverage, Method Contract, Product Creation Plan and Product Implementation Readiness</li>
+          <li>&bull; The goal is controlled production, not more impressive chat</li>
+          <li>&bull; Every useful step leaves an artifact the next step can read</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-dot rose"></div>
+          <h3>What It Refuses</h3>
+        </div>
+        <ul>
+          <li>&bull; No done without proof, no hidden human gate, no self-review as approval, no production/mainnet/funds/secrets without explicit authority</li>
+          <li>&bull; A passing local proof means the public kernel is coherent; it does not prove a private product was delivered</li>
+          <li>&bull; Mapa != Prova: Hermes segue como fonte da verdade; public docs não provam entrega</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-dot emerald"></div>
+          <h3>What Makes It Real</h3>
+        </div>
+        <ul>
+          <li>&bull; Hermes Kanban owns live runtime state; the repo owns contracts, schemas, templates, validators and public documentation</li>
+          <li>&bull; 40 public workers operate through bounded roles, evidence requirements and authority ceilings</li>
+          <li>&bull; Receipt Five closes the loop with request, work, evidence, reviewer and remaining risk or block</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="explain" aria-label="Complete Overkill Factory explanation">
+      <section class="explain-section">
+        <h2>What this map is</h2>
+        <p>
+          This is a conceptual supporting surface for the Overkill Factory. It is meant to make the whole factory understandable in one place: how raw intent enters, how the Factory avoids premature building, how Hermes becomes the runtime floor, how workers receive bounded work, how evidence is reconciled, and how Receipt Five closes the loop.
+        </p>
+        <p>
+          This visual map is not the source of truth. The repository contracts, schemas, templates, registries, validators and Hermes runtime state carry authority. The map does not prove runtime readiness, live delivery, worker execution, production health, mainnet authority or human approval. Mapa != Prova. Hermes segue como fonte da verdade; public docs nao provam entrega.
+        </p>
+      </section>
+
+      <section class="explain-section">
+        <h2>The human story</h2>
+        <p>
+          The Factory exists because a single agent can sound confident while misunderstanding the product. The Factory turns that risk into a production line. It preserves the source, separates facts from assumptions, creates Product SOT, chooses a Method Contract, plans the work, creates bounded cards, dispatches specialists, asks for evidence, runs review and ends with Receipt Five or an honest block.
+        </p>
+        <p>
+          The operator should not need to understand every schema to use the Factory. The operator should be able to ask: what does the Factory know, what is still assumed, what is blocked, what needs human authority, where is the evidence, who reviewed it and what final state was authorized.
+        </p>
+      </section>
+
+      <section class="explain-section">
+        <h2>Current public kernel facts</h2>
+        <div class="fact-row">
+          <div class="fact"><b>26</b>compiled workflow phases</div>
+          <div class="fact"><b>14</b>route classes</div>
+          <div class="fact"><b>8</b>method engines</div>
+          <div class="fact"><b>17</b>operating-system areas</div>
+          <div class="fact"><b>40</b>public workers</div>
+          <div class="fact"><b>251</b>JSON schemas</div>
+          <div class="fact"><b>163</b>JSON templates</div>
+          <div class="fact"><b>102</b>Python test files</div>
+        </div>
+        <p>
+          These counts prove public kernel structure in this checkout. They do not prove a private product run was delivered. A real product proof still needs live Hermes state, a real card, worker result, specific evidence, readback, independent review, required human gates and Receipt Five.
+        </p>
+      </section>
+
+      <section class="explain-section">
+        <h2>The 26 compiled phases</h2>
+        <div class="phase-grid">
+          <div class="phase-pill"><strong>F0</strong> Pre-Start / Sealed Source Envelope</div>
+          <div class="phase-pill"><strong>F1</strong> Intake</div>
+          <div class="phase-pill"><strong>F2</strong> Source Ledger</div>
+          <div class="phase-pill"><strong>F3</strong> Source Resolution</div>
+          <div class="phase-pill"><strong>F4</strong> Product Outcome And Discovery</div>
+          <div class="phase-pill"><strong>F5</strong> Product SOT</div>
+          <div class="phase-pill"><strong>F6</strong> Agentic Method Router</div>
+          <div class="phase-pill"><strong>F7</strong> Method Contract</div>
+          <div class="phase-pill"><strong>F8</strong> Pack And Product Experience Selection</div>
+          <div class="phase-pill"><strong>F9</strong> Risk And Authority Gates</div>
+          <div class="phase-pill"><strong>F10</strong> Security Architecture</div>
+          <div class="phase-pill"><strong>F11</strong> Executable Plans</div>
+          <div class="phase-pill"><strong>F12</strong> Autonomy Readiness</div>
+          <div class="phase-pill"><strong>F13</strong> Ready Gate</div>
+          <div class="phase-pill"><strong>F15</strong> Runtime Execution</div>
+          <div class="phase-pill"><strong>F16</strong> Worker Results</div>
+          <div class="phase-pill"><strong>F17</strong> Verification</div>
+          <div class="phase-pill"><strong>F18</strong> Independent Review</div>
+          <div class="phase-pill"><strong>F20</strong> Closure Summary</div>
+          <div class="phase-pill"><strong>F21</strong> Receipt Five</div>
+          <div class="phase-pill"><strong>F22</strong> Completion Audit</div>
+          <div class="phase-pill"><strong>F23</strong> Production Operations</div>
+          <div class="phase-pill"><strong>F24</strong> Release Or Block</div>
+          <div class="phase-pill"><strong>F25</strong> Monitoring Support</div>
+          <div class="phase-pill"><strong>F26</strong> Learnback</div>
+          <div class="phase-pill"><strong>F27</strong> Factory Maturity Audit</div>
+        </div>
+      </section>
+
+      <section class="explain-section">
+        <h2>How the line behaves</h2>
+        <ul>
+          <li>Source comes first. The Factory preserves the human request, separates facts from assumptions and records conflicts before pretending it knows the product.</li>
+          <li>Product SOT becomes the official product truth. It prevents frontend, backend, security, docs and release workers from building different products.</li>
+          <li>Method Contract chooses the proof path. A typo, production migration, public documentation rewrite, security repair and mainnet launch do not deserve the same evidence burden.</li>
+          <li>Product Creation Plan turns truth into work units. Each work unit needs objective, scope, owner, reviewer, authority, forbidden actions, definition of done and required evidence.</li>
+          <li>Hermes Kanban is the live floor. The repo defines the kernel; Hermes owns cards, worker execution, comments, attachments, process state and runtime evidence.</li>
+          <li>Review and readback stop theater. A worker result is not accepted until evidence actually supports the claim.</li>
+          <li>Receipt Five records the request, produced work, evidence, reviewer and final state: accepted, blocked, needs repair or risk remains.</li>
+        </ul>
+      </section>
+
+      <section class="explain-section">
+        <h2>Authority and risk</h2>
+        <p>
+          The Factory uses risk tiers R0-R4. Low-risk local work can move with local proof. Higher-risk work needs stronger evidence, independent review, security architecture, rollback and explicit human gates. Production, mainnet, funds, signing, secrets, billing, destructive action and residual-risk acceptance always require real human authority.
+        </p>
+        <p>
+          A human gate is not a polite pause. It is an authority package: exact decision, options, consequences, recommendation, evidence, risk, what approval authorizes and what approval does not authorize. The operator delivery receipt proves the question reached the operator.
+        </p>
+      </section>
+
+      <section class="explain-section">
+        <h2>Important artifacts and workers</h2>
+        <ul>
+          <li>Core artifacts include Universal Signal Intake, Product Source Ledger, Product Understanding Packet, Outcome Contract, full Product SOT scope coverage, Specialist Research Decision, Method Contract, Product Creation Plan, Product Implementation Readiness, Worker Packet, Worker Result, Product Face Result, Security Architecture Plan, Human Gate Package, Evidence Bundle, Review Result, Receipt Five and Learnback Proposal.</li>
+          <li>Route classes include product_creation, feature_delivery, bug_repair, incident_response, brownfield_discovery, release_promotion, research_validation, docs_onboarding, security_remediation, critical_integration, migration_execution, ux_product_experience, analytics_data and agent_quality_change.</li>
+          <li>Method engines include spec_first_sdd, test_first_tdd, behavior_first_bdd, discovery_research, security_first_threat_model, design_first_product_experience, legacy_diagnosis and incident_first.</li>
+          <li>Worker roles include factory-orchestrator, source-ledger-worker, product-sot-planner, product-architect, product-face, decomposition-planner, implementation-worker, frontend-builder, backend-api-builder, qa-verification-worker, independent-reviewer, evidence-reconciler, human-gate-clerk, release-ops-worker, public-safety-gate, codex-security and specialist security workers.</li>
+        </ul>
+      </section>
+    </div>
+
+    <!-- Footer -->
+    <p class="footer">
+      Workflow diagram &bull; Built with Archify<span class="no-print"> &bull; Press <kbd>T</kbd> for theme and <kbd>E</kbd> for export</span>
+    </p>
+  </div>
+
+  <script>
+    /* ============================================================
+       Theme toggle — persists to localStorage, respects system pref
+       ============================================================ */
+    var Archify = {};
+
+    Archify.theme = (function () {
+      var STORAGE_KEY = 'archify-theme';
+      var html = document.documentElement;
+      var btn = document.getElementById('btn-theme');
+      var icon = document.getElementById('theme-icon');
+      var label = document.getElementById('theme-label');
+
+      // localStorage can throw (blocked cookies, sandboxed iframes); the whole
+      // script element dies on an uncaught error, so guard every access.
+      function readStored() {
+        try { return localStorage.getItem(STORAGE_KEY); } catch (_) { return null; }
+      }
+      function writeStored(value) {
+        try { localStorage.setItem(STORAGE_KEY, value); } catch (_) {}
+      }
+      function urlOverride() {
+        // URL param wins (useful for deterministic screenshots / share links)
+        try {
+          var param = new URLSearchParams(window.location.search).get('theme');
+          if (param === 'light' || param === 'dark') return param;
+        } catch (_) {}
+        return null;
+      }
+
+      function resolveInitial() {
+        var fromUrl = urlOverride();
+        if (fromUrl) return fromUrl;
+        var saved = readStored();
+        if (saved === 'light' || saved === 'dark') return saved;
+        return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+      }
+
+      function apply(theme) {
+        html.setAttribute('data-theme', theme);
+        icon.textContent = theme === 'dark' ? '\u263E' : '\u263C';
+        label.textContent = theme === 'dark' ? 'Dark' : 'Light';
+        btn.setAttribute('aria-pressed', theme === 'light' ? 'true' : 'false');
+      }
+
+      function toggle() {
+        var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        apply(next);
+        writeStored(next);
+      }
+
+      apply(resolveInitial());
+      btn.addEventListener('click', toggle);
+
+      // Follow live OS theme changes while the user has no explicit preference.
+      try {
+        var media = window.matchMedia('(prefers-color-scheme: light)');
+        var onChange = function (e) {
+          var saved = readStored();
+          if (urlOverride() || saved === 'light' || saved === 'dark') return;
+          apply(e.matches ? 'light' : 'dark');
+        };
+        if (media.addEventListener) media.addEventListener('change', onChange);
+        else if (media.addListener) media.addListener(onChange);
+      } catch (_) {}
+
+      return { toggle: toggle };
+    })();
+
+    /* ============================================================
+       Export — PNG / JPEG / WebP / SVG (download) and Copy PNG (clipboard)
+
+       Raster exports are always rendered at 4x source resolution for
+       maximum sharpness. The trick: we set the serialized SVG's
+       `width`/`height` to viewBox * 4 so the browser rasterizes the
+       vectors at that resolution natively. drawImage then draws at
+       the image's natural size (no upscaling = no blur).
+
+       JPEG/WebP paint the current theme's background explicitly since
+       those formats have no alpha channel.
+       ============================================================ */
+    (function () {
+      var RASTER_SCALE = 4;
+
+      function diagramFilename() {
+        var title = (document.title || 'diagram')
+          .replace(/\s+Architecture(\s+Diagram)?$/i, '')
+          .replace(/\s+Diagram$/i, '')
+          .trim();
+        return title.replace(/[^a-z0-9_\-]+/gi, '-')
+                    .toLowerCase()
+                    .replace(/^-+|-+$/g, '') || 'diagram';
+      }
+
+      function currentBg() {
+        return getComputedStyle(document.body).backgroundColor || '#ffffff';
+      }
+
+      /**
+       * Serialize the main SVG into a standalone document.
+       *
+       * Two modes:
+       * - Default (opts.autoTheme=false) — locks the serialized SVG to the
+       *   viewer's current theme. Used by the raster pipeline
+       *   (PNG/JPEG/WebP/clipboard) because canvas rasterization needs
+       *   deterministic colors; a raster cannot react to
+       *   prefers-color-scheme after encoding.
+       * - autoTheme=true — emits BOTH dark and light variable sets plus a
+       *   `@media (prefers-color-scheme)` rule so the resulting SVG
+       *   self-themes when embedded in GitHub READMEs or other hosts that
+       *   expose a color scheme. Used for "Download SVG".
+       */
+      function serializeSvg(scale, opts) {
+        // scale: integer multiplier for intrinsic SVG pixel dimensions used by
+        // the raster path. Defaults to 1 (natural size) for SVG download.
+        scale = scale || 1;
+        opts = opts || {};
+        var autoTheme = opts.autoTheme === true;
+
+        var svg = document.querySelector('.diagram-container svg');
+        var clone = svg.cloneNode(true);
+
+        var vb = svg.viewBox.baseVal;
+        // Scale width/height so the browser rasterizes the vectors at target
+        // resolution directly. viewBox stays unchanged so coordinates don't
+        // shift. This is the key to sharp rasters — do NOT scale later via
+        // canvas upscaling.
+        clone.setAttribute('width', vb.width * scale);
+        clone.setAttribute('height', vb.height * scale);
+        clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+
+        // Only the SVG-relevant rules: semantic classes, markers, and the
+        // theme variable blocks. Toolbar/cards/print CSS can never apply
+        // inside a standalone SVG and would only bloat the export.
+        var hostStyle = (function () {
+          var out = [];
+          Array.prototype.forEach.call(document.styleSheets, function (sheet) {
+            var rules;
+            try { rules = sheet.cssRules; } catch (_) { return; } // cross-origin
+            if (!rules) return;
+            Array.prototype.forEach.call(rules, function (rule) {
+              if (rule.type !== 1) return; // plain style rules only
+              var sel = rule.selectorText || '';
+              if (/(^|,)\s*(svg|:root|\[data-theme|\.c-|\.t-|\.a-|\.m-)/.test(sel)) {
+                out.push(rule.cssText);
+              }
+            });
+          });
+          return out.join('\n');
+        })();
+
+        // Derive the variable list from the stylesheet so newly added theme
+        // variables can never be missed by the export pipeline again
+        // (--lane-fill/--lane-stroke once were).
+        var varNames = (function () {
+          var seen = {};
+          var names = [];
+          (hostStyle.match(/--[a-zA-Z0-9-]+(?=\s*:)/g) || []).forEach(function (n) {
+            if (!seen[n]) { seen[n] = true; names.push(n); }
+          });
+          return names;
+        })();
+
+        // Resolve the full variable set for a given data-theme via an
+        // off-DOM probe, independent of what the viewer is currently set to.
+        function resolveVars(themeAttr) {
+          var probe = document.createElement('div');
+          probe.setAttribute('data-theme', themeAttr);
+          probe.style.cssText = 'position:absolute;width:0;height:0;visibility:hidden;';
+          document.body.appendChild(probe);
+          try {
+            var c = getComputedStyle(probe);
+            return varNames.map(function (n) {
+              return n + ': ' + c.getPropertyValue(n).trim() + ';';
+            }).join(' ');
+          } finally {
+            document.body.removeChild(probe);
+          }
+        }
+
+        // Prepend a local()-only @font-face block for each weight so that the
+        // sandboxed image-rendering context used during PNG/JPEG/WebP export
+        // can find JetBrains Mono if the user has it installed locally, and
+        // falls through cleanly to the monospace stack otherwise. The usual
+        // Google-Fonts <link> in the host document is unreachable from the
+        // serialized SVG, so url()-sourced faces would just hang.
+        var fontFallback = [400, 500, 600, 700].map(function (w) {
+          return "@font-face { font-family: 'JetBrains Mono'; font-weight: " + w +
+                 "; src: local('JetBrains Mono'), local('JetBrainsMono-Regular'); }";
+        }).join('\n');
+
+        var style = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+        var bgRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        bgRect.setAttribute('width', '100%');
+        bgRect.setAttribute('height', '100%');
+
+        if (autoTheme) {
+          // Dual-theme SVG. Dark is the default (so hosts without
+          // prefers-color-scheme still render), light swaps in via media
+          // query, and svg[data-theme="..."] still lets downstream
+          // consumers force a specific theme.
+          var darkVars = resolveVars('dark');
+          var lightVars = resolveVars('light');
+
+          style.textContent =
+            fontFallback + "\n" +
+            "svg { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', 'Noto Sans Mono CJK SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', monospace; }\n" +
+            hostStyle + "\n" +
+            ":root, svg { " + darkVars + " }\n" +
+            "@media (prefers-color-scheme: light) { :root, svg { " + lightVars + " } }\n" +
+            "svg[data-theme=\"light\"] { " + lightVars + " }\n" +
+            "svg[data-theme=\"dark\"] { " + darkVars + " }\n" +
+            "rect.c-bg-rect { fill: var(--bg); }\n";
+
+          // Don't lock the serialized SVG to the viewer's current theme.
+          clone.removeAttribute('data-theme');
+          // Background follows the CSS variable, not a fixed color, so it
+          // swaps with the media query.
+          bgRect.setAttribute('class', 'c-bg-rect');
+        } else {
+          // Raster path: lock to the viewer's current theme.
+          var theme = document.documentElement.getAttribute('data-theme') || 'dark';
+          var themeHost = document.querySelector('[data-theme="' + theme + '"]') || document.documentElement;
+          var computed = getComputedStyle(themeHost);
+          var vars = varNames.map(function (n) {
+            return n + ': ' + computed.getPropertyValue(n).trim() + ';';
+          }).join(' ');
+
+          // IMPORTANT: inject the resolved variables AFTER hostStyle,
+          // otherwise hostStyle's ":root, [data-theme=\"dark\"] { ... }" rule
+          // overrides our chosen theme via later-in-cascade equal-specificity.
+          // Keep this order.
+          style.textContent =
+            fontFallback + "\n" +
+            "svg { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', 'Noto Sans Mono CJK SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', monospace; }\n" +
+            hostStyle + "\n" +
+            ":root, svg { " + vars + " }\n";
+
+          bgRect.setAttribute('fill', computed.getPropertyValue('--bg').trim() || '#ffffff');
+        }
+
+        clone.insertBefore(style, clone.firstChild);
+        clone.insertBefore(bgRect, style.nextSibling);
+
+        return {
+          svgString: new XMLSerializer().serializeToString(clone),
+          width: vb.width * scale,
+          height: vb.height * scale
+        };
+      }
+
+      function download(blob, filename) {
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+      }
+
+      // Conservative upper bound on total canvas pixels. Older Safari on iOS
+      // silently produces a blank canvas above ~16 Mpx; Chrome / Firefox /
+      // desktop Safari are far higher but start failing on memory-constrained
+      // devices. We pick the largest integer scale in {4,3,2,1} whose target
+      // pixel count fits under this cap.
+      var MAX_CANVAS_PIXELS = 16 * 1024 * 1024;
+
+      function pickSafeScale(vbW, vbH) {
+        for (var s = RASTER_SCALE; s >= 1; s--) {
+          if (vbW * s * vbH * s <= MAX_CANVAS_PIXELS) return s;
+        }
+        return 1;
+      }
+
+      function rasterize(format) {
+        // Serialize at a safe scale (RASTER_SCALE=4 by default, reduced if the
+        // resulting canvas would exceed MAX_CANVAS_PIXELS). The SVG itself is
+        // rasterized at target resolution natively; drawImage draws at natural
+        // size — no upsampling blur.
+        var svg = document.querySelector('.diagram-container svg');
+        var vb = svg.viewBox.baseVal;
+        var scale = pickSafeScale(vb.width, vb.height);
+        var data = serializeSvg(scale);
+        var svgBlob = new Blob([data.svgString], { type: 'image/svg+xml;charset=utf-8' });
+        var svgUrl = URL.createObjectURL(svgBlob);
+
+        return new Promise(function (resolve, reject) {
+          var img = new Image();
+          img.onload = function () {
+            var canvas = document.createElement('canvas');
+            canvas.width = data.width;
+            canvas.height = data.height;
+            var ctx = canvas.getContext('2d');
+            if (format === 'jpeg') {
+              ctx.fillStyle = currentBg();
+              ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+            // Draw at natural size — SVG was already rasterized at target res.
+            ctx.drawImage(img, 0, 0);
+            URL.revokeObjectURL(svgUrl);
+            var mime = format === 'jpeg' ? 'image/jpeg' :
+                       format === 'webp' ? 'image/webp' : 'image/png';
+            var quality = format === 'png' ? undefined : 0.95;
+            canvas.toBlob(function (blob) {
+              if (!blob) reject(new Error('toBlob returned null for ' + format));
+              else resolve(blob);
+            }, mime, quality);
+          };
+          img.onerror = function (e) {
+            URL.revokeObjectURL(svgUrl);
+            reject(e);
+          };
+          img.src = svgUrl;
+        });
+      }
+
+      var menu = document.getElementById('export-menu');
+      var btn = document.getElementById('btn-export');
+      var items = function () {
+        return Array.prototype.slice.call(menu.querySelectorAll('button[role="menuitem"]'));
+      };
+
+      // ---- Clipboard support ----------------------------------------------
+      function canCopyImage() {
+        return typeof ClipboardItem !== 'undefined' &&
+               navigator.clipboard &&
+               typeof navigator.clipboard.write === 'function';
+      }
+
+      // ---- Raster format detection ----------------------------------------
+      // canvas.toBlob('image/webp') silently returns a PNG on browsers without
+      // WebP encoding (older Safari), so detect explicitly.
+      function supports(format) {
+        if (format === 'svg' || format === 'png') return true;
+        var mime = format === 'jpeg' ? 'image/jpeg' : 'image/webp';
+        try {
+          var c = document.createElement('canvas');
+          c.width = c.height = 2;
+          return c.toDataURL(mime).indexOf('data:' + mime) === 0;
+        } catch (_) { return false; }
+      }
+
+      // Gray out unsupported items.
+      items().forEach(function (it) {
+        if (it.dataset.format && !supports(it.dataset.format)) {
+          it.disabled = true;
+          it.title = 'Not supported by this browser';
+          it.style.opacity = '0.5';
+        }
+        if (it.dataset.action === 'copy' && !canCopyImage()) {
+          it.disabled = true;
+          it.title = 'Clipboard image write not supported by this browser';
+          it.style.opacity = '0.5';
+        }
+      });
+
+      // ---- Toast ----------------------------------------------------------
+      // A live region only announces CHANGES to an existing node, so the toast
+      // element is created once up front and updated in place.
+      var toastEl = document.createElement('div');
+      toastEl.className = 'archify-toast';
+      toastEl.setAttribute('role', 'status');
+      document.body.appendChild(toastEl);
+      var toastTimer = null;
+
+      function toast(msg) {
+        toastEl.textContent = '';
+        requestAnimationFrame(function () {
+          toastEl.textContent = msg;
+          toastEl.classList.add('show');
+        });
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 1500);
+      }
+
+      function open(focusLast) {
+        menu.classList.add('open');
+        btn.setAttribute('aria-expanded', 'true');
+        var available = items().filter(function (i) { return !i.disabled; });
+        var target = focusLast ? available[available.length - 1] : available[0];
+        if (target) target.focus();
+      }
+      function close(focusTrigger) {
+        menu.classList.remove('open');
+        btn.setAttribute('aria-expanded', 'false');
+        if (focusTrigger) btn.focus();
+      }
+      function isOpen() { return menu.classList.contains('open'); }
+
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        if (isOpen()) close(false);
+        else open();
+      });
+      // APG menu-button pattern: ArrowDown/ArrowUp on the trigger opens the menu.
+      btn.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+          e.preventDefault();
+          if (!isOpen()) open(e.key === 'ArrowUp');
+        }
+      });
+      document.addEventListener('click', function (e) {
+        if (!menu.contains(e.target) && e.target !== btn) close(false);
+      });
+
+      // Keyboard navigation inside the menu.
+      //   Menu items: Up/Down, Home/End.
+      //   Esc closes + returns focus to trigger; Tab closes.
+      menu.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') { e.preventDefault(); close(true); return; }
+        if (e.key === 'Tab')    { close(false); return; }
+
+        var available = items().filter(function (i) { return !i.disabled; });
+        var current = available.indexOf(document.activeElement);
+        switch (e.key) {
+          case 'ArrowDown':
+            e.preventDefault();
+            if (available.length) available[(current + 1 + available.length) % available.length].focus();
+            break;
+          case 'ArrowUp':
+            e.preventDefault();
+            if (available.length) available[(current - 1 + available.length) % available.length].focus();
+            break;
+          case 'Home':
+            e.preventDefault();
+            if (available[0]) available[0].focus();
+            break;
+          case 'End':
+            e.preventDefault();
+            if (available.length) available[available.length - 1].focus();
+            break;
+        }
+      });
+
+      function runExport(format) {
+        var base = diagramFilename();
+        close(true);
+        return (format === 'svg'
+          ? Promise.resolve(serializeSvg(1, { autoTheme: true })).then(function (d) {
+              download(new Blob([d.svgString], { type: 'image/svg+xml;charset=utf-8' }), base + '.svg');
+            })
+          : rasterize(format).then(function (blob) {
+              download(blob, base + '.' + format);
+            })
+        ).catch(function (err) {
+          console.error(err);
+          alert('Export failed: ' + (err && err.message ? err.message : format));
+        });
+      }
+
+      function runCopy() {
+        close(true);
+        if (!canCopyImage()) {
+          alert('Clipboard image write not supported in this browser.');
+          return;
+        }
+        // WebKit requires ClipboardItem to be constructed synchronously inside
+        // the user gesture — pass the pending Promise<Blob> as the item value.
+        // Browsers that reject promise values throw synchronously; fall back
+        // to awaiting the blob first (works in Chromium/Firefox).
+        var blobPromise = rasterize('png');
+        var writePromise;
+        try {
+          writePromise = navigator.clipboard.write([new ClipboardItem({ 'image/png': blobPromise })]);
+        } catch (_) {
+          writePromise = blobPromise.then(function (blob) {
+            return navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+          });
+        }
+        return writePromise.then(function () {
+          toast('Copied PNG to clipboard');
+        }).catch(function (err) {
+          console.error(err);
+          alert('Copy failed: ' + (err && err.message ? err.message : 'unknown'));
+        });
+      }
+
+      menu.addEventListener('click', function (e) {
+        var copyBtn = e.target.closest('button[data-action="copy"]');
+        if (copyBtn && !copyBtn.disabled) { runCopy(); return; }
+
+        var formatBtn = e.target.closest('button[data-format]');
+        if (formatBtn && !formatBtn.disabled) { runExport(formatBtn.dataset.format); }
+      });
+
+      Archify.exportMenu = { open: open, close: close, isOpen: isOpen, run: runExport };
+
+      // Auto-open on page load for demo/screenshot purposes: ?openExport=1
+      // Wait for fonts (so the menu doesn't flash before typography lands)
+      // and paint before opening. Fallback timeout for browsers without the
+      // Font Loading API.
+      try {
+        if (new URLSearchParams(window.location.search).get('openExport') === '1') {
+          var openWhenReady = function () {
+            requestAnimationFrame(function () { requestAnimationFrame(open); });
+          };
+          if (document.fonts && document.fonts.ready) {
+            document.fonts.ready.then(openWhenReady);
+          } else {
+            setTimeout(openWhenReady, 200);
+          }
+        }
+      } catch (_) {}
+    })();
+
+    /* ============================================================
+       Global keyboard shortcuts
+         T -> toggle theme
+         E -> open export menu
+       Ignored when focus is inside an input/textarea/contenteditable.
+       ============================================================ */
+    document.addEventListener('keydown', function (e) {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      var t = e.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+      if (e.key === 't' || e.key === 'T') {
+        e.preventDefault();
+        Archify.theme.toggle();
+      } else if (e.key === 'e' || e.key === 'E') {
+        e.preventDefault();
+        if (!Archify.exportMenu.isOpen()) Archify.exportMenu.open();
+      }
+    });
+  </script>
 </body>
 </html>

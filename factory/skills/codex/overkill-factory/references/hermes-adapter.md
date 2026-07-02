@@ -35,7 +35,7 @@ venv/bin/python -m pytest -q -o addopts='' \
 ```
 
 Expected result: the adapter blocks weak transitions and creates worker tasks;
-use `docs/architecture/hermes-integration.md` and the CI transition-hook smoke
+use `docs/en/technical-reference.md` and the CI transition-hook smoke
 as the current reference.
 
 When operating Overkill/Hermes, also use the `hermes-kanban` skill.

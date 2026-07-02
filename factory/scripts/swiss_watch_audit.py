@@ -22,8 +22,8 @@ if str(SCRIPT_DIR) not in sys.path:
 
 import factoryctl  # noqa: E402
 
-PROGRAM_REF = "docs/maintenance/swiss-watch-reliability-program.md"
-GEAR_MATRIX_REF = "docs/maintenance/swiss-watch-gear-matrix.md"
+PROGRAM_REF = "docs/en/technical-reference.md"
+GEAR_MATRIX_REF = "docs/en/technical-reference.md"
 REQUIRED_BLOCK_KINDS = {"dependency", "needs_input", "capability", "transient"}
 MANAGER_WORKERS = {"overkill-factory-gerente"}
 DIMENSIONS = [
@@ -106,7 +106,7 @@ def build_audit(
             check(
                 "hermes_native_next_action",
                 "advance_phase" in _items(phase.get("allowed_commands")),
-                ["docs/en/technical-model.md", "templates/factory-workflow-compiled-plan.json"],
+                ["docs/en/technical-reference.md", "templates/factory-workflow-compiled-plan.json"],
                 "Route the phase through Factory V2 commands/events instead of agent prose.",
             ),
             check(
@@ -145,7 +145,7 @@ def build_audit(
         check(
             "hermes_native_authority",
             policy_authority == "hermes_kanban",
-            ["templates/hermes-typed-block-policy.json", "docs/en/technical-model.md"],
+            ["templates/hermes-typed-block-policy.json", "docs/en/technical-reference.md"],
             "Typed block policy must keep runtime_authority=hermes_kanban.",
         ),
         check(

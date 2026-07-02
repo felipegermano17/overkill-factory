@@ -87,34 +87,19 @@ def canonical_worker_count(root: Path) -> int:
     return len(workers) if isinstance(workers, list) else 0
 
 
-def stage_map_count(root: Path) -> int:
-    """Return the canonical public-map stage count.
-
-    The product-manual rewrite moved the old scattered Markdown docs out of
-    `docs/` and into `factory/legacy-docs/`. The current visual map still
-    represents the pre-rewrite stage-map artifact, so this validator reads the
-    preserved legacy source when the old public path no longer exists. The
-    canonical product lifecycle for new docs lives in `docs/en/lifecycle.md` and
-    is validated separately through the workflow compiler.
-    """
-    candidates = [
-        REPO_ROOT / "docs" / "agents" / "factory-stage-agent-map.md",
-        ROOT / "legacy-docs" / "public-docs-before-product-manual" / "agents" / "factory-stage-agent-map.md",
-    ]
-    for candidate in candidates:
-        if candidate.exists():
-            text = candidate.read_text(encoding="utf-8")
-            return len(re.findall(r"^\| \d+\.", text, flags=re.MULTILINE))
-    raise FileNotFoundError("factory stage map source is missing from docs/ and legacy-docs/")
+def workflow_phase_count(root: Path) -> int:
+    catalog = load_json(repo_path(root, "docs/factory-workflow.catalog.json"))
+    phases = catalog.get("phases", [])
+    return len(phases) if isinstance(phases, list) else 0
 
 
 def html_worker_count(text: str) -> int | None:
-    match = re.search(r"expectedCount:\\s*(\\d+)", text)
+    match = re.search(r'"?expectedCount"?\s*:\s*(\d+)', text)
     return int(match.group(1)) if match else None
 
 
 def html_stage_count(text: str) -> int | None:
-    return len(re.findall(r"\\{ id: \"[^\"]+\", n:", text)) or None
+    return len(set(re.findall(r"<strong>F\d+</strong>", text))) or None
 
 
 def html_stage_nodes(text: str) -> dict[str, dict[str, Any]]:
@@ -197,14 +182,8 @@ def validate_map_fidelity(surface: dict[str, Any], text: str, *, root: Path) -> 
 
     findings: list[str] = []
     workflow_catalog_ref = str(contract.get("workflow_catalog_ref") or "")
-    stage_agent_map_ref = str(contract.get("stage_agent_map_ref") or "")
-
-    for ref_name, ref in (
-        ("workflow_catalog_ref", workflow_catalog_ref),
-        ("stage_agent_map_ref", stage_agent_map_ref),
-    ):
-        if ref and not source_ref_exists(root, ref):
-            findings.append(f"{rel}: fidelity {ref_name} does not exist: {ref}")
+    if workflow_catalog_ref and not source_ref_exists(root, workflow_catalog_ref):
+        findings.append(f"{rel}: fidelity workflow_catalog_ref does not exist: {workflow_catalog_ref}")
 
     if workflow_catalog_ref and source_ref_exists(root, workflow_catalog_ref):
         try:
@@ -300,16 +279,16 @@ def validate_surface(
             findings.append(f"{rel}: visual worker count {visual_count} does not match registry count {actual}")
 
     if "stage_count" in checks:
-        canonical = stage_map_count(root)
+        canonical = workflow_phase_count(root)
         manifest_canonical = int(surface.get("canonical_stage_count") or canonical)
         if manifest_canonical != canonical:
-            findings.append(f"{rel}: manifest canonical stage count {manifest_canonical} does not match stage map {canonical}")
+            findings.append(f"{rel}: manifest canonical stage count {manifest_canonical} does not match workflow phase count {canonical}")
         visual = html_stage_count(text)
         expected_stage_count = surface.get("expected_stage_count")
         if visual is not None and expected_stage_count is not None and int(expected_stage_count) != visual:
             findings.append(f"{rel}: visual stage count {visual} does not match manifest expected_stage_count {expected_stage_count}")
         if visual is not None and visual != canonical and not surface.get("conceptual_exceptions"):
-            findings.append(f"{rel}: visual stage count differs from canonical stage map without conceptual_exceptions")
+            findings.append(f"{rel}: visual stage count differs from workflow phase count without conceptual_exceptions")
 
     if "map_fidelity" in checks:
         findings.extend(validate_map_fidelity(surface, text, root=root))

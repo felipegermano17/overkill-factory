@@ -128,7 +128,7 @@
       "evidence_refs": [
         "templates/human-gate-decision-package.json",
         "scripts/render_human_gate_pdf.py",
-        "docs/en/trust-and-evidence.md"
+        "docs/en/factory-manual.md"
       ],
       "command_refs": [
         "command:factoryctl human-gate-package"
@@ -258,10 +258,10 @@
         "README.md",
         "README.pt-BR.md",
         "docs/assets/public-map/overkill-factory-map-v1.0.3.html",
-        "docs/en/reference.md"
+        "docs/en/technical-reference.md"
       ],
       "command_refs": [
-        "command:python scripts/generate_factory_reference_docs.py --check"
+        "command:python scripts/generate_factory_reference_docs.py --out ../.tmp/generated/factory-kernel-reference.md"
       ],
       "operator_safe": true,
       "overclaim_guard": "local deterministic proof is sufficient for this criterion"

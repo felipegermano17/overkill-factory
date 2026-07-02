@@ -51,7 +51,13 @@ def exists(rel_path: str) -> bool:
 
 
 def json_field(path: str, *keys: str) -> Any:
-    data: Any = load_json(ROOT / path)
+    for base in (ROOT, REPO_ROOT):
+        candidate = base / path
+        if candidate.exists():
+            data: Any = load_json(candidate)
+            break
+    else:
+        return None
     for key in keys:
         if not isinstance(data, dict):
             return None
@@ -414,8 +420,8 @@ def public_worker_profile_layer_ready(runtime_proofs: list[dict[str, Any]] | Non
     return (
         exists("agents/worker-profiles.public.json")
         and exists("agents/hermes-profile-bindings.public.json")
-        and exists("docs/en/technical-model.md")
-        and exists("docs/en/trust-and-evidence.md")
+        and exists("docs/en/technical-reference.md")
+        and exists("docs/en/factory-manual.md")
     )
 
 
@@ -468,8 +474,8 @@ def build_requirements(
                 [
                     "agents/worker-profiles.public.json",
                     "agents/hermes-profile-bindings.public.json",
-                    "docs/en/technical-model.md",
-                    "docs/en/trust-and-evidence.md",
+                    "docs/en/technical-reference.md",
+                    "docs/en/factory-manual.md",
                     *(runtime_proof_refs or ["external:redacted-hermes-runtime-proof"]),
                 ],
                 "Workers must be executable Hermes profiles with identity, authority, tool policy, evidence, handoff and review contracts.",
@@ -478,8 +484,8 @@ def build_requirements(
     elif (
         exists("agents/worker-profiles.public.json")
         and exists("agents/hermes-profile-bindings.public.json")
-        and exists("docs/en/technical-model.md")
-        and exists("docs/en/trust-and-evidence.md")
+        and exists("docs/en/technical-reference.md")
+        and exists("docs/en/factory-manual.md")
         and exists(".tmp/factory-runs/agents/worker-profile-validation.md")
     ):
         requirements.append(
@@ -489,8 +495,8 @@ def build_requirements(
                 [
                     "agents/worker-profiles.public.json",
                     "agents/hermes-profile-bindings.public.json",
-                    "docs/en/technical-model.md",
-                    "docs/en/trust-and-evidence.md",
+                    "docs/en/technical-reference.md",
+                    "docs/en/factory-manual.md",
                     ".tmp/factory-runs/agents/worker-profile-validation.md",
                 ],
                 "Workers must be executable Hermes profiles with identity, authority, tool policy, evidence, handoff and review contracts.",

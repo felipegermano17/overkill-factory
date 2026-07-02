@@ -28,8 +28,8 @@
         "schemas/v2-study-traceability.schema.json"
       ],
       "source_of_truth_refs": [
-        "docs/en/technical-model.md",
-        "docs/en/trust-and-evidence.md",
+        "docs/en/technical-reference.md",
+        "docs/en/factory-manual.md",
         "docs/factory-workflow.catalog.json"
       ],
       "enforcement_command_refs": [
@@ -64,8 +64,8 @@
         "human gate is a sequential product phase"
       ],
       "mapped_docs": [
-        "docs/en/technical-model.md",
-        "docs/en/trust-and-evidence.md",
+        "docs/en/technical-reference.md",
+        "docs/en/factory-manual.md",
         "docs/factory-workflow.catalog.json"
       ],
       "completion_audit_blockers_owned": [],
@@ -100,8 +100,7 @@
         "schemas/product-sot.schema.json"
       ],
       "source_of_truth_refs": [
-        "docs/en/manual.md",
-        "docs/en/operating-model.md"
+        "docs/en/factory-manual.md"
       ],
       "enforcement_command_refs": [
         "factoryctl start-conversation",
@@ -134,8 +133,7 @@
         "Product SOT approved by shallow Telegram message"
       ],
       "mapped_docs": [
-        "docs/en/manual.md",
-        "docs/en/operating-model.md"
+        "docs/en/factory-manual.md"
       ],
       "completion_audit_blockers_owned": [],
       "runtime_boundary": {
@@ -167,7 +165,7 @@
         "templates/method-contract.json"
       ],
       "source_of_truth_refs": [
-        "docs/en/manual.md",
+        "docs/en/factory-manual.md",
         "templates/factory-route-registry.json"
       ],
       "enforcement_command_refs": [
@@ -193,7 +191,7 @@
         "method router covered a demand only by prose"
       ],
       "mapped_docs": [
-        "docs/en/manual.md",
+        "docs/en/factory-manual.md",
         "templates/factory-route-registry.json"
       ],
       "completion_audit_blockers_owned": [],
@@ -224,8 +222,8 @@
         "schemas/product-creation-plan.schema.json"
       ],
       "source_of_truth_refs": [
-        "docs/en/operating-model.md",
-        "docs/en/technical-model.md"
+        "docs/en/factory-manual.md",
+        "docs/en/technical-reference.md"
       ],
       "enforcement_command_refs": [
         "factoryctl product-creation-plan",
@@ -250,8 +248,8 @@
         "decomposition starts with no architecture boundary"
       ],
       "mapped_docs": [
-        "docs/en/operating-model.md",
-        "docs/en/technical-model.md"
+        "docs/en/factory-manual.md",
+        "docs/en/technical-reference.md"
       ],
       "completion_audit_blockers_owned": [],
       "runtime_boundary": {
@@ -284,8 +282,7 @@
         "schemas/product-delivery-quality-profile.schema.json"
       ],
       "source_of_truth_refs": [
-        "docs/en/trust-and-evidence.md",
-        "docs/en/manual.md"
+        "docs/en/factory-manual.md"
       ],
       "enforcement_command_refs": [
         "factoryctl product-implementation-readiness",
@@ -314,8 +311,7 @@
         "quality accepted without surface-specific evidence"
       ],
       "mapped_docs": [
-        "docs/en/trust-and-evidence.md",
-        "docs/en/manual.md"
+        "docs/en/factory-manual.md"
       ],
       "completion_audit_blockers_owned": [],
       "runtime_boundary": {
@@ -345,7 +341,7 @@
         "schemas/worker-packet.schema.json"
       ],
       "source_of_truth_refs": [
-        "docs/en/operating-model.md"
+        "docs/en/factory-manual.md"
       ],
       "enforcement_command_refs": [
         "factoryctl ready-work-unit-packets",
@@ -373,7 +369,7 @@
         "ready column means execution proof"
       ],
       "mapped_docs": [
-        "docs/en/operating-model.md"
+        "docs/en/factory-manual.md"
       ],
       "completion_audit_blockers_owned": [],
       "runtime_boundary": {
@@ -404,7 +400,7 @@
         "templates/user-facing-autonomy-contract.json"
       ],
       "source_of_truth_refs": [
-        "docs/en/operating-model.md"
+        "docs/en/factory-manual.md"
       ],
       "enforcement_command_refs": [
         "factoryctl help-next",
@@ -433,7 +429,7 @@
         "bridge or manager can approve human gate"
       ],
       "mapped_docs": [
-        "docs/en/operating-model.md"
+        "docs/en/factory-manual.md"
       ],
       "completion_audit_blockers_owned": [
         "production_release_human_gate"
@@ -466,7 +462,7 @@
         "schemas/hermes-worker-ledger.schema.json"
       ],
       "source_of_truth_refs": [
-        "docs/en/technical-model.md",
+        "docs/en/technical-reference.md",
         "adapters/hermes/README.md"
       ],
       "enforcement_command_refs": [
@@ -495,7 +491,7 @@
         "local quickstart proves production runtime"
       ],
       "mapped_docs": [
-        "docs/en/technical-model.md",
+        "docs/en/technical-reference.md",
         "adapters/hermes/README.md"
       ],
       "completion_audit_blockers_owned": [
@@ -530,8 +526,8 @@
         "schemas/factory-completion-audit.schema.json"
       ],
       "source_of_truth_refs": [
-        "docs/en/usage.md",
-        "docs/en/manual.md"
+        "docs/en/technical-reference.md",
+        "docs/en/factory-manual.md"
       ],
       "enforcement_command_refs": [
         "factoryctl evidence-record",
@@ -560,8 +556,8 @@
         "contract pass proves production"
       ],
       "mapped_docs": [
-        "docs/en/usage.md",
-        "docs/en/manual.md"
+        "docs/en/technical-reference.md",
+        "docs/en/factory-manual.md"
       ],
       "completion_audit_blockers_owned": [
         "production_product_face",
@@ -599,7 +595,7 @@
         "schemas/onchain-work-package.schema.json"
       ],
       "source_of_truth_refs": [
-        "docs/en/technical-model.md",
+        "docs/en/technical-reference.md",
         "templates/factory-route-registry.json"
       ],
       "enforcement_command_refs": [
@@ -630,7 +626,7 @@
         "registered pack equals activated pack"
       ],
       "mapped_docs": [
-        "docs/en/technical-model.md",
+        "docs/en/technical-reference.md",
         "templates/factory-route-registry.json"
       ],
       "completion_audit_blockers_owned": [
@@ -667,8 +663,8 @@
         "schemas/worker-authority-contract.schema.json"
       ],
       "source_of_truth_refs": [
-        "docs/en/technical-model.md",
-        "docs/en/trust-and-evidence.md"
+        "docs/en/technical-reference.md",
+        "docs/en/factory-manual.md"
       ],
       "enforcement_command_refs": [
         "factoryctl validate-card",
@@ -697,8 +693,8 @@
         "worker profile prose replaces reducer"
       ],
       "mapped_docs": [
-        "docs/en/technical-model.md",
-        "docs/en/trust-and-evidence.md"
+        "docs/en/technical-reference.md",
+        "docs/en/factory-manual.md"
       ],
       "completion_audit_blockers_owned": [],
       "runtime_boundary": {
@@ -730,7 +726,7 @@
         "schemas/supply-chain-proof.schema.json"
       ],
       "source_of_truth_refs": [
-        "docs/en/trust-and-evidence.md"
+        "docs/en/factory-manual.md"
       ],
       "enforcement_command_refs": [
         "factoryctl gate-report",
@@ -759,7 +755,7 @@
         "security review replaces security architecture"
       ],
       "mapped_docs": [
-        "docs/en/trust-and-evidence.md"
+        "docs/en/factory-manual.md"
       ],
       "completion_audit_blockers_owned": [
         "factory_security_scan"
@@ -791,8 +787,8 @@
         "schemas/worker-result.schema.json"
       ],
       "source_of_truth_refs": [
-        "docs/en/trust-and-evidence.md",
-        "docs/en/usage.md"
+        "docs/en/factory-manual.md",
+        "docs/en/technical-reference.md"
       ],
       "enforcement_command_refs": [
         "factoryctl gate-report",
@@ -821,8 +817,8 @@
         "mechanical screenshot pass equals product quality"
       ],
       "mapped_docs": [
-        "docs/en/trust-and-evidence.md",
-        "docs/en/usage.md"
+        "docs/en/factory-manual.md",
+        "docs/en/technical-reference.md"
       ],
       "completion_audit_blockers_owned": [
         "production_product_face",
@@ -856,7 +852,7 @@
         "schemas/factory-status-snapshot.schema.json"
       ],
       "source_of_truth_refs": [
-        "docs/en/operating-model.md"
+        "docs/en/factory-manual.md"
       ],
       "enforcement_command_refs": [
         "factoryctl operator-interface",
@@ -889,7 +885,7 @@
         "PDF in wrong language is acceptable"
       ],
       "mapped_docs": [
-        "docs/en/operating-model.md"
+        "docs/en/factory-manual.md"
       ],
       "completion_audit_blockers_owned": [],
       "runtime_boundary": {
@@ -921,8 +917,8 @@
         "schemas/factory-v2-readiness-claim.schema.json"
       ],
       "source_of_truth_refs": [
-        "docs/en/trust-and-evidence.md",
-        "docs/en/usage.md"
+        "docs/en/factory-manual.md",
+        "docs/en/technical-reference.md"
       ],
       "enforcement_command_refs": [
         "factoryctl gate-report",
@@ -952,8 +948,8 @@
         "release equals tests passed"
       ],
       "mapped_docs": [
-        "docs/en/trust-and-evidence.md",
-        "docs/en/usage.md"
+        "docs/en/factory-manual.md",
+        "docs/en/technical-reference.md"
       ],
       "completion_audit_blockers_owned": [
         "production_release_human_gate",
@@ -986,7 +982,7 @@
         "schemas/autonomy-readiness-packet.schema.json"
       ],
       "source_of_truth_refs": [
-        "docs/en/operating-model.md"
+        "docs/en/factory-manual.md"
       ],
       "enforcement_command_refs": [
         "factoryctl status-snapshot",
@@ -1014,7 +1010,7 @@
         "manual 100 percent progress proves completion"
       ],
       "mapped_docs": [
-        "docs/en/operating-model.md"
+        "docs/en/factory-manual.md"
       ],
       "completion_audit_blockers_owned": [],
       "runtime_boundary": {
@@ -1044,7 +1040,7 @@
         "schemas/v2-study-traceability.schema.json"
       ],
       "source_of_truth_refs": [
-        "docs/en/trust-and-evidence.md"
+        "docs/en/factory-manual.md"
       ],
       "enforcement_command_refs": [
         "python scripts/factory_self_improvement.py",
@@ -1071,7 +1067,7 @@
         "learning proposal is active skill"
       ],
       "mapped_docs": [
-        "docs/en/trust-and-evidence.md"
+        "docs/en/factory-manual.md"
       ],
       "completion_audit_blockers_owned": [],
       "runtime_boundary": {

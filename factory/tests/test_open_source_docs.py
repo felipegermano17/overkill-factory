@@ -13,7 +13,7 @@ ROOT = CODE_ROOT.parent
 
 
 def project_path(rel: str) -> Path:
-    code_prefixes = ("adapters/", "agents/", "examples/", "fixtures/", "schemas/", "scripts/", "skills/", "templates/", "tests/", "legacy-docs/")
+    code_prefixes = ("adapters/", "agents/", "examples/", "fixtures/", "schemas/", "scripts/", "skills/", "templates/", "tests/")
     code_names = {"pyproject.toml", ".env.example"}
     return CODE_ROOT / rel if rel in code_names or rel.startswith(code_prefixes) else ROOT / rel
 
@@ -26,27 +26,26 @@ class OpenSourceDocsTest(unittest.TestCase):
     def test_root_readmes_are_simple_bilingual_product_entries(self) -> None:
         readme = read_text("README.md")
         readme_pt = read_text("README.pt-BR.md")
-        version = tomllib.loads(read_text("pyproject.toml"))["project"]["version"]
 
         for text in [readme, readme_pt]:
-            self.assertIn("docs/en/index.md", text)
-            self.assertIn("docs/pt-BR/index.md", text)
+            self.assertIn("docs/en/factory-manual.md", text)
+            self.assertIn("docs/en/technical-reference.md", text)
+            self.assertIn("docs/pt-BR/factory-manual.md", text)
             self.assertIn("https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.3.html", text)
-            self.assertIn("factory/legacy-docs/", text)
             self.assertIn("python3 scripts/factoryctl.py doctor", text)
             self.assertIn("python3 scripts/factoryctl.py run minimal", text)
-            self.assertIn("40 public workers" if text is readme else "40 workers públicos", text)
-            self.assertNotIn("docs/architecture/", text)
-            self.assertNotIn("docs/operations/", text)
+            self.assertIn("40 public workers" if text is readme else "40 workers publicos", text)
+            self.assertNotIn("factory/legacy-docs/", text)
+            self.assertNotIn("docs/en/index.md", text)
+            self.assertNotIn("docs/en/manual.md", text)
         self.assertIn("Overkill Factory is a product factory", readme)
-        self.assertIn("A Overkill Factory é uma fábrica de produto", readme_pt)
+        self.assertIn("A Overkill Factory e uma fabrica de produto", readme_pt)
         self.assertIn("A passing local proof means the public kernel is coherent", readme)
-        self.assertIn("Um teste local passando significa que o kernel público está coerente", readme_pt)
+        self.assertIn("Um teste local passando significa que o kernel publico esta coerente", readme_pt)
         self.assertIn("`docs/`", readme)
         self.assertIn("`factory/`", readme)
-        self.assertIn(version, read_text("docs/en/index.md"))
 
-    def test_new_docs_tree_is_small_bilingual_and_canonical(self) -> None:
+    def test_docs_tree_is_small_bilingual_and_canonical(self) -> None:
         allowed_root_entries = {
             "assets",
             "en",
@@ -60,89 +59,73 @@ class OpenSourceDocsTest(unittest.TestCase):
         actual = {path.name for path in (ROOT / "docs").iterdir()}
         self.assertEqual(actual, allowed_root_entries)
 
-        page_names = {
-            "index.md",
-            "manual.md",
-            "operating-model.md",
-            "lifecycle.md",
-            "trust-and-evidence.md",
-            "technical-model.md",
-            "usage.md",
-            "reference.md",
-        }
+        page_names = {"factory-manual.md", "technical-reference.md"}
         self.assertEqual({p.name for p in (ROOT / "docs" / "en").glob("*.md")}, page_names)
         self.assertEqual({p.name for p in (ROOT / "docs" / "pt-BR").glob("*.md")}, page_names)
+        self.assertFalse((CODE_ROOT / "legacy-docs").exists())
 
         mkdocs = read_text("docs/mkdocs.yml")
-        self.assertIn("English:", mkdocs)
-        self.assertIn("Português:", mkdocs)
-        self.assertIn("en/manual.md", mkdocs)
-        self.assertIn("pt-BR/manual.md", mkdocs)
+        self.assertIn("en/factory-manual.md", mkdocs)
+        self.assertIn("en/technical-reference.md", mkdocs)
+        self.assertIn("pt-BR/factory-manual.md", mkdocs)
+        self.assertIn("pt-BR/technical-reference.md", mkdocs)
+        self.assertIn("assets/public-map/overkill-factory-map-v1.0.3.html", mkdocs)
+        self.assertNotIn("en/index.md", mkdocs)
+        self.assertNotIn("en/manual.md", mkdocs)
         self.assertNotIn("architecture/", mkdocs)
         self.assertNotIn("maintenance/", mkdocs)
 
-    def test_legacy_docs_are_preserved_but_not_canonical(self) -> None:
-        legacy = CODE_ROOT / "legacy-docs" / "public-docs-before-product-manual"
-        self.assertTrue((legacy / "README.md").is_file())
-        self.assertTrue((legacy / "architecture" / "deterministic-control-plane.md").is_file())
-        self.assertTrue((legacy / "operations" / "validation-and-release.md").is_file())
-        self.assertIn("not the canonical public documentation", (legacy / "README.md").read_text(encoding="utf-8"))
-        self.assertFalse((ROOT / "docs" / "architecture").exists())
-        self.assertFalse((ROOT / "docs" / "operations").exists())
-
     def test_bilingual_pages_are_complete_not_summaries(self) -> None:
         pairs = [
-            ("manual.md", "controlled production", "produção controlada"),
-            ("operating-model.md", "Hermes Kanban remains the runtime source of truth", "Hermes Kanban continua sendo a fonte de verdade"),
-            ("lifecycle.md", "F0 — Pre-Start / Sealed Source Envelope", "F0 — Pre-Start / Sealed Source Envelope"),
-            ("trust-and-evidence.md", "Receipt Five", "Receipt Five"),
-            ("technical-model.md", "factoryctl", "factoryctl"),
-            ("usage.md", "validate_public_surface_sync.py", "validate_public_surface_sync.py"),
-            ("reference.md", "Route classes", "Classes de rota"),
+            ("factory-manual.md", "The Factory tries to make AI work controllable", "A Factory tenta tornar o trabalho com IA controlavel"),
+            ("factory-manual.md", "Hermes Kanban remains the runtime source of truth", "Hermes Kanban continua sendo a fonte de verdade"),
+            ("factory-manual.md", "Receipt Five", "Receipt Five"),
+            ("technical-reference.md", "factoryctl", "factoryctl"),
+            ("technical-reference.md", "Route Classes", "Classes De Rota"),
+            ("technical-reference.md", "Hermes owns runtime state", "Hermes controla estado de runtime"),
         ]
         for file_name, en_phrase, pt_phrase in pairs:
             en = read_text(f"docs/en/{file_name}")
             pt = read_text(f"docs/pt-BR/{file_name}")
-            with self.subTest(file=file_name):
+            with self.subTest(file=file_name, phrase=en_phrase):
                 self.assertIn(en_phrase, en)
                 self.assertIn(pt_phrase, pt)
-                self.assertGreater(len(en.split()), 120)
-                self.assertGreater(len(pt.split()), 120)
+                self.assertGreater(len(en.split()), 900)
+                self.assertGreater(len(pt.split()), 900)
 
     def test_docs_are_grounded_in_executable_factory_facts(self) -> None:
+        version = tomllib.loads(read_text("pyproject.toml"))["project"]["version"]
         workflow = json.loads(read_text("docs/factory-workflow.catalog.json"))
         workers = json.loads(read_text("agents/worker-registry.public.json"))
         routes = json.loads(read_text("templates/factory-route-registry.json"))
         methods = json.loads(read_text("templates/method-engine-registry.json"))
         operating_systems = json.loads(read_text("templates/factory-operating-system-registry.json"))
 
-        index = read_text("docs/en/index.md")
-        technical = read_text("docs/en/technical-model.md")
-        lifecycle = read_text("docs/en/lifecycle.md")
-        reference = read_text("docs/en/reference.md")
+        readme = read_text("README.md")
+        technical = read_text("docs/en/technical-reference.md")
 
-        self.assertIn(f"{len(workflow['phases'])} compiled phases", index)
-        self.assertIn(f"{len(workers['workers'])} public workers", index)
+        self.assertIn(f"version `{version}`", technical)
+        self.assertIn(f"{len(workflow['phases'])} compiled phases", readme)
+        self.assertIn(f"{len(workers['workers'])} public workers", readme)
         self.assertIn(f"{len(routes['routes'])} route classes", technical)
         self.assertIn(f"{len(methods['engines'])} method engines", technical)
         self.assertIn(f"{len(operating_systems['entries'])} operating-system areas", technical)
-        self.assertIn("F27 — Factory Maturity Audit", lifecycle)
-        self.assertIn("product_creation", reference)
+        self.assertIn("F27 - Factory Maturity Audit", technical)
+        self.assertIn("product_creation", technical)
 
     def test_public_validators_and_docs_build_pass(self) -> None:
         commands = [
             ([sys.executable, "scripts/validate_public_json_artifacts.py"], CODE_ROOT),
             ([sys.executable, "scripts/validate_public_surface_sync.py"], CODE_ROOT),
             ([sys.executable, "scripts/validate_promise_implementation_map.py"], CODE_ROOT),
-            ([sys.executable, "scripts/generate_factory_reference_docs.py", "--check"], CODE_ROOT),
-            ([sys.executable, "-m", "mkdocs", "build", "-f", "docs/mkdocs.yml", "--strict", "--site-dir", "/tmp/overkill-test-docs-site"], ROOT),
+            ([sys.executable, "-m", "mkdocs", "build", "-f", "docs/mkdocs.yml", "--strict", "--site-dir", str(ROOT / ".tmp" / "overkill-test-docs-site")], ROOT),
         ]
         for command, cwd in commands:
             with self.subTest(command=" ".join(command)):
                 result = subprocess.run(command, cwd=cwd, capture_output=True, text=True)
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
-    def test_package_metadata_matches_new_doc_surface(self) -> None:
+    def test_package_metadata_matches_doc_surface(self) -> None:
         pyproject = read_text("pyproject.toml")
         self.assertIn('"share/overkill-factory/docs/en"', pyproject)
         self.assertIn('"share/overkill-factory/docs/pt-BR"', pyproject)

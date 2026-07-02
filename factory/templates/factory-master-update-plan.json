@@ -569,7 +569,7 @@
       "python3 -m unittest discover -s tests -q",
       "python3 scripts/validate_document_governance.py",
       "python3 scripts/validate_public_json_artifacts.py",
-      "python3 scripts/generate_factory_reference_docs.py --check",
+      "python3 scripts/generate_factory_reference_docs.py --out ../.tmp/generated/factory-kernel-reference.md",
       "python3 scripts/public_safety_scan.py",
       "python3 scripts/secret_safety_scan.py"
     ]

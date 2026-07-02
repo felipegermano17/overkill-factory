@@ -1,131 +1,55 @@
 # Agent Layer
 
-This directory is the public contract surface for Overkill Factory workers.
-It is intentionally split into machine-readable contracts and human-readable
-guides.
+This folder is the public contract surface for Factory workers.
 
-If you are reading this repository on GitHub, start here before opening the
-large JSON files.
+Start with the human docs first:
 
-## What This Directory Is
+- `docs/en/factory-manual.md` explains why workers need gates, evidence and authority limits.
+- `docs/en/technical-reference.md` explains the current worker model, Hermes boundary, phases, routes and proof commands.
+- `agents/worker-roster.md` gives a readable roster of the 40 public workers.
 
-The agent layer answers four practical questions:
+Then use the machine contracts when exact behavior matters.
 
-1. Which workers exist?
-2. When is each worker required?
-3. What can each worker do or refuse?
-4. Which evidence must exist before a card moves forward?
+## Machine Contracts
 
-The factory does not treat agents as loose personalities. A worker becomes
-operable only when its process role, profile, permission class, Hermes binding
-and packet route all exist.
-
-## What Belongs Here
-
-- Public worker registry files, public worker profiles, permission classes and
-  Hermes bindings.
-- Human entrypoint docs that explain how to read the full worker contract.
-- Schemas required to validate public worker contracts.
-
-## What Does Not Belong Here
-
-- Generated worker packets, run logs, Receipt Five evidence or old execution
-  output.
-- Private agent prompts, private Hermes profile material, local paths or board
-  links.
-- Hand-written partial mirrors of the worker registry.
-
-## Source Of Truth
-
-The machine-readable JSON files define worker operability. Human docs explain
-the contract, but the worker registry, profiles, permission classes and Hermes
-bindings are the source of truth.
-
-## How It Is Validated
-
-Run these checks after changing agent contracts or guides:
-
-```bash
-python scripts/validate_worker_profiles.py
-python scripts/validate_public_json_artifacts.py
-python scripts/public_safety_scan.py
-python scripts/secret_safety_scan.py
-python -m unittest tests.test_worker_profiles tests.test_worker_permission_classes tests.test_agent_directory_docs -q
-```
-
-## Read Order
-
-| Read | File | Purpose |
-| --- | --- | --- |
-| 1 | `agents/worker-roster.md` | Human overview of the 40 public workers by ownership group. |
-| 2 | `docs/en/technical-model.md` | Operator-facing guide for every worker role. |
-| 3 | `docs/en/reference.md` | Stage-by-stage map from the factory journey to real workers. |
-| 4 | `docs/en/technical-model.md` | Product-type coverage and pack activation rules. |
-| 5 | `docs/en/trust-and-evidence.md` | Human explanation of worker authority classes. |
-
-Open the JSON files after that, when you need exact contracts.
-
-## Machine-Readable Contracts
-
-| File | What It Controls |
+| File | Purpose |
 | --- | --- |
-| `agents/worker-registry.public.json` | Process role, phase, trigger, inputs, outputs, evidence, transition rules and veto conditions. |
-| `agents/worker-profiles.public.json` | Public agent identity, mission, operating rules, authority, refusal behavior, evidence and handoff contract. |
-| `agents/hermes-profile-bindings.public.json` | Hermes profile name, queue policy, skill refs, result schema, receipt field and adapter binding. |
-| `agents/worker-permission-classes.public.json` | Permission class and authority boundary for every worker. |
-| `agents/capability-packs.public.json` | Product-type coverage and whether a requested surface can execute. |
-| `agents/capability-pack-activation-ledger.public.json` | Current activation state and proof requirements for non-core capability packs. |
-| `agents/worker-contract.schema.json` | Schema for the worker contract shape. |
+| `agents/worker-registry.public.json` | Worker identity, phase, triggers, inputs, outputs, evidence and veto rules. |
+| `agents/worker-profiles.public.json` | Public profile mission, authority, refusal behavior and handoff contract. |
+| `agents/hermes-profile-bindings.public.json` | Hermes profile binding, queue policy, skill refs, result schema and receipt field. |
+| `agents/worker-permission-classes.public.json` | Permission and authority class for each worker. |
+| `agents/capability-packs.public.json` | Product-type coverage and capability-pack activation shape. |
+| `agents/capability-pack-activation-ledger.public.json` | Current activation state for non-core packs. |
+| `agents/worker-contract.schema.json` | Schema for worker contract validation. |
+| `scripts/factoryctl.py` | Public command path that builds packets and checks gates. |
 
-These files are not narrative documentation. They are public-safe contracts
-used by scripts, tests and generated worker packets.
-
-## Human Guides
-
-| File | What It Explains |
-| --- | --- |
-| `agents/worker-roster.md` | The worker set in plain language. |
-| `docs/en/technical-model.md` | How public worker contracts map to live Hermes profile materialization. |
-| `docs/en/technical-model.md` | Expected Hermes profile shape. |
-| `docs/en/technical-model.md` | How Hermes, adapter hooks and worker packets fit together. |
-
-The human guides must never become the runtime source of truth. When a guide
-and a machine contract disagree, fix the mismatch and let the executable gate
-decide the card state.
-
-Do not add hand-written per-worker mirrors under this directory unless they are
-generated from the registry and cover the full worker set. A partial manual
-mirror makes GitHub easier to browse for a moment and harder to trust forever.
+The JSON files are the source of truth. Markdown explains them; it does not outrank them.
 
 ## Worker Operability Rule
 
-A worker is operable only when all of these layers exist:
+A worker is operable only when all of these exist:
 
 1. process role in `agents/worker-registry.public.json`;
-2. agent profile in `agents/worker-profiles.public.json`;
+2. public profile in `agents/worker-profiles.public.json`;
 3. permission class in `agents/worker-permission-classes.public.json`;
 4. Hermes binding in `agents/hermes-profile-bindings.public.json`;
 5. card-specific packet generated by `scripts/factoryctl.py`;
-6. tests or validation that prove the route can be used.
+6. validation that proves the route can be used.
 
-Profile names alone are not enough. A worker without a packet route is only a
-description.
+Profile names alone are not enough. A worker without a packet route is only a description.
 
 ## Quality Bar
 
-Every public worker contract should make these things inspectable:
+Every worker contract should make these things inspectable:
 
-- responsibility: what the worker owns;
-- entry point: when it enters the factory;
-- input contract: what it must receive;
-- output contract: what it must produce;
-- authority: what it may not do;
-- evidence: what proves it ran;
-- blocker: what stops the next transition;
-- handoff: what another worker can trust.
-
-If a worker cannot be explained in those terms, it is not ready to be treated
-as an executable factory role.
+- what the worker owns;
+- when it enters the Factory;
+- what input it must receive;
+- what output it must produce;
+- what authority it does not have;
+- what evidence proves execution;
+- what blocks the next transition;
+- what another worker can trust after handoff.
 
 ## Anti-Theater Rules
 
@@ -135,10 +59,10 @@ as an executable factory role.
 - A security paragraph is not a security scan result.
 - A Product Face screenshot is not full product experience proof.
 - A human-support worker cannot invent approval.
-- A Control Tower view cannot become the source of truth.
-- A generated evidence archive does not belong in this public directory.
+- A Control Tower view cannot become the runtime source of truth.
+- Do not add hand-written per-worker mirrors under this directory unless they are generated from the registry and cover the full worker set.
 
-## Validation Bundle
+## Validation
 
 Run these checks after changing agent contracts or guides:
 

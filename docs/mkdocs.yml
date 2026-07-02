@@ -10,20 +10,9 @@ exclude_docs: |
 nav:
   - Home: index.md
   - English:
-      - Start: en/index.md
-      - Manual: en/manual.md
-      - Operating Model: en/operating-model.md
-      - Lifecycle: en/lifecycle.md
-      - Trust and Evidence: en/trust-and-evidence.md
-      - Technical Model: en/technical-model.md
-      - Usage: en/usage.md
-      - Reference: en/reference.md
+      - Factory Manual: en/factory-manual.md
+      - Technical Reference: en/technical-reference.md
   - Português:
-      - Início: pt-BR/index.md
-      - Manual: pt-BR/manual.md
-      - Como a fábrica trabalha: pt-BR/operating-model.md
-      - Confiança e prova: pt-BR/trust-and-evidence.md
-      - Ciclo simples: pt-BR/lifecycle.md
-      - Uso: pt-BR/usage.md
-      - Modelo técnico: pt-BR/technical-model.md
-      - Referência: pt-BR/reference.md
+      - Manual da Fábrica: pt-BR/factory-manual.md
+      - Referência Técnica: pt-BR/technical-reference.md
+  - Visual Map: assets/public-map/overkill-factory-map-v1.0.3.html

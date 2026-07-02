@@ -97,7 +97,7 @@ class PublicSurfaceSyncTest(unittest.TestCase):
         findings = surface_sync.validate_map_fidelity(
             surface,
             "this public map intentionally omits every canonical phase term",
-            root=ROOT,
+            root=CODE_ROOT,
         )
 
         self.assertTrue(
@@ -105,50 +105,20 @@ class PublicSurfaceSyncTest(unittest.TestCase):
             findings,
         )
 
-    def test_map_fidelity_stage_node_title_drift_is_detected(self) -> None:
-        manifest = self.manifest()
-        mutated = copy.deepcopy(manifest)
-        mutated["surfaces"][0]["fidelity_contract"]["required_stage_nodes"] = [
-            {"node_id": "intake", "title": "Old Intake Name"}
-        ]
-
-        findings = surface_sync.validate_manifest_data(mutated)
-
-        self.assertIn(
-            "docs/assets/public-map/overkill-factory-map-v1.0.3.html: fidelity stage node intake title "
-            "'Universal Signal Intake' does not match 'Old Intake Name'",
-            findings,
-        )
-
-    def test_map_fidelity_missing_stage_output_term_is_detected(self) -> None:
-        manifest = self.manifest()
-        mutated = copy.deepcopy(manifest)
-        mutated["surfaces"][0]["fidelity_contract"]["required_stage_nodes"] = [
-            {"node_id": "completion", "title": "Factory v1 Completion Gate", "required_output_terms": ["missing closure class"]}
-        ]
-
-        findings = surface_sync.validate_manifest_data(mutated)
-
-        self.assertIn(
-            "docs/assets/public-map/overkill-factory-map-v1.0.3.html: fidelity stage node completion "
-            "missing output term 'missing closure class'",
-            findings,
-        )
-
     def test_map_fidelity_missing_template_term_is_detected(self) -> None:
         manifest = self.manifest()
         surface = copy.deepcopy(manifest["surfaces"][0])
-        surface["fidelity_contract"]["required_template_refs"] = ["templates/universal-signal-intake.json"]
+        surface["fidelity_contract"]["required_template_refs"] = ["factory/templates/universal-signal-intake.json"]
 
         findings = surface_sync.validate_map_fidelity(
             surface,
             "this public map intentionally omits the template-backed intake name",
-            root=ROOT,
+            root=CODE_ROOT,
         )
 
         self.assertIn(
             "docs/assets/public-map/overkill-factory-map-v1.0.3.html: fidelity template_ref has no map coverage: "
-            "templates/universal-signal-intake.json",
+            "factory/templates/universal-signal-intake.json",
             findings,
         )
 

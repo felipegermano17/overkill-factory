@@ -95,12 +95,16 @@ class PrepilotMasterTaskReadinessTest(unittest.TestCase):
         self.assertIn("evidence_graph", by_id)
         self.assertEqual(by_id["evidence_graph"]["status"], "BLOCKED")
 
-    def test_public_readme_rejects_narrative_history_as_onboarding(self) -> None:
+    def test_public_readme_keeps_onboarding_simple_and_current(self) -> None:
         readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
         normalized = " ".join(readme.split())
 
-        self.assertIn("Narrative validation history", readme)
-        self.assertIn("do not belong in the public onboarding path", normalized)
+        self.assertIn("Read This First", readme)
+        self.assertIn("Factory manual", readme)
+        self.assertIn("Technical reference", readme)
+        self.assertIn("Visual map", readme)
+        self.assertIn("The point is not to make AI sound more organized", normalized)
+        self.assertNotIn("Narrative validation history", readme)
         self.assertNotIn("docs/roadmap/", readme)
 
 

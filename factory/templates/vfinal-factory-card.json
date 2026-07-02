@@ -2287,7 +2287,7 @@
     "rollback_path": {
       "rollback_owner": "release-ops-worker",
       "rollback_trigger": "Any blocking regression in validation, safety or support readiness.",
-      "rollback_procedure_ref": "docs/en/usage.md",
+      "rollback_procedure_ref": "docs/en/technical-reference.md",
       "rollback_validation_ref": "scripts/release_integration_preflight.py",
       "max_time_to_restore": "bounded to the release owner runbook"
     },
@@ -2368,7 +2368,7 @@
         "action_id": "rollback-release",
         "action_type": "rollback",
         "owner": "release-ops-worker",
-        "procedure_ref": "docs/en/usage.md",
+        "procedure_ref": "docs/en/technical-reference.md",
         "validation_ref": "scripts/release_integration_preflight.py"
       }
     ],

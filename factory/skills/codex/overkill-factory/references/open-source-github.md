@@ -50,8 +50,9 @@ delete it.
 - Do not create partial manual mirrors of registries, schemas, workers, or
   templates. Partial mirrors rot. If human docs are needed, cover the full
   public set or generate them from the canonical contract.
-- If public docs claim to describe the whole factory, require
-  `docs/reference/factory-kernel-reference.md` to be regenerated and checked.
+- If public docs claim to describe the whole factory, require the small canonical
+  docs, public surface manifest and validators to agree with the current
+  workflow, worker, schema, template, method and route contracts.
 - Do not keep historical planning bundles, audit logs, hidden plan folders or
   dated internal review docs in the public repo after their rules have been
   absorbed into current docs, schemas, tests or issues.

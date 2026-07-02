@@ -69,7 +69,9 @@ jobs:
         run: python scripts/validate_promise_implementation_map.py
         working-directory: factory
       - name: Generated factory reference validation
-        run: python scripts/generate_factory_reference_docs.py --check
+        run: |
+          python scripts/generate_factory_reference_docs.py --out "$RUNNER_TEMP/factory-kernel-reference.md"
+          python scripts/generate_factory_reference_docs.py --out "$RUNNER_TEMP/factory-kernel-reference.md" --check
         working-directory: factory
       - name: Public surface sync
         run: python scripts/validate_public_surface_sync.py

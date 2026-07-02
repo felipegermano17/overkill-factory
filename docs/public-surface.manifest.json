@@ -1,27 +1,17 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/public-surface-manifest.schema.json",
   "record_type": "public_surface_manifest",
-  "manifest_version": "v3-product-manual",
-  "created_at": "2026-06-30T00:00:00Z",
+  "manifest_version": "v4-simple-public-surface",
+  "created_at": "2026-07-02T00:00:00Z",
   "canonical_sources": [
     "README.md",
     "README.pt-BR.md",
-    "docs/en/index.md",
-    "docs/en/manual.md",
-    "docs/en/operating-model.md",
-    "docs/en/lifecycle.md",
-    "docs/en/trust-and-evidence.md",
-    "docs/en/technical-model.md",
-    "docs/en/usage.md",
-    "docs/en/reference.md",
-    "docs/pt-BR/index.md",
-    "docs/pt-BR/manual.md",
-    "docs/pt-BR/operating-model.md",
-    "docs/pt-BR/lifecycle.md",
-    "docs/pt-BR/trust-and-evidence.md",
-    "docs/pt-BR/technical-model.md",
-    "docs/pt-BR/usage.md",
-    "docs/pt-BR/reference.md",
+    "docs/index.md",
+    "docs/en/factory-manual.md",
+    "docs/en/technical-reference.md",
+    "docs/pt-BR/factory-manual.md",
+    "docs/pt-BR/technical-reference.md",
+    "docs/assets/public-map/overkill-factory-map-v1.0.3.html",
     "docs/factory-workflow.catalog.json",
     "docs/promise-implementation-map.public.json",
     "factory/scripts/factoryctl.py",
@@ -42,44 +32,36 @@
       "surface_type": "conceptual_visual_map",
       "authority_level": "conceptual_supporting_surface",
       "source_refs": [
+        "docs/factory-workflow.catalog.json",
         "factory/agents/worker-registry.public.json",
         "factory/agents/worker-profiles.public.json",
         "factory/agents/hermes-profile-bindings.public.json",
-        "docs/factory-workflow.catalog.json",
+        "factory/templates/factory-route-registry.json",
+        "factory/templates/method-engine-registry.json",
         "factory/templates/universal-signal-intake.json",
         "factory/templates/product-creation-plan.json",
+        "factory/templates/product-implementation-readiness.json",
         "factory/scripts/factoryctl.py"
       ],
       "claim_checks": [
         "metadata",
         "source_refs_exist",
         "worker_count",
-        "stage_count",
         "map_fidelity",
         "risk_tiers",
         "source_of_truth_disclaimer",
         "no_runtime_proof_claim"
       ],
       "expected_worker_count": 40,
-      "expected_stage_count": 33,
-      "canonical_stage_count": 32,
-      "conceptual_exceptions": [
-        "The visual map remains a conceptual supporting artifact from the previous public map source while the canonical manual now lives in docs/en and docs/pt-BR."
-      ],
       "required_phrases": [
-        "Universal Signal Intake",
-        "full Product SOT scope coverage",
-        "Specialist Research Decision",
-        "Product Creation Plan",
-        "Product Implementation Readiness",
-        "Factory v1 Completion Gate",
+        "This visual map is not the source of truth",
+        "The map does not prove runtime readiness",
         "Mapa != Prova",
         "Hermes segue como fonte da verdade",
-        "não provam entrega"
+        "public docs nao provam entrega"
       ],
       "fidelity_contract": {
         "workflow_catalog_ref": "docs/factory-workflow.catalog.json",
-        "stage_agent_map_ref": "factory/legacy-docs/public-docs-before-product-manual/agents/factory-stage-agent-map.md",
         "required_workflow_phase_ids": [
           "__all__"
         ],
@@ -91,9 +73,10 @@
         "required_terms": [
           "Universal Signal Intake",
           "full Product SOT scope coverage",
+          "Specialist Research Decision",
           "Product Creation Plan",
           "Product Implementation Readiness",
-          "Mapa != Prova"
+          "Receipt Five"
         ]
       }
     },
@@ -103,8 +86,8 @@
       "surface_type": "root_readme",
       "authority_level": "supporting_explanation_not_source_of_truth",
       "source_refs": [
-        "docs/en/index.md",
-        "docs/en/manual.md",
+        "docs/en/factory-manual.md",
+        "docs/en/technical-reference.md",
         "docs/public-surface.manifest.json"
       ],
       "claim_checks": [
@@ -127,7 +110,8 @@
       "authority_level": "supporting_explanation_not_source_of_truth",
       "source_refs": [
         "README.md",
-        "docs/pt-BR/index.md",
+        "docs/pt-BR/factory-manual.md",
+        "docs/pt-BR/technical-reference.md",
         "docs/public-surface.manifest.json"
       ],
       "claim_checks": [
@@ -137,21 +121,23 @@
         "no_runtime_proof_claim"
       ],
       "required_phrases": [
-        "Um teste local passando significa que o kernel público está coerente"
+        "Um teste local passando significa que o kernel publico esta coerente"
       ],
       "expected_links": [
         "https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.3.html"
       ]
     },
     {
-      "surface_id": "en-index",
-      "path": "docs/en/index.md",
+      "surface_id": "docs-index",
+      "path": "docs/index.md",
       "surface_type": "concept_doc",
       "authority_level": "supporting_explanation_not_source_of_truth",
       "source_refs": [
-        "factory/scripts/factoryctl.py",
-        "docs/factory-workflow.catalog.json",
-        "factory/templates/factory-route-registry.json"
+        "docs/en/factory-manual.md",
+        "docs/en/technical-reference.md",
+        "docs/pt-BR/factory-manual.md",
+        "docs/pt-BR/technical-reference.md",
+        "docs/assets/public-map/overkill-factory-map-v1.0.3.html"
       ],
       "claim_checks": [
         "source_refs_exist",
@@ -159,18 +145,19 @@
         "no_runtime_proof_claim"
       ],
       "required_phrases": [
-        "The point is not to slow agents down"
+        "The old scattered documentation model is gone"
       ]
     },
     {
-      "surface_id": "en-manual",
-      "path": "docs/en/manual.md",
+      "surface_id": "en-factory-manual",
+      "path": "docs/en/factory-manual.md",
       "surface_type": "concept_doc",
       "authority_level": "supporting_explanation_not_source_of_truth",
       "source_refs": [
         "factory/scripts/factoryctl.py",
         "docs/factory-workflow.catalog.json",
-        "factory/templates/factory-route-registry.json"
+        "factory/templates/factory-route-registry.json",
+        "factory/templates/method-engine-registry.json"
       ],
       "claim_checks": [
         "source_refs_exist",
@@ -178,75 +165,20 @@
         "no_runtime_proof_claim"
       ],
       "required_phrases": [
-        "controlled production"
+        "The Factory tries to make AI work controllable"
       ]
     },
     {
-      "surface_id": "en-operating-model",
-      "path": "docs/en/operating-model.md",
+      "surface_id": "en-technical-reference",
+      "path": "docs/en/technical-reference.md",
       "surface_type": "concept_doc",
       "authority_level": "supporting_explanation_not_source_of_truth",
       "source_refs": [
         "factory/scripts/factoryctl.py",
         "docs/factory-workflow.catalog.json",
-        "factory/templates/factory-route-registry.json"
-      ],
-      "claim_checks": [
-        "source_refs_exist",
-        "source_of_truth_disclaimer",
-        "no_runtime_proof_claim"
-      ],
-      "required_phrases": [
-        "Hermes Kanban remains the runtime source of truth"
-      ]
-    },
-    {
-      "surface_id": "en-lifecycle",
-      "path": "docs/en/lifecycle.md",
-      "surface_type": "concept_doc",
-      "authority_level": "supporting_explanation_not_source_of_truth",
-      "source_refs": [
-        "factory/scripts/factoryctl.py",
-        "docs/factory-workflow.catalog.json",
-        "factory/templates/factory-route-registry.json"
-      ],
-      "claim_checks": [
-        "source_refs_exist",
-        "source_of_truth_disclaimer",
-        "no_runtime_proof_claim"
-      ],
-      "required_phrases": [
-        "The compiled workflow is the factual source"
-      ]
-    },
-    {
-      "surface_id": "en-trust",
-      "path": "docs/en/trust-and-evidence.md",
-      "surface_type": "concept_doc",
-      "authority_level": "supporting_explanation_not_source_of_truth",
-      "source_refs": [
-        "factory/scripts/factoryctl.py",
-        "docs/factory-workflow.catalog.json",
-        "factory/templates/factory-route-registry.json"
-      ],
-      "claim_checks": [
-        "source_refs_exist",
-        "source_of_truth_disclaimer",
-        "no_runtime_proof_claim"
-      ],
-      "required_phrases": [
-        "a process that looks alive is not the same as progress"
-      ]
-    },
-    {
-      "surface_id": "en-technical",
-      "path": "docs/en/technical-model.md",
-      "surface_type": "concept_doc",
-      "authority_level": "supporting_explanation_not_source_of_truth",
-      "source_refs": [
-        "factory/scripts/factoryctl.py",
-        "docs/factory-workflow.catalog.json",
-        "factory/templates/factory-route-registry.json"
+        "factory/templates/factory-route-registry.json",
+        "factory/templates/method-engine-registry.json",
+        "factory/agents/worker-registry.public.json"
       ],
       "claim_checks": [
         "source_refs_exist",
@@ -258,14 +190,15 @@
       ]
     },
     {
-      "surface_id": "en-usage",
-      "path": "docs/en/usage.md",
+      "surface_id": "pt-factory-manual",
+      "path": "docs/pt-BR/factory-manual.md",
       "surface_type": "concept_doc",
       "authority_level": "supporting_explanation_not_source_of_truth",
       "source_refs": [
         "factory/scripts/factoryctl.py",
         "docs/factory-workflow.catalog.json",
-        "factory/templates/factory-route-registry.json"
+        "factory/templates/factory-route-registry.json",
+        "factory/templates/method-engine-registry.json"
       ],
       "claim_checks": [
         "source_refs_exist",
@@ -273,132 +206,20 @@
         "no_runtime_proof_claim"
       ],
       "required_phrases": [
-        "local validation is not live Hermes E2E proof"
+        "A Factory tenta tornar o trabalho com IA controlavel"
       ]
     },
     {
-      "surface_id": "en-reference",
-      "path": "docs/en/reference.md",
+      "surface_id": "pt-technical-reference",
+      "path": "docs/pt-BR/technical-reference.md",
       "surface_type": "concept_doc",
       "authority_level": "supporting_explanation_not_source_of_truth",
       "source_refs": [
         "factory/scripts/factoryctl.py",
         "docs/factory-workflow.catalog.json",
-        "factory/templates/factory-route-registry.json"
-      ],
-      "claim_checks": [
-        "source_refs_exist",
-        "source_of_truth_disclaimer",
-        "no_runtime_proof_claim"
-      ],
-      "required_phrases": [
-        "This page collects the short-form facts"
-      ]
-    },
-    {
-      "surface_id": "pt-index",
-      "path": "docs/pt-BR/index.md",
-      "surface_type": "concept_doc",
-      "authority_level": "supporting_explanation_not_source_of_truth",
-      "source_refs": [
-        "factory/scripts/factoryctl.py",
-        "docs/factory-workflow.catalog.json",
-        "factory/templates/factory-route-registry.json"
-      ],
-      "claim_checks": [
-        "source_refs_exist",
-        "source_of_truth_disclaimer",
-        "no_runtime_proof_claim"
-      ],
-      "required_phrases": [
-        "O objetivo é tornar a velocidade confiável"
-      ]
-    },
-    {
-      "surface_id": "pt-manual",
-      "path": "docs/pt-BR/manual.md",
-      "surface_type": "concept_doc",
-      "authority_level": "supporting_explanation_not_source_of_truth",
-      "source_refs": [
-        "factory/scripts/factoryctl.py",
-        "docs/factory-workflow.catalog.json",
-        "factory/templates/factory-route-registry.json"
-      ],
-      "claim_checks": [
-        "source_refs_exist",
-        "source_of_truth_disclaimer",
-        "no_runtime_proof_claim"
-      ],
-      "required_phrases": [
-        "produção controlada"
-      ]
-    },
-    {
-      "surface_id": "pt-operating-model",
-      "path": "docs/pt-BR/operating-model.md",
-      "surface_type": "concept_doc",
-      "authority_level": "supporting_explanation_not_source_of_truth",
-      "source_refs": [
-        "factory/scripts/factoryctl.py",
-        "docs/factory-workflow.catalog.json",
-        "factory/templates/factory-route-registry.json"
-      ],
-      "claim_checks": [
-        "source_refs_exist",
-        "source_of_truth_disclaimer",
-        "no_runtime_proof_claim"
-      ],
-      "required_phrases": [
-        "Hermes Kanban continua sendo a fonte de verdade"
-      ]
-    },
-    {
-      "surface_id": "pt-lifecycle",
-      "path": "docs/pt-BR/lifecycle.md",
-      "surface_type": "concept_doc",
-      "authority_level": "supporting_explanation_not_source_of_truth",
-      "source_refs": [
-        "factory/scripts/factoryctl.py",
-        "docs/factory-workflow.catalog.json",
-        "factory/templates/factory-route-registry.json"
-      ],
-      "claim_checks": [
-        "source_refs_exist",
-        "source_of_truth_disclaimer",
-        "no_runtime_proof_claim"
-      ],
-      "required_phrases": [
-        "O workflow compilado é a fonte factual"
-      ]
-    },
-    {
-      "surface_id": "pt-trust",
-      "path": "docs/pt-BR/trust-and-evidence.md",
-      "surface_type": "concept_doc",
-      "authority_level": "supporting_explanation_not_source_of_truth",
-      "source_refs": [
-        "factory/scripts/factoryctl.py",
-        "docs/factory-workflow.catalog.json",
-        "factory/templates/factory-route-registry.json"
-      ],
-      "claim_checks": [
-        "source_refs_exist",
-        "source_of_truth_disclaimer",
-        "no_runtime_proof_claim"
-      ],
-      "required_phrases": [
-        "processo parecendo vivo não é a mesma coisa que progresso"
-      ]
-    },
-    {
-      "surface_id": "pt-technical",
-      "path": "docs/pt-BR/technical-model.md",
-      "surface_type": "concept_doc",
-      "authority_level": "supporting_explanation_not_source_of_truth",
-      "source_refs": [
-        "factory/scripts/factoryctl.py",
-        "docs/factory-workflow.catalog.json",
-        "factory/templates/factory-route-registry.json"
+        "factory/templates/factory-route-registry.json",
+        "factory/templates/method-engine-registry.json",
+        "factory/agents/worker-registry.public.json"
       ],
       "claim_checks": [
         "source_refs_exist",
@@ -407,44 +228,6 @@
       ],
       "required_phrases": [
         "Hermes controla estado de runtime"
-      ]
-    },
-    {
-      "surface_id": "pt-usage",
-      "path": "docs/pt-BR/usage.md",
-      "surface_type": "concept_doc",
-      "authority_level": "supporting_explanation_not_source_of_truth",
-      "source_refs": [
-        "factory/scripts/factoryctl.py",
-        "docs/factory-workflow.catalog.json",
-        "factory/templates/factory-route-registry.json"
-      ],
-      "claim_checks": [
-        "source_refs_exist",
-        "source_of_truth_disclaimer",
-        "no_runtime_proof_claim"
-      ],
-      "required_phrases": [
-        "validação local não é prova E2E Hermes viva"
-      ]
-    },
-    {
-      "surface_id": "pt-reference",
-      "path": "docs/pt-BR/reference.md",
-      "surface_type": "concept_doc",
-      "authority_level": "supporting_explanation_not_source_of_truth",
-      "source_refs": [
-        "factory/scripts/factoryctl.py",
-        "docs/factory-workflow.catalog.json",
-        "factory/templates/factory-route-registry.json"
-      ],
-      "claim_checks": [
-        "source_refs_exist",
-        "source_of_truth_disclaimer",
-        "no_runtime_proof_claim"
-      ],
-      "required_phrases": [
-        "Esta página reúne os fatos curtos"
       ]
     }
   ]

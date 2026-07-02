@@ -24,8 +24,17 @@ def load_generator():
 
 class GeneratedFactoryReferenceDocsTest(unittest.TestCase):
     def test_generated_reference_is_current(self) -> None:
+        out = REPO_ROOT / ".tmp" / "generated" / "test-factory-kernel-reference.md"
+        generate = subprocess.run(
+            [sys.executable, "scripts/generate_factory_reference_docs.py", "--out", str(out)],
+            cwd=ROOT,
+            text=True,
+            capture_output=True,
+        )
+        self.assertEqual(generate.returncode, 0, generate.stderr + generate.stdout)
+
         result = subprocess.run(
-            [sys.executable, "scripts/generate_factory_reference_docs.py", "--check"],
+            [sys.executable, "scripts/generate_factory_reference_docs.py", "--out", str(out), "--check"],
             cwd=ROOT,
             text=True,
             capture_output=True,

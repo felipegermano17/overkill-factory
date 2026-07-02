@@ -29,8 +29,8 @@ KNOWN_STATUSES = (
 )
 CURRENT_AUTHORITY_REFS = (
     "README.md",
-    "docs/en/operating-model.md",
-    "docs/en/usage.md",
+    "docs/en/factory-manual.md",
+    "docs/en/technical-reference.md",
     "factory/scripts/factoryctl.py",
     "factory/schemas/",
     "factory/tests/",
@@ -60,6 +60,13 @@ AMBIGUITY_TERMS = (
     "todo",
     "tbd",
 )
+CANONICAL_PUBLIC_DOCS = {
+    "index.md",
+    "en/factory-manual.md",
+    "en/technical-reference.md",
+    "pt-BR/factory-manual.md",
+    "pt-BR/technical-reference.md",
+}
 
 
 def governed_markdown_files() -> list[Path]:
@@ -97,7 +104,7 @@ def validate_ambiguous_docs_have_status() -> list[str]:
     errors: list[str] = []
     for path in sorted((DOC_ROOT).rglob("*.md")):
         rel_path = path.relative_to(DOC_ROOT).as_posix()
-        if rel_path.startswith("reference/"):
+        if rel_path.startswith("reference/") or rel_path in CANONICAL_PUBLIC_DOCS:
             continue
         head = front_matter(path)
         if "Document status:" in head:
