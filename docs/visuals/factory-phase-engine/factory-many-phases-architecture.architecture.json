@@ -1,0 +1,299 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Factory com Centenas de Fases",
+    "subtitle": "Biblioteca grande, motor pequeno, Hermes como chão de fábrica",
+    "output": "factory-many-phases-architecture.html",
+    "viewBox": [
+      1040,
+      760
+    ]
+  },
+  "components": [
+    {
+      "id": "operator",
+      "type": "external",
+      "label": "Operador",
+      "sublabel": "pedido + decisões",
+      "pos": [
+        40,
+        300
+      ],
+      "size": [
+        130,
+        62
+      ]
+    },
+    {
+      "id": "gerente",
+      "type": "frontend",
+      "label": "Gerente UX",
+      "sublabel": "status simples",
+      "pos": [
+        230,
+        300
+      ],
+      "size": [
+        130,
+        62
+      ]
+    },
+    {
+      "id": "registry",
+      "type": "database",
+      "label": "Phase Library",
+      "sublabel": "100s microfases",
+      "pos": [
+        410,
+        120
+      ],
+      "size": [
+        150,
+        64
+      ]
+    },
+    {
+      "id": "routes",
+      "type": "backend",
+      "label": "Route Compiler",
+      "sublabel": "seleciona fases",
+      "pos": [
+        410,
+        300
+      ],
+      "size": [
+        150,
+        64
+      ]
+    },
+    {
+      "id": "proof",
+      "type": "security",
+      "label": "Proof Policy",
+      "sublabel": "prova por fase",
+      "pos": [
+        410,
+        480
+      ],
+      "size": [
+        150,
+        64
+      ]
+    },
+    {
+      "id": "kanban",
+      "type": "database",
+      "label": "Hermes Kanban",
+      "sublabel": "estado real",
+      "pos": [
+        640,
+        300
+      ],
+      "size": [
+        150,
+        64
+      ]
+    },
+    {
+      "id": "workers",
+      "type": "backend",
+      "label": "Profiles/Skills",
+      "sublabel": "workers reais",
+      "pos": [
+        820,
+        180
+      ],
+      "size": [
+        150,
+        64
+      ]
+    },
+    {
+      "id": "supervisor",
+      "type": "messagebus",
+      "label": "Supervisor",
+      "sublabel": "reduce + dispatch",
+      "pos": [
+        820,
+        420
+      ],
+      "size": [
+        150,
+        64
+      ]
+    },
+    {
+      "id": "evidence",
+      "type": "security",
+      "label": "Evidence Check",
+      "sublabel": "readback + quality",
+      "pos": [
+        640,
+        520
+      ],
+      "size": [
+        150,
+        64
+      ]
+    },
+    {
+      "id": "learn",
+      "type": "cloud",
+      "label": "Learnback",
+      "sublabel": "teste/skill/reducer",
+      "pos": [
+        820,
+        620
+      ],
+      "size": [
+        150,
+        64
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Factory: método e transformação",
+      "wraps": [
+        "registry",
+        "routes",
+        "proof"
+      ]
+    },
+    {
+      "kind": "security-group",
+      "label": "Anti-teatro: só avança com prova",
+      "wraps": [
+        "supervisor",
+        "evidence"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "operator",
+      "to": "gerente",
+      "label": "pedido",
+      "variant": "emphasis"
+    },
+    {
+      "from": "gerente",
+      "to": "routes",
+      "label": "brief",
+      "variant": "emphasis"
+    },
+    {
+      "from": "registry",
+      "to": "routes",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "from": "routes",
+      "to": "proof",
+      "variant": "security",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "from": "routes",
+      "to": "kanban",
+      "label": "cards/fases",
+      "variant": "emphasis"
+    },
+    {
+      "from": "kanban",
+      "to": "workers",
+      "label": "dispatch",
+      "variant": "emphasis",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "from": "workers",
+      "to": "evidence",
+      "label": "outputs",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "right",
+      "route": "orthogonal-v",
+      "labelDy": 14
+    },
+    {
+      "from": "evidence",
+      "to": "supervisor",
+      "label": "PASS/FAIL",
+      "variant": "security",
+      "fromSide": "right",
+      "toSide": "bottom"
+    },
+    {
+      "from": "supervisor",
+      "to": "kanban",
+      "label": "muta",
+      "variant": "emphasis",
+      "fromSide": "left",
+      "toSide": "right"
+    },
+    {
+      "from": "supervisor",
+      "to": "gerente",
+      "label": "gate real/status",
+      "variant": "security",
+      "fromSide": "left",
+      "toSide": "bottom",
+      "route": "orthogonal-h",
+      "labelDy": -18
+    },
+    {
+      "from": "evidence",
+      "to": "learn",
+      "label": "falha recorrente",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "left"
+    },
+    {
+      "from": "gerente",
+      "to": "operator",
+      "label": "resultado",
+      "variant": "emphasis",
+      "fromSide": "top",
+      "toSide": "top",
+      "route": "orthogonal-v",
+      "labelDy": -18
+    }
+  ],
+  "cards": [
+    {
+      "dot": "violet",
+      "title": "Muitas fases",
+      "items": [
+        "Fase é transformação",
+        "Cada fase precisa de delta de produto",
+        "Rotas usam só fases aplicáveis"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Motor pequeno",
+      "items": [
+        "Um contrato operacional",
+        "Um runtime: Hermes",
+        "Um supervisor com reducers"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Sem teatro",
+      "items": [
+        "Submitted não conclui",
+        "Readback e qualidade antes de done",
+        "Loop sem blocker reduction falha"
+      ]
+    }
+  ]
+}
